@@ -1,0 +1,186 @@
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  ForSyDe.ForSyDeErr
+-- Copyright   :  (c) The ForSyDe Team 2007
+-- License     :  BSD-style (see the file LICENSE)
+-- 
+-- Maintainer  :  ecs_forsyde_development@ict.kth.se
+-- Stability   :  experimental
+-- Portability :  portable
+--
+-- ForSyDe error-related types and functions.
+--
+-----------------------------------------------------------------------------
+module ForSyDe.ForSyDeErr 
+ (ForSyDeErr(..),
+  EProne,
+  intError,
+  qError,
+  qGiveUp,
+  qPutTraceMsg,
+  module Debug.Trace) where
+
+
+import {-# SOURCE #-} ForSyDe.Netlist
+
+import Debug.Trace
+import Control.Monad.Error 
+import Data.Dynamic
+import Data.Typeable
+import Language.Haskell.TH.Syntax (Name, Dec, Type, Quasi(..))
+import Language.Haskell.TH.Ppr (pprint)
+
+-- | All Errors thrown or displayed in ForSyDe
+data ForSyDeErr = 
+  -- Used in Netlist.hs
+  EvalErr String |
+
+  -- Used in ForSyDe.System.*
+  -- | Not a variable name
+  NonVarName Name | 
+  -- | Incompatible system function
+  IncomSysF  Name Type | 
+  -- | Incompatible input interface length                
+  InIfaceLength   (Name,Int) ([String],Int)  | 
+  -- | Incompatible output interface length
+  OutIfaceLength  (Name,Int) ([String],Int)  |
+  -- | Multiply defined port identifier                
+  MultPortId  String                         |
+  -- | Not a SysDef variable
+  NonSysDef Name Type                        |
+
+  -- Used in ForSyDe.Proc.ProcFun 
+  -- | Incorrect Declarations provided to create a ProcFun
+  IncorrProcFunDecs [Dec]                    |
+
+  -- Used in ForSyDe.Netlist.Traversable     
+  -- | Inconsistent output tag
+  InconsOutTag NlNodeOut                     |
+
+  -- Used in Simulate.hs
+  InconsSysDefPort PortId                    | 
+  DynMisMatch Dynamic TypeRep                |
+  SigMisMatch Type                           |
+  InLengthMisMatch Int Int                   | 
+
+  -- | Other Errors
+  Other String           
+
+ 
+
+-- | Show errors
+instance Show ForSyDeErr where
+ show (EvalErr str) = "Non evaluable node (" ++ show str ++ ")"
+ show (NonVarName name) = show name ++ " is not a variable name."
+ show (IncomSysF fName inctype) = 
+   "Incompatible system function type\n"++
+   show strFName ++ " was expected to have type:\n" ++
+   "  Signal i1 -> Signal i2 -> ..... -> Signal in ->\n" ++
+   "  (Signal o1, Signal o2, ... , Signal om)\n" ++
+   "  with n <- |N U {0} and m <- |N U {0}\n"  ++ 
+   "       i1 .. in, o1 .. im monomorphic types\n" ++
+   "However " ++ strFName ++ " has type\n  " ++
+   "  " ++ pprint inctype
+  where strFName = show fName
+ show (InIfaceLength   sysFInInfo portIdsInInfo) =
+    showIfaceLength "input interface" sysFInInfo portIdsInInfo
+ show (OutIfaceLength   sysFOutInfo portIdsOutInfo) =
+    showIfaceLength "output interface" sysFOutInfo portIdsOutInfo
+ show (MultPortId  portId) = 
+   "Multiply defined port identifier " ++ show portId
+ show (NonSysDef name t) = 
+   "A variable with SysDef type was expected\n" ++
+   "However " ++ show name ++ " has type " ++ pprint t
+ show (IncorrProcFunDecs decs) =
+  "Only a function declaration (precedeeded by a mandatory signature)" ++ 
+  "is accepted\n"++ 
+  "The specific, incorrect declarations follow:\n" ++
+  pprint decs
+ show (InconsOutTag nlNodeOut) = "Inconsistent output tag: " ++ show nlNodeOut
+ show (InconsSysDefPort id) = "Inconsistent port in SysDef: " ++ show id
+ show (DynMisMatch dyn rep) = 
+   "Type matching error in dynamic value with typerep " ++ 
+   show (dynTypeRep dyn) ++
+   "\n(Expected type: " ++ show rep ++ " )."
+ show (SigMisMatch t) = 
+  "Signal mismatch:  expected a Signal type but got " ++ pprint t 
+ show (InLengthMisMatch l1 l2) = 
+   "Cannot simulate: simulation arguments length-mismatch: " ++ 
+     show l1 ++ " /= " ++ show l2
+ show (Other str) = str 
+
+-------------------------------
+-- Show instance help functions
+-------------------------------
+
+showIfaceLength :: String -> (Name,Int) -> ([String],Int) -> String
+showIfaceLength ifaceMsg  (sysFName,sysFIfaceL) (ifaceIds, ifaceL) = 
+   "Incorrect length of " ++ ifaceMsg  ++ " (" ++ show ifaceL ++ ")\n" ++
+   "  " ++ show ifaceIds ++ "\n" ++    
+   show sysFName ++ " expects an " ++ show ifaceMsg ++ " length of " ++
+   show sysFIfaceL 
+
+-----------------
+-- Internal Error
+-----------------
+
+--  Throws an internal error
+intError :: String     -- ^ Function which caused the internal error 
+         -> ForSyDeErr -- ^ Error to show
+         -> a
+intError funName err = error $ "Internal error in " ++ funName ++ ": " ++ 
+                               show err ++ "\n" ++
+                               "Please report!"
+
+--------------
+-- Error Monad
+--------------
+
+-- | We make ForSyDeErr an instance of the Error class to be able to throw it
+-- as an exception.
+instance Error ForSyDeErr where
+ noMsg  = Other "An Error has ocurred"
+ strMsg = Other
+ 
+
+-- | 'EProne' represents failure using Left LengthError  or a successful 
+--   result of type a using Right a
+-- 
+--  'EProne' is implicitly an instance of 
+--   ['MonadError']  (@Error e => MonadError e (Either e)@)
+--   ['Monad']       (@Error e => Monad (Either e)@)
+type EProne a = Either ForSyDeErr a
+
+------------------------
+-- Quasi error functions
+------------------------
+
+-- | An error reporting function for Quasi monads
+--   Executing in the monad will stop inmideatly after calling qError
+-- Note, it does not work for GHC<6.8
+-- see <http://hackage.haskell.org/trac/ghc/ticket/1265>
+qError :: Quasi m => String      -- ^ The name of the function  
+                                 --   called in the splice 
+                     -> ForSyDeErr  -- ^ Error to show
+                     -> m a
+qError fname err =  fail $ "Error when calling " ++ fname ++ ":\n"  ++ 
+                           show err
+
+
+-- | Stop execution, find the enclosing qRecover
+--   if a recover is not found, it is considered as an internal error
+--   and the string provided will used as a reference to 
+--   the origin of the error.
+-- Note, it does not work for GHC<6.8
+-- see <http://hackage.haskell.org/trac/ghc/ticket/1265>
+qGiveUp :: Quasi m  =>  String -> m a
+qGiveUp name = fail $ "qGiveUp: Internal error in " ++ name ++ 
+                      ", please report."
+
+---------------
+-- qPutTraceMsg
+---------------
+
+-- | Output a trace message in a quasi monad (similar to 'putTraceMsg')
+qPutTraceMsg :: Quasi m => String -> m ()
+qPutTraceMsg msg = qRunIO (putTraceMsg msg)

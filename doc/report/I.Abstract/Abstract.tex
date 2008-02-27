@@ -1,0 +1,31 @@
+
+The ForSyDe (\textit{Formal System Design}) methodology
+is targeted at modelling systems, with the goal of using a high level
+of abstraction in the specification of its models.
+
+Although it is a general system modelling methodology, the initial
+scope of ForSyDe has specifically been \textit{Synchronous Systems}
+(systems in which a global clock is used to synchronize the different
+parts of the system). A well-known type of such system is synchronous
+hardware, which is the main subject of this thesis. A synchronous
+system in ForSyDe is based on the concept of \textit{processes} which
+\textit{``map input signals onto output signals''}.
+
+Currently, the software implementation of ForSyDe is based upon the
+Haskell programming language. The designer specifies the
+system model in Haskell as a network of cooperating process
+constructors with the assistance of the ForSyDe Library.
+
+Until now, there has not been an automated way to synthesize ForSyDe
+models (i.e.  generate an equivalent low-level implementation from
+which to build real hardware) .  However, as a result of this thesis,
+hardware synthesis is now a feature of ForSyDe, enabling ForSyDe
+designs to finally reach silicon.  That is possible thanks to the
+development of a ForSyDe-to-VHDL compiler.  By using this compiler, a
+ForSyDe model can be first translated to synthesizable
+VHDL93 (one of the two most common hardware design
+languages) and then, the designer can use any of the existing
+VHDL-tools to synthesize the model.
+
+This thesis report is aimed at documenting the background, design,
+implementation and use of the compiler.

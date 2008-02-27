@@ -1,0 +1,56 @@
+%%
+%% This is file `nada-ex.sty',
+%% generated with the docstrip utility.
+%%
+%% The original source files were:
+%%
+%% kthesis.dtx  (with options: `layout')
+%% 
+%% IMPORTANT NOTICE:
+%% 
+%% For the copyright see the source file.
+%% 
+%% Any modified versions of this file must be renamed
+%% with new filenames distinct from nada-ex.sty.
+%% 
+%% For distribution of the original source see the terms
+%% for copying and modification in the file kthesis.dtx.
+%% 
+%% This generated file may be distributed as long as the
+%% original source files, as listed above, are part of the
+%% same distribution. (The sources need not necessarily be
+%% in the same archive or directory.)
+\ProvidesPackage{nada-ex}[2005/03/16]
+%% Example customizations of the KTH thesis classes.
+%% See the package documentation for more details.
+\maxsecnumdepth{subsubsection}
+\setsecnumdepth{subsubsection}
+\maxtocdepth{subsection}
+\settocdepth{subsection}
+\renewcommand{\partnamefont} {\usefont{T1}{lmss}{sbc}{n}\boldmath\huge}
+\renewcommand{\partnumfont}  {\usefont{T1}{lmss}{sbc}{n}\boldmath\huge}
+\renewcommand{\parttitlefont}{\usefont{T1}{lmss}{sbc}{n}\boldmath\Huge}
+\renewcommand{\chapnamefont} {\usefont{T1}{lmss}{sbc}{n}\boldmath\huge}
+\renewcommand{\chapnumfont}  {\usefont{T1}{lmss}{sbc}{n}\boldmath\huge}
+\renewcommand{\chaptitlefont}{\usefont{T1}{lmss}{sbc}{n}\boldmath\Huge}
+\setsecheadstyle   {\usefont{T1}{lmss}{bx}{n}\boldmath\Large\raggedright}
+\setsubsecheadstyle{\usefont{T1}{lmss}{bx}{n}\boldmath\large\raggedright}
+\setparaheadstyle   {\normalsize\bfseries\boldmath}
+\setsubparaheadstyle{\normalsize\bfseries\boldmath}
+\makeevenhead{headings}%
+  {\normalfont\small\thepage}{}{\normalfont\small\leftmark}
+\makeoddhead{headings}%
+  {\normalfont\small\rightmark}{}{\normalfont\small\thepage}
+\setlength{\@tempdima}{\textwidth}
+\addtolength{\@tempdima}{-2\leftmargini}
+% It breaks caption alignment
+% \captionwidth{\@tempdima}
+% \changecaptionwidth
+\captiondelim{. }
+\captionnamefont{\normalfont\footnotesize\bfseries}
+\captiontitlefont{\normalfont\footnotesize}
+\setlength{\parskip}{0pt}
+\kthlogo{kth_svv_comp_science_comm}
+\endinput
+%%
+%% End of file `nada-ex.sty'.

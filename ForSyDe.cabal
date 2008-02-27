@@ -1,0 +1,51 @@
+-- FIXME: add a license and CR holder for th-lift and lava
+name:           ForSyDe
+version:        0.1
+cabal-version:  >= 1.2
+build-type:     Simple
+license:        BSD3
+license-file:   LICENSE
+copyright:      Copyright (c) 2003-2007 The ForSyDe Team
+maintainer:     ecs_forsyde_development@ict.kth.se
+homepage:       http://www.imit.kth.se/info/FOFU/ForSyDe/
+stability:      alpha
+-- package-url: not set yet
+synopsis:       
+ DSEL library implementing the ForSyDe system design methodology.
+category:       DSEL
+tested-with:    GHC==6.8.1
+
+Library
+  build-depends:   packedstring,
+                   base, 
+                   regex-posix, 
+                   mtl, 
+                   pretty, 
+                   template-haskell > 2.0
+  hs-source-dirs:  src
+  exposed-modules: Language.Haskell.TH.TypeLib,
+                   Language.Haskell.TH.Lift,
+                   Language.Haskell.TH.LiftInstances,
+                   ForSyDe,
+                   ForSyDe.System,
+                   ForSyDe.AbsentExt,
+                   ForSyDe.Vector,
+                   ForSyDe.DFT,
+                   ForSyDe.FIR,
+                   ForSyDe.Signal,
+                   ForSyDe.Process,
+                   ForSyDe.Process.SynchProc,
+                   ForSyDe.Backend,
+                   ForSyDe.Backend.Simulate
+  other-modules:   ForSyDe.ForSyDeErr,
+                   ForSyDe.Netlist,
+                   ForSyDe.Netlist.Traverse,
+                   ForSyDe.OSharing,
+                   ForSyDe.OSharing.UDynamic,
+                   ForSyDe.System.SysFun,
+                   ForSyDe.System.SysDef,
+                   ForSyDe.System.Instantiate,
+                   ForSyDe.Process.ProcFun,
+                   ForSyDe.Process.ProcVal 
+-- FIXME: remove all the -fno-warn*
+  ghc-options:	-Wall -fno-warn-name-shadowing -fno-warn-orphans

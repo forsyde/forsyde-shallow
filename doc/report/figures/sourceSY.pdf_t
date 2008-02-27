@@ -1,0 +1,25 @@
+\begin{picture}(0,0)%
+\includegraphics{sourceSY.pdf}%
+\end{picture}%
+\setlength{\unitlength}{4144sp}%
+%
+\begingroup\makeatletter\ifx\SetFigFontNFSS\undefined%
+\gdef\SetFigFontNFSS#1#2#3#4#5{%
+  \reset@font\fontsize{#1}{#2pt}%
+  \fontfamily{#3}\fontseries{#4}\fontshape{#5}%
+  \selectfont}%
+\fi\endgroup%
+\begin{picture}(1972,1529)(879,-3143)
+\put(1711,-2131){\makebox(0,0)[b]{\smash{{\SetFigFontNFSS{12}{14.4}{\familydefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}$\mathit{delaySY}_1$}%
+}}}}
+\put(1711,-2311){\makebox(0,0)[b]{\smash{{\SetFigFontNFSS{12}{14.4}{\familydefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}$(s_0)$}%
+}}}}
+\put(1711,-2851){\makebox(0,0)[b]{\smash{{\SetFigFontNFSS{12}{14.4}{\familydefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}$\mathit{mapSY} (f)$}%
+}}}}
+\put(2836,-2221){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{12}{14.4}{\familydefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}\signal{o}}%
+}}}}
+\put(1711,-1861){\makebox(0,0)[b]{\smash{{\SetFigFontNFSS{12}{14.4}{\familydefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}$\mathit{sourceSY}(f,s_0)$}%
+}}}}
+\put(1036,-2536){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{12}{14.4}{\familydefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}\signal{s}}%
+}}}}
+\end{picture}%

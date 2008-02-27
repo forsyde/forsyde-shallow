@@ -1,0 +1,53 @@
+\begin{picture}(0,0)%
+\includegraphics{Complex.pdf}%
+\end{picture}%
+\setlength{\unitlength}{4144sp}%
+%
+\begingroup\makeatletter\ifx\SetFigFontNFSS\undefined%
+\gdef\SetFigFontNFSS#1#2#3#4#5{%
+  \reset@font\fontsize{#1}{#2pt}%
+  \fontfamily{#3}\fontseries{#4}\fontshape{#5}%
+  \selectfont}%
+\fi\endgroup%
+\begin{picture}(4449,2364)(3361,-3088)
+\put(7795,-1008){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}\texttt{\scriptsize Bool}}%
+}}}}
+\put(7795,-2858){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}\texttt{\scriptsize Int}}%
+}}}}
+\put(3876,-2857){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}\signal{i_3}}%
+}}}}
+\put(3387,-2313){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}\texttt{\scriptsize Int}}%
+}}}}
+\put(3822,-1008){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}\signal{i_0}}%
+}}}}
+\put(3387,-1008){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}\texttt{\scriptsize Int}}%
+}}}}
+\put(7631,-1008){\makebox(0,0)[rb]{\smash{{\SetFigFontNFSS{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}\signal{o_0}}%
+}}}}
+\put(7631,-1443){\makebox(0,0)[rb]{\smash{{\SetFigFontNFSS{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}\signal{o_1}}%
+}}}}
+\put(7685,-2858){\makebox(0,0)[rb]{\smash{{\SetFigFontNFSS{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}\signal{o_4}}%
+}}}}
+\put(3421,-2851){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}\texttt{\scriptsize Bool}}%
+}}}}
+\put(7651,-1951){\makebox(0,0)[rb]{\smash{{\SetFigFontNFSS{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}\signal{o_2}}%
+}}}}
+\put(7786,-2401){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}\texttt{\scriptsize Int}}%
+}}}}
+\put(3376,-1681){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}\texttt{\scriptsize Int}}%
+}}}}
+\put(3826,-1681){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}\signal{i_1}}%
+}}}}
+\put(3822,-2258){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}\signal{i_2}}%
+}}}}
+\put(7651,-2401){\makebox(0,0)[rb]{\smash{{\SetFigFontNFSS{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}\signal{o_3}}%
+}}}}
+\put(4906,-2491){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}{\footnotesize \signal{i}$_2$ = 0?}}%
+}}}}
+\put(7786,-1996){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}\texttt{\scriptsize Bool}}%
+}}}}
+\put(7786,-1501){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}\texttt{\scriptsize Int}}%
+}}}}
+\put(4906,-1366){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}{\footnotesize \signal{i}$_0 =- $ \signal{i}$_1$?}}%
+}}}}
+\end{picture}%

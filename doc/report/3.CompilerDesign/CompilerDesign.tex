@@ -1,0 +1,696 @@
+The first part of this chapter describes the compiler's design, including
+the decisions and arguments which have leaded to it. In advance, it
+can be said that it follows Lava's embedded compilation model.
+
+The second part of this chapter explains some improvements which were
+incorporated to ForSyDe in order to overcome the drawbacks of Lava
+analyzed in chapter \ref{chap:vs}.
+
+\section{Design alternatives}
+
+After studying ForSyDe's background and related work, it was necessary
+to choose between three design alternatives before starting to
+implement the compiler:
+
+\begin{enumerate}[1)]
+\item \textbf{Traditional stand-alone compiler}. This alternative
+  implies coding a full Haskell-to-VHDL compiler from scratch.
+\item \textbf{Customizing an existing compiler}. The Haskell-to-VHDL compiler
+  would be added to an existing tool by incorporating a custom VHDL backend.
+\item Using an \textbf{embedded compilation model}. As it was
+  described in chapter \ref{chap:vs}, the embedded compilation model
+  involves including the compiler in the language library. This
+  model is used in Lava based on the fact that Lava-signals are
+  component-wise and store a structural description of the circuit.
+\end{enumerate}
+
+The third alternative was chosen over the others for various reasons
+explained in next section.
+
+\subsection{Why an embedded compiler?}
+There are various reasons for which the embedded compilation model was chosen:
+
+\begin{itemize}
+\item It is \textbf{realistic}. 
+  
+  The time and man-power resources of a master's thesis are very limited.
+
+  GHC, the popular Haskell compiler, in its current version (6.6) is
+  composed of around 150.000 lines of Haskell code (or 72 years of
+  estimated one-man full-time dedication)\footnote{measured
+    with the \texttt{sloccount} command,
+    (\url{http://www.dwheeler.com/sloccount/})}. Even trying to
+  implement a less ambitious compiler, would anyway had been
+  impossible.
+
+  A custom backend would obviously had required a much smaller effort,
+  but it would have been impossible as well. GHC's code generation
+  modules are composed of more than 5.000 lines of code (14 estimated
+  months of one-man full-time dedication).
+  
+  On the other hand, the embedded approach was expected to be feasible
+  for one person. In fact, the whole compiler is composed of less than
+  2.000 lines of Haskell code.
+  
+\item \textbf{Saves unnecessary effort}.
+
+  The goal of the compiler is to translate ForSyDe specifications to
+  VHDL. Customizing a backend or coding a full compiler would have
+  allowed to translate any Haskell file (including ForSyDe descriptions
+  in particular).
+
+  Such a general translation is not the goal of this thesis.
+  Mapping any Haskell program to VHDL would have been unnecessary and
+  extremely difficult (if not impossible).
+
+\item \textbf{Previous success}.
+
+  The embedded compilation model was adopted from Lava, where it was
+  previously used to build a successful hardware development and
+  verification environment.
+
+  A previous success always gives a good initial point from were to
+  start working.
+
+\item It is easily \textbf{maintainable}.
+  
+  Using the embedded compilation model, the compiler is included in
+  ForSyDe's Library making it easy to maintain and distribute.
+  
+\item It is \textbf{independent of the internal design of third-party
+    tools}.
+
+  Modifying an existing compiler to implement a VHDL backend would
+  have caused ForSyDe to depend on a third party tool, making it prone
+  to get outdated by internal design changes in the tool.
+  
+\end{itemize}
+
+\section{Differences with Lava's implementation}
+
+Some differences between Lava and ForSyDe made impossible to simply
+replicate Lava's compilation model.
+
+Those differences had to be analyzed and taken into account in order to
+be able to preserve Lava's approach. The differences were identified in
+last chapter and fortunately, an appropriate solution was found for
+each case:
+ 
+\begin{itemize}
+\item \textbf{ForSyDe already defines a \texttt{Signal} type}.
+
+  The embedded compilation model requires to use a signal type which stores
+  the structure of the circuit.  
+
+  However, ForSyDe's library implements the \texttt{Signal} type as a
+  stream of values.  Furthermore, the \texttt{Signal} type is not
+  encapsulated (that is, the data type is not hidden to the
+  programmer), making impossible to modify it without causing
+  regressions.
+
+  There were two alternatives 
+
+  \begin{enumerate}[a)]
+  \item Transform the original \texttt{Signal} type of ForSyDe, into
+    an ADT which kept track of the circuit structure, causing a
+    regression.  
+  \item Create an alternative signal type which fulfilled the
+    requirements of embedded compiling and which could live together
+    with the old \texttt{Signal} type.
+  \end{enumerate}
+
+  Option b was chosen, mainly because ForSyDe is targeted at design of
+  systems in general not simply hardware. The details about the new
+  signal type are explained in section \ref{sec:hdsignal}.
+
+\item \textbf{ForSyDe is more behavioural than Lava}.
+
+  The behaviour of Lava's gates (e.g \texttt{and}, \texttt{or},
+  \texttt{xor} $\dots$) is hardcoded and cannot be modified, which is
+  perfectly natural for a purely structural language.
+
+  On the other hand, most of ForSyDe's process constructors are
+  implemented as higher-order functions, which behave in one way or
+  another depending on the function passed as argument.
+  
+  Keeping the structure of the circuit in a the signal ADT was no
+  longer enough to perform the translation to VHDL. In addition, a way
+  to store the body of the functions passed to the process
+  constructors had to be found.
+
+  The biggest problem was that an embedded compiler does not have
+  direct access to AST of the host language. The only information it
+  can work with has to be provided by the library in which the
+  compiler is embedded.
+
+  One possible solution would have been developing yet another
+  embedded language in which to express the body of those functions.
+  However, it would have implied designing a new sublanguage, with
+  its new syntax, which would had to be learned by the designer.
+  
+  Instead, inspired by Hydra's implementation \cite{hydra:th}, it was
+  decided to make use of Template Haskell through a new ADT:
+  \texttt{HDFun}. \texttt{HDFun} is covered in section \ref{sec:hdfun}.
+  
+  
+
+\item \textbf{Polymorphism}. 
+
+  Even if the Lava's signal type is polymorphic, only monomorphic
+  \texttt{Int} and \texttt{Bool} signals can be used in practice.
+
+  On the other hand ForSyDe's original \texttt{Signal} is polymorphic
+  and so are its process constructors.  There is no automatic way to
+  transform every kind of signal value into VHDL code, and thus, the
+  subset of supported ForSyDe signals has to be controlled.
+  
+  \texttt{HDPrimType} type-class constraints were used in process
+  constructors as way to control the supported signal subset. The
+  details about the \texttt{HDPrimType} typeclass are described in
+  section \ref{sec:polymorphism}.
+  
+
+\end{itemize}
+
+The next sections give explicit details about how Lava's embedded
+compilation model was adapted to ForSyDe.
+
+In order to make it more intuitive for the reader. Each section
+incrementally refers to the specific changes which were made to
+\texttt{mapSY}, originally defined in ForSyDe's Library as:
+
+  
+\begin{lstlisting}
+mapSY :: (a -> b) -> Signal a -> Signal b
+mapSY _ NullS	= NullS
+mapSY f (x:-xs)	= f x :- (mapSY f xs)
+\end{lstlisting}
+
+Remember that the definition of \texttt{Signal} is isomorphic to
+Haskell lists and is defined as:
+
+\begin{lstlisting}
+data Signal a = NullS
+	      | a :- Signal a 
+\end{lstlisting} 
+
+
+\begin{figure}
+\centering
+\input{figures/plus1.pdf_t}
+  \caption{$\mathit{plus1}$}
+  \label{fig:plus1}
+\end{figure}
+
+
+To illustrate how the design modifications affect the end-user, the
+transformations suffered by the original definition of a simple system
+will be used as example. $\mathit{plus1}$ (figure \ref{fig:plus1}) is
+a trivial system which merely adds 1 to its numerical input and returns
+the resulting value.  Its code, using the original ForSyDe Library is:
+
+\begin{lstlisting}
+plus1 :: Num a => Signal a -> Signal a
+plus1 = mapSY (+1)
+\end{lstlisting}
+
+
+
+\section{\texttt{HDSignal}: The Hardware Description Signal}
+\label{sec:hdsignal}
+
+In order to avoid regressions, instead of modifying the original
+\texttt{Signal} type, an alternative signal type, \texttt{HDSignal}
+(\textit{Hardware Description Signal}) was introduced.
+
+\texttt{HDSignal} works similarly to signals in Lava. It is an ADT
+hidden to the user which \textit{secretly} stores the structure of
+the circuit.
+
+\texttt{HDSignal} makes use of \textit{Observable
+  Sharing} \cite{osharing} (introduced in chapter \ref{chap:vs}) to
+achieve its goal. Understanding the concrete implementation details of
+\textit{Observable Sharing} requires an advance knowledge of Haskell
+which is out of the scope of this report. Therefore, \texttt{HDSignal}
+will simply be treated as an abstract type with unknown implementation.
+
+\begin{lstlisting}
+data HDSignal a = ... -- hidden
+\end{lstlisting}
+
+Providing an alternative version of \texttt{Signal} required as well
+to provide new process constructors, which were initially renamed to
+avoid name-clashes.
+
+Thus, an alternative definition of \texttt{mapSY} using
+\texttt{HDSignal} was created:
+
+\begin{lstlisting}
+hdMapSY :: (a->b) -> HDSignal a -> HDSignal b
+hdMapSY ... -- hidden implementation
+\end{lstlisting}
+
+$\mathit{plus1}$ also needed to renamed and modified to make use of
+\texttt{HDSignal}s
+
+\begin{lstlisting}
+hdPlus1:: Num a =>  HDSignal a -> HDSignal b
+hdPlus1 = hdMapSY (+1) 
+\end{lstlisting}
+
+
+\section{\texttt{HDFun}: the Hardware Description Function}
+\label{sec:hdfun}
+
+Using the definition of previous section, \texttt{hdMapSY} takes a
+standard Haskell function as argument:
+
+\begin{lstlisting}
+hdMapSY :: (a->b) -> HDSignal a -> HDSignal b
+\end{lstlisting}
+
+However, there is no possible way of generating VHDL code from a
+\texttt{(a->b)} value. Instead, a new type, \texttt{HDFun}
+(\textit{Hardware Description Function}), capable of storing the
+definition of a function was introduced.
+
+\texttt{HDFun}, contrary to a standard Haskell function, contains a
+syntax tree thanks to the use of Template Haskell.
+
+
+\subsection{Introduction to Template Haskell}
+TH \cite{metahaskell} (\textit{Template Haskell}) was previously
+mentioned in chapter \ref{chap:vs}. It is a Haskell extension that
+enables to use compile-time meta-programming. Unfortunately, as it was
+stated before, TH is only currently supported by GHC.
+
+Meta-programming allows to write programs which manipulate and/or
+generate other programs. In Template Haskell, that is done by
+processing the AST (\textit{Abstract Syntax Tree}) of Haskell
+declarations or expressions.
+
+In the case of \texttt{HDFun}s, Template Haskell gives access to the
+AST of function declarations, allowing ForSyDe's embedded compiler to
+translate them to VHDL.
+
+The key abstractions that Template Haskell operates on are
+Expressions, Declarations, and Types. Fragments of concrete Haskell
+code can be \textit{lifted} into the meta-world through the use of
+quasi-quotations. Expression, declaration and type fragments each have
+their own variation on the quotation syntax:
+
+\begin{lstlisting}
+[|  expr |] -- lifts a concrete expression 
+[d| decl |] -- lifts a concrete declaration 
+[t| type |] -- lifts a concrete type 
+\end{lstlisting}
+
+As a result of lifting, the AST of the quoted expression, declaration
+or type is obtained for later processing.
+
+In order to generate code, Template Haskell provides \textit{splices}
+which are executed at compile-time and return an AST. GHC
+automatically merges the resulting AST with the rest of the source
+code as if the programmer actually wrote it. Informally, it can  said
+that splices work like C macros, but are type-safe, ensuring the
+generation of correct code.
+
+Splices have their own notation. A splice is written \texttt{\$x},
+where \texttt{x} is an identifier, or \texttt{\$($\dots$)}, where
+``$\dots$'' is an arbitrary Haskell expression. This use of
+\texttt{\$} overrides its meaning as an infix operator. To be
+interpreted as an operator, \texttt{\$} needs to be surrounded by spaces.
+
+The biggest advantage of using Template Haskell is the reutilization
+Haskell syntax, which saves the designer from learning a new embedded
+language. As a drawback, TH introduces syntax extensions (quotes and
+\texttt{\$}) which anyway require certain learning, and makes ForSyDe
+GHC-dependant.
+
+\subsection{\texttt{HDFun}s in practice}
+
+With the introduction of \texttt{HDFun}, the type of \texttt{hdMapSY}
+changes to
+\begin{lstlisting}
+hdMapSY :: HDFun (a->b) -> HDSignal a -> HDSignal b
+\end{lstlisting}
+which is still quite similar to the original definition of \texttt{mapSY}.
+
+Furthermore, $\mathit{plus1}$ needs as well to be readapted:
+
+\begin{lstlisting}
+hdPlus1 :: Num a => HDSignal a -> HDSignal a 
+hdPlus1 = hdMapSY doPlus1
+ where doPlus1 = $(mkHDFun [d| doPlus1 :: Num a => a -> a
+                               doPlus1 a = a + 1          |])
+\end{lstlisting}
+
+The internal \texttt{HDFun} of \texttt{hdPlus1} is generated at
+compile-time as follows:
+
+\begin{enumerate}[1)]
+\item The declaration of \texttt{doPlus1} is lifted to its AST thanks to
+  the  enclosing brackets (\texttt{[| $\dots$ d|]}).
+\item Its AST is processed by a splice in which the \texttt{mkHDFun}
+  constructor function creates the \texttt{HDFun}.
+\end{enumerate}
+
+It is worth to note that \texttt{doPlus1} is defined as 
+\begin{lstlisting}
+doPlus1 a = a + 1
+\end{lstlisting}
+instead of simply
+\begin{lstlisting}
+doPlus1 = (+1)
+\end{lstlisting}
+due to the limitations of \texttt{mkHDFun}. 
+
+Those limitations are:
+
+\begin{itemize}
+ \item The number of formal parameters in the function must equal 
+   its number of arguments.
+ \item The signature of the function is mandatory and only one
+   definition clause is admitted.
+ \item Pattern matching is only supported with literals, variables and
+   the wildcard ``\texttt{\_}'' pattern. No other kind of pattern matching
+   is allowed. 
+ \item \texttt{where} clauses are not supported.
+ \item The only valid expressions are: variables, constructors, infix
+   operations (excluding infix constructors and sections),
+   \texttt{if}, \texttt{case} and the expresions resulting form
+   their combination.  \texttt{let}, lambda abstractions, and the rest
+   kinds of expressions are not supported.
+\end{itemize}
+
+These limitations can be considered excessive. However, they provide a
+sufficient inital functionality. Thanks to the use of TH, this
+limitations can be easily overcome by extending the supported Haskell
+subset of \texttt{HDFun} (see \ref{chap:hacker} for details).
+
+\section{Controllling polymorphism: the \texttt{HDPrimType} type
+  class}
+\label{sec:polymorphism}
+
+As it was previously said, there is no automatic way to transform
+every Haskell type into VHDL, and thus, the subset of
+supported ForSyDe signals has to be controlled somehow.
+
+Indeed, only instances of \texttt{HDPrimType} (\textit{Hardware
+  Description Primitive Type}) can be handled by the compiler.
+Currently, only \texttt{Int} and \texttt{Bool} instantiate
+\texttt{HDPrimType}.
+
+The process constructors have to reflect that limitation. For that
+reason, a \texttt{HDPrimType} constraint was introduced in each of
+its parameters. In the case of \texttt{hdMapSY}, its type changes to:
+
+
+\begin{lstlisting}
+hdMapSY :: (HDPrimType a, HDPrimType b) => 
+           HDFun (a->b) -> HDSignal a -> HDSignal b
+\end{lstlisting}
+
+
+That means as well that $\mathit{plus1}$ can no longer support numerical
+signals in general. A concrete type has to be specified so that the
+compiler can chose an adequate VHDL representation.
+
+\begin{lstlisting}
+hdPlus1 :: HDSignal Int -> HDSignal Int 
+hdPlus1 = hdMapSY doPlus1
+ where doPlus1 = $(mkHDFun [d| doPlus1 :: Int -> Int
+                               doPlus1 a = a + 1          |])
+\end{lstlisting}
+
+The implementation details of \texttt{HDPrimType} are not significant.
+However, it is worth to note that it shares certain similarities with
+Haskell's \texttt{Data.\-Typeable.\-Typeable} class.  Thus,
+\texttt{HDPrimType} can be considered a particular implementation of
+dynamic types.
+
+\section{Integration with ForSyDe's Library}
+
+So far, the original \texttt{mapSY} function has been renamed to
+\texttt{hdMapSY} and modified to include all the requirements of the
+embedded compiler.
+
+Both functions use different types but are intended to attain a
+similar goal. Therefore, it would be desirable to make them share the same
+name (\texttt{mapSY}), without causing a name-clash.
+
+Thanks to a Haskell extension called MPTC \cite{fundep} (\textit{Multi
+  Parameter Type Classes}), it is possible to make them share
+\texttt{mapSY} as their name:
+
+\begin{lstlisting}
+class SynchronousM f_a_b signal a b | signal a b -> f_a_b where
+ mapSY :: f_a_b -> signal a -> signal b
+
+instance SynchronousM (a->b) Signal a b where
+  mapSY _ NullS = NullS
+  mapSY f (x:-xs)       = f x :- (mapSY f xs)
+
+instance (HDPrimType a, HDPrimType b)
+  => SynchronousM (HDFun (a->b)) HDSignal a b where
+ mapSY = -- hidden details
+\end{lstlisting}
+
+\texttt{SynchronousM} is a multi-parameter type class. As its name
+clearly indicates, a MPTC, in contrast to a traditional type class,
+admits multiple parameters and serves as a way of associating various
+types with a group of operations.
+
+However, the use of multiple parameters leads to ambiguity problems in
+the type inference algorithm (i.e. makes difficult to resolve whether
+a set of types conform a MPTC instance or not). Thus, it is necessary
+to help the type inferer with certain constraints named functional
+dependencies.  In this case, ``\texttt{signal a b -> f\_a\_b}'' is a
+functional dependency which tells the inferer that \texttt{signal},
+\texttt{a} and \texttt{b} depend on \texttt{f\_a\_b}, or, in other
+words, providing the \texttt{signal}, \texttt{a} and \texttt{b}
+parameters of a \texttt{SynchronousM} instance, the inferer can
+automatically determine \texttt{f\_a\_b} because the dependency 
+guarantees that it will be unique.
+
+\texttt{SynchronousM} permits to use the name \texttt{mapSY} both for
+the original \texttt{Signal} process constructor and the
+\texttt{HDSignal} one.  The same scheme was applied to the other two
+basic process constructors: \texttt{delaySY} and \texttt{zipWithSY},
+leading to the \texttt{SynchronousD} and \texttt{SynchronousZ} MPTCs.
+
+The use of MPTCs has a sweet and intended consequence. The existent
+code which purely relies on the aforementioned process constructors
+behaves nicely both for the \texttt{Signal} and \texttt{HDSignal}
+worlds without any modifications.
+
+For example, \texttt{sourceSY} is derived from \texttt{mapSY} and
+\texttt{delaySY}, and its original definition is
+\begin{lstlisting}
+sourceSY f s0 = o
+ where o = delaySY s0 s
+       s = mapSY f o
+\end{lstlisting}
+which indeed works for both \texttt{Signal} and \texttt{HDSignal}
+since its type is
+\begin{lstlisting}
+sourceSY :: (SynchronousD signal a, SynchronousM f_a_b signal a a) =>
+            f_a_b -> a -> signal a
+\end{lstlisting}
+which satisfies both
+\begin{lstlisting}
+sourceSY :: (a->a) -> a -> Signal a
+\end{lstlisting}
+and
+\begin{lstlisting}
+sourceSY :: HDPrimType a => HDFun (a->a) -> a -> HDSignal a
+\end{lstlisting}
+
+Thanks to MPTCs the new signal type \texttt{HDSingal} was easily
+integrated with the original ForSyDe Library.
+
+
+\section{Improvements over Lava's original design}
+Chapter \ref{chap:vs} analyzes some features which are lacked by Lava
+but which would certainly be helpful in hardware design:
+\textit{Ports} and \textit{Hierarchical Structures}. The following two
+sections explain those concepts in deeper detail and describe how they
+were incorporated in ForSyDe.
+
+
+\subsection{Ports}
+
+A Port serves as an interface between the system and the outside
+world.  Ports \textit{hold} signals which the system can accept and
+produce.
+
+They work similarly to VHDL's \textit{port clause} within an
+\textit{entity declaration}. However, instead of allowing to mix input
+and output signals in the same port, it was decided to distinguish
+between \textit{Input Ports} (figure \ref{fig:inport}) which provide
+incoming signals to the system and \textit{Output Ports} (figure
+\ref{fig:outport}) which forward output signals from the system to the
+outside world.
+
+
+A port in ForSyDe has an associated descriptor which indicates the
+name and signal types of the port. The constructor functions
+\texttt{mkInPort} and \texttt{mkOutPort} are in charge of creating a
+\textit{Input} (\textit{Output}) \textit{Port}.
+
+
+In the case of the trivial \texttt{hdPlus1} system, its input and output
+ports are:
+
+\begin{lstlisting}
+-- hdPlus1 input port
+plus1In :: InPort
+plus1In = mkInPort 1 [("plus1Input", Int)]
+
+-- hdPlus1 output port
+plus1Out :: OutPort
+plus1Out = mkOutPort 1 [("plus1Output", Int)]
+\end{lstlisting}
+
+
+\begin{landscape}
+\begin{figure}
+\centering
+\captionsetup[subfigure]{width=3cm}
+\subfloat[Input port]{
+    
+  \input{figures/InPort.pdf_t}
+  \label{fig:inport}
+}
+\hspace{3.5cm}
+\subfloat[Output port]{
+  \input{figures/OutPort.pdf_t}
+  \label{fig:outport}
+}
+\hspace{2cm}
+\subfloat[Circuit]{
+  \input{figures/Circuit.pdf_t}
+  \label{fig:circuit}
+}
+
+\captionsetup[subfigure]{width=3cm}
+\subfloat[Block]{
+  \input{figures/Block.pdf_t}
+  \label{fig:block}
+}
+\hspace{2.2cm}
+\subfloat[Block instance]{
+  \input{figures/Instance.pdf_t}
+  \label{fig:blockins}
+}
+
+\caption{Hierarchical structures}
+\label{fig:primderproc}
+\end{figure}
+\end{landscape}
+
+
+The main advantage of using ports is readability and organization,
+which is better observed in bigger systems (i.e. with several inputs
+and outputs).  However, this example is enough to understand the
+concept of ports.
+
+
+\subsection{Hierarchical structures}
+The \textit{Circuit}, \textit{Block} and \textit{Block Instance} structures
+provide ForSyDe with hierarchical design capabilities, in a similar way as
+\textit{components} and \textit{port maps} do in VHDL. 
+
+\subsubsection{Circuit}
+
+A circuit (figure \ref{fig:circuit}) is modelled as a function which takes
+an input port, processes the signals provided by the port and finally
+generates output signals which are stored in an output port, hence its type
+
+\begin{lstlisting}
+type Circuit = (InPort -> OutPort)
+\end{lstlisting}
+
+The following code builds the \texttt{Circuit} for the $\mathit{plus1}$ system
+
+\begin{lstlisting}
+plus1Circ :: InPort -> OutPort
+plus1Circ ip = supplySig  plus1Sig "plus1Output" plus1Out
+  where plus1Sig = plugSig "plus1Input" ip hdPlus1
+\end{lstlisting}
+
+The code reads as ``\textit{Given an input port \texttt{ip}, supply
+  \texttt{plus1Sig} to entry \texttt{"plus1Output"} of output port
+  \texttt{plus1Out}, where \texttt{plus1Sig} is the result of plugging
+  the process constructor \texttt{hdPlus1} to the entry
+  \texttt{"plus1Input"} of \texttt{ip}}''
+
+\texttt{supplySignal} is useful to supply a signal to an output port
+whereas \texttt{plugSignal} \textit{plugs} a process constructor into
+one the signal \textit{sockets} of an input port.
+
+\subsubsection{Block}
+
+Circuits are not useful by themselves. They need to be transformed
+into a \textit{Block} (figure \ref{fig:block}) before running the compiler to
+generate VHDL.
+
+A \textit{Block} is a white-box which defines a sub-system. Its
+internals are known, but it is isolated from the outside world. All
+its content exists but is not accessible, there is no way to directly
+connect a \textit{Block} to other system structures.  It is similar to
+an \textit{entity-architecture} pair in VHDL.
+
+\texttt{plus1Circ} can be transformed to a \textit{Block} by using the
+\texttt{mkBlock} constructor.
+\begin{lstlisting}
+plus1Block :: Block
+plus1Block = mkBlock "plus1" plus1In plus1Circ
+\end{lstlisting}
+
+\texttt{mkBlock} takes the name of the block, its input port and a
+circuit, creating the corresponding \texttt{Block}.
+
+To translate the model to VHDL, one can simply use the \texttt{writeVHDL}
+function, which calls the VHDL compiler. 
+
+\begin{verbatim}
+> writeVHDL plus1Block
+Writing VHDL code to plus1.vhd ... done!
+\end{verbatim}
+
+Later, the designer could use that VHDL description to synthesize
+hardware.  The full Haskell source of the $\mathit{plus1}$ model, its
+VHDL translation and a RTL-level hardware model obtained from it, can
+be seen in appendix \ref{chap:examples}.
+
+\subsubsection{Block Instance}
+
+A \textit{Block Instance} (figure \ref{fig:blockins}) is the
+equivalent of a \textit{component} in the VHDL world. 
+
+A \textit{Block} is a white-box, an isolated section of the system
+whose internals are known. On the other hand, a \textit{Block
+  Instance} is functionally equivalent to a \textit{Block}, but
+behaves like a black-box: its content is unknown, but its input and
+output ports are viewable from the outside world, making it
+connectable to the rest of the system.
+
+In order to obtain a \textit{Block Instance} from a \textit{Block},
+the \textit{Block} needs to be instantiated. 
+
+
+\begin{lstlisting}
+plus1Ins :: BlockIns
+plus1Ins = instantiate plus1Block
+\end{lstlisting}
+
+The code above creates an instance from \texttt{plus1Block}. Now the
+functions \texttt{plugSig} and \texttt{supplySig} could be used
+directly with the \texttt{plus1Ins} to interconnect its ports with
+other parts of a system.
+
+
+
+
+

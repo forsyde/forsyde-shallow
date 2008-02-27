@@ -1,0 +1,21 @@
+\begin{picture}(0,0)%
+\includegraphics{InPort.pdf}%
+\end{picture}%
+\setlength{\unitlength}{4144sp}%
+%
+\begingroup\makeatletter\ifx\SetFigFontNFSS\undefined%
+\gdef\SetFigFontNFSS#1#2#3#4#5{%
+  \reset@font\fontsize{#1}{#2pt}%
+  \fontfamily{#3}\fontseries{#4}\fontshape{#5}%
+  \selectfont}%
+\fi\endgroup%
+\begin{picture}(639,1959)(3991,-2908)
+\put(4006,-1771){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{10}{12.0}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}\signal{i_3}}%
+}}}}
+\put(4051,-2716){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{10}{12.0}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}\signal{i_n}}%
+}}}}
+\put(4006,-1456){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{10}{12.0}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}\signal{i_2}}%
+}}}}
+\put(4006,-1141){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{10}{12.0}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}\signal{i_1}}%
+}}}}
+\end{picture}%

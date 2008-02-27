@@ -1,0 +1,930 @@
+\documentclass[a4paper,twoside,11pt]{article}
+\usepackage{fancyhdr}
+\usepackage[english]{babel}   % automated words (as titles) in english
+\usepackage[latin1]{inputenc} % it will permit us write using latin1 (tildes..)
+\usepackage{listings}
+\usepackage{enumerate}
+\usepackage{url}
+
+
+
+\title{A comparison of the embedded and traditional compilation models \\
+  in  ForSyDe's context} \author{ Alfonso
+  Acosta\\\texttt{alfonso.acosta@gmail.com} } 
+
+\date{
+  Royal Institute of Technology\\
+  Version 2, \today}
+
+\pagestyle{fancy}
+\fancyhead[EL]{A.Acosta}
+\fancyhead[EC]{}
+\fancyhead[ER]{Royal Institute of Technology}
+\fancyhead[OL]{A comparison of the embedded and traditional compilation models}
+\fancyhead[OR]{}
+\fancyhead[OC]{}
+
+\begin{document}
+\maketitle
+\section*{\large{Changelog}} 
+
+
+{\small 
+
+  \begin{itemize} 
+  \item Version 2, \today
+    \begin{itemize}
+    \item Correction of minor typos and phrasing errors.
+    \item Added a limitation to the embedded approach (not all processes are
+      supported yet).
+    \item Modified section 4
+      \begin{itemize}
+      \item Differentiation of traditional compiler and PNE (static analyzer).
+        Categorized the PNE approach into\textit{``Host language
+          transformation''} and added a reference to a similar example (Hydra
+        implemented with Template Haskell).
+      \item Included problematic problems for the static analyzer.
+      \item Extended the maintainability arguments (dependency on third-party
+        tools).
+      \end{itemize}
+    \item Added appendix A: Decisions taken.
+    \item Added appendix B: The node-identification problem.
+    \end{itemize}
+  \item Version 1, October 5, 2007
+    \begin{itemize}
+    \item Initial version.
+    \end{itemize}
+  \end{itemize}
+}
+\section{Introduction}
+This document is aimed at analyzing the benefits and drawbacks of the
+traditional and embedded compilation models in ForSyDe's current context.
+
+ForSyDe is a design methodology in ongoing development and, as such, it is
+important to take into account its current status and short-term goals. If
+this comparison was made in an absolute and timeless manner (i.e. without
+considering previous work, the effect on short-term results and development
+effort) it would simply be a \textit{``waste of time''}. As assertive as the
+previous statement may sound, the embedded compilation model does not offer
+theoretical advantages over a traditional compiler in the case of ForSyDe.
+However, as we will see, there is room for the embedded approach in terms of
+practical benefits: high maintainability together with time and manpower
+saving.
+ 
+Thus, it is important to keep ForSyDe's ``current context'' (or status) in mind
+while reading the rest of the present document.
+
+The comparison will be driven by the effect which both compilation models may
+cause in ForSyDe's implementation goals and it will latter act as the
+argumentative base from which to decide what development approach to follow.
+
+Following a logical line of thought, this article starts with a summary of
+ForSyDe's development goals and needs. Then, it dives deep into comparing both
+approaches and finally gives a conclusion and a personal opinion on which
+development-plan to follow.
+
+\section{ForSyDe implementation goals}
+Before discussing the advantages and disadvantages of both approaches it is
+important to set the criteria upon which the comparison will be built. An
+important point to consider when comparing both approaches is how well they
+match ForSyDe's implementation goals, which are summarized in the following
+list:
+
+ 
+\begin{itemize}
+  \item ForSyDe's primary implementation goal is to 
+
+    create a compilation environment for ForSyDe designs (currently expressed
+    in the Haskell programming language) with which to process and transform
+    synchronous system specifications\footnote{Other models of computation are
+      on their way, but still lack a stable library and mature theoretical
+      base. Until that changes, the implementation will only focus on the
+      synchronous model.}. Such environment should as well serve as a way to
+    substantiate the theoretical expectations of ForSyDe and as a development
+    framework in which to experiment with new features. Thus, flexibility and
+    extensibility are basic requirements of the tool.
+  \item The, more specific, secondary goals are
+    \begin{itemize}
+    \item Inclusion of a simulation backend, providing a means of random-testing
+      the system models.
+    \item A unified signal type\footnote{in contrast to the coexisting
+        \texttt{Signal} and \texttt{HDSignal} type-schemes in current ForSyDe
+        embedded compiler} which, at least in the case of the simulation
+      backend, should be able to carry values as general as possible (ideally
+      any valid Haskell type).
+    \item Inclusion of other backends. Graphical output, SystemC and SMV have
+      been mentioned many times in email conversations.
+    \item Automatization of the \textit{Transformational Design Refinement}
+      stage. The pre-study and implementation of this feature, due to their
+      complexity, clearly constitute standalone projects on their own and
+      make this goal optional.
+    \end{itemize}
+\end{itemize}
+
+\section{ForSyDe's context and implementation needs}
+
+Another criterion to consider during the comparison is \textit{How does each
+  approach satisfy current ForSyDe implementation needs?}. 
+
+As opposed to the term \textit{goal} (which only implies a static, desirable
+culminating state), the term \textit{need} in this document refers to dynamic
+and practical development requirements (e.g. effort, time-limits,
+maintainability) which, of course, are highly related to ForSyDe's current
+status.
+
+Thus, in order identify ForSyDe's implementation needs, it is important to be
+aware of the development starting-point, or, in other words, be aware of
+ForSyDe's current context. The best way to do this is by, at least roughly,
+summarizing what results have been achieved so far.
+
+\subsection{Theoretical context}
+
+On the theoretical side, the ForSyDe methodology has already been
+carefully defined and explained for the synchronous\footnote{Again, the
+  forthcoming computation models are not taken into account for the same
+  aforementioned reasons.} model of computation in different publications,
+namely in Sander's PhD thesis \cite{forsyde:thesis}.
+
+However, the \textit{Transformational Design Refinement}, which in my honest
+opinion is the key stage of ForSyDe, still lacks a more-concrete
+specification, closer to implementation.  Lots of questions remain
+unanswered, for instance:
+
+  \begin{itemize}
+  \item \textit{What specific transformations are likely to be applied in a
+      given design?}
+  \item \textit{Is it possible to measure how beneficial a transformation is?}
+  \item \textit{How can/should the Transformational Refinement phase 
+    make use of and benefit from design constraints?} 
+    \textit{How far should/can automatic decision-taking go regarding
+      transformations?}
+  \item \textit{Should the designer be able to define his/her own
+      transformations?  In that case, How can/should transformations be
+      specified?}
+  \end{itemize}
+
+  Due to their practical nature, it is hard to deal with this questions only
+  with theoretical machinery. Furthermore, many of them probably cannot be
+  answered before the existence of a working implementation. Thus, there is an
+  \textbf{urgent need for a test bench to help specifying the concrete
+    behavior of ForSyDe}, which still remains diffuse in many practical
+  details.
+  
+  But, such a tool would not only help to determine ForSyDe's behavior, there
+  is also a \textbf{compelling need to confirm whether the theoretical
+    conclusions and proposals of ForSyDe really work in practice}. 
+
+  This can be pedagogically illustrated with a simple example. The
+  template-based implementation-mapping proposed in Sander's thesis
+  \cite{forsyde:thesis}, turned out to be difficult to apply in practice. The
+  text-based template system ended up being replaced by a traditional
+  AST-based implementation for different reasons \cite[section
+  5.1.1]{forsyde:synthesis} .
+
+  Thus, the feedback provided by an implementation can lead to
+  reconsiderations of certain theoretical assumptions. In the worst case
+  scenario, those assumptions could be essential parts of ForSyDe's theoretical
+  base. Hence the \textbf{need of and early implementation}, before further
+  theoretical developments are made. The earlier practical feedback is
+  obtained, the easier it will be to readapt the theoretical base without
+  affecting new research results (e.g. the upcoming asynchronous computation
+  model).
+  
+  For these reasons it would be too ambitious to currently think of a
+  definitive and stable solution rather than an experimentation environment
+  from which to obtain answers. If feedback is positive and little or none
+  theoretical rework is required, such environment would obviously lead to a
+  long-term implementation.
+
+  In my honest opinion, provided the theoretical maturity of ForSyDe, the
+  methodology now needs a confirmation of its practical usefulness, and it
+  needs it as soon as possible.
+
+\subsection{Implementation context}
+
+On the implementation side, the only promising result has been the recent
+development of an embedded compiler \cite{forsyde:synthesis}.
+
+  The advantages and disadvantages of using an embedded language together with
+  an embedded compiler were clearly outlined by Sheard, a detractor of the
+  embedded approach, in \cite{another}.  
+
+
+  {\it
+    ``The reasons for this approach to hardware description language design
+    are numerous:
+  \begin{itemize}
+  \item The syntax of the host language can be reused. There is no need to
+    invent a new syntax or write parsers. 
+
+  \item All the machinery of the host language can be reused. Tools for the
+    language such as compilers and debuggers, and language features such as
+    its module system and type system.
+    
+  \item Even the programmers who already know the host language can be reused
+    without re-training.
+
+  \item  Finally, hardware descriptions are now first class
+    objects in the host language and are subject to all the properties of host
+    language objects. 
+  \end{itemize}
+  
+  Of course there are disadvantages to such an approach,
+  and these cannot be overlooked. They include: 
+  \begin{itemize}
+  \item The syntax of the two languages may be radically different. So users
+    of the hardware description language feel that they are being forced into
+    an unnatural programing style.
+
+  \item The features of the host language may not match the features of the
+    embedded language. Type systems, in particular are an example of this kind
+    of mismatch. In this case, unnatural or awkward embeddings must be
+    used. These embeddings increase the complexity of the system, and make it
+    harder to use and maintain.''
+  \end{itemize}
+}
+
+
+Provided that there are no short-term plans of developing a standalone
+ForSyDe-language\footnote{It would certainly be sensible to consider
+  developing such a language. However that is out of the scope of this
+  document.}  (that is, independent of a host language), the two disadvantages
+outlined by Sheard apply to both the embedded and traditional compilation models.
+
+However, in regard to the goals established in previous section, current
+implementation obviously still suffers from a few problems.
+
+Some of those problems are intrinsic to the compiler and, fixing them, if
+possible at all, might entail some design rework:
+
+\begin{itemize}
+\item Non-standard syntactical extensions are required due to the use of
+  Template Haskell. This problem only affects the designer when declaring
+  functions which are likely to be forwarded to process constructors, for
+  instance:
+
+\begin{verbatim}
+isZero :: HDSignal Int -> HDSignal Bool
+isZero = mapSY doIsZero
+ where doISZero = $(mkHDFun [d| doIsZero :: Int -> Bool
+                                doIsZero a = a == 0    |])
+\end{verbatim}
+
+  The use of the extra brackets and unnatural functionality of the dollar
+  symbol is unavoidable without changing current design, can be annoying for
+  the designer and might be difficult to understand without unveiling its
+  underlying purpose. Yet, it should not constitute a big issue for a research
+  tool.
+
+\item Compilation takes place at runtime.
+
+  A Haskell-embedded compiler is, after all, a Haskell program itself and, for
+  that reason, is called at runtime, after the model is processed by the host
+  compiler or interpreter. This, added to current implementation's need of
+  typechecking\footnote{Chalmers' Lava, due to its simple and limited typesystem
+    can guarantee type-correctness by construction and thus it embedded
+    compiler does not require typechecking.}  naturally forces error-reporting
+  to happen at execution time.
+
+  This can be confusing for the end-user, who probably does not expect further
+  errors once the host compiler terminates successfully.
+
+\item Signals can only carry values from a limited set of types.
+
+  In current implementation, a signal can only carry \texttt{Int} or
+  \texttt{Bool} values. Adding other, not necessarily basic, concrete types
+  such as \texttt{Char} or tuples should not constitute a problem. However,
+  there is still an unexplored issue: How to deal with user defined types
+  (e.g. algebraic types)? Could them be carried by a signal using the
+  embedded approach?
+  
+  Since the embedded compiler is simply implemented as a host language
+  library, it does not have access to the original AST of the design and thus,
+  it cannot access the user's type-definitions. There are high chances for
+  this limitation to be overcome using Template Haskell (which, as shown
+  previously, is successfully used for the same purpose in the case of higher
+  order process constructors), but as it was stated before, this possibility
+  has not been studied in depth yet.
+
+  It is worth to note that supporting an unrestricted set of types is
+  unrealistic from the synthesis point of view and only usable, at best, when
+  simulating models (whose types would probably not be synthesizable anyway).
+  
+\item The compiler is GHC-dependant
+
+  Due to the heavy use of Template Haskell and other non-standard Haskell
+  extensions, the embedded compiler is unavoidably dependant on GHC.
+
+  Apart from Template Haskell, all the non-standard features remain
+  hidden to the end-user making it possible to replace them if desired.
+  
+  GHC, on the other hand, can be considered Haskell's reference implementation
+  and is the tool of choice for most of Haskell-based projects. Its closer
+  competitors, Hugs and YHC, are far from it in terms of performance and
+  feature richness, making the dependency on GHC far from being a concern.
+
+  Regarding Template Haskell, I asked its developers about their long-term
+  support plans. Simon Peyton Jones, Haskell guru, maintainer of GHC, and
+  co-author of Template Haskell, kindly answered my questions:
+
+\begin{verbatim}
+Simon Peyton-Jones simonpj@microsoft.com
+Tue Oct 2 01:40:30 EDT 2007
+
+Hi Alfonso
+
+GHC is an open-source project, so anyone can enhance or 
+maintain it.  It's used by thousands of people, so I 
+think it'll continue to attract developers who are prepared 
+to help support it.  For myself, I certainly to expect to
+continue doing so for the foreseeable future.
+
+Template Haskell is part of GHC -- it's not a separate program.  
+I always wonder how many people use TH.  The TH mailing list is 
+quite quiet.  There aren't many bug reports, but that could 
+always be because it just works.  A couple of talks here at the 
+Haskell Workshop have mentioned they use TH, which
+I didn't know about.
+
+So TH is one of the less-heavily-used parts of GHC, although I 
+think there are a bunch of users who rely on it. Nevertheless, 
+I'd expect it to continue working as long as GHC does.
+
+Does that help?
+
+Simon
+\end{verbatim}
+
+So, even if there are no formal guarantees, it seems that Template
+Haskell is likely to live as long as GHC itself.
+
+\end{itemize}
+
+The remaining issues should be solved eventually, only depending on the amount
+of work put on them:
+
+\begin{itemize}
+\item The hierarchical structures (Ports and Blocks) are not fully functional
+  yet.
+\item Only the \texttt{mapSY}, \texttt{zipWithSY} and \texttt{delaySY} process
+  constructors are currently supported.
+
+\item The functions passed to higher order process constructors
+  (\texttt{HDFun}s) can only be specified using a very limited Haskell subset
+  \cite[section 3.4.2]{forsyde:synthesis} .
+
+\item Two different signal types; the original stream-based \texttt{Signal}
+  and the new structural \texttt{HDSignal}, coexist in current implementation.
+
+  This was simply a strategical choice to avoid regressions with the old
+  \texttt{Signal} until the new \texttt{HDSignal} was fully tested and
+  confirmed to fulfill the expectations of ForSyDe. Thus, this apparent
+  problem should simply disappear if all the aforementioned issues are solved
+  and \texttt{HDSignal} (or however it ends up being called) can finally be
+  ready to replace the original \texttt{Signal} type.
+\end{itemize}
+
+\subsection{Available resources}
+
+As far as I know, the man-power available for making ForSyDe's implementation
+a reality is currently limited to one full-time developer during one
+year. And, assuming such effort will not be dramatically increased in the
+years to come, in order to assure any chance of success, it is
+\textbf{absolutely necessary to make ForSyDe's tools as maintainable as
+  possible from the very beginning}.
+
+
+\subsection{Summary of needs}
+
+The following two points extract the conclusions reached to this point. 
+
+\begin{itemize}
+\item There is an \textbf{urgent} need for an implementation, in order to
+  \begin{itemize}
+    \item Obtain specific details of the ForSyDe methodology 
+    \item Get feedback to corroborate its practical usefulness or readapt its
+      underlying theory accordingly
+    \item Experiment with ForSyDe. This implies a need of design flexibility
+      in the tools.
+    \end{itemize}
+  \item Thus, feedback and results should have precedence over a stable design
+    and a definitive solution, which would be hard to obtain at the first try.
+  \item There are limited resources. The implementation should economize
+    effort and be highly maintainable.
+\end{itemize}
+
+\section{Getting to the point: the comparison itself}
+
+We already went through the problems raised by current embedded compiler in
+terms of feasibility of the goals previously set. Apart from the problems
+intrinsic to the embedded compiler design, the rest are likely to be solved
+eventually.
+
+On the other hand, a traditional compiler would obviously be able to fulfill
+those goals, but, At what cost?
+
+Let's first summarize briefly the different execution stages which a
+traditional compiler would have to go through:
+
+\begin{enumerate}[1)]
+\item Parsing and scanning the Haskell description (which might 
+  be split in different modules)
+\item Typechecking
+\item Identification and creation of the process network
+\item Transformational refinement (not to be implemented yet)
+\item Backends (e.g code generation, simulation, verification ...)
+\end{enumerate}
+
+\subsection{Comparison in terms of development effort}
+
+The embedded approach, by construction, gets stages 1, 2 (except for a small
+part related to the embedded-compiler typesystem), 3 and the simulation
+backend (which requires a runtime system and native code generation) for free
+thanks to the host compiler, having to concentrate only on the other
+backends. On the other hand, a traditional compiler cannot escape from any
+step. 
+
+In order to get a tangible estimation of how much effort would the development
+of a standalone compiler require, I used David A. Wheeler's
+\texttt{SLOCCount}\footnote{http://www.dwheeler.com/sloccount/} against the
+major Haskell implementations: GHC, Hugs, and YHC trying to exclude the bits
+which would not be interesting to implement.
+
+\begin{itemize}
+\item In the case of GHC, version 6.6.1 was used and all the code related to
+  \texttt{ghci}, optimization and foreign language interfaces was not taken in
+  account.
+  
+  The result was
+
+  
+\begin{verbatim}
+ghc-6.6.1/compiler $ sloccount 
+     ../rts/ basicTypes/ cbits/ cmm/ codeGen/ 
+     coreSyn/ deSugar/ hsSyn/ iface/ main/ nativeGen/ 
+     ndpFlatten/ parser/ rename/ simplCore/ simplStg/
+     specialise/ stgSyn/ stranal/ types/
+\end{verbatim} 
+[..]
+\begin{verbatim}
+Total Physical Source Lines of Code (SLOC)                
+ = 167,046
+Development Effort Estimate, Person-Years (Person-Months) 
+ = 43.15 (517.83)
+\end{verbatim}
+  
+Approximately 43 years of work for one person.
+
+\item In the case of YHC (darcs snapshot as of October 5), which is not a
+  mature compiler (there is no stable version yet), the result is
+
+\begin{verbatim}
+yhc/src $ sloccount compiler98/ runtime/ 
+\end{verbatim} 
+[..]
+\begin{verbatim}
+Total Physical Source Lines of Code (SLOC)                
+ = 35,893
+Development Effort Estimate, Person-Years (Person-Months) 
+ = 8.59 (103.03)
+\end{verbatim}
+
+\item And in the case of Hugs (September 2006 release), which 
+  uses C as its main development language, the results were
+
+\begin{verbatim}
+hugs98-Sep2006 $ sloccount src/ 
+\end{verbatim} 
+[..]
+\begin{verbatim}
+Total Physical Source Lines of Code (SLOC)                
+ = 55,437
+Development Effort Estimate, Person-Years (Person-Months) 
+ = 13.55 (162.63)
+\end{verbatim}
+
+\end{itemize}
+
+Following the data above, the development of a compiler half as good as the
+most immature analyzed implementation (YHC) would take approximately 4 years
+for a single person.
+
+
+Provided the available manpower, 4 years still seem excessive. Furthermore,
+most of the work would somehow be spent reinventing the wheel, since the
+embedded implementation can implicitly use most of the features in
+GHC\footnote{RTS, code generation, parsing, etc ..}, which are better
+coded than any implementation we could achieve, at 0-cost.
+
+
+On the other hand, when run against the Lava 2000 source tree (which is very
+similar to current embedded implementation, but in more mature state)
+\texttt{SLOCCount} gives the following result
+
+\begin{verbatim} 
+Lava2000/Modules $ sloccount .
+\end{verbatim}
+[..]
+\begin{verbatim}
+Total Physical Source Lines of Code (SLOC)                
+ = 3,800
+Development Effort Estimate, Person-Years (Person-Months) 
+ = 0.81 (9.75)
+\end{verbatim}
+
+
+It is important to note that current embedded compiler has already a few
+months of effort behind its back (a fact which was overlooked until now), which
+would be lost in case of deciding to develop a new compiler from scartch.
+
+The results of \texttt{SLOCCount} over current implementation are:
+
+\begin{verbatim} 
+ForSyDe/src $ sloccount HD.hs HD/
+\end{verbatim}
+[..]
+\begin{verbatim}
+Total Physical Source Lines of Code (SLOC)                
+ = 1,230
+Development Effort Estimate, Person-Years (Person-Months) 
+ = 0.25 (2.98)
+\end{verbatim}
+
+
+
+Implementing a full Haskell compiler is not feasible. However, the
+implementation could be simplified and the process network could probably be
+extracted statically, avoiding to implement the native code generator and RTS,
+(Run Time System), which are probably the most effort-absorbing tasks. This
+static analyzer, will from now on will be called PNE (Process Network
+Extractor). A PNE is more promising than a full compiler (potentially feasible
+at least) and thus, it will take the position of the traditional compiler for
+the rest of this comparison. The PNE falls, together with a prior Template
+Haskell implementation of Hydra \cite{hydra:th}, into the \textit{``Host
+  language transformations''} compiling approach described in \cite[section
+2.4.1.4]{forsyde:synthesis}.
+
+Now that the traditional compiling model was discarded from this comparison,
+it would be interesting to analyze the compiling steps proposed previously in
+the case of the PNE approach.
+
+
+\begin{itemize}
+
+\item Parsing, scanning and typechecking.
+
+  These should not be very complex and even the code of an open source
+  compiler could be reused. However, reusing the code of an external compiler
+  provides a dependency problem.
+      
+  It is tru that the embedded approach itself depends on GHC and Template
+  Haskell. However, that dependency is on the client side (i.e. using the
+  Template Haskell library and GHC as a normal user). In the case of reusing
+  code, an internal implementation is used. In this case, the compiler
+  developers don't have the duty of maintaining their internal API to avoid
+  regressions, since it is not assumed that external clients rely on it.
+  Thus, it is highly probable that the frontend would end up out of sync with
+  the external compiler unless an important maintenance effort was made.
+  
+
+\item Dealing with different modules, interface files, qualified names
+  and identifiers. Again, the embedded compiler gets this done for free.
+
+\item Identifying the process network.
+
+  Once an AST is obtained from the source, the process network
+  needs to be identified in order to be manipulated.
+
+  The PNE assumes that the process network can be identified
+  statically. However, ForSyDe models \textit{processes} as functions, which
+  are a first-class citizens in Haskell. That means they can be taken and
+  returned by other functions just like any other data type. Thus, it may not
+  be possible to statically identify the network without actually executing
+  the code. Let's illustrate this with a few examples.
+\begin{verbatim}
+myproc = mapSY (+1) . mapSY (+1)
+\end{verbatim}
+
+  The example above is straightforward. A PNE, which is a static analyzer
+  after all, could know how to build \texttt{myproc}. But contrary to what it
+  seems, the anylyzer is not behaving statically in this case. It simply knows
+  the definition of \texttt{(.)} and, in consequence, knows that it has to
+  connect them sequentially. After all, it is dynamically ``executing'' a
+  higher order function.
+
+  Now, let's put things slightly more complicated. Let's imagine that a
+  designer stores a list of processes for later use. Maybe not a common
+  thing to do in ForSyDe, but definitively possible in Haskell, and pretty
+  commonly done with functions in general purpose Haskell programs.
+
+\begin{verbatim}
+myFavNumProcs = [mapSY (+1), mapSY (-2), mapSY (+3)]
+\end{verbatim}
+
+  And then, let's imagine the designer simply uses the second one together
+  with the third one
+
+\begin{verbatim}
+myproc = (myFavNumProcs !! 2) . (myFavNumProcs !! 3)
+\end{verbatim}
+
+  The PNE could be made more intelligent by letting it know how \texttt{(!!)}
+  behaves but .. When should this extensions stop before creating a proper
+  runtime?
+
+  Let's for example, connect all the elements of \texttt{myFavNumProcs} in
+  sequence
+
+\begin{verbatim}
+import Control.Monad.Instances -- instantiation of Monad ((->)r)
+
+myproc = sequence myFavNumProcs
+\end{verbatim}
+
+As it seems, the problem of identifying the network without creating a full
+compiler is not simple.
+
+  A possible workaround to avoid execution could be putting certain
+  limitations in the use of Haskell so that static analysis could always
+  succeed.  Nevertheless, new problems arise:
+  \begin{itemize}
+  \item What should that limitation be?
+  \item What expressiveness price should be paid for it?
+  \item Provided that the Haskell language has to be limited, why not
+    considering to develop a custom language which better suits ForSyDe's
+    needs?
+  \end{itemize}
+
+  Even if there was a way to guarantee successful static analysis, it would
+  probably require a huge amount of effort unless the Haskell subset was
+  heavily limited.
+  
+\item Simulation backend
+
+  In this case, execution is impossible to bypass. 
+
+  Again, a solution could be using a external Haskell compiler to simulate the
+  code for us. This, once again, brings new problems
+  \begin{itemize}
+    \item It's half-baked between an embedded compiler and a traditional one.
+    \item A dependency on an external tool is created.
+    \item How to integrate our tool with the external compiler?  Simply
+      executing the code would require analyzing (parsing, typechecking etc
+      ...) the whole system description twice (once by the PNE and another one
+      by the external compiler).  Doing it neatly, if possible at all, would
+      probably require a lot of work.
+    \end{itemize}
+\end{itemize}
+
+Furthermore, limiting the Haskell subset used by ForSyDe would kill much of
+its flexibility, reducing some of its attraction to potential users. And
+again, considering that, in this case, ForSyDe would end up expressed in
+something different to plain Haskell, why not simply take Sheard's advice
+\cite{another} and develop a custom language finally \textit{``freeing
+  ourselves from the tyranny of the host language''}?
+
+
+
+\subsection{Comparison in terms of maintainability}
+
+In terms of maintainability, the bigger the application the more effort is
+required. Obviously, size is not the only factor. For instance, the design and
+complexity of the application are decisive factors, but, unfortunately, they
+cannot be easily quantified or predicted.
+
+Both the embedded compiler and the PNE would depend on external
+tools:
+
+\begin{itemize}
+\item In the case of the embedded compiler: GHC and Template Haskell.
+\item In the case of the PNE: An external compiler as a tool, and its parser
+  and typecheking sourcecode.
+\end{itemize}
+
+
+As it was mentioned in previous section, the embedded compiler acts merely as
+a client whereas the PNE depends on internal APIs and sourcecode which are more
+likely to change (external users are not assumed to rely on them) and thus,
+keeping the PNE in sync with the external compiler would require a high
+maintenance effort.
+
+Furthermore, an embedded implementation is, by design, integrated with the
+embedded-language library making it easy to maintain. That, together with the
+mentioned dependency and the size differences (to begin with, a PNE must
+include a parser and a typechecker, not required in an embedded compiler)
+gives the embedded approach a big advantage in terms of maintainability.
+
+\section{Conclusion}
+
+There is an urgent need for tools with which to experiment, confirm
+theoretical results and help determining more specific details about the
+ForSyDe methodology. The feedback provided by such an implementation can cause
+ForSyDe's underlying theory to be readapted. For that reason, the sooner it is
+developed the less regressions it will cause in new research results.
+
+On the other hand, there are, and probably will be, very limited human
+resources, requiring the implementation to be as effortless and maintainable
+as possible.
+
+An embedded compiler, the only currently available tool, still has some
+problems, but is more promising than traditional compilation in terms of
+effort and maintainability. Additionally, as opposed to a new standalone
+compiler or PNE, current implementation does not require to be built up from
+scratch since some effort has already been put on it.
+
+Furthermore, the embedded-compilation approach is still an innovative
+technique which has yet to be explored in depth, allowing the ForSyDe group to
+get some research results in this area.
+
+\subsection{Personal opinion}
+
+My personal and honest advice would be giving the embedded compiler a chance
+to get its problems fixed. If in a short period of time (3 months should be
+more than enough) a reasonable solution is not reached, I would be the first
+one wanting to switch to another approach. 
+
+Last, and once more, I would like to highlight the importance of quick
+practical feedback. Once the tool has given information about ForSyDe's
+viability in the real world, the implementation could be made more friendly
+for the designer, removing the implicit problems of the embedded-compiler. A
+new standalone compiler could then be created and even a custom
+specification-language could be designed. Until then, I think rapid and
+helpful results should be preferred over a long-term and stable
+implementation.
+
+\appendix
+
+\section{Initial decitions}
+
+As a result of the discussion generated by this document in various e-mail
+conversations and on-line telcos between A.Jantsch, I.Sander and myself,
+A.Acosta, it was agreed to continue the development of the embedded compiler
+described in \cite{forsyde:synthesis}.
+
+The development plan to follow is divided in two phases:
+
+\begin{enumerate}[1)]
+\item Development of an initial robust implementation. This should take a
+  maximum time of 3 months. In order to make the tool more intuitive and adapt
+  it to the requirements of potential designers, J.Zhu will cooperate with
+  A.Acosta testing it, giving suggestions and feedback. In a more detailed
+  way, this phase entails:
+  
+  \begin{itemize}
+  \item Polishing and finishing the, currently unstable, features of the
+    compiler offered in \cite{forsyde:synthesis}. This entails
+    \begin{itemize}
+    \item Finishing the implementation of Ports and Blocks \cite[section
+      3.7]{forsyde:synthesis}.
+    \item Improving the VHDL backend.
+    \item Improving the error reports of the compiler.
+    \item Supporting all the process constructors of ForSyDe Library.
+    \item Creating a web-page (hosted in a sub-directory of ForSyDe's website)
+      where the project will be described and will be downloadable under a BSD
+      license, as agreed with I.Sander and K.Claessen during the development
+      of \cite{forsyde:synthesis}.
+    \item Optionally (depending on time constraints) document the source with
+      Haddock\footnote{\url{http://www.haskell.org/haddock/}} and upload an
+      initial cabalized\footnote{\url{http://www.haskell.org/cabal/}} version
+      to
+      HackageDB\footnote{\url{http://hackage.haskell.org/packages/hackage.html}}
+    \end{itemize}
+  \item Adding a simulation backend which should support signals carrying
+    value-types as general as possible (including user-defined types and,
+    ideally, any type).
+  \end{itemize}
+
+\item Adding new features (yet to be defined in depth). This phase should
+  include adding new backends and features, maybe even the implementation
+  of the \textit{Transformational Refinement} stage.
+\end{enumerate}
+
+\section{The node-identification problem}
+During the discussion caused by this comparison an interesting question was
+risen \textit{``How can a process be identified once the network is built?''}.
+The solution to this, aparently, simple problem has a few applications:
+
+\begin{itemize}
+  \item User defined transformations. It is desirable that the designer
+    could be able to define his/her own transformations in the near future.
+    In order to achieve it, it is mandatory to have a way to
+    uniquely refer to each process in the network.
+  \item Graphical backend. In this case it would be desirable to have
+    user-defined labels in the resulting graphical representation
+    to aid locating particular parts of the design. In this case
+    uniqueness is not a requirement. 
+    
+    It is worth to note that Blocks and Block Instances are already designed
+    to provide this feature\footnote{It is mandatory to provide a textual
+      identifier to the Block and Block Instance constructors}.
+  \item Compiler errors. Error reports from the embedded compiler could be
+    dramatically enriched by providing the identifier of the originating
+    process.
+\end{itemize}
+
+
+
+\subsection{How to solve the problem?}
+
+A process network is, after all, a graph and has the same representation
+problems as a hardware netlist.
+
+In the case of a purely functional language as Haskell there are three
+approaches to represent a circuit, as described in \cite[section
+2.4.1]{forsyde:synthesis}:
+
+\begin{itemize}
+  \item Explicit labeling
+  \item Monads (or even Arrows)
+  \item Observable sharing.
+  \item Host language transformations.
+\end{itemize}
+
+The embedded compiler adopted Observable Sharing \cite{osharing} from Lava. In
+this way the processes (or nodes) of the process network can already be
+uniquely identified by their reference.
+
+Observable Sharing, in spite of its drawbacks\footnote{mainly the inclusion of
+  side-effects which fortunately have limited and controlled semantic
+  implications \cite[section 4]{osharing}}, does not suffer from the
+identifier-clash problem of Explicit Labeling nor the inadequate syntax of the
+monadic style. However, to achieve its goal, it generates the identifiers of
+each node (references in, this case) automatically, making it unsuitable for
+our actual aim: an automatically-generated identifier cannot later be used nor
+give any feedback to the designer in applications presented above.
+
+
+For this reason, even if identifiers are likely to be replicated by the
+designer causing clashes, it would be possible to reconsider explicit
+labeling (as a complement, not a replacement, to Observable Sharing).
+For example:
+
+
+\begin{verbatim}
+addOne = mapSY "addOne" (+1)
+\end{verbatim}
+
+This approach would fit perfectly with either the embedded compiler or even a
+PNE and, furthermore, name clashes could be detected by traversing the network
+since nodes are already distinguishable due to the use of Observable Sharing.
+
+However, as it could be seen in the previous trivial example, it has an
+evident problem: verbosity. Less-verbose process constructors could be
+provided for the cases in which identifiers were not significant (an automatic
+one could be generated later on) but, Why not solving the verbosity problem by
+making use of the process name, instead of having to provide an extra string?
+
+\begin{verbatim}
+addOne = mapSY (+1)
+\end{verbatim}
+
+The previous example gives enough information, \texttt{addOne}, to build a
+non-automatically-generated identifier. However this static analysis approach
+has important problems:
+
+\begin{itemize}
+
+\item It only fits with the PNE approach. The name \texttt{addOne} would not
+  visible to the embedded compiler unless a new Template Haskell extension was
+  made.
+
+\item It does not either save us from the identifier-clash problem
+
+\begin{verbatim}
+myNet = subNet1 . subNet2 
+
+subNet1 = addSomething
+ where addSomething = mapSY (+1)
+
+subNet2 = addSomething
+ where addSomething = mapSY (+2)
+\end{verbatim}
+
+  The functions (processes) from the main scope obviously cannot have the same
+  name, but that does not happen to subclauses with different scopes.
+
+\item Like a PNE, due to the first-citizen status of functions in Haskell, it
+  suffers from a static-analysis problem: sometimes the function (process)
+  names are not provided.
+
+  For example:
+
+\begin{verbatim}
+myNetwork = mapSY (+1) . mapSY (*2)
+\end{verbatim}
+
+  The processes \texttt{mapSY (+1)} and \texttt{mapSY (+2)} do not have a
+  name.
+
+  If the designer is allowed to use the whole Haskell standard, he/she is not
+  forced to provide the process name in every case.
+
+\end{itemize}
+
+
+
+
+\nocite*
+\bibliography{EmbeddedvsTraditional} \bibliographystyle{unsrt}
+
+\end{document}

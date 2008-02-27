@@ -1,0 +1,21 @@
+\begin{picture}(0,0)%
+\includegraphics{OutPort.pdf}%
+\end{picture}%
+\setlength{\unitlength}{4144sp}%
+%
+\begingroup\makeatletter\ifx\SetFigFontNFSS\undefined%
+\gdef\SetFigFontNFSS#1#2#3#4#5{%
+  \reset@font\fontsize{#1}{#2pt}%
+  \fontfamily{#3}\fontseries{#4}\fontshape{#5}%
+  \selectfont}%
+\fi\endgroup%
+\begin{picture}(639,1959)(5047,-2953)
+\put(5626,-1816){\makebox(0,0)[rb]{\smash{{\SetFigFontNFSS{10}{12.0}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}\signal{o_3}}%
+}}}}
+\put(5626,-1501){\makebox(0,0)[rb]{\smash{{\SetFigFontNFSS{10}{12.0}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}\signal{o_2}}%
+}}}}
+\put(5626,-1186){\makebox(0,0)[rb]{\smash{{\SetFigFontNFSS{10}{12.0}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}\signal{o_1}}%
+}}}}
+\put(5671,-2761){\makebox(0,0)[rb]{\smash{{\SetFigFontNFSS{10}{12.0}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}\signal{o_m}}%
+}}}}
+\end{picture}%

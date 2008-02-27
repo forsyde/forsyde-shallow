@@ -1,0 +1,273 @@
+\section{Conclusions}
+ForSyDe provides a methodology to design systems with a high level of
+abstraction in mind. An initial implementation of ForSyDe, based upon
+Haskell, was available before the research related to this thesis began.
+However, the two key stages of ForSyDe's design flow,
+\textit{Transformational Design Refinement} and \textit{Implementation
+  Mapping} remained unimplemented. As a result of this thesis, ForSyDe
+now counts with a new VHDL translator which automates the
+\textit{Implementation Mapping} phase.
+
+An initial study was made to try to take advantage of previous work in
+the Hardware Design and Functional Programming field. Consequently, the
+compiler is inspired on Lava, a successful hardware design environment
+based upon Haskell too.
+
+The embedded approach, adopted from Lava, has allowed to develop a
+full compiler during the limited time frame of a master's thesis.  On
+the other hand, implementing a stand-alone Haskell compiler or a
+customized backend would have been unfeasible, given the associated
+complexity of such a task together with the time and man-power
+limitations. In ideal conditions, even if such a compiler was
+developed, it would certainly had been difficult to maintain.  With
+the embedded approach, the compiler is integrated with ForSyDe's
+library, making it maintainable, easy to distribute and independent of
+third party tools.
+
+Furthermore, the compiler was designed to be extensible, providing a
+framework where to experiment with ForSyDe and easily include other backends
+such as simulation, verification, graphical representation of ForSyDe
+models etc$\dots$ . In order to ease the incorporation of new developers,
+the compiler's use and implementation was thoroughly documented (see
+chapter \ref{chap:user} and appendix \ref{chap:hacker}).
+
+In addition to the initial goals of the thesis, an effort was made add
+features lacked by Lava to the compiler. Lava, at the moment of
+writing this report, does not provide a way to create hierarchical
+designs (in the sense of reusing hierarchical components), and lacks
+the concept of ports, which make models more intuitive and readable.
+The compiler implemented during this thesis has overtaken those
+limitations by including three new structures: \textit{Port},
+\textit{Block} and \textit{Block Instance} which where described in
+chapter \ref{chap:design}. Those features have been needed in Lava for
+a long time. As a matter of fact, Koen Claessen, a member of Lava's
+research group, is currently developing a new version of Lava in which
+components are explicit, making them accessible to the designer.
+
+
+Even if the compiler is based on Lava, the characteristics of
+ForSyDe's implementation have made impossible to simply replicate Lava's
+design. ForSyDe is much more behavioural, whereas Lava is purely
+structural, its functions are monomorphic and the type of signals
+accepted by the language are limited and hardcoded in the compiler. To
+overcome those differences, the compiler makes use of metaprogramming
+through Template Haskell in order to access the AST (\textit{Abstract
+  Syntax Tree}) of the design. Curiously, in parallel to this thesis a
+similar solution \cite{ocaml} was designed by IBM's Andrew Martin for the OCaml
+programming language. Martin's solution makes use of
+MetaOCaml, which shares certain similarities with Template Haskell.
+
+
+\subsection{Goal analysis}
+In order to objectively conclude whether the goals of this thesis
+where achieved, this section summarizes the obtained results based on
+the goals outlined in chapter \ref{chap:intro}.
+
+
+\begin{enumerate}[1)]
+\item \textit{Study of ForSyDe and related work relevant to this thesis.}
+
+  In the initial phase of this thesis, a deep study of ForSyDe and its
+  implementation took place. As a result, chapter \ref{chap:intro} tries to
+  introduce ForSyDe to the reader in a friendly way.
+  
+  Then, a big effort was devoted to analyze the previous work in the
+  Functional Programming and Hardware Design field, in order to make
+  use of it during the development of the compiler.  Chapter
+  \ref{chap:vs} gives an overview of it. Many of the features
+  described in that chapter ended up incorporated in the compiler.
+   
+
+\item \textit{Definition of a relevant subset of Haskell that is accepted by
+  the synthesis.}
+
+With the exception of \texttt{HDFun}, the whole Haskell standard is
+supported by the compiler, thanks to its embedded design. The concrete
+limitations of \texttt{HDFun} are described in chapter
+\ref{chap:design}.  However, due to the use of Template Haskell, it
+should be possible to easily extend the supported language subset.
+
+Another unavoidable limitation of the compiler is the set of signal
+types it can deal with. Due to the time and man-power restrictions of
+the thesis it was decided to only support \texttt{Int} and
+\texttt{Bool} signals. However, in the same way as \texttt{HDFun}, the
+signal-type subset of the compiler was implemented in a way which makes
+it fairly easy to extend (see appendix \ref{chap:hacker}).
+
+\item \textit{Development of the synthesis tool according to
+     \cite{forsyde:thesis}.}
+
+   \cite{forsyde:thesis} presents a template-based translation
+  approach, which was not implemented before this thesis took
+  place.
+
+  The template approach was considered and later replaced with a
+  AST-driven implementation for various reasons:
+  
+  \begin{itemize}
+  \item Templates lead to an obscure application design.  
+    
+    Using simple text to represent the structure of the target
+    language made the compiler design unorganized and more difficult
+    to understand.  A structured XML approach would have been
+    substantially better (at least regarding the organization of the
+    program), but it would have entailed transforming XML to usable
+    VHDL at certain point, causing an undesired overhead.
+    
+    
+    
+  \item Lack of flexibility. 
+
+    Using in-memory data structures to represent the target language
+    makes the translation more flexible and easy to extend. Modifying
+    or extending the AST representation of VHDL is easier and cleaner
+    than dealing with plain text.
+    
+  \end{itemize}
+
+  
+\item \textit{Evaluation of the tool, identifying and including
+    possible improvements.}
+
+  The tool was tested with a set of source examples written for that
+  purpose.  However, due to the research nature of the tool and the
+  lack of a user-base, it was not possible to check if the compiler
+  suits the needs of future users.
+  
+  Nevertheless, the compiler was later reviewed and additional
+  features such as circuit ports and hierarchical design were
+  identified and incorporated in the compiler.
+  
+
+\item \textit{Detailed documentation of the tool.}  
+
+  This thesis reflects the big effort done to exhaustively document
+  the compiler. Chapters \ref{chap:design} and \ref{chap:user}
+  describe the design and use of the compiler, while appendix
+  \ref{chap:hacker} is intended to give implementation details for
+  future developers.
+  
+
+\end{enumerate}
+
+
+\section{Further work}
+
+The compiler presented in this thesis allows to synthesize hardware
+from ForSyDe specifications and establishes a development framework
+where to experiment with ForSyDe. However, the compiler can still only
+considered a research tool. In order to obtain a realistic development
+environment there is still a lot of work to be done. The following
+list proposes general and specific tasks which would help to transform
+the compiler into an industrial-strength solution.
+
+\begin{itemize}
+\item \textbf{Automatization of the \textit{Transformational Design
+      Refinement} stage} 
+
+  The compiler implements one of the two main phases of ForSyDe's
+  design flow, the aforementioned \textit{Implementation Mapping}
+  stage.  However, the \textit{Transformational Design Refinement}
+  stage has not still been automated. This stage is essential, since
+  it is the way to bridge the high abstraction level imposed by
+  ForSyDe, taking advantage of ForSyDe's strong formal base. Thus, it
+  of major importance to put it in practice through an appropriate
+  tool.  A good way to do it, would be extending the compiler by
+  adding an initial transformation phase.
+  
+\item \textbf{Development of a test suite}
+  
+  During the development of the compiler, several sample design models
+  were tested. However that cannot be considered a way to test the
+  compiler thoroughly.
+  
+  For that reason, it is advisable to create a robust test suite to
+  detect bugs which remained unnoticed or were introduced during
+  development.
+  
+\item \textbf{Inclusion of new backends}
+
+  To date, the compiler can only process a ForSyDe model in order to perform a
+  translation to VHDL. However, other backends would certainly be useful:
+  \begin{itemize}
+  \item \textbf{Simulation}. Currently, a model developed with
+    \texttt{HDSignal}s can only be simulated from its VHDL
+    translation. A simulation backend would allow to avoid translating
+    to VHDL and to test models without leaving ForSyDe's development
+    environment. Furthermore it could be used to provide
+    interoperability between the \texttt{Signal} and \texttt{HDSignal}
+    types.
+  \item \textbf{Graphical representation backend}. This backend would
+    allow to generate a graph of the ForSyDe models, which could be
+    used to easily and automatically document them.
+  
+  \end{itemize}
+  
+
+\item \textbf{Development of a graphical frontend} 
+
+  The introduction of a graphical CAD (\textit{Computer Aided Design})
+  tool would allow to design models by simply and visually connecting
+  process constructors and thus, it would save the designer from
+  having a functional programming background, attracting new users.
+  
+
+\item \textbf{Support for new signal types}
+
+  The compiler can only deal with signals carrying \texttt{Int} and
+  \texttt{Bool} values. In order to support the full ForSyDe
+  specification \cite{forsyde:thesis} it would be necessary to extend
+  that subset, including, for instance, enumerated types. Appendix
+  \ref{chap:hacker} gives guidelines to perform this extension.
+
+\item \textbf{Extension of \texttt{HDFun}'s Haskell subset}
+  
+  Current limitations of \texttt{HDFun}s are outlined in chapter
+  \ref{chap:design}. Their supported Haskell subset makes the compiler
+  functional but is probably not enough for a realistic production
+  environment. Again, appendix \ref{chap:hacker} documents how to
+  extend \texttt{HDFun}.
+  
+
+\item \textbf{Development of \texttt{Block} and \texttt{HDFun}
+    combinational libraries}
+
+  Process constructors are easily combinable, through, for example,
+  sequential and parallel composition. The same idea could be applied
+  to the \texttt{Block} and \texttt{HDFun} types by implementing
+  appropriate combinational libraries.
+  
+
+\item \textbf{Promotion of ForSyDe} 
+
+  Many research projects like ForSyDe remain unknown to the main public
+  due to their closed development model.  In order to promote a
+  broader adoption and development it would be necessary to make ForSyDe
+  more appealing for, at least, the Haskell community. That entails
+  opening its development together with making it easier to install,
+  distribute and develop. A few modifications in ForSyDe's development
+  model would be advisable:
+  
+  \begin{itemize}
+  \item Document ForSyDe with
+    Haddock\footnote{\url{http://www.haskell.org/haddock/}}, the most
+    used Haskell documentation system.
+  \item Create an open mailing list where to discuss the development
+    of ForSyDe and give support to its users.
+  \item Make the latest development version of ForSyDe available
+    through a version control system
+    (Darcs\footnote{\url{http://www.abridgegame.org/darcs/}} is the most
+    widely-used within the Haskell community).
+  \item Package ForSyDe's stable versions with
+    Cabal\footnote{\url{http://www.haskell.org/cabal/}} and upload
+    them to
+    HackageDB\footnote{\url{http://hackage.haskell.org/}} in
+    order to make them more accessible and easier to install. It is
+    worth to note that including the project in HackageDB would
+    require to change the module naming scheme of ForSyDe, taking
+    global hierarchical naming in account, to avoid name clashes with
+    other projects.
+    
+\end{itemize}
+
+\end{itemize}

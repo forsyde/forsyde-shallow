@@ -1,0 +1,21 @@
+\begin{picture}(0,0)%
+\includegraphics{mapSY.pdf}%
+\end{picture}%
+\setlength{\unitlength}{4144sp}%
+%
+\begingroup\makeatletter\ifx\SetFigFontNFSS\undefined%
+\gdef\SetFigFontNFSS#1#2#3#4#5{%
+  \reset@font\fontsize{#1}{#2pt}%
+  \fontfamily{#3}\fontseries{#4}\fontshape{#5}%
+  \selectfont}%
+\fi\endgroup%
+\begin{picture}(1464,474)(1159,-1153)
+\put(1891,-871){\makebox(0,0)[b]{\smash{{\SetFigFontNFSS{12}{14.4}{\familydefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}$\mathit{mapSY}$}%
+}}}}
+\put(1891,-1051){\makebox(0,0)[b]{\smash{{\SetFigFontNFSS{12}{14.4}{\familydefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}$(f)$}%
+}}}}
+\put(1351,-871){\makebox(0,0)[rb]{\smash{{\SetFigFontNFSS{12}{14.4}{\familydefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}\signal{i}}%
+}}}}
+\put(2341,-871){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{12}{14.4}{\familydefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}\signal{o}}%
+}}}}
+\end{picture}%
