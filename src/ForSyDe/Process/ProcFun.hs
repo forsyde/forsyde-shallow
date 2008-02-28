@@ -57,7 +57,8 @@ data DefArg = FunAST ProcFunAST | ValAST ProcValAST
 procFun2Dyn :: Typeable a => ProcFun a -> ProcFun Dynamic
 procFun2Dyn f = f{val= toDyn (val f)}
 
-
+-- | tranform the arguments and return value of
+--   a ProcFun to dynamic
 contProcFun2Dyn :: (Typeable a, Typeable b, Functor container) =>
                    ProcFun (container a -> b) -> 
                    ProcFun (container Dynamic -> Dynamic)

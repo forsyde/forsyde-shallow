@@ -16,7 +16,9 @@ category:       DSEL
 tested-with:    GHC==6.8.1
 
 Library
-  build-depends:   packedstring,
+  build-depends:   type-level,
+                   parameterized-data,
+                   packedstring,
                    base, 
                    regex-posix, 
                    mtl, 
@@ -29,7 +31,6 @@ Library
                    ForSyDe,
                    ForSyDe.System,
                    ForSyDe.AbsentExt,
-                   ForSyDe.Vector,
                    ForSyDe.DFT,
                    ForSyDe.FIR,
                    ForSyDe.Signal,

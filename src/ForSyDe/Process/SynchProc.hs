@@ -43,9 +43,11 @@ import ForSyDe.Process.ProcVal
 import ForSyDe.OSharing
 import ForSyDe.Netlist
 import ForSyDe.Signal
-import ForSyDe.Vector
 import ForSyDe.AbsentExt
 
+import qualified Data.Param.FSVec as V
+import Data.Param.FSVec hiding ((++), map)
+import Data.TypeLevel (Nat, toInt)
 import Data.Maybe
 import Data.Dynamic
 import Data.Typeable
@@ -219,20 +221,20 @@ zipWith6SY id f s1 s2 s3 s4 s5 s6 =
 -- function onto all signals in a vector of signals. The identifier is used 
 -- as the identifier prefix of the processes created (a number starting with 1
 -- will be appended to each identifier)
-mapxSY  :: (Typeable a, Typeable b) => 
+mapxSY  :: (Nat s, Typeable a, Typeable b) => 
            ProcId
         -> ProcFun (a -> b) 
-        -> Vector (Signal a) 
-        -> Vector (Signal b)
-mapxSY id f = zipWithV (\n s -> mapSY (id ++ show n) f s) 
-                       (vector [(1::Int)..]) 
+        -> FSVec s (Signal a) 
+        -> FSVec s (Signal b)
+mapxSY id f = V.zipWith (\n s -> mapSY (id ++ show n) f s) 
+                        (V.reallyUnsafeVector [(1::Int)..]) 
 
 -- | The process constructor 'zipWithxSY' works as 'zipWithSY', but takes a 
 --   vector of signals as input.                                             
-zipWithxSY      :: (Typeable a, Typeable b) => 
+zipWithxSY      :: (Nat s, Typeable a, Typeable b) => 
                    ProcId
-                -> ProcFun (Vector a -> b) 
-                -> Vector (Signal a) 
+                -> ProcFun (FSVec s a -> b) 
+                -> FSVec s (Signal a) 
                 -> Signal b
 zipWithxSY id f sv = Signal (newNodeOutSig nodeRef ZipWithxSYOut outType)
   where (_, procFunRetType, _) = unArrowT ((typ.ast) f)
@@ -241,7 +243,14 @@ zipWithxSY id f sv = Signal (newNodeOutSig nodeRef ZipWithxSYOut outType)
         --       returned by unArrowT will always be empty and can be ignored. 
         outType = signalize procFunRetType
         nodeRef = newURef $ Proc id $ 
-                    ZipWithxSY (contProcFun2Dyn f) (mapV unSignal sv) 
+                    ZipWithxSY (V.length sv)
+                               ((contProcFun2Dyn.vecProcFun2List) f) 
+                               (map unSignal (V.fromVector sv)) 
+        -- Transform the vector argument of a procfun into a list
+        vecProcFun2List :: ProcFun (FSVec s a -> b) -> 
+                           ProcFun ([a] -> b)
+        vecProcFun2List f = f{val = \x -> (val f) (reallyUnsafeVector x)}
+
                                    
 
 -------------------------------------
@@ -557,7 +566,7 @@ sourceSY id f s0 = o
 
 
 
--- FIMXE: implement correctly
+
 -- | The process constructor 'fillSY' creates a process that 'fills' a signal 
 --   with present values by replacing absent values with a given value. The 
 --   output signal is not any more of the type 'AbstExt'.        
@@ -766,67 +775,70 @@ unzip6SY s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1) outType),
                        toDyn t6]
 
 -- | The process 'zipxSY' \"zips\" a signal of vectors into a vector of signals.
-zipxSY :: Typeable a =>
-          Vector (Signal a) 
-       -> Signal (Vector a)
+zipxSY :: (Nat s, Typeable s, Typeable a) =>
+          FSVec s (Signal a) 
+       -> Signal (FSVec s a)
 zipxSY = zipWithxSY "zipxSY" vectId 
-  where vectId = $(newProcFun [d| vectId :: Vector a -> Vector a
+  where vectId = $(newProcFun [d| vectId :: FSVec s a -> FSVec s a
                                   vectId v = v |]) 
 
 -- | The process 'unzipxSY' \"unzips\" a vector of n signals into a signal of 
 --   vectors.
-unzipxSY :: forall a . Typeable a => 
-            Int -- ^n
-         -> Signal (Vector a) 
-         -> Vector (Signal a)
-unzipxSY n vs = mapV (\tag -> Signal (newNodeOutSig nodeRef tag outType) )
-                     (vector [UnzipxSYOut i | i <- [1..n]])
-  where nodeRef = newURef $ Proc "unzipxSY" $
+unzipxSY :: forall s a . (Typeable s, Nat s, Typeable a) => 
+            Signal (FSVec s a) 
+         -> FSVec s (Signal a)
+unzipxSY vs = V.map (\tag -> Signal (newNodeOutSig nodeRef tag outType) )
+                    (reallyUnsafeVector [UnzipxSYOut i | i <- [1..n]])
+  where n = toInt (undefined :: s)
+        nodeRef = newURef $ Proc "unzipxSY" $
                     UnzipxSY n unvector (unSignal vs)
         -- FIXME: change the undefined
         outType = undefined
-        unvector :: Dynamic -> Vector Dynamic
-        unvector i = let v = ((fromJust.fromDynamic) i) :: Vector a
-                     -- FIXME: include the error in ForSyDe.ForSyDeErr
-                     -- FIMXE: improve efficiency (call to length)
-                     in if lengthV v /= n 
-                           then error "unzipxSY length error" 
-                           else mapV toDyn v
+        unvector :: Dynamic -> [Dynamic]
+        unvector i = let v = ((fromJust.fromDynamic) i) :: FSVec s a
+                     in map toDyn (V.fromVector v)
 
 -- | The process 'fstSY' selects always the first value from a signal of pairs
 fstSY :: (Typeable a, Typeable b) => Signal (a,b) -> Signal a
 fstSY = mapSY "fst" first
   where first = $(newProcFun [d| first :: (a,b) -> a
-                                 first (a,b) = a |])
+                                 first (a,_) = a |])
 
 
 -- | The process 'sndSY' selects always the second value from a signal of pairs
 sndSY :: (Typeable a, Typeable b) => Signal (a,b) -> Signal b
 sndSY = mapSY "snd" second
   where second = $(newProcFun [d| second :: (a,b) -> b
-                                  second (a,b) = b |])
+                                  second (_,b) = b |])
 
 
 
 -- | The function 'groupSY' groups values into a vector of size n, which takes 
 --   n cycles. While the grouping takes place the output from this process 
 --   consists of absent values.
-
-groupSY :: (Typeable a, Lift a) => 
-           ProcId -> Integer -> Signal a -> Signal (AbstExt (Vector a))
-groupSY id k = mooreSY id (f `defArgVal` k)  (g `defArgVal` k) s0 
+groupSY :: forall k a . (Nat k, Typeable k, Lift k, Typeable a, Lift a) => 
+           ProcId -> k -> Signal a -> Signal (AbstExt (FSVec k a))
+groupSY id k = mooreSY id (f `defArgVal` kV)  (g `defArgVal` kV) s0 
   where
-    s0 = NullV
-    f = $(newProcFun [d| f :: Integer -> Vector a -> a -> Vector a
-                         f k v x | (lengthV v) == 0 = unitV x
-	                         | (lengthV v) == k = unitV x 
-	                         | otherwise        = v <: x |])
-    g = $(newProcFun [d| g :: Integer -> Vector a -> AbstExt (Vector a) 
-                         g k v   | (lengthV v) == 0 = Prst NullV
-                         g k v   | (lengthV v) == k = Prst v
-                         g k _   | otherwise        = Abst |])
-
-
+   kV = toInt k
+   -- FIXME, FIXME, this won't work in th VHDL backend
+   --               due to the undefined and probably unsafeReplace
+   s0 = (0, V.copy k (undefined :: a)) 
+   f = $(newProcFun [d| f :: Nat k' => Int -> (Int, FSVec k' a') -> a' -> 
+                             (Int, FSVec k' a')
+                        f k (count,v)  a =
+                           (count+1 `mod` k, unsafeReplace v count a) |])
+   g = $(newProcFun [d| g :: Int -> (Int, FSVec k' a') -> AbstExt (FSVec k' a') 
+                        g k (count,v)  
+                                | k-1 == count = Prst v
+                                | otherwise    = Abst |])
+   unsafeReplace :: Nat s => FSVec s a' -> Int -> a' ->FSVec s a'
+   unsafeReplace v i a = 
+      reallyUnsafeVector $ unsafeReplace' (fromVector v) i a
+     where unsafeReplace' []     _ _ = []
+           unsafeReplace' (_:xs) 0 y = (y:xs)
+           unsafeReplace' (x:xs) n y = x : (unsafeReplace' xs (n - 1) y)
+  
 ----------------------------
 -- Internal Helper Functions
 ----------------------------

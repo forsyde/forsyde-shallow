@@ -34,10 +34,12 @@ module ForSyDe.FIR (fir) where
 
 import ForSyDe.Signal
 import ForSyDe.Process
-import ForSyDe.Vector
 
+import Data.TypeLevel.Num (Nat, Pos)
+import Data.Param.FSVec
+import qualified Data.Param.FSVec as V
 import Data.Typeable
-import Language.Haskell.TH.Syntax
+import Language.Haskell.TH.Syntax (Lift)
 
 -- | All kinds of FIR-filters can now be modeled by means of 'fir'. The only argument needed is the list of coefficients, which is given as a vector of any size. To illustrate this, an 8-th order band pass filter is modeled as follows. 
 --
@@ -46,26 +48,29 @@ import Language.Haskell.TH.Syntax
 -- >                   0.09562326700432, 0.08131651217682, 0.06318761339784 ])
 -- 
 
-fir :: (Fractional b, Lift b, Typeable b) => Vector b -> Signal b -> Signal b
+fir :: (Fractional b, Lift b, Typeable b, Pos s, Typeable s) => 
+       FSVec s b -> Signal b -> Signal b
 fir h = innerProd h . sipo k 0.0
-    where k = lengthV h
+    where k = V.lengthT h
 
-sipo :: (Fractional a, Lift a, Typeable a) =>
-        Int -> a -> Signal a -> Vector (Signal a)
-sipo n s0 = unzipxSY n . scanldSY "siposcanldSY" srV initState
-    where initState = copyV n s0
-          srV = $(newProcFun [d| srV :: Vector a -> a -> Vector a
-                                 srV v a = shiftrV v a |])
+sipo :: (Pos s, Typeable s, Fractional a, Lift a, Typeable a) =>
+        s -> a -> Signal a -> FSVec s (Signal a)
+sipo n s0 = unzipxSY . scanldSY "siposcanldSY" srV initState
+    where initState = V.copy n s0
+          srV = $(newProcFun [d| srV :: Pos s => FSVec s a -> a -> FSVec s a
+                                 srV v a = V.shiftr v a |])
 
-innerProd :: (Fractional a, Lift a, Typeable a) =>
-             Vector a -> Vector (Signal a) -> Signal a
+innerProd :: (Fractional a, Lift a, Typeable a, Nat s, Typeable s) =>
+             FSVec s a -> FSVec s (Signal a) -> Signal a
 innerProd h = zipWithxSY "innerProd" (ipV `defArgVal` h)
    where ipV = $(newProcFun 
-                  [d| ipV :: Num a => Vector a -> Vector a -> a
-                      ipV h x 
-                         | nullV h || nullV x  = 0
-	                 | otherwise = 
-                              (headV h)*(headV x) + ipV (tailV h) (tailV x) |])
+                  -- We could make the inner product in one traverse 
+                  -- but FSVecs don't allow recursive calls
+                  -- (they don't allow to check the constraints statically)
+                  -- Thus, we traverse the vector twice
+                  [d| ipV :: (Nat s, Num a) => FSVec s a -> FSVec s a -> a
+                      ipV v1 v2 = 
+                          V.foldl (+) 0 $ V.zipWith (*) v1 v2 |])
 
 
 

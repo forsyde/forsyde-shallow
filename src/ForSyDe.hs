@@ -17,7 +17,6 @@ module ForSyDe
  module ForSyDe.System,
  module ForSyDe.Process,
  module ForSyDe.Backend,
- module ForSyDe.Vector,
  module ForSyDe.AbsentExt,
  module ForSyDe.DFT,
  module ForSyDe.FIR) where
@@ -26,7 +25,6 @@ import ForSyDe.Signal (Signal)
 import ForSyDe.Process
 import ForSyDe.System
 import ForSyDe.Backend
-import ForSyDe.Vector
 import ForSyDe.AbsentExt
 import ForSyDe.DFT
 import ForSyDe.FIR

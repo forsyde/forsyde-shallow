@@ -37,12 +37,12 @@ import Control.Monad.ST (ST)
 -- Instances to traverse a netlist Node (and implicitly the whole netlist)
 
 instance DF.Foldable NlProc where
- foldMap f (ZipWithNSY _ is) = DF.foldMap f is
- foldMap f (ZipWithxSY _ is) = DF.foldMap f is
- foldMap f (UnzipNSY _ _ i)  = f i
- foldMap f (UnzipxSY _ _ i)  = f i                                  
- foldMap f (DelaySY _ i)     = f i
- foldMap f (SysIns  _ i)     = DF.foldMap (f.snd) i
+ foldMap f (ZipWithNSY _ is)   = DF.foldMap f is
+ foldMap f (ZipWithxSY _ _ is) = DF.foldMap f is
+ foldMap f (UnzipNSY _ _ i)    = f i
+ foldMap f (UnzipxSY _ _ i)    = f i                                  
+ foldMap f (DelaySY _ i)       = f i
+ foldMap f (SysIns  _ i)       = DF.foldMap (f.snd) i
 
 
 
@@ -52,12 +52,12 @@ instance DF.Foldable NlNode where
  foldMap f (Proc _ proc) = DF.foldMap f proc
 
 instance Functor NlProc where
- fmap f (ZipWithNSY pf is) = ZipWithNSY pf (fmap f is)
- fmap f (ZipWithxSY pf is) = ZipWithxSY pf (fmap f is)
- fmap f (UnzipNSY n pf i)  = UnzipNSY n pf (f i)
- fmap f (UnzipxSY n pf i)  = UnzipxSY n pf (f i)                       
- fmap f (DelaySY c i)      = DelaySY c (f i)
- fmap f (SysIns def is)    = SysIns def (fmap (fmap f) is)
+ fmap f (ZipWithNSY pf is)   = ZipWithNSY pf (fmap f is)
+ fmap f (ZipWithxSY n pf is) = ZipWithxSY n pf (fmap f is)
+ fmap f (UnzipNSY n pf i)    = UnzipNSY n pf (f i)
+ fmap f (UnzipxSY n pf i)    = UnzipxSY n pf (f i)                       
+ fmap f (DelaySY c i)        = DelaySY c (f i)
+ fmap f (SysIns def is)      = SysIns def (fmap (fmap f) is)
 
 
 
@@ -67,12 +67,12 @@ instance Functor NlNode where
  fmap f (Proc id proc)       = Proc id (fmap f proc) 
 
 instance DT.Traversable NlProc where 
- traverse f (ZipWithNSY pf is) = ZipWithNSY pf <$> DT.traverse f is
- traverse f (ZipWithxSY pf is) = ZipWithxSY pf <$> DT.traverse f is
- traverse f (UnzipNSY n pf i)  = UnzipNSY n pf <$> f i
- traverse f (UnzipxSY n pf i)  = UnzipxSY n pf <$> f i
- traverse f (DelaySY c i)      = DelaySY c <$> f i
- traverse f (SysIns def is)    = SysIns def <$> DT.traverse f' is 
+ traverse f (ZipWithNSY pf is)   = ZipWithNSY pf <$> DT.traverse f is
+ traverse f (ZipWithxSY n pf is) = ZipWithxSY n pf <$> DT.traverse f is
+ traverse f (UnzipNSY n pf i)    = UnzipNSY n pf <$> f i
+ traverse f (UnzipxSY n pf i)    = UnzipxSY n pf <$> f i
+ traverse f (DelaySY c i)        = DelaySY c <$> f i
+ traverse f (SysIns def is)      = SysIns def <$> DT.traverse f' is 
   where f' (id,s) = (,) id <$> f s
 
 

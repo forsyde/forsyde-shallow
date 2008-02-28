@@ -27,7 +27,7 @@ import ForSyDe.System.SysDef
 import ForSyDe.Process.ProcFun (ProcFun(..))
 import ForSyDe.ForSyDeErr
 import ForSyDe.Process.ProcVal (ProcVal(..))
-import ForSyDe.Vector
+
 
 import Language.Haskell.TH (Type)
 import Data.Dynamic
@@ -80,22 +80,25 @@ data  NlNode inputi =
 
 
 -- | A process node
+--   Note that vectors and transformed to lists puls an Int parameter 
+--   indicating its size
 data NlProc inputi = 
  ZipWithNSY (ProcFun Dynamic) -- Process function in dynamic form
             [inputi]                                | -- ^ mapSY and zipWithSY*
                                                       --   processes
- ZipWithxSY (ProcFun (Vector Dynamic -> Dynamic)) -- Process function 
+ ZipWithxSY Int -- Size of input vectors (number of inputs)
+            (ProcFun ([Dynamic] -> Dynamic)) -- Process function 
                                                   -- with dynamic arguments  
-            (Vector inputi)                         | -- ^ Vector version 
-                                                      --   of zipWithNSY
+            ([inputi])                         | -- ^ Vector version 
+                                                 --   of zipWithNSY
  UnzipNSY Int -- Number of outputs
           (Dynamic -> [Dynamic]) -- Dynamic version of the zipping function
                                  -- for the concrete, monomorphic types
                                  -- of the process
           inputi                                    | -- ^ Inverse of
                                                       -- ZipWithNSY
- UnzipxSY Int -- Number of outputs
-          (Dynamic -> Vector Dynamic)             
+ UnzipxSY Int -- Size of output vectors (Number of outputs)
+          (Dynamic -> [Dynamic])             
           inputi                                    | -- ^ Vector version
                                                       --   of UnzipSY 
 
@@ -139,7 +142,7 @@ outTags (Const _) = [ConstOut]
 outTags (Proc _ proc) =
  case proc of
    ZipWithNSY _ _ -> [ZipWithNSYOut]
-   ZipWithxSY _ _ -> [ZipWithxSYOut] 
+   ZipWithxSY _ _ _ -> [ZipWithxSYOut] 
    UnzipNSY nout _ _  -> map UnzipNSYOut [1..nout]
    UnzipxSY nout _ _  -> map UnzipxSYOut [1..nout]
    DelaySY    _ _  -> [DelaySYOut]
@@ -219,8 +222,8 @@ eval (Proc _ proc) =
   case proc of
     ZipWithNSY fun dynArgs
       -> [(ZipWithNSYOut, foldl1 dynApp ((val fun) : dynArgs))]  
-    ZipWithxSY fun dynVecArg
-      -> [(ZipWithxSYOut, (val fun) dynVecArg)]
+    ZipWithxSY _ fun dynListArg
+      -> [(ZipWithxSYOut, (val fun) dynListArg)]
     UnzipNSY _ fun dynArg
       -> zipWith (\n dyn -> (UnzipNSYOut n, dyn))
                  [1..] 
@@ -228,7 +231,7 @@ eval (Proc _ proc) =
     UnzipxSY _ fun dynArg
       -> zipWith (\n dyn -> (UnzipxSYOut n, dyn))
                  [1..] 
-                 (fromVector (fun dynArg)) 
+                 (fun dynArg) 
     DelaySY _ _                   
       -> intError evalStr (EvalErr "DelaySY")
     SysIns  _ _                   

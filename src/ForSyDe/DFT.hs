@@ -1,62 +1,68 @@
+{-# LANGUAGE ScopedTypeVariables, FlexibleContexts #-}
 -- FIXME: Add header
 -- | The module includes the standard Discrete Fourier Transform (DFT) function, and a fast Fourier transform (FFT) algorithm, for computing the DFT, when the size N is a power of 2.
 module ForSyDe.DFT(dft, fft) where
 
-import ForSyDe.Vector
+
+
+import qualified Data.Param.FSVec as V
+import Data.Param.FSVec 
+import Data.TypeLevel (Nat, IsPowOf, D2)
 import Data.Complex
 
+
 -- | The function 'dft' performs a standard Discrete Fourier Transformation
-dft :: Integer -> Vector (Complex Double) -> Vector (Complex Double)
-dft bigN x | bigN == (lengthV x) = mapV (bigX_k bigN x) (nVector x)
-           | (lengthV x) == 0 = copyV bigN (toComplex 0.0)
-	   | otherwise   = error "DFT: Vector has not the right size!"   
+dft :: forall s . Nat s => FSVec s (Complex Double) -> FSVec s (Complex Double)
+dft v = V.map (bigX_k v) nVector
    where
-     nVector x'       = iterateV (lengthV x') (+1) 0
-     bigX_k bigN' x' k = sumV (zipWithV (*) x' (bigW' k bigN'))
-     bigW' k' bigN'     = mapV (** k') (mapV cis (fullcircle bigN'))
-     sumV            = foldlV (+) (0:+ 0)
-     toComplex x = x :+ 0
-
-fullcircle :: Integer -> Vector Double 
-fullcircle n = fullcircle1 0 (fromInteger n) n
-	  where
-	     fullcircle1 l m n' 
-		| l == m    = NullV
-		| otherwise = -2*pi*l/(fromInteger n') 
-			      :> fullcircle1 (l+1) m n' 
-
--- | The function 'fft' implements a fast Fourier transform (FFT) algorithm, for computing the DFT, when the size N is a power of 2.
-fft :: Integer -> Vector (Complex Double) -> Vector (Complex Double)
-fft bigN xv | bigN == (lengthV xv) = mapV (bigX xv) (kVector bigN)
-	    | otherwise = error "FFT: Vector has not the right size!"
+     lT = V.lengthT v
+     lV = V.genericLength v
+     -- FIXME: dft does not type-check without this type signature:
+     --        learn why!
+     nVector :: Num a => FSVec s a
+     nVector = kVector lT
+     fullCircle = V.map (\n -> -2*pi*n/lV) nVector
+     bigX_k v k = sumV (V.zipWith (*) v (bigW k))
+     bigW k = V.map (** k) (V.map cis fullCircle)
+     sumV = V.foldl (+) (0:+ 0)
 
 
-kVector :: (Num b, Num a) => a -> Vector b      
-kVector bigN = iterateV bigN (+1) 0 
+-- | The function 'fft' implements a fast Fourier transform (FFT) algorithm, 
+--   for computing the DFT, when the size N is a power of 2.
+fft :: (Nat s, IsPowOf D2 s) => 
+       FSVec s (Complex Double) -> FSVec s (Complex Double)
+fft v = V.map (bigX v) (kVector lT)
+   where lT = V.lengthT v
+
+kVector :: (Num a, Nat s) => s -> FSVec s a      
+kVector s = V.iterate s (+1) 0 
 
 
-bigX :: Vector (Complex Double) -> Integer -> Complex Double
-bigX (x0:>x1:>NullV) k | even k = x0 + x1 * bigW 2 0
-		       | odd k  = x0 - x1 * bigW 2 0
-bigX xv k = bigF_even k + bigF_odd k * bigW bigN (fromInteger k)
-     where bigF_even k' = bigX (evens xv) k'
-	   bigF_odd k' = bigX (odds xv) k'
-	   bigN = lengthV xv
+bigX :: (Nat s, IsPowOf D2 s) => 
+        FSVec s (Complex Double) -> Integer ->  Complex Double
+-- since there are no output length constraints (no vector is being returned)
+-- we can simply obtain the list inside the vector and work with it directly
+bigX v k = bigX' (V.genericLength v) (V.fromVector v) k
+ where bigX' :: Integer -> [Complex Double] -> Integer ->  Complex Double
+       -- The first argument is the length of the list (bigN)
+       bigX' _ (x0:[x1]) k | even k = x0 + x1 * bigW 2 0
+                           | odd k  = x0 - x1 * bigW 2 0
+       bigX' l xs k = bigF_even + bigF_odd * bigW l k
+           where bigF_even = bigX' halfl (evens xs) k
+	         bigF_odd  = bigX' halfl (odds xs) k
+                 halfl = l `div` 2
 
 bigW :: Integer -> Integer -> Complex Double
 bigW bigN k = cis (-2 * pi * (fromInteger k) / (fromInteger bigN))
 
-evens :: Vector a -> Vector a
-evens NullV       = NullV
-evens (v1:>NullV) = v1 :> NullV
-evens (v1:>_:>v)  = v1 :> evens v
+evens :: [a] -> [a]
+evens []  = []
+evens [v1] = [v1] 
+evens (v1:_:v) = v1 : evens v
 
-odds :: Vector a -> Vector a
-odds NullV        = NullV
-odds (_:>NullV)   = NullV
-odds (_:>v2:>v)   = v2 :> odds v
-
-
-
+odds :: [a] -> [a]
+odds [] = []
+odds [_] = []
+odds (_:v2:v) = v2 : odds v
 
 
