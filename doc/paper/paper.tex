@@ -1,0 +1,64 @@
+\documentclass[preprint,natbib]{sigplanconf}
+
+\usepackage{amsmath}
+\usepackage{natbib}
+\bibpunct();A{},
+\let\cite=\citep
+
+\begin{document}
+
+\conferenceinfo{ICFP'08}{September 22--24, 2008, Victoria, British Columbia, Canada} 
+\copyrightyear{2008} 
+%\copyrightdata{[to be supplied]} 
+
+\titlebanner{DRAFT---Do not distribute}        % These are ignored unless
+\preprintfooter{}                                             % 'preprint' option specified.
+
+\title{Compiling ForSyDe}
+\subtitle{Deep-embedding a behavioural and polymorphic DSL in Haskell}
+
+\authorinfo{Alfonso Acosta\and Ingo Sander}
+           {Royal Institute of Technology}
+           {\{alfonsoa,ingo\}@kth.se}
+
+\maketitle
+
+\begin{abstract}
+This is the text of the abstract.
+\end{abstract}
+
+\category{D.3.2}{Programming Languages}{Language Classifications}[Haskell]
+\category{D.3.4}{Programming Languages}{Processors}[Compilers]
+\category{C.0}{General}{}[Systems specification methodology]
+\category{D.3.2}{Programming Languages}{Language Classifications}[Design languages]
+\category{B.5.2}{Register-Transfer-Level Implementation}{Design Aids}[Hardware description languages]
+
+\terms
+term1, term2
+
+\keywords
+keyword1, keyword2
+
+\input{1.Introduction/Introduction}
+\input{2.TheProblem/TheProblem}
+\input{3.TheIdea/TheIdea}
+\input{4.TheDetails/TheDetails}
+\input{5.OtherProblems/OtherProblems}
+\input{6.RelatedWork/RelatedWork}
+\input{7.Conclusions/Conclusions}
+
+\appendix
+\section{Appendix Title}
+
+This is the text of the appendix, if you need one.
+
+\acks
+
+Acknowledgments, if needed.
+
+\bibliography{paper}
+\bibliographystyle{plainnat}
+
+
+\end{document}
+
