@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 -- |
--- Module      :  ForSyDe.Backend
+-- Module      :  ForSyDe.Ids
 -- Copyright   :  (c) The ForSyDe Team 2007
 -- License     :  BSD-style (see the file LICENSE)
 -- 
@@ -8,14 +8,19 @@
 -- Stability   :  experimental
 -- Portability :  portable
 --
--- Wrapper module exporting all the backends
--- 
+-- ForSyDe  identifier types
+--
 -----------------------------------------------------------------------------
-module ForSyDe.Backend 
- (module ForSyDe.Backend.Simulate,
-  module ForSyDe.Backend.VHDL) where
+module ForSyDe.Ids where
 
-import ForSyDe.Backend.Simulate
-import ForSyDe.Backend.VHDL
+-- | A process identifier
+--   FIXME: make it an ADT
+type ProcId = String
 
+-- | A Port identifier
+-- FIXME: make it an ADT
+type PortId = String
 
+-- | A System identifier
+-- FIXME: make it an ADT
+type SysId = String

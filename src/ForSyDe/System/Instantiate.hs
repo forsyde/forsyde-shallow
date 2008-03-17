@@ -17,6 +17,7 @@
 -----------------------------------------------------------------------------
 module ForSyDe.System.Instantiate (instantiate) where
 
+import ForSyDe.Ids
 import ForSyDe.OSharing (readURef)
 import ForSyDe.Netlist
 import ForSyDe.Signal
@@ -82,8 +83,8 @@ instantiate insId sysDefN =
                       -- The instance node
                       insNode = newSysIns insId sysDef inputsInfo
                       -- Generate a Signal for each output
-                      outList = map (\(id,t) -> newNodeOutSig 
-                                                 insNode (SysInsOut id) t) 
+                      outList = map (\(id, _) -> newNodeOutSig 
+                                                  insNode (SysInsOut id)) 
                                 (oIface sysVal) 
                       toTup = $(nlSignalList2Tup nOut)       
                       in  toTup outList|]

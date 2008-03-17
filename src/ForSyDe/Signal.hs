@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveDataTypeable, GeneralizedNewtypeDeriving #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  ForSyDe.Signal
@@ -22,6 +23,8 @@ import {-# SOURCE #-} ForSyDe.Netlist
 -- import ForSyDe.OSharing
 -- import Language.Haskell.TH.TypeLib
 
+import Data.Typeable (Typeable)
+
 -- | A signal can be seen as wire which carries values of certain type 
 --   and which can be connected and processed by the two computational 
 --   entities of a ForSyDe system: processes and block instances.
@@ -34,6 +37,7 @@ import {-# SOURCE #-} ForSyDe.Netlist
 --   FIXME: we don't the end user to know about the internal rep of Signal
 
 newtype Signal a = Signal {unSignal :: NlSignal}
+ deriving Typeable
 
 {- FINISH and ... think about where to put signalize -}
 -- | Creates a constant signal

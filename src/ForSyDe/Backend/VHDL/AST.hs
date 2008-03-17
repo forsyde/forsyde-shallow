@@ -1,14 +1,25 @@
--- A VHDL 93 AST subset, coded so that it can be easy to extend, 
--- please see doc/VHDL/vhdl93-syntax.html as reference 
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  ForSyDe.Backend.VHDL.AST
+-- Copyright   :  (c) The ForSyDe Team 2007
+-- License     :  BSD-style (see the file LICENSE)
+-- 
+-- Maintainer  :  ecs_forsyde_development@ict.kth.se
+-- Stability   :  experimental
+-- Portability :  non-portable (Template Haskell)
+--
+-- A VHDL 93 subset AST (Abstract Syntax Tree), coded so that it can be easy 
+-- to extend, please see doc/VHDL/vhdl93-syntax.html as reference 
 -- in order to extend it (this AST is based on that grammar)
+-----------------------------------------------------------------------------
 
 -- This AST is aimed at code generation not parsing, and thus, 
 -- it was simplified
 -- The incompatibilities or simplifications from the standard
 -- are properly commented
 
--- FIXME: shouldn't I use records instead of bare algebraic types?
--- FIXME: shouldn't I remove unused type redefinitions?
+-- FIXME: shouldn't be records used instead of bare algebraic types?
+-- FIXME: shouldn't the unused type redefinitions be removed?
 -- FIXME: It would maybe be a good idea to create a sequence ADT which
 --        guaranteed to hold at least one element (i.e. the grammar
 --        has some cases such as "choices ::= choice | {choice}"
@@ -16,22 +27,23 @@
 --        "Choices Choice  (Maybe [Choice])" is not easy to handle either
 --        and thus, it was discarded.
 
-module HD.VHDL.AST where
-import Data.Char
-import Data.Maybe (isJust, fromJust)
+module ForSyDe.Backend.VHDL.AST where
 
-import HD.Misc
+import Data.Char (toLower)
+import Text.Regex.Posix
 
--- { } is expressed as [ ]
--- [ ] is expressed as Maybe
+import ForSyDe.ForSyDeErr
 
--- Reset and clock signals (they are considered 
+
+--------------------
+-- VHDL identifiers
+--------------------
 
 -- VHDL identifier, use mkVHDLId to create it from a String, 
 -- making sure a string is a proper VHDL identifier
 data VHDLId = Basic String | Extended String
 
-
+-- | Obtain the String of a VHDL identifier
 fromVHDLId :: VHDLId -> String
 fromVHDLId (Basic    str) = str
 fromVHDLId (Extended str) = str
@@ -41,57 +53,90 @@ instance Show VHDLId where
  show  = show.fromVHDLId
 
 
--- unsafely create a basic VHDLId (without cheking if the string is correct)
+-- | unsafely create a VHDLId
+unsafeVHDLId :: String -> VHDLId
+unsafeVHDLId [] = error "ForSyDe.Backend.VHDL.unsafeVHDLId []"
+unsafeVHDLId id@(first:_)
+ | first == '/'    = unsafeVHDLExtId id
+ | otherwise       = unsafeVHDLBasicId id
+
+-- | unsafely create a basic VHDLId (without cheking if the string is correct)
 unsafeVHDLBasicId :: String -> VHDLId
 unsafeVHDLBasicId str = Basic str
 
 
 
--- unsafely create an exteded VHDLId (without cheking if the string is correct)
+-- | unsafely create an exteded VHDLId (without cheking if the string is 
+--   correct)
 unsafeVHDLExtId :: String -> VHDLId
 unsafeVHDLExtId str = Extended str
 
 
 
--- FIXME: make use of regular expressions or parsec, a hand made
---        lexer is ugly (but powerful)
+-- | Create a VHDL identifier from a String, previously checking if the 
+--   String is correct
 mkVHDLId :: String -> EProne VHDLId
 -- FIXME: The first letter and end empty pattern matching are checked twice
-mkVHDLId [] = throwError "empty identifier"
+mkVHDLId [] = throwError EmptyVHDLId
 mkVHDLId id@(first:_)
  | first == '/'    = mkVHDLExtId id
- | isLetter first  = mkVHDLBasicId id
- | otherwise       = throwError " is not a valid VHDL Id"    
+ | otherwise       = mkVHDLBasicId id
 
+-- | Create a VHDL basic identifier from a String, previously checking if the 
+--   String is correct
 mkVHDLBasicId ::String -> EProne VHDLId
 -- FIXME: we relax the fact that two consecutive underlines 
 --        are not allowed
-mkVHDLBasicId [] = throwError "empty identifier"
-mkVHDLBasicId id@(first:rest)
-  | isLetter first && all (\c -> isLetter c || isDigit c || c == '_') rest &&
-    (not $ elem lowId reservedWords) = return $ Basic id
-  | otherwise = throwError "incorrect basic identifier"
+mkVHDLBasicId [] = throwError EmptyVHDLId
+mkVHDLBasicId id
+  | id =~ basiIdPat && (not $ elem lowId reservedWords) = return $ Basic id
+  | otherwise = throwError $ IncVHDLBasId id
  where lowId = map toLower id
- 
+       basiIdPat = "^[A-Za-z](_?[A-Za-z0-9])*$"
+
+-- | Create a VHDL extended identifier from a String, previously checking 
+--   if the String is correct
 mkVHDLExtId :: String -> EProne VHDLId
--- FIXME: we don't check that "If a backslash is to be used as 
---        one of the graphic characters of an extended identifier, 
---        it must be doubled."
-mkVHDLExtId [] = throwError "empty identifier"
-mkVHDLExtId id@(first:rest)
- | first == '/' && isJust maybeMLId && lastId == '/' &&
-   all isMiddle middleId = return $ Extended id
- | otherwise = throwError "incorrect extended identifier"
- where ~(middleId,lastId) = fromJust maybeMLId
-       maybeMLId = safeInitLast rest
-       isMiddle c = isLetter c || isDigit c || c == ' ' || 
-                    elem c specialChars || elem c otherSpecialChars 
-       
+mkVHDLExtId [] = throwError EmptyVHDLId
+mkVHDLExtId id
+ | id =~ extIdPat = return $ Extended id
+ | otherwise = throwError $ IncVHDLExtId id
+ where -- Regular expression pattern for extended identifiers.
+       -- An extended identifier must:
+       --  * Start and end with a backslash '\'
+       --  * Its middle characters can be
+       --    * two contiguous backslashes \\
+       --    * an alphanumeric (A-Za-z0-9)
+       --    * a Special Character 
+       --    * an Other Special Character 
+       --      (backslashes can only appear in pairs as indicated above)
+       -- 
+       -- Note that we cannot use specialChars and otherSpecialChars
+       -- to build the pattern because of the double-backslash rule
+       -- and also, the right bracket (according to the posix
+       -- standard) needs to go in the first place of a bracket
+       -- expression to lose its special meaning.  Furthermore,
+       -- (according to the POSIX standard as well) we also need to put
+       -- '-' in the last place of the bracket expression.
+   extIdPat = 
+     "^\\\\(\\\\\\\\|[]A-Za-z0-9 \"#&'()*+,./:;<=>_|!$%@?[^`{}~-])+\\\\$"
 
 
+-- | Unsafely append a string to a VHDL identifier (i.e. without checking if
+--  the resulting identifier is valid)
+unsafeIdAppend :: VHDLId -> String -> VHDLId
+unsafeIdAppend (Basic id)    suffix = Basic $ id ++ suffix
+-- FIXME: init is inneficient, maybe keep the extended identifier without
+--        the enclosing backslashes?
+unsafeIdAppend (Extended id) suffix = Extended $ (init id) ++ suffix ++ "\\" 
+
+-- | special characters as defined in the VHDL93 standard
+specialChars :: [Char]
 specialChars = ['"' , '#' , '&' , '\'' , '(' , ')' , '*' , '+' , ',',
                 '-' , '.' , '/' , ':'  , ';' , '<' , '=' , '>' , '_' , '|']
 
+-- | other special characters as defined in the VHDL93 standard
+otherSpecialChars :: [Char]
 otherSpecialChars =['!' , '$' , '%' , '@' , '?' , '[' , '\\' , ']',
                     '^' , '`' , '{' , '}' , '~']
 
@@ -111,6 +156,18 @@ reservedWords = ["abs", "access", "after", "alias", "all", "and",
  "sra", "srl", "subtype", "then", "to", "transport", "type",
  "unaffected", "units", "until", "use", "variable", "wait", "when",
  "while", "with", "xnor", "xor"]
+
+
+
+
+   ---------
+   -- AST --
+   ---------
+
+
+-- { } (0 or more) is expressed as [ ]
+-- [ ] (optional) is expressed as Maybe
+
 
 -- design_file
 -- Having ContextClauses associated to library units is messy
@@ -142,7 +199,7 @@ data LibraryUnit = LUEntity EntityDec | LUArch ArchBody
 data EntityDec = EntityDec VHDLId [IfaceSigDec]
  deriving Show
 
--- interface_signal_declaration
+-- | interface_signal_declaration
 -- We don't allow the "id1,id2,id3" syntax, only one identifier is allowed
 --  at once
 -- The Mode is mandatory
@@ -154,38 +211,38 @@ data EntityDec = EntityDec VHDLId [IfaceSigDec]
 data IfaceSigDec = IfaceSigDec VHDLId Mode TypeMark
  deriving Show
 
--- type_mark
+-- | type_mark
 -- We don't distinguish between type names and subtype names
 type TypeMark = VHDLName
 
 
--- mode
+-- | mode
 -- INOUT | BUFFER | LINKAGE are not allowed
 data Mode = In | Out
- deriving Show
+ deriving (Show, Eq)
 
--- architecture_body 
+-- | architecture_body 
 -- [ ARCHITECTURE ] and [ architecture_simple_name ] are not allowed
 data ArchBody = ArchBody VHDLId VHDLName [BlockDecItem] [ConcSm]
  deriving Show
 
--- name
+-- | name
 -- Only simple_names (identifiers) are allowed 
 type VHDLName = VHDLId
 
--- block_declarative_item
+-- | block_declarative_item
 -- Only subprogram bodys and signal declarations are allowed
 data BlockDecItem = BDISPB SubProgBody | BDISD SigDec
  deriving Show
 
 
--- subprogram_body
+-- | subprogram_body
 -- No declarations are allowed, (wierd but we don't need them anyway) 
 -- No subprogram kind nor designator is allowed
 data SubProgBody = SubProgBody SubProgSpec [SeqSm]
  deriving Show
 
--- subprogram_specification
+-- | subprogram_specification
 -- Only Functions are allowed
 -- [Pure | Impure] is not allowed
 -- Only a VHDLName is valid as the designator
@@ -193,7 +250,7 @@ data SubProgBody = SubProgBody SubProgSpec [SeqSm]
 data SubProgSpec = Function VHDLName [IfaceVarDec] TypeMark 
  deriving Show
 
--- interface_variable_declaration
+-- | interface_variable_declaration
 -- [variable] is not allowed
 -- We don't allow the "id1,id2,id3" syntax, only one identifier is allowed
 -- Mode is not allowed
@@ -202,7 +259,7 @@ data SubProgSpec = Function VHDLName [IfaceVarDec] TypeMark
 data IfaceVarDec = IfaceVarDec VHDLId TypeMark
  deriving Show
 
--- sequential_statement
+-- | sequential_statement
 -- Only If, case and return allowed
 -- It is incorrect to have an empty [CaseSmAlt]
 data SeqSm = IfSm  Expr [SeqSm] [ElseIf] (Maybe Else) |
@@ -210,40 +267,41 @@ data SeqSm = IfSm  Expr [SeqSm] [ElseIf] (Maybe Else) |
              ReturnSm (Maybe Expr)
  deriving Show
 
--- helper types, they don't exist in the origianl grammar
+-- | helper type, they doesn't exist in the origianl grammar
 data ElseIf = ElseIf Expr [SeqSm]
  deriving Show
+
+-- | helper type, it doesn't exist in the origianl grammar
 data Else = Else [SeqSm]
  deriving Show
 
--- case_statement_alternative
+-- | case_statement_alternative
 -- it is incorrect to have an empty [Choice]
 data CaseSmAlt = CaseSmAlt [Choice] [SeqSm]
  deriving Show
 
--- choice
+-- | choice
 -- although any expression is allowed the grammar specfically only allows 
 -- simple_expressions (not covered in this AST) 
 data Choice = ChoiceE Expr | Others
  deriving Show
 
--- signal_declaration
+-- | signal_declaration
 -- We don't allow the "id1,id2,id3" syntax, only one identifier is allowed
 --  at once
 -- Resolution functions and constraints are not allowed, thus a TypeMark
 --  is used instead of a subtype_indication
 -- Signal kinds are not allowed
--- Preasigned values are not allowed
-data SigDec = SigDec VHDLId TypeMark 
+data SigDec = SigDec VHDLId TypeMark (Maybe Expr)
  deriving Show
 
--- concurrent_statement
+-- | concurrent_statement
 -- only block statements, component instantiations and signal assignments 
 -- are allowed
 data ConcSm = CSBSm BlockSm | CSSASm  ConSigAssignSm | CSISm CompInsSm  
  deriving Show
 
--- block_statement
+-- | block_statement
 -- Generics are not supported
 -- The port_clause (with only signals) and port_map_aspect are mandatory
 -- The ending [ block_label ] is not allowed
@@ -251,50 +309,52 @@ data ConcSm = CSBSm BlockSm | CSSASm  ConSigAssignSm | CSISm CompInsSm
 data BlockSm = BlockSm Label [IfaceSigDec] PMapAspect [BlockDecItem] [ConcSm]
  deriving Show
 
--- port_map_aspect
+-- | port_map_aspect
 newtype PMapAspect = PMapAspect [AssocElem]
  deriving Show
 
--- label
+-- | label
 type Label = VHDLId
 
--- association_element
+-- | association_element
 data AssocElem = Maybe (FormalPart) :=>: ActualPart
  deriving Show
 
--- formal_part
+-- | formal_part
 -- We only accept a formal_designator (which is a name after all),   
 --  "function_name ( formal_designator )" and "type_mark ( formal_designator )"
 --  are not allowed
 type FormalPart = VHDLName
 
--- actual_part
+-- | actual_part
 -- We only accept an actual_designator,
 --  "function_name ( actual_designator )" and "type_mark ( actual_designator )"
 --  are not allowed
 type ActualPart = ActualDesig
 
--- actual_designator
+-- | actual_designator
 data ActualDesig = ADName VHDLName | ADExpr Expr | Open
  deriving Show
 
--- concurrent_signal_assignment_statement
+-- | concurrent_signal_assignment_statement
 -- Only conditional_signal_assignment is allowed (without options)
 -- The LHS (targets) are simply signal names, no aggregates
 data ConSigAssignSm = VHDLName :<==: ConWforms
  deriving Show
 
--- conditional_waveforms 
+-- | conditional_waveforms 
 data ConWforms = ConWforms [WhenElse] Wform (Maybe When)  
  deriving Show
 
--- Helper types, they don't exist in the VHDL grammar
+-- | Helper type, it doesn't exist in the VHDL grammar
 data WhenElse = WhenElse Wform Expr
  deriving Show
+
+-- | Helper type, it doesn't exist in the VHDL grammar
 newtype When = When Expr
  deriving Show
 
--- waveform
+-- | waveform
 -- wavefrom_element can just be  an expression
 -- although it is possible to leave [Expr] empty, that's obviously not
 -- valid VHDL
@@ -303,13 +363,13 @@ data Wform = Wform [Expr] | Unaffected
  deriving Show
 
            
--- component_instantiation_statement
+-- | component_instantiation_statement
 -- No generics supported
 -- The port map aspect is mandatory
 data CompInsSm = CompInsSm Label InsUnit [AssocElem]
  deriving Show
 
--- instantiated_unit
+-- | instantiated_unit
 -- Only Entities are allowed and their architecture cannot be specified
 data InsUnit = IUEntity VHDLName
  deriving Show
@@ -318,7 +378,7 @@ data InsUnit = IUEntity VHDLName
 -- Expression AST
 -----------------
 
--- expression, instead of creating an AST like the grammar 
+-- | expression, instead of creating an AST like the grammar 
 -- (see commented section below) we made our own expressions which are 
 -- easier to handle, but which don't don't show operand precedence
 -- (that is a responsibility of the pretty printer)
@@ -367,12 +427,12 @@ data Expr = -- Logical operations
  deriving Show            
 
 
--- literal
+-- | literal
 -- Literals are expressed as a string (remember we are generating
 -- code, not parsing)
 type Literal = String
 
--- function_call
+-- | function_call
 data FCall = FCall VHDLName [AssocElem]
  deriving Show
              

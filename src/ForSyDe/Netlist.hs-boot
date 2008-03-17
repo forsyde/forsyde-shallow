@@ -3,11 +3,11 @@
 -- See "How to compile mutually recursive modules" in GHC's manual for details
 module ForSyDe.Netlist where
 
+import ForSyDe.Ids
+
 -----------
 -- Netlist
 -----------
-
-
 
 
 -- | The netlist of a system is modelled as a directed cyclic graph but is
@@ -30,10 +30,6 @@ newtype Netlist container = Netlist (container NlTree)
 ----------
 -- NlNode
 ----------
-
--- FIXME: remove this or decide where to put it
-type ProcId = String
-type PortId = String
 
 -- | A node of the netlist can be either a process, component instances or
 -- special nodes to help traversing the graph.  
@@ -87,4 +83,10 @@ newtype NlTree = NlTree  {rootEdge :: (NlEdge (NlNode NlTree))}
 -- signals are implemented in the netlist.
 type NlSignal = NlTree
 
+-------------------
+-- Helper functions
+-------------------
+
+-- | Generate a signal pointing to an 'InPort' node
+newInPort :: PortId -> NlSignal
 

@@ -1,19 +1,33 @@
-{-# OPTIONS_GHC -fglasgow-exts #-}
--- The use of -fglasgow-exts is due to non-standard instances such as
--- "instance Ppr [IfaceSigDec]" which is not haskell98
+{-# LANGUAGE FlexibleInstances, TypeSynonymInstances #-}
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  ForSyDe.Backend.VHDL.Ppr
+-- Copyright   :  (c) The ForSyDe Team 2007
+-- License     :  BSD-style (see the file LICENSE)
+-- 
+-- Maintainer  :  ecs_forsyde_development@ict.kth.se
+-- Stability   :  experimental
+-- Portability :  non-portable (Template Haskell)
+--
+-- VHDL pretty printing module.
+--
+-----------------------------------------------------------------------------
 
--- FIXME:  we could avoid the -fglasgow-exts by adding ppr_list to the Ppr 
+
+-- FIXME:  we could avoid the LANGUAGE extensions by adding ppr_list to the Ppr 
 --         class (see Language.Haskell.TH.Ppr)
 
-module HD.VHDL.Ppr where
+module ForSyDe.Backend.VHDL.Ppr where
 
 import Text.PrettyPrint.HughesPJ hiding (Mode)
-import HD.VHDL.AST
+import ForSyDe.Backend.VHDL.AST
 
+-- | Pretty printing class
 class Ppr a where
  ppr :: a -> Doc
 
-
+-- | Number of spaces used for indentation
+nestVal :: Int
 nestVal = 5
 
 instance Ppr a => Ppr (Maybe a) where
@@ -163,8 +177,9 @@ instance Ppr CaseSmAlt where
   where joinAlts a1 a2 = a1 <+> char '|' <+> a2
 
 instance Ppr SigDec where
- ppr (SigDec id typemark) = 
-   text "signal" <+> ppr id <+> colon <+> ppr typemark <> semi
+ ppr (SigDec id typemark mInit) = 
+   text "signal" <+> ppr id <+> colon <+> ppr typemark <+> 
+                    (text ":=" <++>  ppr mInit) <> semi
 
 instance Ppr [ConcSm] where
  ppr = ppr_list ($$)
@@ -241,7 +256,7 @@ instance Ppr Expr where
  ppr (Or  e1 e2)  = parens (ppr e1) <+> text "or"   <+> parens (ppr e2)
  ppr (Xor e1 e2)  = parens (ppr e1) <+> text "xor"  <+> parens (ppr e2)
  ppr (Nand e1 e2) = parens (ppr e1) <+> text "nand" <+> parens (ppr e2)
- ppr (Nor  e1 e2) = parens (ppr e2) <+> text "nor"  <+> parens (ppr e2)
+ ppr (Nor  e1 e2) = parens (ppr e1) <+> text "nor"  <+> parens (ppr e2)
  -- Relational Operators
  ppr (e1 :=:  e2) = parens (ppr e1) <+> text "="  <+> parens (ppr e2)
  ppr (e1 :/=: e2) = parens (ppr e1) <+> text "/=" <+> parens (ppr e2)
@@ -313,3 +328,9 @@ vSemi doc1 doc2 = doc1 <> semi $+$ doc2
 -- Join two documents vertically putting a comma in the middle
 vComma :: Doc -> Doc -> Doc
 vComma doc1 doc2 = doc1 <> comma $+$ doc2
+
+-- Only append if both of the documents are non-empty
+(<++>) :: Doc -> Doc -> Doc
+d1 <++> d2 
+ | isEmpty d1 && isEmpty d2 = empty
+ | otherwise = d1 <+> d2

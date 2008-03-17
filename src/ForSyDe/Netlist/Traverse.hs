@@ -83,54 +83,62 @@ instance DT.Traversable NlNode where
  traverse _ (InPort  id)   = pure (InPort id)
  traverse f (Proc id proc) = Proc id <$> DT.traverse f proc 
 
-{-
--- | Traversing state for the IO Monad
-type TravSIO s = StateT s IO
+
+-- | Traversing monad, stacking state and error transformers over IO
+type TravSEIO s e a = (StateT s (ErrorT e IO)) a
+
 
 
 -- | traverseSIO traverses a netlist and returns a final user-defined 
---   traversing state (s) given:
---  new: generates the new (and normally unique) tag of every node given
---       the traversing state (which is updated as well).
---  define: given the tag of a node, current iteration state, and the tag of
---          its children, generates the netlist of that node, updating the 
---          traversing state
---
--- 
---FIXME: 1) why IO and not ST?
---       2) make a stateless version of netlist:
-traverseSIO :: forall container s nt. DT.Traversable container =>
-               (TravSIO s NlSignal -> TravSIO s nt)        -- ^ new 
-            -> (TravSIO s nt -> NlNode nt -> TravSIO s ()) -- ^ define
-            -> Netlist container                         
-            -> TravSIO s (container nt)
-traverseSIO new define (Netlist container) =
-  do uRefTable  <-  lift newURefTable     
-     let gather :: TravSIO s NlSignal  ->  TravSIO s nt
-         gather stateNlSignal =
-            do nlSignal@(NlTree (NlEdge uRef _ _ )) <- stateNlSignal 
-               visited <- lift (query uRefTable uRef) 
-               case visited of
-                 Just tag  -> return tag
-                 Nothing -> do tag'  <- new stateNlSignal
-                               lift (addEntry uRefTable uRef tag')
-                               s <- DT.mapM (gather.return) (readURef uRef)
-                               define (return tag') s
-                               return tag'
-           
-     DT.mapM (gather.return) container
--}
+--   traversing state (@s@) given:
+--  new: generates a new (and normally unique) tag for the outputs of each 
+--       netlist node given the traversing state (which is possibly updated 
+--       as well).
+--  define: given the output tags of a node, current iteration state, 
+--          and the output tags of its children, @define@
+--          generates the netlist of that node, possibly updating 
+--          the traversing state
+-- FIXME: shoudn't the arguments of define go the other way around?
+--        first inputs then outputs.
+-- FIXME: why are tags needed in define? [oinfo] should be enough.
+--        tags are ugly in general (see the pattern matches) fix this problem.
+traverseSEIO :: (DT.Traversable container, Error e) => 
+         (NlNode NlSignal -> TravSEIO s e [(NlNodeOut, oinfo)]) -- ^ new
+      -> ([(NlNodeOut, oinfo)] -> NlNode oinfo -> TravSEIO s e ()) -- ^ define
+      -> Netlist container 
+      -> TravSEIO s e (container oinfo)
+traverseSEIO new define (Netlist rootSignals) =
+  do uRefTable <- liftIO $ newURefTableIO
 
+     let gather (NlTree (NlEdge nodeRef tag)) =
+           do visited <- liftIO $ queryIO uRefTable nodeRef
+              case visited of
+                Just infoPairs  -> return (specifyOut tag infoPairs)
+                Nothing -> do 
+                  let node = readURef nodeRef
+                  infoPairs <- new node
+                  liftIO $ addEntryIO uRefTable nodeRef infoPairs
+                  childInfo <- DT.mapM gather node
+                  define infoPairs childInfo
+                  return (specifyOut tag infoPairs)
+
+         specifyOut :: NlNodeOut -> [(NlNodeOut, a)] -> a
+         specifyOut tag pairs = fromMaybe err maybeOut
+             where funName = "ForSyDe.NetList.Traverse.traverseIO"
+                   err = intError funName (InconsOutTag tag)
+                   maybeOut = lookup tag pairs
+
+     DT.mapM gather rootSignals
 
 traverseST :: DT.Traversable container => 
-             (NlNode NlSignal -> ST s [(NlNodeOut, ninfo)]) 
-          -> ([(NlNodeOut, ninfo)] -> NlNode ninfo -> ST s ()) 
+             (NlNode NlSignal -> ST s [(NlNodeOut, oinfo)]) 
+          -> ([(NlNodeOut, oinfo)] -> NlNode oinfo -> ST s ()) 
           -> Netlist container 
-          -> ST s (container ninfo)
+          -> ST s (container oinfo)
 traverseST new define (Netlist rootSignals) =
   do uRefTable <- newURefTableST
 
-     let gather (NlTree (NlEdge nodeRef tag _ )) =
+     let gather (NlTree (NlEdge nodeRef tag)) =
            do visited <- queryST uRefTable nodeRef
               case visited of
                 Just infoPairs  -> return (specifyOut tag infoPairs)

@@ -8,7 +8,8 @@
 -- Stability   :  experimental
 -- Portability :  portable
 --
--- This module provides a definition for the netlist of a system description 
+-- This module provides a definition for the netlist of a system description, 
+-- which is used as the intermediate representation of the embedded compiler.
 -- 
 -- The netlist is modelled as a directed cyclic graph whose nodes 
 -- are shared using Observable Sharing ("ForSyDe.OSharing").
@@ -17,21 +18,19 @@
 -- 
 -----------------------------------------------------------------------------
 
--- FIXME: WHy are we reexporting PortId?
 module ForSyDe.Netlist  where
 
 
+import ForSyDe.Ids
 import ForSyDe.OSharing (URef, newURef, readURef)
 import ForSyDe.System.SysDef 
- (SysDef(..), PrimSysDef(..), IFace, oIface)
-import ForSyDe.Process.ProcFun (ProcFun(..))
+ (SysDef(..), PrimSysDef(..), oIface)
+import ForSyDe.Process.ProcFun (TypedProcFun(..))
 import ForSyDe.ForSyDeErr
 import ForSyDe.Process.ProcVal (ProcVal(..))
 
-
-import Language.Haskell.TH (Type)
 import Data.Dynamic
-import Data.Maybe
+
 
 -----------
 -- Netlist
@@ -59,10 +58,6 @@ newtype Netlist container = Netlist (container NlTree)
 -- NlNode
 ----------
 
--- FIXME: remove this or decide where to put it
-type ProcId = String
-type PortId = String
-
 -- | A node of the netlist can be either a process, component instances or
 -- special nodes to help traversing the graph.  
 --
@@ -83,29 +78,36 @@ data  NlNode inputi =
 --   Note that vectors and transformed to lists puls an Int parameter 
 --   indicating its size
 data NlProc inputi = 
- ZipWithNSY (ProcFun Dynamic) -- Process function in dynamic form
-            [inputi]                                | -- ^ mapSY and zipWithSY*
-                                                      --   processes
+ -- | mapSY and zipWithSY processes
+ ZipWithNSY (TypedProcFun Dynamic) -- Process function in dynamic form
+            [inputi]                                | 
+ 
+ -- | Vector version of zipWithNSY
  ZipWithxSY Int -- Size of input vectors (number of inputs)
-            (ProcFun ([Dynamic] -> Dynamic)) -- Process function 
-                                                  -- with dynamic arguments  
-            ([inputi])                         | -- ^ Vector version 
-                                                 --   of zipWithNSY
+            (TypedProcFun ([Dynamic] -> Dynamic))     -- Process function 
+                                                      -- with dynamic arguments 
+            ([inputi])                              | 
+ 
+ -- ^ Inverse of ZipWithNSY
  UnzipNSY Int -- Number of outputs
-          (Dynamic -> [Dynamic]) -- Dynamic version of the zipping function
+          (Dynamic -> [Dynamic]) -- Dynamic version of the unzipping function
                                  -- for the concrete, monomorphic types
                                  -- of the process
-          inputi                                    | -- ^ Inverse of
-                                                      -- ZipWithNSY
+          inputi                                    | 
+ 
+ -- | Vector version of UnzipSY
  UnzipxSY Int -- Size of output vectors (Number of outputs)
           (Dynamic -> [Dynamic])             
-          inputi                                    | -- ^ Vector version
-                                                      --   of UnzipSY 
+          inputi                                    |  
 
- DelaySY    ProcVal    inputi                       | -- ^ delaySY process
+ -- | delaySY process
+ DelaySY    ProcVal    inputi                       | 
+ 
  -- A System Instance is considered a special process
  -- FIXME: aren't the PortId elements redundant?
- SysIns PrimSysDef [(PortId, inputi)]                 -- ^ System Instance
+ 
+ -- | System Instance
+ SysIns PrimSysDef [(PortId, inputi)]                 
  
          
 
@@ -119,9 +121,8 @@ data NlProc inputi =
 --   Since the node to which the edge is directed can have various outputs 
 --   (e.g a system instance) the edge is tagged to indicate to what 
 --   output it refers to.
-data NlEdge node = NlEdge (ForSyDe.OSharing.URef node) 
-                           NlNodeOut
-                           Type
+data NlEdge node = NlEdge (ForSyDe.OSharing.URef node) NlNodeOut
+                           
 
 
 -- | The different outputs which the different nodes can have
@@ -172,13 +173,9 @@ newtype NlTree = NlTree  {rootEdge :: (NlEdge (NlNode NlTree))}
 -- signals are implemented in the netlist.
 type NlSignal = NlTree
 
--- | Get the type of a signal
-nlSignalType :: NlSignal -> Type
-nlSignalType (NlTree (NlEdge _ _ t)) = t
-
 -- | Get the tag of a signal
 nlSignalNlOut :: NlSignal -> NlNodeOut
-nlSignalNlOut (NlTree (NlEdge _ tag _)) = tag
+nlSignalNlOut (NlTree (NlEdge _ tag)) = tag
 
 -------------------
 -- Helper functions
@@ -187,12 +184,8 @@ nlSignalNlOut (NlTree (NlEdge _ tag _)) = tag
 -- FIXME: All these newWhatever functions probably shouldn't be here
 
 -- | Generate a signal pointing to an 'InPort' node
-newInPort :: PortId -> Type -> NlSignal
-newInPort id t = NlTree (NlEdge (newURef (InPort id)) InPortOut t)
-
--- | Transform an interface into a list of input signals
-iface2InPorts :: IFace -> [NlSignal]
-iface2InPorts = map (uncurry newInPort)          
+newInPort :: PortId -> NlSignal
+newInPort id = NlTree (NlEdge (newURef (InPort id)) InPortOut)
 
 
 -- | Generate a reference to a new 'SysIns' node
@@ -204,26 +197,25 @@ newSysIns id (SysDef primSysDef) inputInfo =
 -- | Generate the output signal of a node
 newNodeOutSig :: URef (NlNode NlSignal)  -- ^ Reference to the node 
               -> NlNodeOut               -- ^ Output tag
-              -> Type                    -- ^ Type of the output
               -> NlSignal
-newNodeOutSig ref mTag t = NlTree (NlEdge ref mTag t)
+newNodeOutSig ref mTag  = NlTree (NlEdge ref mTag)
 
 -- | Create one of the output signals of a node
-node2NlSignal :: URef (NlNode NlSignal) -> NlNodeOut -> Type -> NlSignal
-node2NlSignal ref tag t = NlTree (NlEdge ref tag t)
+node2NlSignal :: URef (NlNode NlSignal) -> NlNodeOut -> NlSignal
+node2NlSignal ref tag = NlTree (NlEdge ref tag)
 
 
 -- | Evaluate the output of a process within a synchronous period
 --   The inputs and outputs are given in dynamic form
 eval :: NlNode Dynamic -> [(NlNodeOut, Dynamic)]
-eval (InPort _)    = intError evalStr (EvalErr "InPort")
-eval (Const pv)   = [(ConstOut, dyn pv)]
-eval (Proc _ proc) = 
-  case proc of
+eval node = case node of
+ InPort _ -> intError evalStr (EvalErr "InPort")
+ Const pv -> [(ConstOut, dyn pv)]
+ Proc _ proc -> case proc of
     ZipWithNSY fun dynArgs
-      -> [(ZipWithNSYOut, foldl1 dynApp ((val fun) : dynArgs))]  
+      -> [(ZipWithNSYOut, foldl1 dynApp ((tval fun) : dynArgs))]  
     ZipWithxSY _ fun dynListArg
-      -> [(ZipWithxSYOut, (val fun) dynListArg)]
+      -> [(ZipWithxSYOut, (tval fun) dynListArg)]
     UnzipNSY _ fun dynArg
       -> zipWith (\n dyn -> (UnzipNSYOut n, dyn))
                  [1..] 
@@ -231,12 +223,10 @@ eval (Proc _ proc) =
     UnzipxSY _ fun dynArg
       -> zipWith (\n dyn -> (UnzipxSYOut n, dyn))
                  [1..] 
-                 (fun dynArg) 
+                 (fun  dynArg) 
     DelaySY _ _                   
       -> intError evalStr (EvalErr "DelaySY")
     SysIns  _ _                   
       -> intError evalStr (EvalErr "SysIns")
-     
-
--- FIXME: ugly string
-evalStr = "ForSyDe.Netlist.eval"
+ 
+ where evalStr = "ForSyDe.Netlist.eval"

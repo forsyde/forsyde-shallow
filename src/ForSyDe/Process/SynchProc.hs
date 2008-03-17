@@ -38,6 +38,7 @@ module ForSyDe.Process.SynchProc (
  fstSY, sndSY, groupSY) where
 
 
+import ForSyDe.Ids
 import ForSyDe.Process.ProcFun
 import ForSyDe.Process.ProcVal
 import ForSyDe.OSharing
@@ -51,9 +52,8 @@ import Data.TypeLevel (Nat, toInt)
 import Data.Maybe
 import Data.Dynamic
 import Data.Typeable
-import Language.Haskell.TH
 import Language.Haskell.TH.Syntax (Lift)
-import Language.Haskell.TH.TypeLib (unArrowT)
+
 
 -----------------------------------
 -- Synchronous Process Constructors
@@ -74,13 +74,8 @@ mapSY :: (Typeable a, Typeable b) =>
                           --   in every cycle
       -> Signal a         -- ^ Input 'Signal' 
       -> Signal b         -- ^ Output 'Signal'
-mapSY id  f s = Signal (newNodeOutSig nodeRef ZipWithNSYOut outType) 
-  where (_, procFunRetType, _) = unArrowT ((typ.ast) f)
-        -- Note: since the the arguments of mapSY are forced to be
-        --       Typeable (and consequently monomorphic) the context 
-        --       returned by unArrowT will always be empty and can be ignored. 
-        outType = signalize procFunRetType
-        nodeRef = newURef $ Proc id $ ZipWithNSY (procFun2Dyn f) [unSignal s]
+mapSY id  f s = Signal (newNodeOutSig nodeRef ZipWithNSYOut) 
+  where nodeRef = newURef $ Proc id $ ZipWithNSY (procFun2Dyn f) [unSignal s]
 
 -- | The process constructor 'zipWithSY' takes an identifier and a 
 --  combinational function as arguments and returns a process with 
@@ -92,13 +87,8 @@ zipWithSY :: (Typeable a, Typeable b, Typeable c) =>
           -> Signal a              -- ^ First input 'Signal'
           -> Signal b              -- ^ Second input 'Signal'
           -> Signal c              -- ^ Output Signal 
-zipWithSY id f s1 s2 = Signal (newNodeOutSig nodeRef ZipWithNSYOut outType)
-  where (_, procFunRetType, _) = unArrowT ((typ.ast) f)
-        -- Note: since the the arguments of zipWithSY are forced to be
-        --       Typeable (and consequently monomorphic) the context 
-        --       returned by unArrowT will always be empty and can be ignored. 
-        outType = signalize procFunRetType
-        nodeRef = newURef $ Proc id $ 
+zipWithSY id f s1 s2 = Signal (newNodeOutSig nodeRef ZipWithNSYOut)
+  where nodeRef = newURef $ Proc id $ 
                      ZipWithNSY (procFun2Dyn f) [unSignal s1,unSignal s2]
 
 
@@ -113,13 +103,8 @@ zipWith3SY :: (Typeable a, Typeable b, Typeable c, Typeable d) =>
            -> Signal b              -- ^ Second input 'Signal'
            -> Signal c              -- ^ Third input 'Signal'
            -> Signal d              -- ^ Output Signal 
-zipWith3SY id f s1 s2 s3 = Signal (newNodeOutSig nodeRef ZipWithNSYOut outType)
-  where (_, procFunRetType, _) = unArrowT ((typ.ast) f)
-        -- Note: since the the arguments of zipWithSY are forced to be
-        --       Typeable (and consequently monomorphic) the context 
-        --       returned by unArrowT will always be empty and can be ignored. 
-        outType = signalize procFunRetType
-        nodeRef = newURef $ Proc id $ 
+zipWith3SY id f s1 s2 s3 = Signal (newNodeOutSig nodeRef ZipWithNSYOut)
+  where nodeRef = newURef $ Proc id $ 
                     ZipWithNSY (procFun2Dyn f) 
                                    [unSignal s1, 
                                     unSignal s2, 
@@ -139,14 +124,8 @@ zipWith4SY :: (Typeable a, Typeable b, Typeable c, Typeable d, Typeable e) =>
            -> Signal c              -- ^ Third input 'Signal'
            -> Signal d              -- ^ Fourth input 'Signal'
            -> Signal e              -- ^ Output Signal 
-zipWith4SY id f s1 s2 s3 s4 = 
-   Signal (newNodeOutSig nodeRef ZipWithNSYOut outType)
-  where (_, procFunRetType, _) = unArrowT ((typ.ast) f)
-        -- Note: since the the arguments of zipWith4SY are forced to be
-        --       Typeable (and consequently monomorphic) the context 
-        --       returned by unArrowT will always be empty and can be ignored. 
-        outType = signalize procFunRetType
-        nodeRef = newURef $ Proc id $ 
+zipWith4SY id f s1 s2 s3 s4 = Signal (newNodeOutSig nodeRef ZipWithNSYOut)
+  where nodeRef = newURef $ Proc id $ 
                     ZipWithNSY (procFun2Dyn f) 
                                    [unSignal s1, 
                                     unSignal s2, 
@@ -168,14 +147,8 @@ zipWith5SY :: (Typeable a, Typeable b, Typeable c, Typeable d, Typeable e,
            -> Signal d              -- ^ Fourth input 'Signal'
            -> Signal e              -- ^ Fifth input 'Signal'
            -> Signal f              -- ^ Output Signal 
-zipWith5SY id f s1 s2 s3 s4 s5 = 
-   Signal (newNodeOutSig nodeRef ZipWithNSYOut outType)
-  where (_, procFunRetType, _) = unArrowT ((typ.ast) f)
-        -- Note: since the the arguments of zipWith5SY are forced to be
-        --       Typeable (and consequently monomorphic) the context 
-        --       returned by unArrowT will always be empty and can be ignored. 
-        outType = signalize procFunRetType
-        nodeRef = newURef $ Proc id $ 
+zipWith5SY id f s1 s2 s3 s4 s5 = Signal (newNodeOutSig nodeRef ZipWithNSYOut)
+  where nodeRef = newURef $ Proc id $ 
                     ZipWithNSY (procFun2Dyn f) 
                                    [unSignal s1, 
                                     unSignal s2, 
@@ -201,14 +174,8 @@ zipWith6SY :: (Typeable a, Typeable b, Typeable c, Typeable d, Typeable e,
            -> Signal e              -- ^ Fifth input 'Signal'
            -> Signal f              -- ^ Sixth input 'Signal'
            -> Signal g              -- ^ Output Signal 
-zipWith6SY id f s1 s2 s3 s4 s5 s6 = 
-   Signal (newNodeOutSig nodeRef ZipWithNSYOut outType)
-  where (_, procFunRetType, _) = unArrowT ((typ.ast) f)
-        -- Note: since the the arguments of zipWith5SY are forced to be
-        --       Typeable (and consequently monomorphic) the context 
-        --       returned by unArrowT will always be empty and can be ignored. 
-        outType = signalize procFunRetType
-        nodeRef = newURef $ Proc id $ 
+zipWith6SY id f s1 s2 s3 s4 s5 s6 = Signal (newNodeOutSig nodeRef ZipWithNSYOut)
+  where nodeRef = newURef $ Proc id $ 
                     ZipWithNSY (procFun2Dyn f) 
                                    [unSignal s1, 
                                     unSignal s2, 
@@ -231,25 +198,20 @@ mapxSY id f = V.zipWith (\n s -> mapSY (id ++ show n) f s)
 
 -- | The process constructor 'zipWithxSY' works as 'zipWithSY', but takes a 
 --   vector of signals as input.                                             
-zipWithxSY      :: (Nat s, Typeable a, Typeable b) => 
+zipWithxSY      :: (Nat s, Typeable s, Typeable a, Typeable b) => 
                    ProcId
                 -> ProcFun (FSVec s a -> b) 
                 -> FSVec s (Signal a) 
                 -> Signal b
-zipWithxSY id f sv = Signal (newNodeOutSig nodeRef ZipWithxSYOut outType)
-  where (_, procFunRetType, _) = unArrowT ((typ.ast) f)
-        -- Note: since the the arguments of zipWith5SY are forced to be
-        --       Typeable (and consequently monomorphic) the context 
-        --       returned by unArrowT will always be empty and can be ignored. 
-        outType = signalize procFunRetType
-        nodeRef = newURef $ Proc id $ 
+zipWithxSY id f sv = Signal (newNodeOutSig nodeRef ZipWithxSYOut)
+  where nodeRef = newURef $ Proc id $ 
                     ZipWithxSY (V.length sv)
-                               ((contProcFun2Dyn.vecProcFun2List) f) 
+                               ((vecProcFun2List.contProcFun2Dyn) f) 
                                (map unSignal (V.fromVector sv)) 
         -- Transform the vector argument of a procfun into a list
-        vecProcFun2List :: ProcFun (FSVec s a -> b) -> 
-                           ProcFun ([a] -> b)
-        vecProcFun2List f = f{val = \x -> (val f) (reallyUnsafeVector x)}
+        vecProcFun2List :: TypedProcFun (FSVec s a -> b) -> 
+                           TypedProcFun ([a] -> b)
+        vecProcFun2List f = f{tval = \x -> (tval f) (reallyUnsafeVector x)}
 
                                    
 
@@ -271,10 +233,8 @@ delaySY :: (Typeable a, Lift a) =>
         -> a           -- ^ Initial value
         -> Signal a    -- ^ 'Signal' to be delayed         
         -> Signal a    -- ^ Resulting delayed 'Signal'
-delaySY id v s = Signal (newNodeOutSig nodeRef DelaySYOut outType)
+delaySY id v s = Signal (newNodeOutSig nodeRef DelaySYOut)
   where procVal = mkProcVal v
-        t       = (expTyp . valAST) procVal 
-        outType = signalize t
         nodeRef = newURef $ Proc id $ DelaySY procVal (unSignal s)
 
 
@@ -687,12 +647,10 @@ zip6SY = zipWith6SY "zip6" tup6
 unzipSY :: forall a b . (Typeable a, Typeable b) =>  
           Signal (a,b) 
        -> (Signal a,Signal b)
-unzipSY s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1) outType),
-             Signal (newNodeOutSig nodeRef (UnzipNSYOut 2) outType))
+unzipSY s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1)),
+             Signal (newNodeOutSig nodeRef (UnzipNSYOut 2)))
   where nodeRef = newURef $ Proc "unzipSY" $ 
                      UnzipNSY 2 untup (unSignal s)
-        -- FIXME: remove the undefined
-        outType = undefined
         untup :: Dynamic -> [Dynamic]
         untup i = let (t1,t2) = ((fromJust.fromDynamic) i) :: (a,b)    
                   in [toDyn t1, toDyn t2]
@@ -703,13 +661,11 @@ unzipSY s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1) outType),
 unzip3SY :: forall a b c . (Typeable a, Typeable b, Typeable c) =>  
            Signal (a,b,c) 
         -> (Signal a, Signal b, Signal c)
-unzip3SY s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1) outType),
-              Signal (newNodeOutSig nodeRef (UnzipNSYOut 2) outType),
-              Signal (newNodeOutSig nodeRef (UnzipNSYOut 3) outType))
+unzip3SY s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1)),
+              Signal (newNodeOutSig nodeRef (UnzipNSYOut 2)),
+              Signal (newNodeOutSig nodeRef (UnzipNSYOut 3)))
   where nodeRef = newURef $ Proc "unzip3SY" $ 
                      UnzipNSY 3 untup3 (unSignal s)
-        -- FIXME: remove the undefined
-        outType = undefined
         untup3 :: Dynamic -> [Dynamic]
         untup3 i = let (t1,t2,t3) = ((fromJust.fromDynamic) i) :: (a,b,c)    
                    in [toDyn t1, toDyn t2, toDyn t3]
@@ -720,14 +676,12 @@ unzip4SY :: forall a b c d . (Typeable a, Typeable b, Typeable c,
                               Typeable d) => 
            Signal (a,b,c,d) 
         -> (Signal a, Signal b, Signal c, Signal d)
-unzip4SY s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1) outType),
-              Signal (newNodeOutSig nodeRef (UnzipNSYOut 2) outType),
-              Signal (newNodeOutSig nodeRef (UnzipNSYOut 3) outType),
-              Signal (newNodeOutSig nodeRef (UnzipNSYOut 4) outType))
+unzip4SY s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1)),
+              Signal (newNodeOutSig nodeRef (UnzipNSYOut 2)),
+              Signal (newNodeOutSig nodeRef (UnzipNSYOut 3)),
+              Signal (newNodeOutSig nodeRef (UnzipNSYOut 4)))
   where nodeRef = newURef $ Proc "unzip4SY" $ 
                      UnzipNSY 4 untup4 (unSignal s)
-        -- FIXME: remove the undefined
-        outType = undefined
         untup4 :: Dynamic -> [Dynamic]
         untup4 i = let (t1,t2,t3,t4) = ((fromJust.fromDynamic) i) :: (a,b,c,d)
                    in [toDyn t1, toDyn t2, toDyn t3, toDyn t4]
@@ -738,15 +692,13 @@ unzip5SY :: forall a b c d e . (Typeable a, Typeable b, Typeable c,
                                 Typeable d, Typeable e) => 
             Signal (a,b,c,d,e) 
         -> (Signal a, Signal b, Signal c, Signal d, Signal e)
-unzip5SY s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1) outType),
-              Signal (newNodeOutSig nodeRef (UnzipNSYOut 2) outType),
-              Signal (newNodeOutSig nodeRef (UnzipNSYOut 3) outType),
-              Signal (newNodeOutSig nodeRef (UnzipNSYOut 4) outType),
-              Signal (newNodeOutSig nodeRef (UnzipNSYOut 5) outType))
+unzip5SY s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1)),
+              Signal (newNodeOutSig nodeRef (UnzipNSYOut 2)),
+              Signal (newNodeOutSig nodeRef (UnzipNSYOut 3)),
+              Signal (newNodeOutSig nodeRef (UnzipNSYOut 4)),
+              Signal (newNodeOutSig nodeRef (UnzipNSYOut 5)))
   where nodeRef = newURef $ Proc "unzip5SY" $ 
                      UnzipNSY 5 untup5 (unSignal s)
-        -- FIXME: remove the undefined
-        outType = undefined
         untup5 :: Dynamic -> [Dynamic]
         untup5 i = let (t1,t2,t3,t4,t5) 
                         = ((fromJust.fromDynamic) i) :: (a,b,c,d,e)
@@ -758,16 +710,14 @@ unzip6SY :: forall a b c d e f . (Typeable a, Typeable b, Typeable c,
                                   Typeable d, Typeable e, Typeable f) =>  
            Signal (a,b,c,d,e,f) 
         -> (Signal a, Signal b, Signal c, Signal d, Signal e, Signal f)
-unzip6SY s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1) outType),
-              Signal (newNodeOutSig nodeRef (UnzipNSYOut 2) outType),
-              Signal (newNodeOutSig nodeRef (UnzipNSYOut 3) outType),
-              Signal (newNodeOutSig nodeRef (UnzipNSYOut 4) outType),
-              Signal (newNodeOutSig nodeRef (UnzipNSYOut 5) outType),
-              Signal (newNodeOutSig nodeRef (UnzipNSYOut 6) outType))
+unzip6SY s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1)),
+              Signal (newNodeOutSig nodeRef (UnzipNSYOut 2)),
+              Signal (newNodeOutSig nodeRef (UnzipNSYOut 3)),
+              Signal (newNodeOutSig nodeRef (UnzipNSYOut 4)),
+              Signal (newNodeOutSig nodeRef (UnzipNSYOut 5)),
+              Signal (newNodeOutSig nodeRef (UnzipNSYOut 6)))
   where nodeRef = newURef $ Proc "unzip6SY" $ 
                      UnzipNSY 6 untup6 (unSignal s)
-        -- FIXME: remove the undefined
-        outType = undefined
         untup6 :: Dynamic -> [Dynamic]
         untup6 i = let (t1,t2,t3,t4,t5,t6) 
                         = ((fromJust.fromDynamic) i) :: (a,b,c,d,e,f)
@@ -787,13 +737,11 @@ zipxSY = zipWithxSY "zipxSY" vectId
 unzipxSY :: forall s a . (Typeable s, Nat s, Typeable a) => 
             Signal (FSVec s a) 
          -> FSVec s (Signal a)
-unzipxSY vs = V.map (\tag -> Signal (newNodeOutSig nodeRef tag outType) )
+unzipxSY vs = V.map (\tag -> Signal (newNodeOutSig nodeRef tag) )
                     (reallyUnsafeVector [UnzipxSYOut i | i <- [1..n]])
   where n = toInt (undefined :: s)
         nodeRef = newURef $ Proc "unzipxSY" $
                     UnzipxSY n unvector (unSignal vs)
-        -- FIXME: change the undefined
-        outType = undefined
         unvector :: Dynamic -> [Dynamic]
         unvector i = let v = ((fromJust.fromDynamic) i) :: FSVec s a
                      in map toDyn (V.fromVector v)
@@ -838,13 +786,4 @@ groupSY id k = mooreSY id (f `defArgVal` kV)  (g `defArgVal` kV) s0
      where unsafeReplace' []     _ _ = []
            unsafeReplace' (_:xs) 0 y = (y:xs)
            unsafeReplace' (x:xs) n y = x : (unsafeReplace' xs (n - 1) y)
-  
-----------------------------
--- Internal Helper Functions
-----------------------------
-
-
--- | Nest a type in the 'Signal' type constructor
-signalize :: Type -> Type
-signalize t = (ConT ''Signal) `AppT` t
 

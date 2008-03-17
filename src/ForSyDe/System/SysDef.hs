@@ -19,8 +19,10 @@ module ForSyDe.System.SysDef
    SysDefVal(..), 
    newSysDef,
    PortId,
-   IFace) where
+   Iface,
+   getSymNetlist) where
 
+import ForSyDe.Ids
 import ForSyDe.Signal
 import {-# SOURCE #-} ForSyDe.Netlist 
 import ForSyDe.OSharing
@@ -29,16 +31,17 @@ import ForSyDe.System.SysFun (checkSysFType)
 
 import Data.Maybe (isJust, fromJust)
 import Control.Monad (when, replicateM)
+import Data.Typeable
 import Language.Haskell.TH
 import Language.Haskell.TH.LiftInstances ()
 
 
 
 
--- FIXME: it should be Iface not IFace
+
 -- | Interface, describes the input or output ports of the system.
 --   Each entry contains the name of the port and its type.
-type IFace = [(PortId, Type)]
+type Iface = [(PortId, TypeRep)]
 
 
 -- | We add a phantom parameter to indicate the type of the system 
@@ -51,13 +54,13 @@ newtype PrimSysDef = PrimSysDef {unPrimSysDef :: URef SysDefVal}
 
 -- | The System Definition value
 data SysDefVal = SysDefVal 
-     {id      :: String,                    -- ^ Identifier of the System 
-      t       :: Type,                      -- ^ Type of the system
+     {sid     :: SysId,                     -- ^ Identifier of the System 
+      t       :: TypeRep,                   -- ^ Type of the system
       sysFun  :: [NlSignal] -> [NlSignal],  -- ^ System function
                                             --   in internal untyped form
-      iIface  :: IFace,                     -- ^ Input  interface
-      oIface  :: IFace,                     -- ^ Output interface 
-      errInfo :: String}                    -- ^ Location of the call to 
+      iIface  :: Iface,                     -- ^ Input  interface
+      oIface  :: Iface,                     -- ^ Output interface 
+      loc     :: SysDefLoc}                 -- ^ Location of the call to 
                                             --   newSysDef which created this 
                                             --   System definition  
                                             --   (used for later error 
@@ -107,8 +110,6 @@ newSysDef sysFName inIds outIds =  do
            when (isJust maybeDup)
              (currError  (MultPortId  (fromJust maybeDup)))
            -- Build the system definition
-           let iIface = zip inIds inTypes
-               oIface = zip outIds outTypes 
            errInfo <- currentModule
            -- Names used to build the internal untyped version of the 
            -- system function
@@ -131,9 +132,9 @@ newSysDef sysFName inIds outIds =  do
                             (appE [| toList |]
                                   (appsE $ varE sysFName : inArgs)) )  
                -- Rest of the system defintion
-               sysType   = sysFType
-               inIface   = iIface
-               outIface  = oIface
+               sysType   = $(type2TypeRep sysFType)
+               inIface   = $(genIface inIds inTypes)
+               outIface  = $(genIface outIds outTypes)
                errorInfo = errInfo
                in  SysDef $ PrimSysDef $ newURef $ SysDefVal (show sysFName) 
                                                    sysType
@@ -145,6 +146,20 @@ newSysDef sysFName inIds outIds =  do
            sigE untypedSysDef (return $ ConT ''SysDef `AppT` sysFType)
  where currError  = qError "newSysDef"
 
+
+
+-- | Transform an interface into a list of input signals
+iface2InPorts :: Iface -> [NlSignal]
+iface2InPorts = map (newInPort.fst)          
+
+
+-- | Obtain the symbolic Netlist of a 'PrimSysDef' by applying its system 
+--   function to InPort nodes.
+getSymNetlist :: SysDefVal -> Netlist []
+getSymNetlist sysDefVal = 
+ Netlist $ (sysFun sysDefVal) (iface2InPorts $ iIface sysDefVal) 
+
+        
 
 ----------------------------
 -- Internal Helper Functions
@@ -170,3 +185,19 @@ findDup [_] = Nothing
 findDup (x:xs)
  | elem x xs = Just x
  | otherwise = findDup xs
+
+
+-- | Generate a TypeRep expression given a Template Haskell Type
+--   note that the use of typeOf cannot lead to errors since all the signal
+--   types in a system function are guaranteed to be Typeable by construction
+type2TypeRep :: Type -> ExpQ
+type2TypeRep t = [| typeOf $(sigE [| undefined |] (return t) ) |]
+
+-- | Generate an interface given its identifiers and Template Haskell Types
+genIface :: [PortId] -> [Type] -> ExpQ
+genIface [] _  = listE []
+genIface _  [] = listE []
+genIface (i:ix) (t:tx)  = do
+ ListE rest <- genIface ix tx
+ tupExp <- tupE [[| i |], type2TypeRep t]
+ return (ListE (tupExp:rest)) 

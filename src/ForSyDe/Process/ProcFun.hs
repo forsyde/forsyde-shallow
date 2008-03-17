@@ -15,12 +15,15 @@
 ----------------------------------------------------------------------------- 
 module ForSyDe.Process.ProcFun 
  (ProcFun(..),
-  ProcFunAST(..), 
+  ProcFunAST(..),
+  newProcFun, 
   defArgVal,
   defArgPF,
+  TypedProcFun(..),
+  TypedProcFunAST(..),
   procFun2Dyn,
   contProcFun2Dyn,
-  newProcFun) where
+) where
 
 import ForSyDe.Process.ProcVal (ProcValAST, mkProcValAST)
 import ForSyDe.ForSyDeErr
@@ -31,6 +34,9 @@ import Language.Haskell.TH.LiftInstances ()
 import Data.Dynamic
 import Data.Maybe (fromJust)
 
+-----------
+-- ProcFun
+-----------
 
 -- | A Process Function 
 data ProcFun a = 
@@ -43,7 +49,6 @@ data ProcFun a =
 data ProcFunAST = 
   ProcFunAST {name :: Name,     -- ^ Function Name 
                                     -- (FIXME: maybe just a String?) 
-              typ  :: Type,     -- ^ Function Type
               cls  :: [Clause], -- ^ Function clauses 
               pars :: [DefArg]} -- ^ Default parameters
 
@@ -52,18 +57,6 @@ data ProcFunAST =
 --   Either a process function AST or a value AST
 data DefArg = FunAST ProcFunAST | ValAST ProcValAST
 
-
-
-procFun2Dyn :: Typeable a => ProcFun a -> ProcFun Dynamic
-procFun2Dyn f = f{val= toDyn (val f)}
-
--- | tranform the arguments and return value of
---   a ProcFun to dynamic
-contProcFun2Dyn :: (Typeable a, Typeable b, Functor container) =>
-                   ProcFun (container a -> b) -> 
-                   ProcFun (container Dynamic -> Dynamic)
-contProcFun2Dyn f = f{val = fmapDyn (val f)}
-       where  fmapDyn f cont = toDyn (f (fmap (fromJust.fromDynamic) cont)) 
 
 
 -- | Sets a default value for an argument of the process function
@@ -87,26 +80,67 @@ newProcFun :: Q [Dec] -> ExpQ
 newProcFun fDecQs = do 
       fDecs <- fDecQs   
       -- Check for the declarations to be correct
-      (name, typ, cls) <- recover
-                            (currErr $ IncorrProcFunDecs fDecs) 
-                            (checkDecs fDecs)
+      (name, cls) <- recover (currErr $ IncorrProcFunDecs fDecs) 
+                             (checkDecs fDecs)
       -- Generate the main expression
       exp <-  [| let  fName    = name
-                      fType    = typ
                       fClauses = cls 
                  in ProcFun $(varE name) 
-                            (ProcFunAST fName fType fClauses []) |]
+                            (ProcFunAST fName fClauses []) |]
       -- Add the function declarations to the expression
       return $ LetE fDecs exp  
  where currErr = qError "newProcFun"
- 
+
+----------------
+-- TypedProcFun
+----------------
+
+
+-- | A ProcFun bundled with its type representation. This type is not
+--   exported to the end user. Only used internally.
+data TypedProcFun a =    
+   TypedProcFun {tval  :: a,          -- ^ Value of the function
+                 tast  :: TypedProcFunAST} -- ^ AST of the function
+
+
+-- | A ProcFunAST bundled with its type representation:
+--   Why a TypeRep and not the Type provided by Template Haskell?
+--    We could use the type signature provided by TH but ...
+--     1) We don't want to force the user to provide a signature
+--     2) We don't want to handle polymorphic types. We just want the
+--        monomorphic type used by the process using the procfun.
+--   Why not just including the 'TypeRep' in ProcFunAST?
+--     We need the context of the process to know what monomorphic types are 
+--     going to be used. Thus it is imposible to guess the TypeRep within
+--     the code of newProcFun.
+data TypedProcFunAST = TypedProcFunAST TypeRep ProcFunAST
+
+-- | transform a ProcFun into a Dynamic TypedProcFun
+procFun2Dyn :: Typeable a => ProcFun a -> TypedProcFun Dynamic
+procFun2Dyn ProcFun{val=v,ast=a} = 
+  TypedProcFun (toDyn v) (TypedProcFunAST (typeOf v) a)
+
+-- FIXME: probably not needed
+-- | tranform the arguments and return value of
+--   a ProcFun to dynamic
+contProcFun2Dyn :: (Typeable a, Typeable b, Functor container, 
+                    Typeable1 container) =>
+                   ProcFun (container a -> b) -> 
+                   TypedProcFun (container Dynamic -> Dynamic)
+contProcFun2Dyn ProcFun{val=v,ast=a} = 
+     TypedProcFun (fmapDyn v) (TypedProcFunAST (typeOf v) a)
+       where  fmapDyn f cont = toDyn (f (fmap (fromJust.fromDynamic) cont)) 
+
+
 ----------------------------
 -- Internal Helper Functions
 ----------------------------
 
 -- | Check the decarations passed to newProcFun to be correct
-checkDecs :: [Dec] -> Q (Name, Type, [Clause])
-checkDecs [SigD name1 t, FunD name2 cls] | name1 == name2 = 
-  return (name1, t, cls) 
+checkDecs :: [Dec] -> Q (Name, [Clause])
+checkDecs [FunD name2 cls] = return (name2, cls) 
+-- in case a signature is provided
+checkDecs [SigD name1 _, FunD name2 cls] | name1 == name2 = 
+  return (name1, cls) 
 checkDecs _                  = qGiveUp name
   where name = "ForSyDe.Process.ProcFun.checkDecs"
