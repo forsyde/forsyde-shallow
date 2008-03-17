@@ -99,10 +99,6 @@ data TravResult = TravResult
   {archDecs  :: [BlockDecItem], -- generated architecture declarations 
    archSms   :: [ConcSm]      } -- generated architecture statements
 
--- | Set the Design File information inside the VHDL monad
-setTravResult :: TravResult -> VHDLM ()
-setTravResult travRes = modify (\st -> st{res=travRes})
-
 -- | empty VHDL compilation Result
 emptyTravResult :: TravResult
 emptyTravResult = TravResult [] []
@@ -146,6 +142,9 @@ addStm sm = modify (\st -> st{res= addStm' (res st)})
  -- FIXME: use a queue for the declarations
  where addStm' res =  res{archSms=archSms res ++ [sm]}
 
+-- | Set the compiled systems table inside the VHDL monad
+setCompSysDefs :: URefTableIO SysDefVal () -> VHDLM ()
+setCompSysDefs table = modify (\st -> st{compSysDefs=table})
  
 -- | Add an element to the 'SysDef' table in the state
 addSysDef :: URef SysDefVal -> VHDLM ()

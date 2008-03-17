@@ -16,12 +16,14 @@ module ForSyDe.Backend.VHDL.Translate where
 import ForSyDe.Backend.VHDL.AST
 import qualified ForSyDe.Backend.VHDL.AST as VHDL
 import ForSyDe.Backend.VHDL.Constants
+import ForSyDe.Backend.VHDL.Traverse.VHDLM
 
 import ForSyDe.Ids
 import ForSyDe.Signal
 import ForSyDe.ForSyDeErr
 import ForSyDe.System.SysDef
 import qualified Language.Haskell.TH as TH
+import qualified Data.Traversable as DT
 
 import Data.Typeable
 import Data.Char (toLower)
@@ -36,8 +38,17 @@ transSysDef2Ent sysDefVal = do
  inDecs  <- mapM (transPort2SigDec In)  (iIface sysDefVal) 
  outDecs <- mapM (transPort2SigDec Out) (oIface sysDefVal)
  return $ EntityDec entId (inDecs ++ outDecs) 
- 
 
+-- | Translate an intermediate Signal to a VHDL Signal declaration
+transIntSignal2SigDec ::  IntSignalInfo -- ^ Intermediate signal information 
+             -> TypeRep -- ^ Type of the intermediate signal 
+             -> Maybe TH.Exp -- ^ Maybe an initializer expression for the signal
+             -> EProne SigDec
+transIntSignal2SigDec (IntSignalInfo vId) tr mExp = do
+ tm <- transSignalTR2TM tr
+ mVExp <- DT.mapM transExp2VHDL mExp
+ return $ SigDec vId tm mVExp
+ 
 -- | Translate a Port to a VHDL Interface signal declaration
 transPort2SigDec :: Mode -> (PortId, TypeRep) -> EProne IfaceSigDec
 transPort2SigDec m (pid, trep) = do           

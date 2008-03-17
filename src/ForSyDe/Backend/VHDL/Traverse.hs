@@ -26,6 +26,7 @@ import ForSyDe.System.SysDef
 import ForSyDe.Process.ProcVal
 import ForSyDe.Netlist.Traverse
 import ForSyDe.Netlist
+import ForSyDe.OSharing
 
 import Control.Monad.State
 
@@ -63,7 +64,7 @@ writeVHDLM = do
 traverseVHDLM :: Netlist [] -> VHDLM [IntSignalInfo]
 traverseVHDLM = traverseSEIO newVHDL defineVHDL
 
--- | new traversing function for the VHDL backend
+-- | \'new\' traversing function for the VHDL backend
 newVHDL :: NlNode NlSignal -> VHDLM [(NlNodeOut, IntSignalInfo)]
 newVHDL node = case node of
   -- We can create the id unsafely because it was already checked in
@@ -99,26 +100,62 @@ newVHDL node = case node of
                (outTags node) [(1::Int)..]
  where outSuffix = "_out"    
        
--- | define traversing function for the VHDL backend
+-- | \'define\' traversing function for the VHDL backend
 defineVHDL :: [(NlNodeOut, IntSignalInfo)] 
              -> NlNode IntSignalInfo 
              -> VHDLM ()
 defineVHDL outs ins = case (outs,ins) of
   (_, InPort _) -> return ()
-  ([(ConstOut, IntSignalInfo cid)],  Const pv) -> do
+  ([(ConstOut, intSig)],  Const ProcVal{valAST=ast}) -> do
    -- FIXME: give identifier to constants as well
-   vTM  <- liftEProneSys $  transSignalTR2TM ((expTyp.valAST) pv)
-   vExp <- liftEProneSys $  transExp2VHDL ((exp.valAST) pv)
-   addSigDec (SigDec cid vTM (Just vExp))
+   -- Generate a Signal declaration for the constant
+   dec  <- liftEProneSys $  transIntSignal2SigDec 
+                                   intSig (expTyp ast) (Just (exp ast))
+   addSigDec dec
   (outs, Proc pid proc) -> case (outs, proc) of
-    ([(ZipWithNSYOut, IntSignalInfo cid)],  ZipWithNSY _ _) -> 
-      return ()
+    ([(ZipWithNSYOut, intSig)],  ZipWithNSY _ _) ->  
+     -- Translate the zipWithN process to a block
+     -- Generate a signal declaration for the resulting signal
+     return () 
     (_, ZipWithxSY _ _ _) -> return ()
     (_, UnzipNSY _ _ _) -> return ()
     (_, UnzipxSY _ _ _) -> return ()
-    ([(DelaySYOut, IntSignalInfo cid)],  DelaySY _ _) -> 
-      return ()
-    (outs, SysIns  _ _) -> do
-      
+    ([(DelaySYOut, intSig)],  DelaySY _ _) -> do
+      -- Translate the delay process to a block
+      -- Generate a signal declaration for the resulting delayed signal
+      return ()     
+    (outs, SysIns pSys _) -> do
+      let parentSysRef = unPrimSysDef pSys 
+      -- Translate the instance to a port map
+      -- Generate a signal declaration for each of the resulting signals
+      -- Compile the parent system 
+      --  (i.e. the system associated with the instance)
+      writeVHDLInsParent parentSysRef      
+
+
+
+
+
+
+-- | Compile the parent system of an instance
+writeVHDLInsParent :: URef SysDefVal -> VHDLM ()
+writeVHDLInsParent parentSysRef = do
+      let parentSysVal = readURef parentSysRef
+      -- Mark the parent system as compiled
+      addSysDef parentSysRef
+      --  Save current state
+      s <- get
+      -- Create a new state for the compilation keeping the compiled systems 
+      -- table
+      s' <- liftIO $ initVHDLTravST parentSysVal
+      put s'
+      setCompSysDefs (compSysDefs s)
+      -- Compile the parent System      
+      writeVHDLM
+      -- Restore the state, using the table obtained by the compilation of the 
+      -- parent system
+      table' <- gets compSysDefs
+      put s
+      setCompSysDefs table'      
      
     
