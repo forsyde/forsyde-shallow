@@ -51,4 +51,4 @@ std_logicTM = unsafeVHDLBasicId "std_logic"
 
 -- | int32 typemark (defined in ForSyDe's VHDL library)
 int32TM :: TypeMark
-int32TM = unsafeVHDLBasicId "int32TM"
+int32TM = unsafeVHDLBasicId "forsyde.types.int32"

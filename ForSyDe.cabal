@@ -25,8 +25,7 @@ Library
                    pretty, 
                    template-haskell > 2.0
   hs-source-dirs:  src
-  exposed-modules: Language.Haskell.TH.TypeLib,
-                   Language.Haskell.TH.Lift,
+  exposed-modules: Language.Haskell.TH.Lift,
                    Language.Haskell.TH.LiftInstances,
                    ForSyDe,
                    ForSyDe.Ids,
@@ -40,7 +39,9 @@ Library
                    ForSyDe.Backend,
                    ForSyDe.Backend.Simulate,
                    ForSyDe.Backend.VHDL
-  other-modules:   ForSyDe.ForSyDeErr,
+  other-modules:   Language.Haskell.TH.TypeLib,
+                   Data.Typeable.TypeRepLib,
+                   ForSyDe.ForSyDeErr,
                    ForSyDe.Netlist,
                    ForSyDe.Netlist.Traverse,
                    ForSyDe.OSharing,

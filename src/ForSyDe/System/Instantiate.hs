@@ -77,11 +77,8 @@ instantiate insId sysDefN =
                       sysVal  = (readURef.unPrimSysDef.unSysDef) sysDef
                       -- Put all the inputs in a list
                       allIns = $inList
-                      -- Input info of the instance node
-                      inputsInfo =  
-                          zipWith (\(id,_) s -> (id,s))  (iIface sysVal) allIns
                       -- The instance node
-                      insNode = newSysIns insId sysDef inputsInfo
+                      insNode = newSysIns insId sysDef allIns
                       -- Generate a Signal for each output
                       outList = map (\(id, _) -> newNodeOutSig 
                                                   insNode (SysInsOut id)) 

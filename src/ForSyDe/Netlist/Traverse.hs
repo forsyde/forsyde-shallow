@@ -42,7 +42,7 @@ instance DF.Foldable NlProc where
  foldMap f (UnzipNSY _ _ i)    = f i
  foldMap f (UnzipxSY _ _ i)    = f i                                  
  foldMap f (DelaySY _ i)       = f i
- foldMap f (SysIns  _ i)       = DF.foldMap (f.snd) i
+ foldMap f (SysIns  _ i)       = DF.foldMap f i
 
 
 
@@ -57,7 +57,7 @@ instance Functor NlProc where
  fmap f (UnzipNSY n pf i)    = UnzipNSY n pf (f i)
  fmap f (UnzipxSY n pf i)    = UnzipxSY n pf (f i)                       
  fmap f (DelaySY c i)        = DelaySY c (f i)
- fmap f (SysIns def is)      = SysIns def (fmap (fmap f) is)
+ fmap f (SysIns def is)      = SysIns def (fmap f is)
 
 
 
@@ -72,8 +72,7 @@ instance DT.Traversable NlProc where
  traverse f (UnzipNSY n pf i)    = UnzipNSY n pf <$> f i
  traverse f (UnzipxSY n pf i)    = UnzipxSY n pf <$> f i
  traverse f (DelaySY c i)        = DelaySY c <$> f i
- traverse f (SysIns def is)      = SysIns def <$> DT.traverse f' is 
-  where f' (id,s) = (,) id <$> f s
+ traverse f (SysIns def is)      = SysIns def <$> DT.traverse f is
 
 
 

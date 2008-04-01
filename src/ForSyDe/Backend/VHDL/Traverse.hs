@@ -24,6 +24,7 @@ import ForSyDe.Backend.VHDL.AST
 import ForSyDe.ForSyDeErr
 import ForSyDe.System.SysDef
 import ForSyDe.Process.ProcVal
+import ForSyDe.Process.ProcFun
 import ForSyDe.Netlist.Traverse
 import ForSyDe.Netlist
 import ForSyDe.OSharing
@@ -112,11 +113,19 @@ defineVHDL outs ins = case (outs,ins) of
    dec  <- liftEProneSys $  transIntSignal2SigDec 
                                    intSig (expTyp ast) (Just (exp ast))
    addSigDec dec
-  (outs, Proc pid proc) -> case (outs, proc) of
-    ([(ZipWithNSYOut, intSig)],  ZipWithNSY _ _) ->  
+  (outs, Proc pid proc) -> do
+   -- We can unsafely transform the pid to a VHDL identifier because
+   -- it was checked in newVHDL
+   let vPid = unsafeVHDLId pid
+   case (outs, proc) of
+    ([(ZipWithNSYOut, intOut)],  ZipWithNSY f intIns) -> do 
      -- Translate the zipWithN process to a block
+     -- and get the declaration of its output signal
+     (block, dec) <- liftEProneProc pid $
+              transZipWithN2Block vPid (map sId intIns) (tast f) (sId intOut)  
+     addStm $ CSBSm block
      -- Generate a signal declaration for the resulting signal
-     return () 
+     addSigDec dec
     (_, ZipWithxSY _ _ _) -> return ()
     (_, UnzipNSY _ _ _) -> return ()
     (_, UnzipxSY _ _ _) -> return ()
@@ -124,10 +133,22 @@ defineVHDL outs ins = case (outs,ins) of
       -- Translate the delay process to a block
       -- Generate a signal declaration for the resulting delayed signal
       return ()     
-    (outs, SysIns pSys _) -> do
-      let parentSysRef = unPrimSysDef pSys 
-      -- Translate the instance to a port map
+    (intOuts, SysIns pSys intIns) -> do
+      let parentSysRef = unPrimSysDef pSys
+          parentSysVal = readURef parentSysRef
+          parentInIface = iIface parentSysVal
+          parentOutIface = oIface parentSysVal
+          typedOuts = zipWith (\(id,t) (tag,int) -> (sId int,t)) parentOutIface
+                                                                 intOuts 
+          parentId = sid parentSysVal 
+      -- Translate the instance to a component isntantiation 
+      -- and get the declaration of the output signals
+      (compIns, decs) <- liftEProneProc pid $
+               transSysIns2CompIns vPid (map sId intIns) typedOuts parentId 
+                           (map fst parentInIface) (map fst parentOutIface)
+      addStm $ CSISm compIns
       -- Generate a signal declaration for each of the resulting signals
+      mapM addSigDec decs
       -- Compile the parent system 
       --  (i.e. the system associated with the instance)
       writeVHDLInsParent parentSysRef      

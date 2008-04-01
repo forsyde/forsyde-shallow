@@ -104,10 +104,9 @@ data NlProc inputi =
  DelaySY    ProcVal    inputi                       | 
  
  -- A System Instance is considered a special process
- -- FIXME: aren't the PortId elements redundant?
  
  -- | System Instance
- SysIns PrimSysDef [(PortId, inputi)]                 
+ SysIns PrimSysDef [inputi]                 
  
          
 
@@ -189,7 +188,7 @@ newInPort id = NlTree (NlEdge (newURef (InPort id)) InPortOut)
 
 
 -- | Generate a reference to a new 'SysIns' node
-newSysIns :: ProcId -> SysDef a -> [(PortId, NlSignal)] 
+newSysIns :: ProcId -> SysDef a -> [NlSignal] 
              -> URef (NlNode NlSignal)
 newSysIns id (SysDef primSysDef) inputInfo = 
     newURef (Proc id (SysIns primSysDef inputInfo))   

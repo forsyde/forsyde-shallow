@@ -24,3 +24,4 @@ writeDesignFile :: DesignFile -> FilePath -> IO ()
 writeDesignFile df fp = do
  handle     <- openFile fp WriteMode
  hPutStr handle $ (render . VHDLPpr.ppr) df
+ hClose handle

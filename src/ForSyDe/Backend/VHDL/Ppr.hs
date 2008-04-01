@@ -332,5 +332,5 @@ vComma doc1 doc2 = doc1 <> comma $+$ doc2
 -- Only append if both of the documents are non-empty
 (<++>) :: Doc -> Doc -> Doc
 d1 <++> d2 
- | isEmpty d1 && isEmpty d2 = empty
+ | isEmpty d1 || isEmpty d2 = empty
  | otherwise = d1 <+> d2

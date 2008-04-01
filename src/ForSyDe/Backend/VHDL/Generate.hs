@@ -26,7 +26,7 @@ genOutAssigns = zipWith assign
               CSSASm $ orig `genSimpleAssign` dest
 
 -- | Generate a simple signal assignment, from a VHDL identifier to a
---   VHD identifier
+--   VHDL identifier
 genSimpleAssign :: VHDLId -- ^ origin 
                ->  VHDLId -- ^ destination
                ->  ConSigAssignSm
@@ -39,4 +39,27 @@ genSimpleAssign orig dest =
 genDesignFile :: EntityDec -> TravResult -> DesignFile 
 genDesignFile ent@(EntityDec id _) (TravResult decs stms) = 
    DesignFile contextClause [LUEntity ent, LUArch archBody]
- where archBody = ArchBody  (unsafeVHDLBasicId "Synthesizable") id decs stms
+ where archBody = ArchBody  (unsafeVHDLBasicId "synthesizable") id decs stms
+
+-- | Generate a list of association from two lists of signal identifiers
+--   The first one establishes the formal parameters
+genAssocElems :: [VHDLName] -> [VHDLName] -> [AssocElem]
+genAssocElems formalNames actualNames = zipWith genAssoc formalNames actualNames
+
+-- | Generate a port map from two lists of signal identifiers
+--   The first list establishes the formal parameters
+genPMap :: [VHDLName] -> [VHDLName] -> PMapAspect
+genPMap formalNames actualNames = 
+  PMapAspect $ genAssocElems formalNames actualNames
+
+
+-- | Generate a function call from two lists of signal identifiers
+--   The first list establishes the formal parameters
+genFCall :: VHDLName -> [VHDLName] -> [VHDLName] -> FCall 
+genFCall fName formalNames actualNames = 
+  FCall fName $ zipWith genAssoc formalNames actualNames
+  
+
+-- Generate an association of a formal and actual parameter
+genAssoc :: VHDLName -> VHDLName -> AssocElem
+genAssoc formal actual = Just formal :=>: ADName actual

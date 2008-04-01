@@ -18,7 +18,6 @@ module ForSyDe.System.SysDef
    PrimSysDef(..),
    SysDefVal(..), 
    newSysDef,
-   PortId,
    Iface,
    getSymNetlist) where
 
@@ -136,12 +135,13 @@ newSysDef sysFName inIds outIds =  do
                inIface   = $(genIface inIds inTypes)
                outIface  = $(genIface outIds outTypes)
                errorInfo = errInfo
-               in  SysDef $ PrimSysDef $ newURef $ SysDefVal (show sysFName) 
-                                                   sysType
-                                                   sysFun
-                                                   inIface 
-                                                   outIface  
-                                                   errorInfo |] 
+               in  SysDef $ PrimSysDef $ newURef $ 
+                         SysDefVal (nameBase sysFName)
+                                   sysType
+                                   sysFun
+                                   inIface 
+                                   outIface  
+                                   errorInfo |] 
            -- We are done, we simply specify the concrete type of the SysDef
            sigE untypedSysDef (return $ ConT ''SysDef `AppT` sysFType)
  where currError  = qError "newSysDef"

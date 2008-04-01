@@ -141,9 +141,9 @@ instance Show ForSyDeErr where
      show l1 ++ " /= " ++ show l2
  show EmptyVHDLId = "Empty VHDL identifier"
  show (IncVHDLBasId id)  = "Incorrect VHDL basic identifier " ++ 
-                           "(" ++ id ++ ")"
+                           "`" ++ id ++ "'"
  show (IncVHDLExtId id)  = "Incorrect VHDL extended identifier " ++ 
-                           "(" ++ id ++ ")"
+                           "`" ++ id ++ "'"
  show (UnsupportedType tr) = "Unsupported type " ++ show tr
  show (ReservedId str)  = "Identifier `" ++ str ++ "' is reserved"
  show UnsupportedProc = "Unusupported process"
@@ -257,8 +257,8 @@ qPutTraceMsg msg = qRunIO (putTraceMsg msg)
 
 -- | Print an Error
 printError :: Show a => a -> IO ()
-printError = print.("Error: "++).show
+printError = putStrLn.("Error: "++).show
 
 -- | Print a VHDL compilation error
 printVHDLError :: Show a => a -> IO ()
-printVHDLError = print.("VHDL Compilation Error: "++).show
+printVHDLError = putStrLn.("VHDL Compilation Error: "++).show

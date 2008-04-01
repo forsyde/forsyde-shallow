@@ -190,8 +190,10 @@ simulateDyn pSysDef inps | seq argsl True = runST (
              Proc _ (SysIns pSysDef ins)) ->
                -- FIXME: ugly ugly ugly
                do let sysDefVal = (readURef . unPrimSysDef) pSysDef
+                      taggedIns = zipWith (\(id,_) var -> (id,var)) 
+                                          (iIface sysDefVal) ins
                   sr  <- traverseST 
-                           (newInstance ins)
+                           (newInstance taggedIns)
                            define 
                            (getSymNetlist sysDefVal)
 
