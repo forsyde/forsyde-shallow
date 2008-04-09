@@ -31,32 +31,51 @@ import ForSyDe.OSharing
 
 import Control.Monad.State
 
-import Prelude hiding (exp)
-
 -- | Internal VHDL-Monad version of 'ForSyDe.Backend.writeVHDL'
 writeVHDLM :: VHDLM ()
-writeVHDLM = do
-  sysDefVal <- gets currSysDef
+writeVHDLM = writeLocalVHDLM >> writeGlobalVHDLM
+
+-- | Write the global traversing results (i.e. the library design file)
+--   accumulated  in the state of the monad
+writeGlobalVHDLM :: VHDLM ()
+writeGlobalVHDLM = do
+ gSysId <- gets (sid.globalSysDef.global)
+ debugMsg $ "Generating global system library for `" ++ gSysId ++  "' ...\n"
+ globalRes <- gets (globalRes.global)
+ -- We can create the id unsafely because sysId was already checked in
+ -- transSysDef2Ent
+ let libName = gSysId ++ "_lib"
+     libDesignFile = genLibDesignFile globalRes
+ liftIO $ writeDesignFile libDesignFile (libName ++ ".vhd")
+
+
+-- | Traverse the netlist and write the local results (i.e. system design files)
+writeLocalVHDLM :: VHDLM ()
+writeLocalVHDLM = do
+  lSysDefVal <- gets (currSysDef.local)
+  gSysDefVal <- gets (globalSysDef.global)
+  let lSysDefId =  sid lSysDefVal
+  debugMsg $ "Compiling system definition `" ++ lSysDefId ++ "' ...\n"
   -- Obtain the entity declaration of the system and the VHDL identifiers
   -- of the output signals.
   -- It is important to do it first, in order to validate the identifiers of the
   -- input and output signals.
-  entity@(EntityDec _ eIface) <- liftEProneSys $  transSysDef2Ent sysDefVal 
+  entity@(EntityDec _ eIface) <- transSysDef2Ent lSysDefVal 
   -- Obtain the netlist of the system definition 
-  let nl = getSymNetlist sysDefVal
+  let nl = getSymNetlist lSysDefVal
   -- Traverse the netlist, and get the traversing results
   intOutsInfo <- traverseVHDLM nl 
-  TravResult decs stms <- gets res
+  LocalTravResult decs stms <- gets (localRes.local)
   -- For each output signal, we need an assigment between its intermediate
   -- signal and the final output signal declared in the entity interface.
   let outIds = mapFilter (\(IfaceSigDec id _ _) -> id) 
                          (\(IfaceSigDec _  m _) -> m == Out) eIface
-      outAssigns = genOutAssigns intOutsInfo outIds
-      finalRes = TravResult decs (stms ++ outAssigns)
+      outAssigns = genOutAssigns outIds intOutsInfo
+      finalRes = LocalTravResult decs (stms ++ outAssigns)
   -- Finally, generate the design file
-      designFile = genDesignFile entity finalRes
+      sysDesignFile = genSysDesignFile (sid gSysDefVal) entity finalRes
   -- and write it to disk
-  liftIO $ writeDesignFile designFile (((++ ".vhd").sid) sysDefVal)
+  liftIO $ writeDesignFile sysDesignFile (lSysDefId ++ ".vhd") 
  where mapFilter f p = foldr (\x ys -> if p x then (f x):ys else ys) []
 
 -- | Traverse the netlist of a System Definition, 
@@ -68,52 +87,53 @@ traverseVHDLM = traverseSEIO newVHDL defineVHDL
 -- | \'new\' traversing function for the VHDL backend
 newVHDL :: NlNode NlSignal -> VHDLM [(NlNodeOut, IntSignalInfo)]
 newVHDL node = case node of
-  -- We can create the id unsafely because it was already checked in
-  -- transSysDef2Ent
-  InPort id -> return [(InPortOut, IntSignalInfo (unsafeVHDLId id))]
+  InPort id -> return [(InPortOut, unsafeVHDLId id)]
   -- FIXME: make it a reserved identifier
   Const _ -> do 
-   n <- gets constNum
+   n <- gets (constNum.local)
    incConstNum
-   return [(ConstOut, IntSignalInfo (unsafeVHDLId $ "const" ++ show n))]
-  Proc pid proc -> do
-   let unsupportedError = throwFErrorProc pid $ UnsupportedProc
+   return [(ConstOut, unsafeVHDLId $ "const" ++ show n)]
+  Proc pid proc -> withProcC pid $ do
    -- Obtain the VHDL id of the process
-   vpid <- liftEProneProc pid $  transProcId2VHDL pid
+   vpid <- transProcId2VHDL pid
    -- function to create an intermediate signal out of the process
    -- identifier and a string suffix
-   let procSuffSignal sigSuffix = IntSignalInfo $ unsafeIdAppend vpid sigSuffix 
+   let procSuffSignal sigSuffix = unsafeIdAppend vpid sigSuffix
+   -- Multiple output tags, add a numeric suffix specifying the output
+       multOutTags =  
+            zipWith (\tag n -> (tag, procSuffSignal $ outSuffix ++ show n))
+                    (outTags node) [(1::Int)..]
    case proc of
     ZipWithNSY _ _ -> return [(ZipWithNSYOut, procSuffSignal outSuffix)]
-    ZipWithxSY _ _ _ -> unsupportedError
-    UnzipNSY _ _ _ -> unsupportedError
-    UnzipxSY _ _ _ -> unsupportedError
+    ZipWithxSY _ _ -> return [(ZipWithxSYOut, procSuffSignal outSuffix)]
+    UnzipNSY _ _ _ -> return multOutTags
+    UnzipxSY _ _ _ _ -> return multOutTags 
     DelaySY _ _ -> return [(DelaySYOut, procSuffSignal outSuffix)]
-    SysIns  _ _ -> do
+    SysIns  _ _ ->
       -- Note: Here we could use the name of the System outputs instead of
       --       instanceid_out_n but ... that could cause
       --       clashes with the oher signal names (we only check for the
       --       of the uniqueness of all process ids within a system when 
       --       creating it). We could check for those clashes but it would be
       --       ineffective and ilogical.
-      return $ 
-       zipWith (\tag n -> (tag, procSuffSignal $ outSuffix ++ show n))
-               (outTags node) [(1::Int)..]
+      return multOutTags
  where outSuffix = "_out"    
        
 -- | \'define\' traversing function for the VHDL backend
 defineVHDL :: [(NlNodeOut, IntSignalInfo)] 
              -> NlNode IntSignalInfo 
              -> VHDLM ()
-defineVHDL outs ins = case (outs,ins) of
+defineVHDL outs ins = do 
+ case (outs,ins) of
   (_, InPort _) -> return ()
   ([(ConstOut, intSig)],  Const ProcVal{valAST=ast}) -> do
    -- FIXME: give identifier to constants as well
    -- Generate a Signal declaration for the constant
-   dec  <- liftEProneSys $  transIntSignal2SigDec 
-                                   intSig (expTyp ast) (Just (exp ast))
+   let cons = expVal ast
+   dec  <- withProcValC cons $ transVHDLName2SigDec 
+                                   intSig (expTyp ast) (Just cons)
    addSigDec dec
-  (outs, Proc pid proc) -> do
+  (outs, Proc pid proc) -> withProcC pid $ do
    -- We can unsafely transform the pid to a VHDL identifier because
    -- it was checked in newVHDL
    let vPid = unsafeVHDLId pid
@@ -121,38 +141,60 @@ defineVHDL outs ins = case (outs,ins) of
     ([(ZipWithNSYOut, intOut)],  ZipWithNSY f intIns) -> do 
      -- Translate the zipWithN process to a block
      -- and get the declaration of its output signal
-     (block, dec) <- liftEProneProc pid $
-              transZipWithN2Block vPid (map sId intIns) (tast f) (sId intOut)  
+     (block, dec) <- transZipWithN2Block vPid intIns (tpfloc f) (tast f) intOut
      addStm $ CSBSm block
      -- Generate a signal declaration for the resulting signal
      addSigDec dec
-    (_, ZipWithxSY _ _ _) -> return ()
-    (_, UnzipNSY _ _ _) -> return ()
-    (_, UnzipxSY _ _ _) -> return ()
-    ([(DelaySYOut, intSig)],  DelaySY _ _) -> do
-      -- Translate the delay process to a block
-      -- Generate a signal declaration for the resulting delayed signal
-      return ()     
+    ([(ZipWithxSYOut, intOut)], ZipWithxSY f intIns) -> do
+     -- Translate the zipWithx process to a block
+     -- and get the declaration of its output signal
+     (block, dec) <- transZipWithx2Block vPid intIns (tpfloc f) (tast f) intOut
+     addStm $ CSBSm block
+     -- Generate a signal declaration for the resulting signal
+     addSigDec dec      
+    (intOuts, UnzipNSY outTypes _ intIn) -> do
+     -- Translate the zipWithNSY process to a block
+     -- and get the declaration of its output signal
+     (block, decs) <- transUnzipNSY2Block vPid intIn (map snd intOuts) outTypes 
+     addStm $ CSBSm block
+     -- Generate a signal declaration for the resulting signals
+     mapM_ addSigDec decs
+    (intOuts, UnzipxSY typ size _ intIn) -> do
+     -- Translate the UnzipxSY process to a block
+     -- and get the declaration of its output signal
+     (block, decs) <- transUnzipxSY2Block vPid intIn (map snd intOuts) typ size 
+     addStm $ CSBSm block
+     -- Generate a signal declaration for the resulting signals
+     mapM_ addSigDec decs
+    ([(DelaySYOut, intOut)],  DelaySY initExp intIn) -> do
+     -- Translate the delay process to a block
+     -- and get the declaration of its output signal
+     (block, dec) <- transDelay2Block vPid intIn (valAST initExp) intOut
+     addStm $ CSBSm block
+     -- Generate a signal declaration for the resulting delayed signal
+     addSigDec dec 
     (intOuts, SysIns pSys intIns) -> do
       let parentSysRef = unPrimSysDef pSys
           parentSysVal = readURef parentSysRef
           parentInIface = iIface parentSysVal
           parentOutIface = oIface parentSysVal
-          typedOuts = zipWith (\(id,t) (tag,int) -> (sId int,t)) parentOutIface
-                                                                 intOuts 
+          typedOuts = zipWith (\(_, t) (_, int) -> (int,t)) parentOutIface
+                                                            intOuts 
           parentId = sid parentSysVal 
-      -- Translate the instance to a component isntantiation 
+      -- Translate the instance to a component instantiation 
       -- and get the declaration of the output signals
-      (compIns, decs) <- liftEProneProc pid $
-               transSysIns2CompIns vPid (map sId intIns) typedOuts parentId 
-                           (map fst parentInIface) (map fst parentOutIface)
+      (compIns, decs) <- transSysIns2CompIns vPid intIns typedOuts parentId 
+                              (map fst parentInIface) (map fst parentOutIface)
       addStm $ CSISm compIns
       -- Generate a signal declaration for each of the resulting signals
-      mapM addSigDec decs
+      mapM_ addSigDec decs
       -- Compile the parent system 
       --  (i.e. the system associated with the instance)
       writeVHDLInsParent parentSysRef      
 
+-- Othewise there is a problem of inconsisten tags
+    _ -> intError "ForSyDe.Backend.VHDL.Traverse.defineVHDL" InconsOutTag
+  _ -> intError "ForSyDe.Backend.VHDL.Traverse.defineVHDL" InconsOutTag
 
 
 
@@ -161,22 +203,15 @@ defineVHDL outs ins = case (outs,ins) of
 -- | Compile the parent system of an instance
 writeVHDLInsParent :: URef SysDefVal -> VHDLM ()
 writeVHDLInsParent parentSysRef = do
-      let parentSysVal = readURef parentSysRef
-      -- Mark the parent system as compiled
-      addSysDef parentSysRef
-      --  Save current state
-      s <- get
-      -- Create a new state for the compilation keeping the compiled systems 
-      -- table
-      s' <- liftIO $ initVHDLTravST parentSysVal
-      put s'
-      setCompSysDefs (compSysDefs s)
-      -- Compile the parent System      
-      writeVHDLM
-      -- Restore the state, using the table obtained by the compilation of the 
-      -- parent system
-      table' <- gets compSysDefs
-      put s
-      setCompSysDefs table'      
-     
+      -- Only compile when the Recursive option was provided and
+      -- the parent system wasn't compiled before
+      rec <- isRecursiveSet
+      when rec $
+         do wasCompiled <- traversedSysDef parentSysRef
+            when (not wasCompiled) $ 
+               do let parentSysVal = readURef parentSysRef
+                  -- Mark the parent system as compiled
+                  addSysDef parentSysRef
+                  -- Compile the parent system
+                  withLocalST (initLocalST parentSysVal) writeLocalVHDLM
     

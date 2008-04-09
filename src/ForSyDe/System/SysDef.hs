@@ -59,7 +59,7 @@ data SysDefVal = SysDefVal
                                             --   in internal untyped form
       iIface  :: Iface,                     -- ^ Input  interface
       oIface  :: Iface,                     -- ^ Output interface 
-      loc     :: SysDefLoc}                 -- ^ Location of the call to 
+      loc     :: Loc}                       -- ^ Location of the call to 
                                             --   newSysDef which created this 
                                             --   System definition  
                                             --   (used for later error 

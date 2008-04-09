@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  ForSyDe.Backend.VHDL.Ppr
@@ -42,21 +42,22 @@ instance Ppr VHDLId where
  
 
 instance Ppr DesignFile where
- ppr (DesignFile cx lx) = (ppr_list ($+$) cx) $$ 
-                          vBlock              $$
-                          (ppr_list vSep lx)  $$
+ ppr (DesignFile cx lx) = vNSpaces spaces (ppr_list ($+$) cx) 
+                                          (ppr_list (vNSpaces spaces) lx)  $+$
                           vSpace
-  where vBlock = multiVSpace 2
-        vSep doc1 doc2 = doc1 $+$ vBlock $+$ doc2 
+  where spaces = 2
+
+
         
 instance Ppr ContextItem where
  ppr (Library id) = text "library" <+> ppr id <> semi
- ppr (Use name) = text "use" <+> text name <> semi
+ ppr (Use name) = text "use" <+> ppr name <> semi
  
 
 instance Ppr LibraryUnit where
  ppr (LUEntity entityDec) = ppr entityDec
  ppr (LUArch archBody)  = ppr archBody
+ ppr (LUPackage packageDec) = ppr packageDec 
 
 instance Ppr EntityDec where
  ppr (EntityDec id ifaceSigDecs) = 
@@ -94,10 +95,53 @@ instance Ppr ArchBody where
   text "architecture" <+> idDoc <+> text "of" <+> ppr enName <+> text "is" $+$
     nest nestVal (ppr decs) $+$
   text "begin" $+$
-    nest nestVal (ppr_list vSep conSms) $+$
+    nest nestVal (ppr_list (vNSpaces 1) conSms) $+$
   text "end architecture" <+> idDoc <> semi
-  where vSep doc1 doc2 = doc1 $+$ vSpace $+$ doc2 
-        idDoc = ppr id
+  where idDoc = ppr id
+
+instance Ppr PackageDec where
+ ppr (PackageDec id typeDecs) =
+  text "package" <+> idDoc <+> text "is" $+$
+   nest nestVal (ppr_list (vNSpaces 1) typeDecs) $+$
+  text "end package" <+> idDoc <> semi
+  where idDoc = ppr id 
+
+
+instance Ppr TypeDec where
+ ppr (TypeDec id typeDef) = 
+  text "type" <+> ppr id <+> text "is" $$
+   nest  indentL (ppr typeDef <> semi)
+  where indentL = length "type " + (length.fromVHDLId) id + 1
+
+instance Ppr TypeDef where
+ ppr (TDA arrayTD) = ppr arrayTD
+ ppr (TDR recordTD) = ppr recordTD
+
+instance Ppr ArrayTypeDef where
+ ppr (ArrayTypeDef init last tm) = 
+  text "array" <+> parens (int init <+> text "to" <+>  int last) <+>
+   text "of" <+> ppr tm
+
+instance Ppr RecordTypeDef where
+ ppr (RecordTypeDef elementDecs) =
+  text "record" $+$
+   nest nestVal (ppr_list ($+$) elementDecs) $+$ 
+  text "end record"
+
+instance Ppr ElementDec where
+ ppr (ElementDec id tm) = ppr id <+> colon <+> ppr tm <> semi 
+
+instance Ppr VHDLName where
+ ppr (NSimple simple) = ppr simple
+ ppr (NSelected selected) = ppr selected
+
+instance Ppr SelectedName where
+ ppr (prefix :.: suffix) = ppr prefix <> dot <> ppr suffix
+
+instance Ppr Suffix where
+ ppr (SSimple simpleName) = ppr simpleName
+ ppr All = text "all"
+
 instance Ppr [BlockDecItem] where
  ppr = ppr_list ($+$)
 
@@ -127,7 +171,8 @@ instance Ppr SubProgSpec where
     text "function"  <+> ppr name               $$
        nest indentL (parens (ppr_decs decList)) $$
        nest indentL (text "return" <+> ppr returnType)
-   where indentL = length "function " + (length.fromVHDLId) name + 1
+   where nameDoc = ppr name
+         indentL = length "function " + (length.render) nameDoc + 1
          ppr_decs [] = empty
          ppr_decs ds = ppr_list vSemi ds
 
@@ -214,15 +259,16 @@ instance Ppr AssocElem where
  ppr (formalPart :=>: actualPart) = formalPartDoc <+> ppr actualPart
   where formalPartDoc = maybe empty (\fp -> ppr fp <+> text "=>") formalPart
 
-instance Ppr ActualPart where
+instance Ppr ActualDesig where
  ppr (ADName name) = ppr name
  ppr (ADExpr expr) = ppr expr
  ppr Open          = text "open"
 
 instance Ppr ConSigAssignSm where
- ppr (target :<==: cWforms) = ppr target <+> text "<=" $$
+ ppr (target :<==: cWforms) = targetDoc <+> text "<=" $$
                                 nest indentL (ppr cWforms) <> semi
-  where indentL = (length.fromVHDLId) target + length " <= "
+  where  targetDoc = ppr target
+         indentL = (length.render) targetDoc + length " <= "
 
 instance Ppr ConWforms where
  ppr (ConWforms whenElses wform lastElse) = ppr_list ($+$) whenElses $+$
@@ -236,7 +282,7 @@ instance Ppr When where
  ppr (When cond) = text "when" <+> ppr cond
 
 instance Ppr Wform where
- ppr (Wform elems) = ppr_list (\e1 e2 -> e1 <> comma <+> e2) elems
+ ppr (Wform elems) = ppr_list hComma elems
  ppr Unaffected    = text "unaffected"
 
 instance Ppr CompInsSm where
@@ -290,20 +336,24 @@ instance Ppr Expr where
  -- Primary expressions
  -- Only literals, names and function calls  are allowed
  ppr (PrimName name)    = ppr name
- ppr (PrimLit  lit)     = ppr lit
+ ppr (PrimLit  lit)     = text lit
  ppr (PrimFCall fCall)  = ppr fCall
-         
+ -- Composite-type  expressions
+ ppr (Aggregate exps)        = parens (ppr_list hComma  exps)
+ ppr (IndexedExp exp1 exp2) = ppr exp1 <> parens (ppr exp2)
+ ppr (SelectedExp exp1 exp2) = ppr exp1 <> dot <> ppr exp2     
 
 instance Ppr FCall where
  ppr (FCall name assocs) = ppr name <+> ppr assocs
 
 
-instance Ppr Literal where
- ppr = text
-
 -------------------
 -- Helper Functions
 -------------------
+
+-- dot
+dot :: Doc
+dot = char '.'
 
 -- One line vertical space
 vSpace :: Doc
@@ -320,6 +370,13 @@ ppr_list join (a1:rest) = go a1 rest
   where go a1 []        = ppr a1
         go a1 (a2:rest) = ppr a1 `join` go a2 rest
 
+
+-- | Join two documents vertically leaving n vertical spaces between them
+vNSpaces :: Int -> Doc -> Doc -> Doc
+vNSpaces n doc1 doc2 = doc1 $+$ 
+                        foldr ($+$) empty (replicate n vSpace) $+$
+                       doc2
+
 -- Join two documents vertically putting a semicolon in the middle
 vSemi :: Doc -> Doc -> Doc
 vSemi doc1 doc2 = doc1 <> semi $+$ doc2
@@ -328,6 +385,10 @@ vSemi doc1 doc2 = doc1 <> semi $+$ doc2
 -- Join two documents vertically putting a comma in the middle
 vComma :: Doc -> Doc -> Doc
 vComma doc1 doc2 = doc1 <> comma $+$ doc2
+
+-- Join two documents horizontally putting a comma in the middle
+hComma :: Doc -> Doc -> Doc
+hComma doc1 doc2 = doc1 <> comma <+> doc2
 
 -- Only append if both of the documents are non-empty
 (<++>) :: Doc -> Doc -> Doc

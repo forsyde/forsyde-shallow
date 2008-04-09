@@ -42,6 +42,7 @@ import ForSyDe.ForSyDeErr
 -- VHDL identifier, use mkVHDLId to create it from a String, 
 -- making sure a string is a proper VHDL identifier
 data VHDLId = Basic String | Extended String
+ deriving Eq
 
 -- | Obtain the String of a VHDL identifier
 fromVHDLId :: VHDLId -> String
@@ -140,7 +141,7 @@ otherSpecialChars :: [Char]
 otherSpecialChars =['!' , '$' , '%' , '@' , '?' , '[' , '\\' , ']',
                     '^' , '`' , '{' , '}' , '~']
 
-
+-- | Reserved identifiers
 reservedWords :: [String]
 reservedWords = ["abs", "access", "after", "alias", "all", "and",
  "architecture", "array", "assert", "attribute", "begin", "block",
@@ -183,14 +184,9 @@ data DesignFile = DesignFile [ContextItem] [LibraryUnit]
 data ContextItem = Library VHDLId | Use SelectedName
  deriving Show
 
--- selected_name
--- We don't want to deal with prefixes and subfixes, the name is internally
--- generated anyway, and thus we will make sure it is a correct one.
-type SelectedName = String
-
 -- library_unit
 -- We avoid adding the overhead of a PrimaryUnit and SecondaryUnit types
-data LibraryUnit = LUEntity EntityDec | LUArch ArchBody
+data LibraryUnit = LUEntity EntityDec | LUArch ArchBody | LUPackage PackageDec
  deriving Show
 
 -- entity_declaration
@@ -213,7 +209,9 @@ data IfaceSigDec = IfaceSigDec VHDLId Mode TypeMark
 
 -- | type_mark
 -- We don't distinguish between type names and subtype names
-type TypeMark = VHDLName
+-- We dont' support selected names, only simple names because we won't need
+-- name selection (i.e. Use clauses will make name selection unnecesary)
+type TypeMark = SimpleName
 
 
 -- | mode
@@ -226,9 +224,65 @@ data Mode = In | Out
 data ArchBody = ArchBody VHDLId VHDLName [BlockDecItem] [ConcSm]
  deriving Show
 
+-- | package_declaration
+--  the declarative_part can only be formed by type_declarations
+--  [ PACKAGE ] and [ package_simple_name ] are not allowed
+data PackageDec = PackageDec VHDLId [TypeDec]
+ deriving Show
+
+-- | type_declaration
+-- only full_type_declarations are allowed
+data TypeDec = TypeDec VHDLId TypeDef
+ deriving Show
+
+-- | type_declaration
+-- only composite types
+data TypeDef = TDA ArrayTypeDef | TDR RecordTypeDef
+ deriving Show
+
+-- | array_type_definition
+-- only constrained arrays
+-- no subtype_inidications allowed (just a type_mark)
+-- Only a unique range (not a general index_constraint) allowed
+-- The range can't be an attribute_name
+-- Expressions in the range can only be ints
+-- The direction will implicitly be ascending (i.e. \"to\") 
+data ArrayTypeDef = ArrayTypeDef Int Int TypeMark
+ deriving Show
+
+-- | record_type_definition
+-- [ record_type_simple_name ] not allowed
+data RecordTypeDef = RecordTypeDef [ElementDec]
+ deriving Show
+
+-- | elemt_declaration 
+-- multi-identifier element declarations not allowed
+-- element_subtype_definition is simplified to a type_mark
+data ElementDec = ElementDec VHDLId TypeMark
+ deriving Show
+
 -- | name
--- Only simple_names (identifiers) are allowed 
-type VHDLName = VHDLId
+-- Only simple_names (identifiers) and selected_names are allowed 
+data VHDLName = NSimple SimpleName  | NSelected SelectedName
+ deriving Show
+
+-- | simple_name
+type SimpleName = VHDLId
+
+-- selected_name
+data SelectedName = Prefix :.: Suffix
+ deriving Show
+
+infixl :.:
+
+-- | prefix
+--  only names (no function calls)
+type Prefix = VHDLName
+
+-- | suffix
+-- no character or operator symbols are accepted
+data Suffix = SSimple SimpleName | All
+ deriving Show
 
 -- | block_declarative_item
 -- Only subprogram bodys and signal declarations are allowed
@@ -247,7 +301,7 @@ data SubProgBody = SubProgBody SubProgSpec [SeqSm]
 -- [Pure | Impure] is not allowed
 -- Only a VHDLName is valid as the designator
 -- In the formal parameter list only variable declarations are accepted  
-data SubProgSpec = Function VHDLName [IfaceVarDec] TypeMark 
+data SubProgSpec = Function VHDLId [IfaceVarDec] TypeMark 
  deriving Show
 
 -- | interface_variable_declaration
@@ -321,10 +375,11 @@ data AssocElem = Maybe (FormalPart) :=>: ActualPart
  deriving Show
 
 -- | formal_part
--- We only accept a formal_designator (which is a name after all),   
+-- We only accept a formal_designator (which is a name after all),
+-- in the forme of simple name (no need for selected names)   
 --  "function_name ( formal_designator )" and "type_mark ( formal_designator )"
 --  are not allowed
-type FormalPart = VHDLName
+type FormalPart = SimpleName
 
 -- | actual_part
 -- We only accept an actual_designator,
@@ -366,7 +421,7 @@ data Wform = Wform [Expr] | Unaffected
 -- | component_instantiation_statement
 -- No generics supported
 -- The port map aspect is mandatory
-data CompInsSm = CompInsSm Label InsUnit [AssocElem]
+data CompInsSm = CompInsSm Label InsUnit PMapAspect
  deriving Show
 
 -- | instantiated_unit
@@ -421,9 +476,15 @@ data Expr = -- Logical operations
             Not  Expr         |
             -- Primary expressions
             -- Only literals, names and function calls  are allowed
-            PrimName VHDLName     |
+            PrimName VHDLName |
             PrimLit   Literal |
-            PrimFCall FCall           
+            PrimFCall FCall   |       
+            -- Composite_types-related operators
+            Aggregate [Expr]  | -- (exp1,exp2,exp3, ...)
+              -- Next two really belong to Names (selected_name and indexed_name)
+              -- but it makes things easier to have them in expressions
+            IndexedExp  Expr Expr | -- exp(index), only one index is accepted
+            SelectedExp Expr Expr   -- exp . exp 
  deriving Show            
 
 

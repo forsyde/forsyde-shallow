@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -XMagicHash -XTemplateHaskell -fno-warn-deprecations #-}  
+{-# OPTIONS_GHC -fglasgow-exts -XTemplateHaskell -fno-warn-deprecations #-}  
 -- Due to the use of unboxed types, TH, and deprecated Packed Strings
 -- Taken from HackageDB
 -- (c) Ian Lynagh, 2006
@@ -62,8 +62,3 @@ instance Lift NameSpace where
     lift DataName = [| DataName |]
     lift TcClsName = [| TcClsName |]
 
-instance Lift Double where
- lift d = return $ LitE (RationalL (toRational d))
-
-instance Lift Float where
- lift f = return $ LitE (RationalL (toRational f)) 

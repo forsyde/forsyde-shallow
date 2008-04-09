@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  ForSyDe.ForSyDeErr
@@ -14,8 +15,13 @@
 module ForSyDe.ForSyDeErr 
  (ForSyDeErr(..),
   ContextErr(..),
+  VHDLFunErr(..),
+  VHDLExpErr(..),
   Context(..),
-  SysDefLoc,
+  setProcC,
+  setProcFunC,
+  setProcValC,
+  Loc,
   EProne,
   liftEither,
   intError,
@@ -28,15 +34,16 @@ module ForSyDe.ForSyDeErr
   module Debug.Trace) where
 
 
-import {-# SOURCE #-} ForSyDe.Netlist
 import ForSyDe.Ids
 
 import Debug.Trace
 import Control.Monad.Error 
 import Data.Dynamic
 import Data.Typeable
-import Language.Haskell.TH.Syntax (Name, Dec, Type, Quasi(..))
-import Language.Haskell.TH.Ppr (pprint)
+import Language.Haskell.TH.Syntax 
+import Language.Haskell.TH.Ppr
+import Language.Haskell.TH.PprLib
+import Text.PrettyPrint.HughesPJ (render)
 
 -------------
 -- ForSyDeErr
@@ -44,6 +51,8 @@ import Language.Haskell.TH.Ppr (pprint)
 
 -- | All Errors thrown or displayed in ForSyDe
 data ForSyDeErr = 
+  -- Used in ForSyDe.ForSyDeErr              
+  InconsistentContexts                       |
   -- Used in ForSyDe.Netlist
   EvalErr String                             |
 
@@ -67,7 +76,7 @@ data ForSyDeErr =
 
   -- Used in ForSyDe.Netlist.Traversable     
   -- | Inconsistent output tag
-  InconsOutTag NlNodeOut                     |
+  InconsOutTag                               |
 
   -- Used in ForSyDe.Backend.Simulate
   -- | Inconsistent System Definition Port
@@ -86,7 +95,10 @@ data ForSyDeErr =
   IncVHDLBasId String                        |
   -- | Incorrect Extended VHDL Identifier
   IncVHDLExtId String                        |
-
+  -- | Function untranslatable to VHDL (function name and error raised)
+  UntranslatableVHDLFun VHDLFunErr           |
+  -- | Expresion untranslatable to VHDL
+  UntranslatableVHDLExp Exp VHDLExpErr       |
   -- Common Backend errors              
   -- | UnsUpported type
   UnsupportedType TypeRep                    |
@@ -98,10 +110,104 @@ data ForSyDeErr =
   -- | Other Errors
   Other String           
 
+-- | Function translation errors in the VHDL backend
+data VHDLFunErr =
+  -- | Insufficient number of parameters 
+  InsParamNum Int              |
+  -- | Non-variable parameter 
+  NonVarPar Pat                |
+  -- | Multiple clauses
+  MultipleClauses [Clause]     |
+  -- | Guards in case alternatives are not supported
+  FunGuardedBody Body          |
+  -- | Where constructs in case alternatives are not supported
+  FunWhereConstruct [Dec]      |
+  -- | A general Error which applies to a function
+  --   (e.g. its name or parameters are not a VHDL identifier,
+  --         an error in an inner expression ... )
+  GeneralErr ForSyDeErr
+
+
+instance Show VHDLFunErr where
+  show (FunGuardedBody body) = "guards are not supported in functions:\n" ++
+                               (render.to_HPJ_Doc.(pprBody True)) body
+  show (FunWhereConstruct decs) = 
+   "where constructs are not supported in functions:\n" ++
+   (render.to_HPJ_Doc.where_clause) decs 
+  show (InsParamNum n) = "insufficient number of parameters (" ++ show n ++ ")"
+  show (NonVarPar pat) = "parameter `" ++ pprint pat ++ "' is not a variable"
+  show (MultipleClauses cs) = "multiple clauses (" ++ 
+                              (show.length) cs ++ "):\n" ++ pprint cs
+  show (GeneralErr err) = show err
+
+-- | Expression translation errors in the VHDL backend
+data VHDLExpErr =
+  -- | Guards in case alternatives are not supported
+  CaseGuardedBody Body     |
+  -- Unsupported case pattern 
+  UnsupportedCasePat Pat   |
+  -- | Where constructs in case alternatives are not supported
+  CaseWhereConstruct [Dec] |
+  -- | Unkown identifier
+  UnkownIdentifier Name    |
+  -- Unsupported literal
+  UnsupportedLiteral       |
+  -- Sections are not supported
+  Section                  |
+  -- Lambda Abstractions are not supported
+  LambdaAbstraction        |
+  -- Conditional expressions are only supported in a function body
+  Conditional              |
+  -- Let expressions are not supported
+  Let                      |
+  -- Case expressions are only supported in a function body
+  Case                     |
+  -- Do expressions are not supported
+  Do                       |
+  -- List comprehensions are not supported
+  ListComprehension        |
+  -- Arithmetic sequences are not supported
+  ArithSeq                 |
+  -- Lists are not supported
+  List                     |
+  -- Signature expressiosn are not supported
+  Signature                |
+  -- Record expressions are not supported
+  Record                   |
+  -- Unsupported expression generic error
+  -- it shouldn't be raised, just for pattern completeness
+  Unsupported
+
+instance Show VHDLExpErr where
+ show (CaseGuardedBody body) = 
+  "guards are not supported in case alternatives:\n" ++
+  (render.to_HPJ_Doc.(pprBody True)) body
+ show (UnsupportedCasePat pat) = "unsupported case pattern: `" ++ 
+                                 pprint pat ++ "'"
+ show (CaseWhereConstruct decs) = 
+   "where constructs are not supported in case alternatives:\n" ++
+   (render.to_HPJ_Doc.where_clause) decs 
+ show (UnkownIdentifier name) = "unkown identifier `" ++ pprint name ++ "'"
+ show UnsupportedLiteral = "unsupported literal"
  
+ show Section            = "sections are not supported"
+ show LambdaAbstraction  = "lambda abstractions are not supported"
+ show Conditional        = "conditional expressions are only supported within" 
+                           ++ " a function body"
+ show Let                = "let expressions are not supported"
+ show Case               = "case expressions are only supported within" 
+                           ++ " a function body"
+ show Do                 = "do expressions are not suupported"
+ show ListComprehension  = "list comprehensions are not supported"
+ show ArithSeq           = "arithmetic sequences are not supported"
+ show List               = "lists are not supported" 
+ show Signature          = "signature expressions are not supported"
+ show Record             = "record expressions are not supported"
+ show Unsupported        = "unsupported expression"
 
 -- | Show errors
 instance Show ForSyDeErr where
+ show InconsistentContexts = "Inconsistent contexts"
  show (EvalErr str) = "Non evaluable node (" ++ show str ++ ")"
  show (NonVarName name) = show name ++ " is not a variable name."
  show (IncomSysF fName inctype) = 
@@ -128,7 +234,7 @@ instance Show ForSyDeErr where
   "is accepted\n"++ 
   "The specific, incorrect declarations follow:\n" ++
   pprint decs
- show (InconsOutTag nlNodeOut) = "Inconsistent output tag: " ++ show nlNodeOut
+ show InconsOutTag = "Inconsistent output tag"
  show (InconsSysDefPort id) = "Inconsistent port in SysDef: " ++ show id
  show (DynMisMatch dyn rep) = 
    "Type matching error in dynamic value with typerep " ++ 
@@ -146,7 +252,11 @@ instance Show ForSyDeErr where
                            "`" ++ id ++ "'"
  show (UnsupportedType tr) = "Unsupported type " ++ show tr
  show (ReservedId str)  = "Identifier `" ++ str ++ "' is reserved"
- show UnsupportedProc = "Unusupported process"
+ show UnsupportedProc = "Unsupported process"
+ show (UntranslatableVHDLFun err) = 
+    "Untranslatable function: " ++ show err     
+ show (UntranslatableVHDLExp exp err) = 
+    "Untranslatable expression `" ++ pprint exp ++ "': " ++ show err     
  show (Other str) = str 
 
 -- | help function for the show instance
@@ -166,25 +276,66 @@ showIfaceLength ifaceMsg  (sysFName,sysFIfaceL) (ifaceIds, ifaceL) =
 data ContextErr = ContextErr Context ForSyDeErr
 
 -- | A context: it indicates where an error ocurred.
-data Context = SysDefC SysId SysDefLoc        | -- ^ In a System definition 
-               ProcC   SysId SysDefLoc ProcId | -- ^ In a process 
-               Empty                            -- ^ Empty context
+data Context =
+ -- | Empty context 
+ EmptyC | 
+ -- | In a System definition 
+ SysDefC SysId Loc | 
+ -- | In a Process
+ ProcC   SysId Loc ProcId | 
+ -- | In a Proces Function
+ ProcFunC SysId Loc ProcId Name Loc | 
+ -- | In  a Process value
+ ProcValC SysId Loc ProcId Exp
 
--- | type indicating where a system definition is located in the user's source
+-- | type indicating a location in the user's source
 --   code
-type SysDefLoc = String
+type Loc = String
+
+-- | Set a process context from a system context
+setProcC :: ProcId -- ^ Identifier of the process
+        -> Context -- ^ system context
+        -> Context
+setProcC pid (SysDefC sysid sysloc) = ProcC sysid sysloc pid 
+setProcC _ _ = intError funName InconsistentContexts
+ where funName = "ForSyDe.ForSyDeErr.setProcC" 
+
+-- | Set a process function context from a process context 
+setProcFunC :: Name -- ^ Function name
+        -> Loc -- ^ Function location
+        -> Context -- ^ system context
+        -> Context
+setProcFunC name loc (ProcC sysid sysloc pid) = 
+ ProcFunC sysid sysloc pid name loc
+setProcFunC _ _ _ = intError funName InconsistentContexts
+ where funName = "ForSyDe.ForSyDeErr.setProcFunC" 
+
+-- | Set a process value context from a process context 
+setProcValC :: Exp -- ^ Expression value
+        -> Context -- ^ system context
+        -> Context
+setProcValC exp (ProcC sysid sysloc pid) = ProcValC sysid sysloc pid exp
+setProcValC _ _ = intError funName InconsistentContexts
+ where funName = "ForSyDe.ForSyDeErr.setProcValC" 
 
 instance Show Context where
- show (SysDefC id loc)   = "system definition " ++ id ++ 
-                           " (created in " ++ loc ++ ")"
+ show EmptyC = ""
+ show (SysDefC id loc)   = "system definition `" ++ id ++ 
+                           "' (created in " ++ loc ++ ")"
  show (ProcC sysid sysloc pid) = "process `" ++ pid ++ "' belonging to " ++ 
                       show (SysDefC sysid sysloc)
- show Empty = ""
+ show (ProcFunC sysid sysloc pid fName fLoc) = 
+   "process function `" ++ pprint fName ++ "' (created in " ++ fLoc ++ ") " ++
+   " used by process " ++  show (ProcC sysid sysloc pid)
+ show (ProcValC sysid sysloc pid valExp) =
+   "process argument `" ++ pprint valExp ++ "' used by process "
+   ++ show (ProcC sysid sysloc pid)
+ 
 
 instance Show ContextErr where
  show (ContextErr cxt err) = case cxt of
-   Empty -> show err
-   _ -> show err ++ "\nin " ++ show cxt
+  EmptyC -> show err
+  _ -> show err ++ "\nin " ++ show cxt
 
 --------------
 -- Error Monad
@@ -198,8 +349,8 @@ instance Error ForSyDeErr where
 
 
 instance Error ContextErr where
- noMsg = ContextErr Empty noMsg
- strMsg = \str ->  ContextErr Empty (Other str)
+ noMsg = ContextErr EmptyC noMsg
+ strMsg = \str ->  ContextErr EmptyC (strMsg str)
 
 -- | 'EProne' represents failure using Left ForSyDeErr  or a successful 
 --   result of type a using Right a
@@ -207,8 +358,8 @@ instance Error ContextErr where
 --  'EProne' is implicitly an instance of 
 --   ['MonadError']  (@Error e => MonadError e (Either e)@)
 --   ['Monad']       (@Error e => Monad (Either e)@)
-type EProne a = Either ForSyDeErr a
-
+type EProne = Either ForSyDeErr
+-- FIXME: Rethink Eprone so that it takes contexts in account
 
 -------------------
 -- Helper functions

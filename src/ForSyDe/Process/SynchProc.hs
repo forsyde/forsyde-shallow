@@ -205,8 +205,7 @@ zipWithxSY      :: (Nat s, Typeable s, Typeable a, Typeable b) =>
                 -> Signal b
 zipWithxSY id f sv = Signal (newNodeOutSig nodeRef ZipWithxSYOut)
   where nodeRef = newURef $ Proc id $ 
-                    ZipWithxSY (V.length sv)
-                               ((vecProcFun2List.contProcFun2Dyn) f) 
+                    ZipWithxSY ((vecProcFun2List.contProcFun2Dyn) f) 
                                (map unSignal (V.fromVector sv)) 
         -- Transform the vector argument of a procfun into a list
         vecProcFun2List :: TypedProcFun (FSVec s a -> b) -> 
@@ -521,8 +520,8 @@ sourceSY :: (Typeable a, Lift a) =>
          -> a 
          -> Signal a
 sourceSY id f s0 = o
- where o = delaySY ("_sourceSY_" ++ id ++ "_delaySY") s0 s
-       s = mapSY  ("_sourceSY_" ++ id ++ "_mapSY") f o
+ where o = delaySY ("sourceSY_" ++ id ++ "_delaySY") s0 s
+       s = mapSY  ("sourceSY_" ++ id ++ "_mapSY") f o
 
 
 
@@ -649,8 +648,9 @@ unzipSY :: forall a b . (Typeable a, Typeable b) =>
        -> (Signal a,Signal b)
 unzipSY s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1)),
              Signal (newNodeOutSig nodeRef (UnzipNSYOut 2)))
-  where nodeRef = newURef $ Proc "unzipSY" $ 
-                     UnzipNSY 2 untup (unSignal s)
+  where ts = [typeOf (undefined :: a), typeOf (undefined :: b)]
+        nodeRef = newURef $ Proc "unzipSY" $ 
+                     UnzipNSY ts untup (unSignal s)
         untup :: Dynamic -> [Dynamic]
         untup i = let (t1,t2) = ((fromJust.fromDynamic) i) :: (a,b)    
                   in [toDyn t1, toDyn t2]
@@ -664,8 +664,10 @@ unzip3SY :: forall a b c . (Typeable a, Typeable b, Typeable c) =>
 unzip3SY s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1)),
               Signal (newNodeOutSig nodeRef (UnzipNSYOut 2)),
               Signal (newNodeOutSig nodeRef (UnzipNSYOut 3)))
-  where nodeRef = newURef $ Proc "unzip3SY" $ 
-                     UnzipNSY 3 untup3 (unSignal s)
+  where ts = [typeOf (undefined :: a), typeOf (undefined :: b),
+              typeOf (undefined :: c)]
+        nodeRef = newURef $ Proc "unzip3SY" $ 
+                     UnzipNSY ts untup3 (unSignal s)
         untup3 :: Dynamic -> [Dynamic]
         untup3 i = let (t1,t2,t3) = ((fromJust.fromDynamic) i) :: (a,b,c)    
                    in [toDyn t1, toDyn t2, toDyn t3]
@@ -680,8 +682,10 @@ unzip4SY s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1)),
               Signal (newNodeOutSig nodeRef (UnzipNSYOut 2)),
               Signal (newNodeOutSig nodeRef (UnzipNSYOut 3)),
               Signal (newNodeOutSig nodeRef (UnzipNSYOut 4)))
-  where nodeRef = newURef $ Proc "unzip4SY" $ 
-                     UnzipNSY 4 untup4 (unSignal s)
+  where ts = [typeOf (undefined :: a), typeOf (undefined :: b),
+              typeOf (undefined :: c), typeOf (undefined :: d)]
+        nodeRef = newURef $ Proc "unzip4SY" $ 
+                     UnzipNSY ts untup4 (unSignal s)
         untup4 :: Dynamic -> [Dynamic]
         untup4 i = let (t1,t2,t3,t4) = ((fromJust.fromDynamic) i) :: (a,b,c,d)
                    in [toDyn t1, toDyn t2, toDyn t3, toDyn t4]
@@ -697,8 +701,11 @@ unzip5SY s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1)),
               Signal (newNodeOutSig nodeRef (UnzipNSYOut 3)),
               Signal (newNodeOutSig nodeRef (UnzipNSYOut 4)),
               Signal (newNodeOutSig nodeRef (UnzipNSYOut 5)))
-  where nodeRef = newURef $ Proc "unzip5SY" $ 
-                     UnzipNSY 5 untup5 (unSignal s)
+  where ts = [typeOf (undefined :: a), typeOf (undefined :: b),
+              typeOf (undefined :: c), typeOf (undefined :: d),
+              typeOf (undefined :: e)]
+        nodeRef = newURef $ Proc "unzip5SY" $ 
+                     UnzipNSY ts untup5 (unSignal s)
         untup5 :: Dynamic -> [Dynamic]
         untup5 i = let (t1,t2,t3,t4,t5) 
                         = ((fromJust.fromDynamic) i) :: (a,b,c,d,e)
@@ -716,8 +723,11 @@ unzip6SY s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1)),
               Signal (newNodeOutSig nodeRef (UnzipNSYOut 4)),
               Signal (newNodeOutSig nodeRef (UnzipNSYOut 5)),
               Signal (newNodeOutSig nodeRef (UnzipNSYOut 6)))
-  where nodeRef = newURef $ Proc "unzip6SY" $ 
-                     UnzipNSY 6 untup6 (unSignal s)
+  where ts = [typeOf (undefined :: a), typeOf (undefined :: b),
+              typeOf (undefined :: c), typeOf (undefined :: d),
+              typeOf (undefined :: e), typeOf (undefined :: f)]
+        nodeRef = newURef $ Proc "unzip6SY" $ 
+                     UnzipNSY ts untup6 (unSignal s)
         untup6 :: Dynamic -> [Dynamic]
         untup6 i = let (t1,t2,t3,t4,t5,t6) 
                         = ((fromJust.fromDynamic) i) :: (a,b,c,d,e,f)
@@ -740,8 +750,9 @@ unzipxSY :: forall s a . (Typeable s, Nat s, Typeable a) =>
 unzipxSY vs = V.map (\tag -> Signal (newNodeOutSig nodeRef tag) )
                     (reallyUnsafeVector [UnzipxSYOut i | i <- [1..n]])
   where n = toInt (undefined :: s)
+        t = typeOf (undefined :: a)
         nodeRef = newURef $ Proc "unzipxSY" $
-                    UnzipxSY n unvector (unSignal vs)
+                    UnzipxSY t n unvector (unSignal vs)
         unvector :: Dynamic -> [Dynamic]
         unvector i = let v = ((fromJust.fromDynamic) i) :: FSVec s a
                      in map toDyn (V.fromVector v)
@@ -776,7 +787,7 @@ groupSY id k = mooreSY id (f `defArgVal` kV)  (g `defArgVal` kV) s0
                              (Int, FSVec k' a')
                         f k (count,v)  a =
                            (count+1 `mod` k, unsafeReplace v count a) |])
-   g = $(newProcFun [d| g :: Int -> (Int, FSVec k' a') -> AbstExt (FSVec k' a') 
+   g = $(newProcFun [d| g :: Nat k' => Int -> (Int, FSVec k' a') -> AbstExt (FSVec k' a') 
                         g k (count,v)  
                                 | k-1 == count = Prst v
                                 | otherwise    = Abst |])

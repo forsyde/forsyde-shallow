@@ -15,6 +15,8 @@ module ForSyDe.Backend.VHDL
  (writeVHDL, 
   writeVHDLOps, 
   VHDLOps(..),
+  VHDLDebugLevel(..),
+  VHDLRecursivity(..),
   defaultVHDLOps) where
 
 import Control.Monad.State (evalStateT)

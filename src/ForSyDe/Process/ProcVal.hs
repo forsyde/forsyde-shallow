@@ -27,7 +27,7 @@ data ProcVal = ProcVal
                    valAST  :: ProcValAST} --  its AST
 
 data ProcValAST = ProcValAST
-                    {exp    :: Exp,       --  Its AST representation
+                    {expVal :: Exp,       --  Its AST representation
                      expTyp :: TypeRep}    --  Type of the value   
 
 -- | 'ProcVal' constructor

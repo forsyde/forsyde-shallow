@@ -16,11 +16,18 @@ module ForSyDe.Backend.VHDL.Constants where
 import ForSyDe.Backend.VHDL.AST
 
 -- | Standard context clause used in all generated vhdl files. It imports
---   all the necessary libraries
-contextClause :: [ContextItem]
-contextClause = [Library (unsafeVHDLBasicId "forsyde"), 
-                 Library (unsafeVHDLBasicId "ieee"   ),
-                 Use     "ieee.std_logic_1164.all"   ]
+commonContextClause :: [ContextItem]
+commonContextClause = 
+  [Library forsydeId, 
+   Library ieeeId,
+   Use     $ NSelected (NSimple forsydeId :.: SSimple typesId) :.: All,
+   Use     $ NSelected (NSimple ieeeId :.: SSimple std_logic_1164Id) :.: All,
+   Use     $ NSelected (NSimple ieeeId :.: SSimple numeric_stdId) :.: All]
+ where forsydeId = unsafeVHDLBasicId "forsyde" 
+       ieeeId = unsafeVHDLBasicId "ieee"
+       typesId = unsafeVHDLBasicId "types"
+       std_logic_1164Id = unsafeVHDLBasicId "std_logic_1164"
+       numeric_stdId = unsafeVHDLBasicId "numeric_std"
 
 
 -- | reset and clock signal identifiers in String form
@@ -47,8 +54,16 @@ reservedIds = [resetId, clockId]
 
 -- | Stardard logic type mark
 std_logicTM :: TypeMark
-std_logicTM = unsafeVHDLBasicId "std_logic"
+std_logicTM =  unsafeVHDLBasicId "std_logic"
 
 -- | int32 typemark (defined in ForSyDe's VHDL library)
 int32TM :: TypeMark
-int32TM = unsafeVHDLBasicId "forsyde.types.int32"
+int32TM = unsafeVHDLBasicId "int32"
+
+-- | types identifier
+typesId :: VHDLId
+typesId = unsafeVHDLBasicId "types"
+
+-- | work identifier
+workId :: VHDLId
+workId = unsafeVHDLBasicId "work"

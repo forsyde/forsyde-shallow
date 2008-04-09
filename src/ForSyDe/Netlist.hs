@@ -83,20 +83,22 @@ data NlProc inputi =
             [inputi]                                | 
  
  -- | Vector version of zipWithNSY
- ZipWithxSY Int -- Size of input vectors (number of inputs)
-            (TypedProcFun ([Dynamic] -> Dynamic))     -- Process function 
+ ZipWithxSY (TypedProcFun ([Dynamic] -> Dynamic))     -- Process function 
                                                       -- with dynamic arguments 
-            ([inputi])                              | 
+             [inputi]                               | 
  
  -- ^ Inverse of ZipWithNSY
- UnzipNSY Int -- Number of outputs
+ UnzipNSY [TypeRep] -- Type of the elements in the input tuple
+                    -- (type of outputs)
           (Dynamic -> [Dynamic]) -- Dynamic version of the unzipping function
                                  -- for the concrete, monomorphic types
                                  -- of the process
           inputi                                    | 
  
  -- | Vector version of UnzipSY
- UnzipxSY Int -- Size of output vectors (Number of outputs)
+ UnzipxSY TypeRep -- Type of elements in the input vector
+                  -- (and type of the outputs)
+          Int -- Size of output vector (Number of output signals)
           (Dynamic -> [Dynamic])             
           inputi                                    |  
 
@@ -142,9 +144,9 @@ outTags (Const _) = [ConstOut]
 outTags (Proc _ proc) =
  case proc of
    ZipWithNSY _ _ -> [ZipWithNSYOut]
-   ZipWithxSY _ _ _ -> [ZipWithxSYOut] 
-   UnzipNSY nout _ _  -> map UnzipNSYOut [1..nout]
-   UnzipxSY nout _ _  -> map UnzipxSYOut [1..nout]
+   ZipWithxSY _ _ -> [ZipWithxSYOut] 
+   UnzipNSY types _ _  -> map UnzipNSYOut [1..length types]
+   UnzipxSY _ nout _ _  -> map UnzipxSYOut [1..nout]
    DelaySY    _ _  -> [DelaySYOut]
    SysIns primSysDefRef _ -> 
        map (SysInsOut . fst) ((oIface . readURef . unPrimSysDef) primSysDefRef)
@@ -213,13 +215,13 @@ eval node = case node of
  Proc _ proc -> case proc of
     ZipWithNSY fun dynArgs
       -> [(ZipWithNSYOut, foldl1 dynApp ((tval fun) : dynArgs))]  
-    ZipWithxSY _ fun dynListArg
+    ZipWithxSY fun dynListArg
       -> [(ZipWithxSYOut, (tval fun) dynListArg)]
     UnzipNSY _ fun dynArg
       -> zipWith (\n dyn -> (UnzipNSYOut n, dyn))
                  [1..] 
                  (fun dynArg) 
-    UnzipxSY _ fun dynArg
+    UnzipxSY _ _ fun dynArg
       -> zipWith (\n dyn -> (UnzipxSYOut n, dyn))
                  [1..] 
                  (fun  dynArg) 

@@ -41,16 +41,17 @@ import Data.Maybe (fromJust)
 -- | A Process Function 
 data ProcFun a = 
    ProcFun {val  :: a,          -- ^ Value of the function
+            pfloc :: Loc, -- ^ where was it created
             ast  :: ProcFunAST} -- ^ AST of the function
 
 
 
 -- | A process Function AST
 data ProcFunAST = 
-  ProcFunAST {name :: Name,     -- ^ Function Name 
+  ProcFunAST {name  :: Name,     -- ^ Function Name 
                                     -- (FIXME: maybe just a String?) 
-              cls  :: [Clause], -- ^ Function clauses 
-              pars :: [DefArg]} -- ^ Default parameters
+              cls   :: [Clause], -- ^ Function clauses 
+              pars  :: [DefArg]} -- ^ Default parameters
 
 
 -- | A process Function default argument
@@ -83,9 +84,11 @@ newProcFun fDecQs = do
       (name, cls) <- recover (currErr $ IncorrProcFunDecs fDecs) 
                              (checkDecs fDecs)
       -- Generate the main expression
+      errInfo <- qCurrentModule
       exp <-  [| let  fName    = name
                       fClauses = cls 
-                 in ProcFun $(varE name) 
+                 in ProcFun $(varE name)
+                            errInfo 
                             (ProcFunAST fName fClauses []) |]
       -- Add the function declarations to the expression
       return $ LetE fDecs exp  
@@ -99,8 +102,9 @@ newProcFun fDecQs = do
 -- | A ProcFun bundled with its type representation. This type is not
 --   exported to the end user. Only used internally.
 data TypedProcFun a =    
-   TypedProcFun {tval  :: a,          -- ^ Value of the function
-                 tast  :: TypedProcFunAST} -- ^ AST of the function
+   TypedProcFun {tval   :: a,          -- ^ Value of the function
+                 tpfloc :: Loc,
+                 tast   :: TypedProcFunAST} -- ^ AST of the function
 
 
 -- | A ProcFunAST bundled with its type representation:
@@ -113,12 +117,13 @@ data TypedProcFun a =
 --     We need the context of the process to know what monomorphic types are 
 --     going to be used. Thus it is imposible to guess the TypeRep within
 --     the code of newProcFun.
-data TypedProcFunAST = TypedProcFunAST TypeRep ProcFunAST
+data TypedProcFunAST = TypedProcFunAST {tptyp  :: TypeRep,
+                                        tpast  :: ProcFunAST}
 
 -- | transform a ProcFun into a Dynamic TypedProcFun
 procFun2Dyn :: Typeable a => ProcFun a -> TypedProcFun Dynamic
-procFun2Dyn ProcFun{val=v,ast=a} = 
-  TypedProcFun (toDyn v) (TypedProcFunAST (typeOf v) a)
+procFun2Dyn (ProcFun v l a) = 
+  TypedProcFun (toDyn v) l (TypedProcFunAST (typeOf v) a)
 
 -- FIXME: probably not needed
 -- | tranform the arguments and return value of
@@ -127,8 +132,8 @@ contProcFun2Dyn :: (Typeable a, Typeable b, Functor container,
                     Typeable1 container) =>
                    ProcFun (container a -> b) -> 
                    TypedProcFun (container Dynamic -> Dynamic)
-contProcFun2Dyn ProcFun{val=v,ast=a} = 
-     TypedProcFun (fmapDyn v) (TypedProcFunAST (typeOf v) a)
+contProcFun2Dyn (ProcFun v l a) = 
+     TypedProcFun (fmapDyn v) l (TypedProcFunAST (typeOf v) a)
        where  fmapDyn f cont = toDyn (f (fmap (fromJust.fromDynamic) cont)) 
 
 
