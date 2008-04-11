@@ -6,14 +6,14 @@ module Counter where
 
 import ForSyDe
 
-counter :: Signal Int -> Signal Int
-counter _ = sourceSY "counterSource" add1 (0 :: Int)
+counter :: Signal Int
+counter  = sourceSY "counterSource" add1 (0 :: Int)
  where add1 = $(newProcFun [d| add1 :: Int -> Int 
                                add1 a = a + 1   |]) 
 
 
-counterSys :: SysDef (Signal Int -> Signal Int)
-counterSys = $(newSysDef 'counter ["undefined"] ["countVal"])
+counterSys :: SysDef (Signal Int)
+counterSys = $(newSysDef 'counter [] ["countVal"])
 
-simCounter :: [Int] -> [Int]
+simCounter :: [Int]
 simCounter = $(simulate 'counterSys)
