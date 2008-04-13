@@ -32,11 +32,12 @@ The output of the shiftregister, a signal of vectors, is transformed with the pr
 -- | The module implements a FIR-filter for the synchronous computational model.
 module ForSyDe.FIR (fir) where
 
+import ForSyDe.Ids
 import ForSyDe.Signal
 import ForSyDe.Process
 
 import Data.TypeLevel.Num (Nat, Pos)
-import Data.Param.FSVec
+import Data.Param.FSVec hiding ((++))
 import qualified Data.Param.FSVec as V
 import Data.Typeable
 import Language.Haskell.TH.Syntax (Lift)
@@ -49,20 +50,20 @@ import Language.Haskell.TH.Syntax (Lift)
 -- 
 
 fir :: (Fractional b, Lift b, Typeable b, Pos s, Typeable s) => 
-       FSVec s b -> Signal b -> Signal b
-fir h = innerProd h . sipo k 0.0
+       ProcId -> FSVec s b -> Signal b -> Signal b
+fir id h = innerProd (id ++ "_innerProd") h . sipo (id ++ "_sipo") k 0.0
     where k = V.lengthT h
 
 sipo :: (Pos s, Typeable s, Fractional a, Lift a, Typeable a) =>
-        s -> a -> Signal a -> FSVec s (Signal a)
-sipo n s0 = unzipxSY . scanldSY "siposcanldSY" srV initState
+        ProcId -> s -> a -> Signal a -> FSVec s (Signal a)
+sipo id n s0 = unzipxSY (id ++ "_unzipxSY") . scanldSY (id ++ "_scanldSY") srV initState
     where initState = V.copy n s0
           srV = $(newProcFun [d| srV :: Pos s => FSVec s a -> a -> FSVec s a
                                  srV v a = V.shiftr v a |])
 
 innerProd :: (Fractional a, Lift a, Typeable a, Nat s, Typeable s) =>
-             FSVec s a -> FSVec s (Signal a) -> Signal a
-innerProd h = zipWithxSY "innerProd" (ipV `defArgVal` h)
+             ProcId -> FSVec s a -> FSVec s (Signal a) -> Signal a
+innerProd id h = zipWithxSY id (ipV `defArgVal` h)
    where ipV = $(newProcFun 
                   -- We could make the inner product in one traverse 
                   -- but FSVecs don't allow recursive calls

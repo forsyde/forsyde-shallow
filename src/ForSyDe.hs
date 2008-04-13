@@ -13,7 +13,8 @@
 -- 
 -----------------------------------------------------------------------------
 module ForSyDe 
-(module ForSyDe.Signal,
+(module ForSyDe.Ids,
+ module ForSyDe.Signal,
  module ForSyDe.System,
  module ForSyDe.Process,
  module ForSyDe.Backend,
@@ -21,6 +22,7 @@ module ForSyDe
  module ForSyDe.DFT,
  module ForSyDe.FIR) where
 
+import ForSyDe.Ids
 import ForSyDe.Signal (Signal)
 import ForSyDe.Process
 import ForSyDe.System

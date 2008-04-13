@@ -15,7 +15,7 @@
 -- /This module is based on Lava2000/: <http://www.cs.chalmers.se/~koen/Lava/>
 --
 -----------------------------------------------------------------------------
-module ForSyDe.Backend.Simulate where
+module ForSyDe.Backend.Simulate (simulate) where
 
 import ForSyDe.OSharing
 import ForSyDe.Netlist

@@ -578,21 +578,23 @@ whenSY id = zipWithSY id whenF
 -- | The process 'zipSY' \"zips\" two incoming signals into one signal of 
 --   tuples.
 zipSY :: (Typeable a, Typeable b) => 
-         Signal a 
+         ProcId
+      -> Signal a 
       -> Signal b 
       -> Signal (a,b)
-zipSY = zipWithSY "zipSY" tup2
+zipSY id = zipWithSY id tup2
   where tup2 :: ProcFun (a -> b -> (a,b))
         tup2 = $(newProcFun [d| tup2 :: a -> b -> (a,b)
                                 tup2 a b = (a,b) |])
 
 -- | The process 'zip3SY' works as 'zipSY', but takes three input signals.
 zip3SY :: (Typeable a, Typeable b, Typeable c) => 
+          ProcId ->
           Signal a -> 
           Signal b -> 
           Signal c ->
           Signal (a,b,c)
-zip3SY = zipWith3SY "zip3SY" tup3
+zip3SY id = zipWith3SY id tup3
   where tup3 :: ProcFun (a -> b -> c -> (a,b,c))
         tup3 = $(newProcFun [d| tup3 :: a -> b -> c -> (a,b,c)
                                 tup3 a b c = (a,b,c) |])
@@ -600,12 +602,13 @@ zip3SY = zipWith3SY "zip3SY" tup3
 
 -- | The process 'zip4SY' works as 'zipSY', but takes four input signals.
 zip4SY :: (Typeable a, Typeable b, Typeable c, Typeable d) => 
+          ProcId -> 
           Signal a -> 
           Signal b -> 
           Signal c ->
           Signal d ->
           Signal (a,b,c,d)
-zip4SY = zipWith4SY "zip4SY" tup4
+zip4SY id = zipWith4SY id tup4
   where tup4 :: ProcFun (a -> b -> c -> d -> (a,b,c,d))
         tup4 = $(newProcFun [d| tup4 :: a -> b -> c -> d -> (a,b,c,d)
                                 tup4 a b c d = (a,b,c,d) |])
@@ -613,13 +616,14 @@ zip4SY = zipWith4SY "zip4SY" tup4
 
 -- | The process 'zip5SY' works as 'zipSY', but takes five input signals.
 zip5SY :: (Typeable a, Typeable b, Typeable c, Typeable d, Typeable e) => 
+          ProcId ->
           Signal a -> 
           Signal b -> 
           Signal c ->
           Signal d ->
           Signal e ->
           Signal (a,b,c,d,e)
-zip5SY = zipWith5SY "zip5SY" tup5
+zip5SY id = zipWith5SY id tup5
   where tup5 :: ProcFun (a -> b -> c -> d -> e -> (a,b,c,d,e))
         tup5 = $(newProcFun [d| tup5 :: a -> b -> c -> d -> e -> (a,b,c,d,e)
                                 tup5 a b c d e = (a,b,c,d,e) |])
@@ -627,7 +631,8 @@ zip5SY = zipWith5SY "zip5SY" tup5
 
 -- | The process 'zip6SY' works as 'zipSY', but takes six input signals.
 zip6SY :: (Typeable a, Typeable b, Typeable c, Typeable d, Typeable e, 
-           Typeable f) => 
+           Typeable f) =>
+          ProcId -> 
           Signal a -> 
           Signal b -> 
           Signal c ->
@@ -635,7 +640,7 @@ zip6SY :: (Typeable a, Typeable b, Typeable c, Typeable d, Typeable e,
           Signal e ->
           Signal f ->
           Signal (a,b,c,d,e,f)
-zip6SY = zipWith6SY "zip6" tup6
+zip6SY id = zipWith6SY id tup6
   where tup6 :: ProcFun (a -> b -> c -> d -> e -> f -> (a,b,c,d,e,f))
         tup6 = $(newProcFun [d| tup6 :: a -> b -> c -> d -> e -> f -> 
                                         (a,b,c,d,e,f)
@@ -644,12 +649,13 @@ zip6SY = zipWith6SY "zip6" tup6
 
 -- | The process 'unzipSY' \"unzips\" a signal of tuples into two signals.
 unzipSY :: forall a b . (Typeable a, Typeable b) =>  
-          Signal (a,b) 
+          ProcId
+       -> Signal (a,b) 
        -> (Signal a,Signal b)
-unzipSY s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1)),
-             Signal (newNodeOutSig nodeRef (UnzipNSYOut 2)))
+unzipSY id s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1)),
+                Signal (newNodeOutSig nodeRef (UnzipNSYOut 2)))
   where ts = [typeOf (undefined :: a), typeOf (undefined :: b)]
-        nodeRef = newURef $ Proc "unzipSY" $ 
+        nodeRef = newURef $ Proc id $ 
                      UnzipNSY ts untup (unSignal s)
         untup :: Dynamic -> [Dynamic]
         untup i = let (t1,t2) = ((fromJust.fromDynamic) i) :: (a,b)    
@@ -659,14 +665,15 @@ unzipSY s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1)),
 
 -- | The process 'unzip3SY' \"unzips\" a signal of tuples into three signals.
 unzip3SY :: forall a b c . (Typeable a, Typeable b, Typeable c) =>  
-           Signal (a,b,c) 
+           ProcId 
+        -> Signal (a,b,c) 
         -> (Signal a, Signal b, Signal c)
-unzip3SY s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1)),
-              Signal (newNodeOutSig nodeRef (UnzipNSYOut 2)),
-              Signal (newNodeOutSig nodeRef (UnzipNSYOut 3)))
+unzip3SY id s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1)),
+                 Signal (newNodeOutSig nodeRef (UnzipNSYOut 2)),
+                 Signal (newNodeOutSig nodeRef (UnzipNSYOut 3)))
   where ts = [typeOf (undefined :: a), typeOf (undefined :: b),
               typeOf (undefined :: c)]
-        nodeRef = newURef $ Proc "unzip3SY" $ 
+        nodeRef = newURef $ Proc id $ 
                      UnzipNSY ts untup3 (unSignal s)
         untup3 :: Dynamic -> [Dynamic]
         untup3 i = let (t1,t2,t3) = ((fromJust.fromDynamic) i) :: (a,b,c)    
@@ -676,15 +683,16 @@ unzip3SY s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1)),
 -- | The process 'unzip4SY' \"unzips\" a signal of tuples into four signals.
 unzip4SY :: forall a b c d . (Typeable a, Typeable b, Typeable c, 
                               Typeable d) => 
-           Signal (a,b,c,d) 
+           ProcId   
+        -> Signal (a,b,c,d) 
         -> (Signal a, Signal b, Signal c, Signal d)
-unzip4SY s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1)),
-              Signal (newNodeOutSig nodeRef (UnzipNSYOut 2)),
-              Signal (newNodeOutSig nodeRef (UnzipNSYOut 3)),
-              Signal (newNodeOutSig nodeRef (UnzipNSYOut 4)))
+unzip4SY id s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1)),
+                 Signal (newNodeOutSig nodeRef (UnzipNSYOut 2)),
+                 Signal (newNodeOutSig nodeRef (UnzipNSYOut 3)),
+                 Signal (newNodeOutSig nodeRef (UnzipNSYOut 4)))
   where ts = [typeOf (undefined :: a), typeOf (undefined :: b),
               typeOf (undefined :: c), typeOf (undefined :: d)]
-        nodeRef = newURef $ Proc "unzip4SY" $ 
+        nodeRef = newURef $ Proc id $ 
                      UnzipNSY ts untup4 (unSignal s)
         untup4 :: Dynamic -> [Dynamic]
         untup4 i = let (t1,t2,t3,t4) = ((fromJust.fromDynamic) i) :: (a,b,c,d)
@@ -694,17 +702,18 @@ unzip4SY s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1)),
 -- | The process 'unzip5SY' \"unzips\" a signal of tuples into five signals.
 unzip5SY :: forall a b c d e . (Typeable a, Typeable b, Typeable c, 
                                 Typeable d, Typeable e) => 
-            Signal (a,b,c,d,e) 
+           ProcId 
+        -> Signal (a,b,c,d,e) 
         -> (Signal a, Signal b, Signal c, Signal d, Signal e)
-unzip5SY s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1)),
-              Signal (newNodeOutSig nodeRef (UnzipNSYOut 2)),
-              Signal (newNodeOutSig nodeRef (UnzipNSYOut 3)),
-              Signal (newNodeOutSig nodeRef (UnzipNSYOut 4)),
-              Signal (newNodeOutSig nodeRef (UnzipNSYOut 5)))
+unzip5SY id s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1)),
+                 Signal (newNodeOutSig nodeRef (UnzipNSYOut 2)),
+                 Signal (newNodeOutSig nodeRef (UnzipNSYOut 3)),
+                 Signal (newNodeOutSig nodeRef (UnzipNSYOut 4)),
+                 Signal (newNodeOutSig nodeRef (UnzipNSYOut 5)))
   where ts = [typeOf (undefined :: a), typeOf (undefined :: b),
               typeOf (undefined :: c), typeOf (undefined :: d),
               typeOf (undefined :: e)]
-        nodeRef = newURef $ Proc "unzip5SY" $ 
+        nodeRef = newURef $ Proc id $ 
                      UnzipNSY ts untup5 (unSignal s)
         untup5 :: Dynamic -> [Dynamic]
         untup5 i = let (t1,t2,t3,t4,t5) 
@@ -715,18 +724,19 @@ unzip5SY s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1)),
 -- | The process 'unzip6SY' \"unzips\" a signal of tuples into six signals.
 unzip6SY :: forall a b c d e f . (Typeable a, Typeable b, Typeable c, 
                                   Typeable d, Typeable e, Typeable f) =>  
-           Signal (a,b,c,d,e,f) 
+           ProcId 
+        -> Signal (a,b,c,d,e,f) 
         -> (Signal a, Signal b, Signal c, Signal d, Signal e, Signal f)
-unzip6SY s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1)),
-              Signal (newNodeOutSig nodeRef (UnzipNSYOut 2)),
-              Signal (newNodeOutSig nodeRef (UnzipNSYOut 3)),
-              Signal (newNodeOutSig nodeRef (UnzipNSYOut 4)),
-              Signal (newNodeOutSig nodeRef (UnzipNSYOut 5)),
-              Signal (newNodeOutSig nodeRef (UnzipNSYOut 6)))
+unzip6SY id s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1)),
+                 Signal (newNodeOutSig nodeRef (UnzipNSYOut 2)),
+                 Signal (newNodeOutSig nodeRef (UnzipNSYOut 3)),
+                 Signal (newNodeOutSig nodeRef (UnzipNSYOut 4)),
+                 Signal (newNodeOutSig nodeRef (UnzipNSYOut 5)),
+                 Signal (newNodeOutSig nodeRef (UnzipNSYOut 6)))
   where ts = [typeOf (undefined :: a), typeOf (undefined :: b),
               typeOf (undefined :: c), typeOf (undefined :: d),
               typeOf (undefined :: e), typeOf (undefined :: f)]
-        nodeRef = newURef $ Proc "unzip6SY" $ 
+        nodeRef = newURef $ Proc id $ 
                      UnzipNSY ts untup6 (unSignal s)
         untup6 :: Dynamic -> [Dynamic]
         untup6 i = let (t1,t2,t3,t4,t5,t6) 
@@ -736,37 +746,39 @@ unzip6SY s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1)),
 
 -- | The process 'zipxSY' \"zips\" a signal of vectors into a vector of signals.
 zipxSY :: (Nat s, Typeable s, Typeable a) =>
-          FSVec s (Signal a) 
+          ProcId
+       -> FSVec s (Signal a) 
        -> Signal (FSVec s a)
-zipxSY = zipWithxSY "zipxSY" vectId 
+zipxSY id = zipWithxSY id vectId 
   where vectId = $(newProcFun [d| vectId :: FSVec s a -> FSVec s a
                                   vectId v = v |]) 
 
 -- | The process 'unzipxSY' \"unzips\" a vector of n signals into a signal of 
 --   vectors.
 unzipxSY :: forall s a . (Typeable s, Nat s, Typeable a) => 
-            Signal (FSVec s a) 
+            ProcId
+         -> Signal (FSVec s a) 
          -> FSVec s (Signal a)
-unzipxSY vs = V.map (\tag -> Signal (newNodeOutSig nodeRef tag) )
-                    (reallyUnsafeVector [UnzipxSYOut i | i <- [1..n]])
+unzipxSY id vs = V.map (\tag -> Signal (newNodeOutSig nodeRef tag) )
+                        (reallyUnsafeVector [UnzipxSYOut i | i <- [1..n]])
   where n = toInt (undefined :: s)
         t = typeOf (undefined :: a)
-        nodeRef = newURef $ Proc "unzipxSY" $
+        nodeRef = newURef $ Proc id $
                     UnzipxSY t n unvector (unSignal vs)
         unvector :: Dynamic -> [Dynamic]
         unvector i = let v = ((fromJust.fromDynamic) i) :: FSVec s a
                      in map toDyn (V.fromVector v)
 
 -- | The process 'fstSY' selects always the first value from a signal of pairs
-fstSY :: (Typeable a, Typeable b) => Signal (a,b) -> Signal a
-fstSY = mapSY "fst" first
+fstSY :: (Typeable a, Typeable b) => ProcId -> Signal (a,b) -> Signal a
+fstSY id = mapSY id  first
   where first = $(newProcFun [d| first :: (a,b) -> a
                                  first (a,_) = a |])
 
 
 -- | The process 'sndSY' selects always the second value from a signal of pairs
-sndSY :: (Typeable a, Typeable b) => Signal (a,b) -> Signal b
-sndSY = mapSY "snd" second
+sndSY :: (Typeable a, Typeable b) => ProcId -> Signal (a,b) -> Signal b
+sndSY id = mapSY id second
   where second = $(newProcFun [d| second :: (a,b) -> b
                                   second (_,b) = b |])
 

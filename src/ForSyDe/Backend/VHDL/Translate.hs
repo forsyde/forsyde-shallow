@@ -179,7 +179,7 @@ transUnzipxSY2Block vPid inSig outSigs elemTR vSize = do
  -- Generate the signal assignments
      genOrigExp n = PrimName (NSimple inPar) `IndexedExp` (PrimLit  $ show n)
      genOutAssign outSig n = CSSASm $ genExprAssign outSig (genOrigExp n)
-     outAssigns = zipWith genOutAssign outPars [(1::Int)..]              
+     outAssigns = zipWith genOutAssign outPars [(0::Int)..]              
  return  (BlockSm vPid iface pMap [] outAssigns,
           map (\sig -> SigDec sig elemTM Nothing) outSigs)
 
@@ -437,6 +437,7 @@ checkProcFunSpec _ (ProcFunAST _ clauses@(_:_:_) _) =
   funErr (MultipleClauses clauses)
 -- cannot happen
 checkProcFunSpec _ (ProcFunAST _ [] _) =  
+ -- FIMXE, use a custom error
  intError "ForSyDe.Backend.VHDL.Translate.checkProcFunSpec" 
           (UntranslatableVHDLFun $ GeneralErr (Other "inconsistentency"))
 
@@ -587,23 +588,23 @@ validUnaryCons = [('True, PrimLit "'1'"),
 -- | Translation table of valid binary functions
 validBinaryFuns :: [(TH.Name, (Expr -> Expr -> Expr))]
 validBinaryFuns = [('(&&) , And   ),
-                 ('(||) , Or    ),
-                 ('(.&.), And   ),
-                 ('(.|.), Or    ),
-                 ('xor  , Xor   ),
-                 ('(==) , (:=:) ),
-                 ('(/=) , (:/=:)),
-                 ('(<)  , (:<:) ), 
-                 ('(<=) , (:<=:)),
-                 ('(>)  , (:>:) ),
-                 ('(>=) , (:>=:)),  
-                 ('(+)  , (:+:) ),
-                 ('(-)  , (:-:) ),
-                 ('(*)  , (:*:) ),
-                 ('div  , (:/:) ),
-                 ('mod  , (Mod) ),
-                 ('rem  , (Rem) ),
-                 ('(^)  , (:**:))] 
+                   ('(||) , Or    ),
+                   ('(.&.), And   ),
+                   ('(.|.), Or    ),
+                   ('xor  , Xor   ),
+                   ('(==) , (:=:) ),
+                   ('(/=) , (:/=:)),
+                   ('(<)  , (:<:) ), 
+                   ('(<=) , (:<=:)),
+                   ('(>)  , (:>:) ),
+                   ('(>=) , (:>=:)),  
+                   ('(+)  , (:+:) ),
+                   ('(-)  , (:-:) ),
+                   ('(*)  , (:*:) ),
+                   ('div  , (:/:) ),
+                   ('mod  , (Mod) ),
+                   ('rem  , (Rem) ),
+                   ('(^)  , (:**:))] 
                  
 
 -- | Translation table of valid unary functions
