@@ -1,15 +1,9 @@
-{-# LANGUAGE TemplateHaskell, DeriveDataTypeable #-}
-
--- Example implements a multiplexer
+{-# LANGUAGE TemplateHaskell #-}
+-- multiplexer
 module Multiplexer where
 
 import ForSyDe
-import Data.Typeable
 import Language.Haskell.TH.Lift
-
--- A data type Bit is really needed!
-data Bit = H | L deriving (Eq, Show, Typeable)
-$(deriveLift1 ''Bit)
 
 -- I used tuples, but a vector of bits is what I would like to have
 selectf :: ProcFun((Bit, Bit) -> (Bit, Bit, Bit, Bit) -> Bit)

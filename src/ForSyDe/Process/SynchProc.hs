@@ -800,9 +800,7 @@ groupSY id k = mooreSY id (f `defArgVal` kV)  (g `defArgVal` kV) s0
                         f k (count,v)  a =
                            (count+1 `mod` k, unsafeReplace v count a) |])
    g = $(newProcFun [d| g :: Nat k' => Int -> (Int, FSVec k' a') -> AbstExt (FSVec k' a') 
-                        g k (count,v)  
-                                | k-1 == count = Prst v
-                                | otherwise    = Abst |])
+                        g k (count,v) = if  k-1 == count then Prst v else Abst |])
    unsafeReplace :: Nat s => FSVec s a' -> Int -> a' ->FSVec s a'
    unsafeReplace v i a = 
       reallyUnsafeVector $ unsafeReplace' (fromVector v) i a

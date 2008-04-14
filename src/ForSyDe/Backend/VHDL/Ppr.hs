@@ -57,7 +57,8 @@ instance Ppr ContextItem where
 instance Ppr LibraryUnit where
  ppr (LUEntity entityDec) = ppr entityDec
  ppr (LUArch archBody)  = ppr archBody
- ppr (LUPackage packageDec) = ppr packageDec 
+ ppr (LUPackageDec packageDec) = ppr packageDec 
+ ppr (LUPackageBody packageBody) = ppr packageBody
 
 instance Ppr EntityDec where
  ppr (EntityDec id ifaceSigDecs) = 
@@ -100,18 +101,28 @@ instance Ppr ArchBody where
   where idDoc = ppr id
 
 instance Ppr PackageDec where
- ppr (PackageDec id typeDecs) =
+ ppr (PackageDec id decs) =
   text "package" <+> idDoc <+> text "is" $+$
-   nest nestVal (ppr_list (vNSpaces 1) typeDecs) $+$
+   nest nestVal (ppr_list (vNSpaces 1) decs) $+$
   text "end package" <+> idDoc <> semi
   where idDoc = ppr id 
 
+instance Ppr PackageDecItem where
+ ppr (PDITD typeDec) = ppr typeDec
+ ppr (PDISS subProgSpec) = ppr subProgSpec
+
+instance Ppr PackageBody where
+ ppr (PackageBody id decs) =
+  text "package body" <+> idDoc <+> text "is" $+$
+   nest nestVal (ppr_list (vNSpaces 1) decs) $+$
+  text "end package body" <+> idDoc <> semi
+  where idDoc = ppr id 
 
 instance Ppr TypeDec where
  ppr (TypeDec id typeDef) = 
   text "type" <+> ppr id <+> text "is" $$
    nest  indentL (ppr typeDef <> semi)
-  where indentL = length "type " + (length.fromVHDLId) id + 1
+  where indentL = length "type " + (length.fromVHDLId) id + length "is "
 
 instance Ppr TypeDef where
  ppr (TDA arrayTD) = ppr arrayTD
@@ -134,6 +145,7 @@ instance Ppr ElementDec where
 instance Ppr VHDLName where
  ppr (NSimple simple) = ppr simple
  ppr (NSelected selected) = ppr selected
+ ppr (NIndexed indexed) = ppr indexed
 
 instance Ppr SelectedName where
  ppr (prefix :.: suffix) = ppr prefix <> dot <> ppr suffix
@@ -141,6 +153,11 @@ instance Ppr SelectedName where
 instance Ppr Suffix where
  ppr (SSimple simpleName) = ppr simpleName
  ppr All = text "all"
+
+instance Ppr IndexedName where
+ ppr (IndexedName prefix indexList) = 
+  ppr prefix <> parens ( ppr_list hComma indexList )
+
 
 instance Ppr [BlockDecItem] where
  ppr = ppr_list ($+$)
@@ -169,11 +186,10 @@ instance Ppr SubProgSpec where
 --  Ssdds : bit)
  ppr (Function name decList returnType) =
     text "function"  <+> ppr name               $$
-       nest indentL (parens (ppr_decs decList)) $$
+       nest indentL (parensNonEmpty (ppr_decs decList)) $$
        nest indentL (text "return" <+> ppr returnType)
    where nameDoc = ppr name
          indentL = length "function " + (length.render) nameDoc + 1
-         ppr_decs [] = empty
          ppr_decs ds = ppr_list vSemi ds
 
          
@@ -251,8 +267,7 @@ instance Ppr PMapAspect where
   where identL = length "port map "
 
 instance Ppr [AssocElem] where
- ppr [] = empty
- ppr assocs = parens (ppr_list vComma assocs)
+ ppr assocs = parensNonEmpty (ppr_list vComma assocs)
          
 
 instance Ppr AssocElem where
@@ -340,8 +355,7 @@ instance Ppr Expr where
  ppr (PrimFCall fCall)  = ppr fCall
  -- Composite-type  expressions
  ppr (Aggregate exps)        = parens (ppr_list hComma  exps)
- ppr (IndexedExp exp1 exp2) = ppr exp1 <> parens (ppr exp2)
- ppr (SelectedExp exp1 exp2) = ppr exp1 <> dot <> ppr exp2     
+
 
 instance Ppr FCall where
  ppr (FCall name assocs) = ppr name <+> ppr assocs
@@ -390,8 +404,13 @@ vComma doc1 doc2 = doc1 <> comma $+$ doc2
 hComma :: Doc -> Doc -> Doc
 hComma doc1 doc2 = doc1 <> comma <+> doc2
 
--- Only append if both of the documents are non-empty
+-- | Only append if both of the documents are non-empty
 (<++>) :: Doc -> Doc -> Doc
 d1 <++> d2 
  | isEmpty d1 || isEmpty d2 = empty
  | otherwise = d1 <+> d2
+
+-- | Enclose in parenthesis only if the document is non-empty
+parensNonEmpty :: Doc -> Doc
+parensNonEmpty doc | isEmpty doc = empty
+parensNonEmpty doc = parens doc

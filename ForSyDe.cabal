@@ -31,6 +31,7 @@ Library
                    ForSyDe.Ids,
                    ForSyDe.System,
                    ForSyDe.AbsentExt,
+                   ForSyDe.Bit,
                    ForSyDe.DFT,
                    ForSyDe.FIR,
                    ForSyDe.Signal,

@@ -1,6 +1,19 @@
 {-# LANGUAGE TemplateHaskell, DeriveDataTypeable #-}  
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  ForSyDe.AbsentExt
+-- Copyright   :  (c) The ForSyDe Team 2007
+-- License     :  BSD-style (see the file LICENSE)
+-- 
+-- Maintainer  :  ecs_forsyde_development@ict.kth.se
+-- Stability   :  experimental
+-- Portability :  portable
+--
+-- The 'AbstExt' is used to extend existing data types with the value
+--  \'absent\', which models the absence of a value.
+-- 
+-----------------------------------------------------------------------------
 
--- |The module 'AbsentExt' is used to extend existing data types with the value \'absent\', which models the absence of a value.
 module ForSyDe.AbsentExt( 
 		  AbstExt (Abst, Prst), fromAbstExt, unsafeFromAbstExt, 
                   abstExt, psi, 

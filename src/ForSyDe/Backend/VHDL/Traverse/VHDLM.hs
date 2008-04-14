@@ -189,13 +189,15 @@ emptyLocalTravResult = LocalTravResult [] []
 
 -- | Global Results accumulated throughout the whole compilation
 data GlobalTravResult = GlobalTravResult 
- {typeDecs :: [TypeDec]} -- Types translated during the traversal
+ {typeDecs      :: [TypeDec], -- Types translated during the traversal
+  subProgBodies :: [SubProgBody] } -- Functions or procedures generated during
+                                   -- the traversal
 
 
 
 -- | empty global VHDL compilation result
 emptyGlobalTravResult :: GlobalTravResult
-emptyGlobalTravResult = GlobalTravResult [] 
+emptyGlobalTravResult = GlobalTravResult [] []
 
 
 ----------
@@ -243,7 +245,7 @@ setVHDLOps options =  modify (\st -> st{global=(global st){ops=options}})
 -- Useful functions in the VHDL Monad
 -------------------------------------
 
--- | Add a signal declaration to the 'TravResult' in the State
+-- | Add a signal declaration to the 'LocalTravResult' in the State
 addSigDec :: SigDec -> VHDLM ()
 addSigDec dec = modify addFun 
  -- FIXME: use a queue for the declarations
@@ -253,7 +255,7 @@ addSigDec dec = modify addFun
                ads = archDecs r 
 
 
--- | Add a statement to the 'TravResult' in the State
+-- | Add a statement to the 'LocalTravResult' in the State
 addStm :: ConcSm -> VHDLM ()
 addStm sm = modify addFun
  -- FIXME: use a queue for the statements
@@ -263,7 +265,7 @@ addStm sm = modify addFun
                aSms = archSms r 
 
  
--- | Add an element to the 'SysDef' table in the state
+-- | Add an element to the 'SysDef' table in the global state
 addSysDef :: URef SysDefVal -> VHDLM ()
 addSysDef ref = do table <- gets (compSysDefs.global)
                    liftIO $ addEntryIO table ref () 
@@ -274,7 +276,15 @@ lookupCustomType rep = do
  transTable <- gets (typeTable.global)
  return $ lookup rep transTable
 
--- | Add a type declaration to the global results and translation table
+
+-- | Check if a SysDef was previously traversed
+traversedSysDef :: URef SysDefVal -> VHDLM Bool
+traversedSysDef ref =  do table <- gets (compSysDefs.global)
+                          mUnit <- liftIO $ queryIO table ref
+                          return $ maybe False (\() -> True) mUnit 
+
+
+-- | Add a type declaration to the global results and type translation table
 addTypeDec :: TypeRep -> TypeDec -> VHDLM ()
 addTypeDec rep typeDec@(TypeDec id _) = do
  globalST <- gets global 
@@ -287,12 +297,17 @@ addTypeDec rep typeDec@(TypeDec id _) = do
                               globalRes = gRes{typeDecs = tDecs ++ [typeDec]}}})
   
 
+-- | Add a subprogram to the global results
+addSubProgBody :: SubProgBody -> VHDLM ()
+addSubProgBody newBody = do
+ globalST <- gets global 
+ let gRes = globalRes globalST 
+     bodies = subProgBodies gRes
+ -- FIXME: use queues
+ modify (\st -> st{global = globalST
+                       {globalRes = gRes{subProgBodies = bodies ++ [newBody]}}})
 
--- | Check if a SysDef was previously traversed
-traversedSysDef :: URef SysDefVal -> VHDLM Bool
-traversedSysDef ref =  do table <- gets (compSysDefs.global)
-                          mUnit <- liftIO $ queryIO table ref
-                          return $ maybe False (\() -> True) mUnit 
+
 
 -- | Increment the number of constants found
 incConstNum :: VHDLM ()

@@ -186,7 +186,10 @@ data ContextItem = Library VHDLId | Use SelectedName
 
 -- library_unit
 -- We avoid adding the overhead of a PrimaryUnit and SecondaryUnit types
-data LibraryUnit = LUEntity EntityDec | LUArch ArchBody | LUPackage PackageDec
+data LibraryUnit = LUEntity EntityDec      | 
+                   LUArch ArchBody         | 
+                   LUPackageDec PackageDec |
+                   LUPackageBody PackageBody
  deriving Show
 
 -- entity_declaration
@@ -225,10 +228,23 @@ data ArchBody = ArchBody VHDLId VHDLName [BlockDecItem] [ConcSm]
  deriving Show
 
 -- | package_declaration
---  the declarative_part can only be formed by type_declarations
 --  [ PACKAGE ] and [ package_simple_name ] are not allowed
-data PackageDec = PackageDec VHDLId [TypeDec]
+data PackageDec = PackageDec VHDLId [PackageDecItem]
  deriving Show
+
+-- | package_declarative_item
+-- only type declarations and subprogram specifications allowed
+data PackageDecItem = PDITD TypeDec | PDISS SubProgSpec
+ deriving Show
+
+-- | package_body
+--  [ PACKAGE ] and [ package_simple_name ] are not allowed
+data PackageBody = PackageBody VHDLId [PackageBodyDecItem]
+ deriving Show
+
+-- | package_body_declarative_item
+--  only subprogram_body is allowed
+type PackageBodyDecItem = SubProgBody
 
 -- | type_declaration
 -- only full_type_declarations are allowed
@@ -263,17 +279,24 @@ data ElementDec = ElementDec VHDLId TypeMark
 
 -- | name
 -- Only simple_names (identifiers) and selected_names are allowed 
-data VHDLName = NSimple SimpleName  | NSelected SelectedName
+data VHDLName = NSimple SimpleName     | 
+                NSelected SelectedName | 
+                NIndexed IndexedName
  deriving Show
 
 -- | simple_name
 type SimpleName = VHDLId
 
--- selected_name
+-- | selected_name
 data SelectedName = Prefix :.: Suffix
  deriving Show
 
 infixl :.:
+
+-- | indexed_name
+-- note that according to the VHDL93 grammar the index list cannot be empty 
+data IndexedName = IndexedName Prefix [Expr]
+ deriving Show
 
 -- | prefix
 --  only names (no function calls)
@@ -285,13 +308,13 @@ data Suffix = SSimple SimpleName | All
  deriving Show
 
 -- | block_declarative_item
--- Only subprogram bodys and signal declarations are allowed
+-- Only subprogram bodies and signal declarations are allowed
 data BlockDecItem = BDISPB SubProgBody | BDISD SigDec
  deriving Show
 
 
 -- | subprogram_body
--- No declarations are allowed, (wierd but we don't need them anyway) 
+-- No declarations are allowed, (weird but we don't need them anyway) 
 -- No subprogram kind nor designator is allowed
 data SubProgBody = SubProgBody SubProgSpec [SeqSm]
  deriving Show
@@ -480,11 +503,7 @@ data Expr = -- Logical operations
             PrimLit   Literal |
             PrimFCall FCall   |       
             -- Composite_types-related operators
-            Aggregate [Expr]  | -- (exp1,exp2,exp3, ...)
-              -- Next two really belong to Names (selected_name and indexed_name)
-              -- but it makes things easier to have them in expressions
-            IndexedExp  Expr Expr | -- exp(index), only one index is accepted
-            SelectedExp Expr Expr   -- exp . exp 
+            Aggregate [Expr]   -- (exp1,exp2,exp3, ...)
  deriving Show            
 
 

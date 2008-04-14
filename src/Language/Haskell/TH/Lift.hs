@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -fglasgow-exts -XTemplateHaskell -fno-warn-deprecations #-}  
+{-# OPTIONS_GHC -XMagicHash -XTemplateHaskell -fno-warn-deprecations #-}  
 -- Due to the use of unboxed types, TH, and deprecated Packed Strings
 -- Taken from HackageDB
 -- (c) Ian Lynagh, 2006

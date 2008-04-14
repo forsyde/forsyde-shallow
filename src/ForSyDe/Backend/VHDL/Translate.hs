@@ -21,7 +21,10 @@ import ForSyDe.Backend.VHDL.Generate
 import ForSyDe.Backend.VHDL.Traverse.VHDLM
 
 import ForSyDe.Ids
+import ForSyDe.AbsentExt
 import ForSyDe.Signal
+import ForSyDe.Bit hiding (not)
+import qualified ForSyDe.Bit as B
 import ForSyDe.ForSyDeErr
 import ForSyDe.System.SysDef
 import ForSyDe.Process.ProcFun
@@ -29,7 +32,7 @@ import ForSyDe.Process.ProcVal
 
 import Data.Typeable.TypeRepLib (unArrowT)
 
-
+import Data.Int
 import Data.Char (digitToInt)
 import Data.List (intersperse, find)
 import Data.Maybe (isJust, fromJust)
@@ -177,7 +180,8 @@ transUnzipxSY2Block vPid inSig outSigs elemTR vSize = do
  -- Generate the port map
      pMap = genPMap  (inPar : outPars) (inSig : outSigs)
  -- Generate the signal assignments
-     genOrigExp n = PrimName (NSimple inPar) `IndexedExp` (PrimLit  $ show n)
+     genOrigExp n = 
+        PrimName $ NIndexed (NSimple inPar `IndexedName` [PrimLit  $ show n])
      genOutAssign outSig n = CSSASm $ genExprAssign outSig (genOrigExp n)
      outAssigns = zipWith genOutAssign outPars [(0::Int)..]              
  return  (BlockSm vPid iface pMap [] outAssigns,
@@ -339,9 +343,11 @@ doCustomTR2TM rep | isFSVec = do
  -- Create the vector type identifier
  let vectorId = unsafeVHDLBasicId ("fsvec_" ++ show size ++ "_" ++
                                    fromVHDLId valTM)
+  -- Add the default functions for the vector type to the global results
+     funs =  genVectorFuns valTM size vectorId
+ mapM_ addSubProgBody funs
  -- Create the vector declaration
-     vectorDec = TypeDec vectorId (TDA (ArrayTypeDef 0 (size-1) valTM))
- return vectorDec
+ return $ TypeDec vectorId (TDA (ArrayTypeDef 0 (size-1) valTM))
    where (cons, ~[sizeType,valueType]) = splitTyConApp rep
          isFSVec = cons == fSVecTyCon
          size = transTLNat2Int sizeType
@@ -358,7 +364,10 @@ doCustomTR2TM rep | isTuple = do
       recordId = unsafeVHDLBasicId $ 
               "tup" ++ 
               (show $ length fieldTMs) ++ "_" ++ 
-              (concatMap fromVHDLId.intersperse (unsafeVHDLBasicId "_")) fieldTMs 
+              (concatMap fromVHDLId.intersperse (unsafeVHDLBasicId "_")) fieldTMs
+  -- Add the default functions for the tuple type to the global results
+      funs = genTupleFuns fieldTMs recordId
+  mapM_ addSubProgBody funs
   -- Create the record
   return (TypeDec recordId (TDR $ RecordTypeDef elems))
  where (cons, args) = splitTyConApp rep
@@ -366,15 +375,36 @@ doCustomTR2TM rep | isTuple = do
        isTuple = all (==',') conStr
        
 
--- | Abst
+-- | AbstExt
+doCustomTR2TM rep | isAbsExt = do
+  -- Create the elements of the record
+  valueTM <- transTR2TM valueTR
+  let elems = [ElementDec isPresentId booleanTM,
+               ElementDec valueId     valueTM  ]
+              
+  -- Create the Type Declaration identifier
+      recordId = unsafeVHDLBasicId $ 
+                    "abs_ext_" ++ fromVHDLId valueTM
+  -- Add the default functions for the vector type to the global results
+      funs =  genAbstExtFuns valueTM recordId
+  mapM_ addSubProgBody funs
+  -- Return the resulting the record
+  return (TypeDec recordId (TDR $ RecordTypeDef elems))
+ where (cons, ~[valueTR]) = splitTyConApp rep
+       absExtTyCon = (typeRepTyCon.typeOf) (undefined :: AbstExt ())
+       isAbsExt = cons == absExtTyCon 
 
 -- | Unkown custom type
 doCustomTR2TM rep = throwFError $ UnsupportedType rep               
         
 -- | Translation table for primitive types
 primTypeTable :: [(TypeRep, TypeMark)]
-primTypeTable = [(typeOf (undefined :: Int), int32TM),
-                 (typeOf (undefined :: Bool), std_logicTM)]
+primTypeTable = [(typeOf (undefined :: Int64), int64TM)   ,
+                 (typeOf (undefined :: Int32), int32TM)   ,
+                 (typeOf (undefined :: Int16), int16TM)   ,
+                 (typeOf (undefined :: Int8) , int8TM)    ,
+                 (typeOf (undefined :: Bool) , booleanTM) ,
+                 (typeOf (undefined :: Bit)  , std_logicTM)]
 
 ---------------------------------------
 -- Translating functions and expresions
@@ -516,15 +546,19 @@ transExp2VHDL exp@(VarE name) =
            (\name -> return $ PrimName name) 
            mVHDLName       
         
-
 -- Unary constructor
-transExp2VHDL  con@(ConE cName) 
-  | isJust consTranslation = return $ fromJust consTranslation
-  | otherwise =  expErr con $ UnkownIdentifier cName
+transExp2VHDL  (ConE cName `AppE` arg) | isJust consTranslation = 
+  do vHDLarg <- transExp2VHDL arg
+     return $ (fromJust consTranslation)  vHDLarg
     where consTranslation = lookup cName validUnaryCons
 
+-- Constant constructor
+transExp2VHDL  (ConE cName) | isJust consTranslation = 
+   return $ fromJust consTranslation
+    where consTranslation = lookup cName validConstantCons
+
 -- Unkown constructor
-transExp2VHDL  con@(ConE cName `AppE` _) = expErr con $ UnkownIdentifier cName
+transExp2VHDL  con@(ConE cName) = expErr con $ UnkownIdentifier cName
 
 -- Literals
 transExp2VHDL  (LitE (IntegerL integer))  = (return.transInteger2VHDL) integer
@@ -572,17 +606,22 @@ transExp2VHDL exp = expErr exp Unsupported
 transInteger2VHDL :: Integer -> Expr
 transInteger2VHDL = PrimLit . show 
 
--- FIXME: remove when done
--- PrimFCall $ FCall (unsafeVHDLBasicId "TO_SIGNED") 
---  [Just (unsafeVHDLBasicId "ARG")  :=>: (ADExpr $ PrimLit (show i)),
---   Just (unsafeVHDLBasicId "SIZE") :=>: (ADExpr $ PrimLit "32")     ]
+----------------------------------------------------
+-- Translation tables for constructors and functions
+----------------------------------------------------
+
+-- | Translation table of valid unary constructors
+validUnaryCons :: [(TH.Name, Expr -> Expr)]
+validUnaryCons = [('Prst , genExprFCall1 presentId)]
 
 
--- | Translation table of valid constructors
-validUnaryCons :: [(TH.Name, Expr)]
-validUnaryCons = [('True, PrimLit "'1'"),
-                  ('False, PrimLit "'0'")]
-
+-- | Translation table of valid constant constructors
+validConstantCons :: [(TH.Name, Expr)]
+validConstantCons = [('True , trueExpr ),
+                     ('False, falseExpr),
+                     ('H    , highExpr ),
+                     ('L    , lowExpr  ),
+                     ('Abst , PrimName $ NSimple absentId)]
 
 
 -- | Translation table of valid binary functions
@@ -609,9 +648,11 @@ validBinaryFuns = [('(&&) , And   ),
 
 -- | Translation table of valid unary functions
 validUnaryFuns :: [(TH.Name, (Expr -> Expr))]
-validUnaryFuns = [('not   , Not  ),
+validUnaryFuns = [('B.not , Not  ),
+                  ('not   , Not  ),
                   ('negate, Neg  ),
-                  ('abs   , Abs  )]
+                  ('abs   , Abs  ),
+                  ('abstExt, genExprFCall1 presentId) ]
 
 --------------------
 -- Helper Functions

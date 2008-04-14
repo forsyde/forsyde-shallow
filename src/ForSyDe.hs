@@ -18,12 +18,14 @@ module ForSyDe
  module ForSyDe.System,
  module ForSyDe.Process,
  module ForSyDe.Backend,
+ module ForSyDe.Bit,
  module ForSyDe.AbsentExt,
  module ForSyDe.DFT,
  module ForSyDe.FIR) where
 
 import ForSyDe.Ids
 import ForSyDe.Signal (Signal)
+import ForSyDe.Bit
 import ForSyDe.Process
 import ForSyDe.System
 import ForSyDe.Backend
