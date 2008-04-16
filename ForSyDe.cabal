@@ -39,9 +39,11 @@ Library
                    ForSyDe.Process.SynchProc,
                    ForSyDe.Backend,
                    ForSyDe.Backend.Simulate,
-                   ForSyDe.Backend.VHDL
+                   ForSyDe.Backend.VHDL,
+                   ForSyDe.Backend.GraphML
   other-modules:   Language.Haskell.TH.TypeLib,
                    Data.Typeable.TypeRepLib,
+                   Data.Traversable.GenericZipWith,
                    ForSyDe.ForSyDeErr,
                    ForSyDe.Netlist,
                    ForSyDe.Netlist.Traverse,
@@ -59,8 +61,13 @@ Library
                    ForSyDe.Backend.VHDL.Traverse,
                    ForSyDe.Backend.VHDL.Traverse.VHDLM,
                    ForSyDe.Backend.VHDL.Translate,
-                   ForSyDe.Backend.VHDL.Generate
-                   
+                   ForSyDe.Backend.VHDL.Generate,
+                   ForSyDe.Backend.GraphML.AST,
+                   ForSyDe.Backend.GraphML.Ppr,
+                   ForSyDe.Backend.GraphML.FileIO,
+                   ForSyDe.Backend.GraphML.Traverse,
+                   ForSyDe.Backend.GraphML.Traverse.GraphMLM
+
 
 -- FIXME: remove all the -fno-warn*
   ghc-options:	-Wall -fno-warn-name-shadowing -fno-warn-orphans

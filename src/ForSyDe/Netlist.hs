@@ -67,9 +67,6 @@ newtype Netlist container = Netlist (container NlTree)
 data  NlNode inputi =
              -- Ports
              InPort  PortId               | -- ^ Input Ports of the system 
-             -- Constant signal 
-             Const ProcVal                | -- ^ A signal with constant value
-                                            --   During all its periods        
              -- Processes
              Proc ProcId (NlProc inputi)
 
@@ -77,7 +74,11 @@ data  NlNode inputi =
 -- | A process node
 --   Note that vectors and transformed to lists puls an Int parameter 
 --   indicating its size
-data NlProc inputi = 
+data NlProc inputi =
+ -- Constant signal 
+ Const ProcVal  | -- ^ A signal with constant value
+                  --   During all its periods        
+              
  -- | mapSY and zipWithSY processes
  ZipWithNSY (TypedProcFun Dynamic) -- Process function in dynamic form
             [inputi]                                | 
@@ -116,6 +117,8 @@ data NlProc inputi =
 -- NlEdge
 ---------
 
+-- FIXME: The NLNodeOut should merely be an integer
+
 -- | The node connection is carried out by directed edges modelled as 
 --   Unsafe Unmutable References (allowing to share nodes) connected 
 --   in the output->input direction (remember we are using trees). 
@@ -125,6 +128,7 @@ data NlProc inputi =
 data NlEdge node = NlEdge (ForSyDe.OSharing.URef node) NlNodeOut
                            
 
+-- FIXME: output tags are ugly, create a variant of NlNode which takes outputs in account
 
 -- | The different outputs which the different nodes can have
 data NlNodeOut = InPortOut        |
@@ -140,9 +144,9 @@ data NlNodeOut = InPortOut        |
 -- | Get the output tags of a node
 outTags :: NlNode a -> [NlNodeOut]
 outTags (InPort  _) = [InPortOut]
-outTags (Const _) = [ConstOut]
 outTags (Proc _ proc) =
  case proc of
+   Const _ -> [ConstOut]
    ZipWithNSY _ _ -> [ZipWithNSYOut]
    ZipWithxSY _ _ -> [ZipWithxSYOut] 
    UnzipNSY types _ _  -> map UnzipNSYOut [1..length types]
@@ -211,8 +215,8 @@ node2NlSignal ref tag = NlTree (NlEdge ref tag)
 eval :: NlNode Dynamic -> [(NlNodeOut, Dynamic)]
 eval node = case node of
  InPort _ -> intError evalStr (EvalErr "InPort")
- Const pv -> [(ConstOut, dyn pv)]
  Proc _ proc -> case proc of
+    Const pv -> [(ConstOut, dyn pv)]
     ZipWithNSY fun dynArgs
       -> [(ZipWithNSYOut, foldl1 dynApp ((tval fun) : dynArgs))]  
     ZipWithxSY fun dynListArg

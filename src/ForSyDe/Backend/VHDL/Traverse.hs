@@ -87,12 +87,9 @@ traverseVHDLM = traverseSEIO newVHDL defineVHDL
 -- | \'new\' traversing function for the VHDL backend
 newVHDL :: NlNode NlSignal -> VHDLM [(NlNodeOut, IntSignalInfo)]
 newVHDL node = case node of
+  -- FIXME: Skip the case and basing the generation of tags on
+  --        outTags 
   InPort id -> return [(InPortOut, unsafeVHDLId id)]
-  -- FIXME: make it a reserved identifier
-  Const _ -> do 
-   n <- gets (constNum.local)
-   incConstNum
-   return [(ConstOut, unsafeVHDLId $ "const" ++ show n)]
   Proc pid proc -> withProcC pid $ do
    -- Obtain the VHDL id of the process
    vpid <- transProcId2VHDL pid
@@ -104,6 +101,7 @@ newVHDL node = case node of
             zipWith (\tag n -> (tag, procSuffSignal $ outSuffix ++ show n))
                     (outTags node) [(1::Int)..]
    case proc of
+    Const _ -> return [(ConstOut, procSuffSignal outSuffix)]
     ZipWithNSY _ _ -> return [(ZipWithNSYOut, procSuffSignal outSuffix)]
     ZipWithxSY _ _ -> return [(ZipWithxSYOut, procSuffSignal outSuffix)]
     UnzipNSY _ _ _ -> return multOutTags
@@ -126,18 +124,17 @@ defineVHDL :: [(NlNodeOut, IntSignalInfo)]
 defineVHDL outs ins = do 
  case (outs,ins) of
   (_, InPort _) -> return ()
-  ([(ConstOut, intSig)],  Const ProcVal{valAST=ast}) -> do
-   -- FIXME: give identifier to constants as well
-   -- Generate a Signal declaration for the constant
-   let cons = expVal ast
-   dec  <- withProcValC cons $ transVHDLName2SigDec 
-                                   intSig (expTyp ast) (Just cons)
-   addSigDec dec
   (outs, Proc pid proc) -> withProcC pid $ do
    -- We can unsafely transform the pid to a VHDL identifier because
    -- it was checked in newVHDL
    let vPid = unsafeVHDLId pid
    case (outs, proc) of
+    ([(ConstOut, intSig)],  Const ProcVal{valAST=ast}) -> do
+     -- Generate a Signal declaration for the constant
+     let cons = expVal ast
+     dec  <- withProcValC cons $ transVHDLName2SigDec 
+                                   intSig (expTyp ast) (Just cons)
+     addSigDec dec
     ([(ZipWithNSYOut, intOut)],  ZipWithNSY f intIns) -> do 
      -- Translate the zipWithN process to a block
      -- and get the declaration of its output signal
@@ -194,7 +191,7 @@ defineVHDL outs ins = do
 
 -- Othewise there is a problem of inconsisten tags
     _ -> intError "ForSyDe.Backend.VHDL.Traverse.defineVHDL" InconsOutTag
-  _ -> intError "ForSyDe.Backend.VHDL.Traverse.defineVHDL" InconsOutTag
+
 
 
 

@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, FlexibleContexts, TypeOperators #-}
+{-# LANGUAGE TemplateHaskell, TypeOperators #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  ForSyDe.Backend.VHDL.Traverse

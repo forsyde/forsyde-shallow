@@ -25,7 +25,7 @@ import ForSyDe.ForSyDeErr
 
 import Data.Maybe (fromMaybe)
 -- qualified to avoid nameclash
-import qualified Data.Foldable  as DF (Foldable(foldMap), foldr)
+import qualified Data.Foldable  as DF (Foldable(foldMap), toList)
 import Data.Monoid (mempty)
 -- qualified to avoid nameclash
 import qualified Data.Traversable as DT (Traversable(traverse,mapM)) 
@@ -37,6 +37,7 @@ import Control.Monad.ST (ST)
 -- Instances to traverse a netlist Node (and implicitly the whole netlist)
 
 instance DF.Foldable NlProc where
+ foldMap _ (Const _)  = mempty 
  foldMap f (ZipWithNSY _ is)   = DF.foldMap f is
  foldMap f (ZipWithxSY _ is) = DF.foldMap f is
  foldMap f (UnzipNSY _ _ i)    = f i
@@ -47,11 +48,11 @@ instance DF.Foldable NlProc where
 
 
 instance DF.Foldable NlNode where
- foldMap _ (Const _)     = mempty 
  foldMap _ (InPort  _)   = mempty
  foldMap f (Proc _ proc) = DF.foldMap f proc
 
 instance Functor NlProc where
+ fmap _ (Const val)          = Const val
  fmap f (ZipWithNSY pf is)  = ZipWithNSY pf (fmap f is)
  fmap f (ZipWithxSY pf is)  = ZipWithxSY  pf (fmap f is)
  fmap f (UnzipNSY ts pf i)  = UnzipNSY ts pf (f i)
@@ -62,11 +63,11 @@ instance Functor NlProc where
 
 
 instance Functor NlNode where
- fmap _ (Const val)          = Const val
  fmap _ (InPort  id)         = InPort  id
  fmap f (Proc id proc)       = Proc id (fmap f proc) 
 
-instance DT.Traversable NlProc where 
+instance DT.Traversable NlProc where
+ traverse _ (Const val) = pure (Const val) 
  traverse f (ZipWithNSY pf is)  = ZipWithNSY pf <$> DT.traverse f is
  traverse f (ZipWithxSY pf is)  = ZipWithxSY pf <$> DT.traverse f is
  traverse f (UnzipNSY ts pf i)  = UnzipNSY ts pf <$> f i
@@ -78,7 +79,6 @@ instance DT.Traversable NlProc where
 
 
 instance DT.Traversable NlNode where
- traverse _ (Const val)    = pure (Const val)
  traverse _ (InPort  id)   = pure (InPort id)
  traverse f (Proc id proc) = Proc id <$> DT.traverse f proc 
 
@@ -158,4 +158,4 @@ traverseST new define (Netlist rootSignals) =
 
 -- | Obtain the arguments of a node
 arguments :: NlNode a -> [a]
-arguments = DF.foldr (:) []
+arguments = DF.toList

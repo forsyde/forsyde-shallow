@@ -30,6 +30,7 @@ module ForSyDe.ForSyDeErr
   qPutTraceMsg,
   printError,
   printVHDLError,
+  printGraphMLError,
   module Control.Monad.Error,
   module Debug.Trace) where
 
@@ -413,3 +414,7 @@ printError = putStrLn.("Error: "++).show
 -- | Print a VHDL compilation error
 printVHDLError :: Show a => a -> IO ()
 printVHDLError = putStrLn.("VHDL Compilation Error: "++).show
+
+-- | Print a GraphML compilation error
+printGraphMLError :: Show a => a -> IO ()
+printGraphMLError = putStrLn.("VHDL Compilation Error: "++).show

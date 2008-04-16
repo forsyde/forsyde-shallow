@@ -13,9 +13,12 @@
 -----------------------------------------------------------------------------
 module ForSyDe.Backend 
  (module ForSyDe.Backend.Simulate,
-  module ForSyDe.Backend.VHDL) where
+  module ForSyDe.Backend.VHDL,
+  module ForSyDe.Backend.GraphML) where
 
 import ForSyDe.Backend.Simulate
 import ForSyDe.Backend.VHDL
+import ForSyDe.Backend.GraphML
+
 
 

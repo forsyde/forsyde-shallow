@@ -98,10 +98,10 @@ data LocalVHDLST = LocalVHDLST
                                       -- known in a function 
                                       -- it only makes sense
                                       -- in a process-function context  
-   localRes    :: LocalTravResult, -- Result accumulated during the 
+   localRes    :: LocalTravResult} -- Result accumulated during the 
                                    -- traversal of current System Definition 
                                    -- netlist
-   constNum    :: Int}            --  Number of constants found
+
 
 
 
@@ -109,7 +109,7 @@ data LocalVHDLST = LocalVHDLST
 initLocalST :: SysDefVal -> LocalVHDLST
 initLocalST sysDefVal = 
  LocalVHDLST sysDefVal (SysDefC (sid sysDefVal) (loc sysDefVal)) []
-             emptyLocalTravResult 0
+             emptyLocalTravResult
 
 -- | Execute certain operation with a concrete local state.
 --   The initial local state is restored after the operation is executed
@@ -205,35 +205,35 @@ emptyGlobalTravResult = GlobalTravResult [] []
 ----------
 
 -- | VHDL Compilation options
-data VHDLOps = VHDLOps {debug :: VHDLDebugLevel, recursivity :: VHDLRecursivity}
+data VHDLOps = VHDLOps {debugVHDL :: VHDLDebugLevel, recursivityVHDL :: VHDLRecursivity}
  deriving (Eq, Show)
 
 -- | Debug level
-data VHDLDebugLevel = Normal | Verbose
+data VHDLDebugLevel = VHDLNormal | VHDLVerbose
  deriving (Eq, Ord, Show)
 
 -- | Print a message to stdout if in verbose mode
 debugMsg :: String -> VHDLM ()
 debugMsg str = do
- debugLevel <- gets (debug.ops.global)
- when (debugLevel > Normal) 
+ debugLevel <- gets (debugVHDL.ops.global)
+ when (debugLevel > VHDLNormal) 
       (liftIO $ putStr ("DEBUG: " ++ str))
 
 -- | Recursivity, should the parent systems of system instances be compiled as 
 --   well?
-data VHDLRecursivity = Recursive | NonRecursive
+data VHDLRecursivity = VHDLRecursive | VHDLNonRecursive
  deriving (Eq, Show)
 
 -- | Check if we are in recursive mode
 isRecursiveSet :: VHDLM Bool
 isRecursiveSet = do 
-  recOp <- gets (recursivity.ops.global)
-  return $ recOp == Recursive
+  recOp <- gets (recursivityVHDL.ops.global)
+  return $ recOp == VHDLRecursive
 
 
 -- | Default traversing options
 defaultVHDLOps :: VHDLOps
-defaultVHDLOps =  VHDLOps Normal Recursive
+defaultVHDLOps =  VHDLOps VHDLNormal VHDLRecursive
 
 
 -- | Set VHDL options inside the VHDL monad
@@ -308,13 +308,6 @@ addSubProgBody newBody = do
                        {globalRes = gRes{subProgBodies = bodies ++ [newBody]}}})
 
 
-
--- | Increment the number of constants found
-incConstNum :: VHDLM ()
-incConstNum = modify incFun
-  where incFun st  = st{local=l{constNum=c + 1}}
-         where l = local st
-               c = constNum l
 
 -- | Lift an 'EProne' value to the VHDL monad setting current error context
 --   for the error
