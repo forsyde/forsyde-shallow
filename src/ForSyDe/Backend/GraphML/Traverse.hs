@@ -65,31 +65,13 @@ traverseGraphML = traverseSEIO newGraphML defineGraphML
 
 -- | \'new\' traversing function for the GraphML backend
 newGraphML :: NlNode NlSignal -> GraphMLM [(NlNodeOut, IntSignalInfo)]
-newGraphML node = case node of
-  -- FIXME: This can be really simplified based on outTags
-  InPort id -> return [(InPortOut, IntSignalInfo id (id ++ outSuffix))]
-  Proc pid proc -> do 
-   let procSuffSignal sigSuffix = IntSignalInfo pid (pid ++ sigSuffix)
-   -- Multiple output tags, add a numeric suffix specifying the output
-       multOutTags =  
-            zipWith (\tag n -> (tag, procSuffSignal $ outSuffix ++ show n))
+newGraphML node = do
+   let id = case node of
+             InPort id  -> id 
+             Proc pid _ -> pid
+     
+   return $ zipWith (\tag n -> (tag, IntSignalInfo id (id ++ "_out" ++ show n)))
                     (outTags node) [(1::Int)..]
-   case proc of
-    Const _ -> return [(ConstOut, procSuffSignal outSuffix)]
-    ZipWithNSY _ _ -> return [(ZipWithNSYOut, procSuffSignal outSuffix)]
-    ZipWithxSY _ _ -> return [(ZipWithxSYOut, procSuffSignal outSuffix)]
-    UnzipNSY _ _ _ -> return multOutTags
-    UnzipxSY _ _ _ _ -> return multOutTags 
-    DelaySY _ _ -> return [(DelaySYOut, procSuffSignal outSuffix)]
-    SysIns  _ _ ->
-      -- Note: Here we could use the name of the System outputs instead of
-      --       instanceid_out_n but ... that could cause
-      --       clashes with the oher signal names (we only check for the
-      --       of the uniqueness of all process ids within a system when 
-      --       creating it). We could check for those clashes but it would be
-      --       ineffective and ilogical.
-      return multOutTags
- where outSuffix = "_out"    
        
 
        
@@ -102,7 +84,7 @@ defineGraphML outs ins = do
            InPort id  -> id 
            Proc pid _ -> pid
      -- Formal input signals of the proces
-     formalInL = [id ++ show n | n <- [(1::Int)..]]
+     formalInL = [id ++ "_in" ++ show n | n <- [(1::Int)..]]
      -- Actual input signals of the process
      actualInL = arguments ins
      -- Generate the input edges of the node 
