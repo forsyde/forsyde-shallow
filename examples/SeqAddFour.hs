@@ -40,3 +40,6 @@ addFourSys = $(newSysDef 'addFour ["in1"] ["out1"])
 -- we simulate the system
 simAddFour :: [Int32] -> [Int32]
 simAddFour = $(simulate 'addFourSys)
+
+-- we generate VHDL
+createVHDL = writeVHDL addFourSys
