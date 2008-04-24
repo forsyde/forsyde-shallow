@@ -399,7 +399,8 @@ doCustomTR2TM rep = throwFError $ UnsupportedType rep
         
 -- | Translation table for primitive types
 primTypeTable :: [(TypeRep, TypeMark)]
-primTypeTable = [(typeOf (undefined :: Int64), int64TM)   ,
+primTypeTable = [-- Commented out due to representation overflow
+                 -- (typeOf (undefined :: Int64), int64TM)   ,
                  (typeOf (undefined :: Int32), int32TM)   ,
                  (typeOf (undefined :: Int16), int16TM)   ,
                  (typeOf (undefined :: Int8) , int8TM)    ,
