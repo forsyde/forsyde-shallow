@@ -1,8 +1,35 @@
-
 \section{Introduction}
 \label{sec:Introduction}
 
-\cite{SanJan2004a}
+% Intro ForSyDe modeling language 
+ForSyDe is a design methodology that has been designed to raise the abstraction level of system design. It uses a behavioral system domain specific language (DSL) with polymorphic signal values, which means that signal values can be of any Haskell type.
+ 
+% Objectives
+The initial implementation of the modeling environment was shallow embedded in Haskell, which restricted its use to simulation and did not allow to analyse the systems model. 
+
+% Solution
+This paper introduces a general technique based on dynamic types and Template
+Haskell \cite{} to deep embed DSLs in Haskell without losing the power
+of polymorhic types (values in all deep embedded DSLs so far are
+monomorphic (check!!!)) and to describe computations in plain Haskell
+(no need to create an specific DSL for that). We successfully applied
+the technique for the analysis ForSyDe of systems. This means that
+system models can be described using any Haskell type for signal
+values and any Haskell expression to describe computations. Depending
+on the restrictions of the analyzer backend, the backend can either
+support the full language (simulation) or a restricted subset of the
+language (Synthesis to VHDL). 
+
+% Outcome
+% -- Compiler
+% -- Simulation
+% -- Graphical Backend
+
+ForSyDe has been design as a system design methodology for heterogeneous embedded systems \cite{SanJan2004a}. A ForSyDe system model is a hierarchical concurrent process network, where processes communicate via signals. ForSyDe supports different models of computation (MoCs), which are connected via domain interfaces. The ForSyDe library comprises modeling elements for the different models of computation and is written in Haskell. 
+
+%This paper presents an embedded hardware compiler for the synchronous MoC of ForSyDe. A signal is defined as a sequence of events, where each event has a tag and a value. Although ForSyDe supports several models of computation \cite{}, we focus in this paper only on the synchronous model of computation, since 
+
+
 
 \cite{BjeCla1998}
 
