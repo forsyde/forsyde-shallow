@@ -42,7 +42,6 @@ import qualified Language.Haskell.TH as TH
 import Language.Haskell.TH hiding (global)
 import qualified Data.Traversable as DT
 import Data.Typeable
-import Data.Char (toLower)
 import qualified Data.Param.FSVec as V
 
 
@@ -52,8 +51,6 @@ import Data.TypeLevel.Num.Reps
 --   the VHDL identifiers of its output signals.
 transSysDef2Ent :: SysDefVal -> VHDLM EntityDec
 transSysDef2Ent sysDefVal = do
- -- FIXME: check if the entity name and its signals are in the same namespace
- -- then we could use mkVHDLId instead.
  entId <- transSysId2VHDL (sid sysDefVal)
  inDecs  <- mapM (uncurry $ transPort2IfaceSigDec In)  (iIface sysDefVal) 
  outDecs <- mapM (uncurry $ transPort2IfaceSigDec Out) (oIface sysDefVal)
@@ -239,8 +236,8 @@ transSysIns2CompIns vPid ins typedOuts parentId parentInIds parentOutIds = do
   decs <- mapM (\(name,typ) -> transVHDLName2SigDec name typ Nothing) typedOuts
   -- Create the portmap 
   vParentId <- transSysId2VHDL parentId
-  vParentInIds <- liftEProne $ mapM mkVHDLId parentInIds
-  vParentOutIds <- liftEProne $ mapM mkVHDLId parentOutIds
+  vParentInIds <- liftEProne $ mapM mkVHDLExtId parentInIds
+  vParentOutIds <- liftEProne $ mapM mkVHDLExtId parentOutIds
   let assocs =  genAssocElems 
                   ([resetId, clockId] ++ vParentInIds ++ vParentOutIds)
                   ([resetId, clockId] ++ ins          ++ map fst typedOuts)
@@ -289,10 +286,7 @@ transProcId2VHDL = transPortId2VHDL
 
 -- | translate a port identifier to a VHDL Identifier
 transPortId2VHDL :: PortId -> VHDLM VHDLId
-transPortId2VHDL str = do let strL = map toLower str
-                          when (elem strL reservedStrs)
-                               (throwFError (ReservedId str)) 
-                          liftEProne $ mkVHDLId str
+transPortId2VHDL str = liftEProne $ mkVHDLExtId str
 
 
 -------------------
@@ -459,7 +453,7 @@ checkProcFunSpec argN (ProcFunAST thName [Clause pats (NormalB exp) []] _)= do
  return (fName, parVHDLIds, nameTable, exp)
     where getParName (VarP name) = return name 
           getParName pat = funErr $ NonVarPar pat
-          thName2VHDL name = (liftEProne.mkVHDLId.nameBase) name
+          thName2VHDL name = (liftEProne.mkVHDLExtId.nameBase) name
 checkProcFunSpec _ (ProcFunAST _ [Clause _ _ whereConstruct@(_:_)] _) =  
   funErr (FunWhereConstruct whereConstruct)
 checkProcFunSpec _ (ProcFunAST _ [Clause _ bdy@(GuardedB _) _] _) =  

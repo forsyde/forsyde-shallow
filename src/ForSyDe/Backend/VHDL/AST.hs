@@ -47,24 +47,18 @@ data VHDLId = Basic String | Extended String
 -- | Obtain the String of a VHDL identifier
 fromVHDLId :: VHDLId -> String
 fromVHDLId (Basic    str) = str
-fromVHDLId (Extended str) = str
-
-
+fromVHDLId (Extended str) = '\\' :  (escapeBackslashes str) ++ "\\"
+ where escapeBackslashes [] = []
+       escapeBackslashes (x : xs) 
+        | x == '\\' = "\\\\" ++ escapeBackslashes xs
+        | otherwise = x : escapeBackslashes xs
 instance Show VHDLId where
  show  = show.fromVHDLId
 
 
--- | unsafely create a VHDLId
-unsafeVHDLId :: String -> VHDLId
-unsafeVHDLId [] = error "ForSyDe.Backend.VHDL.unsafeVHDLId []"
-unsafeVHDLId id@(first:_)
- | first == '/'    = unsafeVHDLExtId id
- | otherwise       = unsafeVHDLBasicId id
-
 -- | unsafely create a basic VHDLId (without cheking if the string is correct)
 unsafeVHDLBasicId :: String -> VHDLId
 unsafeVHDLBasicId str = Basic str
-
 
 
 -- | unsafely create an exteded VHDLId (without cheking if the string is 
@@ -72,16 +66,6 @@ unsafeVHDLBasicId str = Basic str
 unsafeVHDLExtId :: String -> VHDLId
 unsafeVHDLExtId str = Extended str
 
-
-
--- | Create a VHDL identifier from a String, previously checking if the 
---   String is correct
-mkVHDLId :: String -> EProne VHDLId
--- FIXME: The first letter and end empty pattern matching are checked twice
-mkVHDLId [] = throwError EmptyVHDLId
-mkVHDLId id@(first:_)
- | first == '/'    = mkVHDLExtId id
- | otherwise       = mkVHDLBasicId id
 
 -- | Create a VHDL basic identifier from a String, previously checking if the 
 --   String is correct
@@ -96,14 +80,15 @@ mkVHDLBasicId id
        basiIdPat = "^[A-Za-z](_?[A-Za-z0-9])*$"
 
 -- | Create a VHDL extended identifier from a String, previously checking 
---   if the String is correct
+--   if the String is correct. The input string must not include the initial
+--   and ending backslashes nad the intermediate backslashes shouldn't be escaped.
 mkVHDLExtId :: String -> EProne VHDLId
 mkVHDLExtId [] = throwError EmptyVHDLId
 mkVHDLExtId id
  | id =~ extIdPat = return $ Extended id
  | otherwise = throwError $ IncVHDLExtId id
  where -- Regular expression pattern for extended identifiers.
-       -- An extended identifier must:
+       -- According to the VHDL93 standard, an extended identifier must:
        --  * Start and end with a backslash '\'
        --  * Its middle characters can be
        --    * two contiguous backslashes \\
@@ -112,6 +97,10 @@ mkVHDLExtId id
        --    * an Other Special Character 
        --      (backslashes can only appear in pairs as indicated above)
        -- 
+       -- However, backslashes will be handled when printing the identifier,
+       -- (an initial and ending backslash are added and the intermediate backslashes
+       --  are escaped)
+       --
        -- Note that we cannot use specialChars and otherSpecialChars
        -- to build the pattern because of the double-backslash rule
        -- and also, the right bracket (according to the posix
@@ -120,16 +109,14 @@ mkVHDLExtId id
        -- (according to the POSIX standard as well) we also need to put
        -- '-' in the last place of the bracket expression.
    extIdPat = 
-     "^\\\\(\\\\\\\\|[]A-Za-z0-9 \"#&'()*+,./:;<=>_|!$%@?[^`{}~-])+\\\\$"
+     "^[]A-Za-z0-9 \"#&\\'()*+,./:;<=>_|!$%@?[^`{}~-]+$"
 
 
 -- | Unsafely append a string to a VHDL identifier (i.e. without checking if
 --  the resulting identifier is valid)
 unsafeIdAppend :: VHDLId -> String -> VHDLId
 unsafeIdAppend (Basic id)    suffix = Basic $ id ++ suffix
--- FIXME: init is inneficient, maybe keep the extended identifier without
---        the enclosing backslashes?
-unsafeIdAppend (Extended id) suffix = Extended $ (init id) ++ suffix ++ "\\" 
+unsafeIdAppend (Extended id) suffix = Extended $ id ++ suffix
 
 -- | special characters as defined in the VHDL93 standard
 specialChars :: [Char]

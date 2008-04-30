@@ -23,7 +23,6 @@ module ForSyDe.Backend.GraphML
   defaultGraphMLOps) where
 
 import Control.Monad.State (evalStateT)
-
 import ForSyDe.ForSyDeErr
 import ForSyDe.OSharing (readURef)
 import ForSyDe.System.SysDef

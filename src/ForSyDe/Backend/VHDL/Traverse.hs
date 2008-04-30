@@ -87,9 +87,11 @@ traverseVHDLM = traverseSEIO newVHDL defineVHDL
 -- | \'new\' traversing function for the VHDL backend
 newVHDL :: NlNode NlSignal -> VHDLM [(NlNodeOut, IntSignalInfo)]
 newVHDL node = case node of
-  -- FIXME: Skip the case and basing the generation of tags on
+  -- FIXME: Skip the case, basing the generation of tags on
   --        outTags 
-  InPort id -> return [(InPortOut, unsafeVHDLId id)]
+  -- We can use unsafeVHDLExtId, because the ids are already
+  -- checked when translating the entity
+  InPort id -> return [(InPortOut, unsafeVHDLExtId id)]
   Proc pid proc -> withProcC pid $ do
    -- Obtain the VHDL id of the process
    vpid <- transProcId2VHDL pid
@@ -127,7 +129,7 @@ defineVHDL outs ins = do
   (outs, Proc pid proc) -> withProcC pid $ do
    -- We can unsafely transform the pid to a VHDL identifier because
    -- it was checked in newVHDL
-   let vPid = unsafeVHDLId pid
+   let vPid = unsafeVHDLExtId pid
    case (outs, proc) of
     ([(ConstOut, intSig)],  Const ProcVal{valAST=ast}) -> do
      -- Generate a Signal declaration for the constant

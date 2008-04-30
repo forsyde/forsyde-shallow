@@ -34,26 +34,15 @@ commonContextClause =
 --------------
 
 -- | reset and clock signal identifiers in String form
---   note that there are in lower case and thus (due to VHDL basic identifiers
---   being case insensitive) in order to check if an identifier is reserved
---   it first needs to be mapped to lowercase before comparing. 
 resetStr, clockStr :: String
 resetStr = "resetn"
 clockStr = "clock"
-
--- | reserved identifiers in String form
-reservedStrs :: [String]
-reservedStrs = [resetStr, clockStr]
 
 -- | reset and clock signal identifiers in basic VHDLId form
 resetId, clockId :: VHDLId
 resetId = unsafeVHDLBasicId resetStr
 clockId = unsafeVHDLBasicId clockStr
 
-
--- | reserved Identifiers
-reservedIds :: [VHDLId]      
-reservedIds = [resetId, clockId]
 
 -- | \"types\" identifier
 typesId :: VHDLId
