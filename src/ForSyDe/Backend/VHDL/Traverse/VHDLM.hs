@@ -71,12 +71,21 @@ import Data.Typeable (TypeRep)
 --          2) add the System Definition to the table
 
 -----------
+-- SysLogic
+-----------
+
+-- | Indicates wether a system is combinational or sequential
+--   In practice, a system is sequential if if contains a delay process or
+--   a sequential system instance, otherwise its combinational.
+data SysLogic = Combinational | Sequential
+ deriving (Eq, Show)
+
+-----------
 -- VHDLM --
 -----------
 
 -- | VHDL backend monad
 type VHDLM a = TravSEIO VHDLTravST ContextErr a
-
 
 ----------------
 -- VHDLTravST --
@@ -93,6 +102,7 @@ data LocalVHDLST = LocalVHDLST
    {currSysDef :: SysDefVal, -- System definition which is currently 
                               -- being compiled
    context     :: Context,    -- Error Context
+   logic       :: SysLogic,   -- Current system is sequential or combinational?
    nameTable :: [(Name, VHDLName)],   -- Name translation table,
                                       -- It tells what local variables are 
                                       -- known in a function 
@@ -108,7 +118,7 @@ data LocalVHDLST = LocalVHDLST
 -- | initialize the local state
 initLocalST :: SysDefVal -> LocalVHDLST
 initLocalST sysDefVal = 
- LocalVHDLST sysDefVal (SysDefC (sid sysDefVal) (loc sysDefVal)) []
+ LocalVHDLST sysDefVal (SysDefC (sid sysDefVal) (loc sysDefVal)) Combinational []
              emptyLocalTravResult
 
 -- | Execute certain operation with a concrete local state.
@@ -153,9 +163,11 @@ data GlobalVHDLST = GlobalVHDLST
    ops          :: VHDLOps,   -- Compilation options
    globalRes    :: GlobalTravResult, -- Result accumulated during the 
                                     -- whole compilation
-   compSysDefs  :: URefTableIO SysDefVal (), -- Table containing the
+   compSysDefs  :: URefTableIO SysDefVal SysLogic, -- Table containing the
                                             -- System Definitions which
                                             -- where already compiled
+                                            -- indicating what type of
+                                            -- logic
    typeTable    :: [(TypeRep, TypeMark)]} -- Type translation table
 
 
@@ -245,6 +257,12 @@ setVHDLOps options =  modify (\st -> st{global=(global st){ops=options}})
 -- Useful functions in the VHDL Monad
 -------------------------------------
 
+-- | Set local System as sequential
+setSeqCurrSys :: VHDLM ()
+setSeqCurrSys = modify setSeq
+ where setSeq st = st{local=(local st){logic=Sequential}}
+
+
 -- | Add a signal declaration to the 'LocalTravResult' in the State
 addSigDec :: SigDec -> VHDLM ()
 addSigDec dec = modify addFun 
@@ -266,9 +284,9 @@ addStm sm = modify addFun
 
  
 -- | Add an element to the 'SysDef' table in the global state
-addSysDef :: URef SysDefVal -> VHDLM ()
-addSysDef ref = do table <- gets (compSysDefs.global)
-                   liftIO $ addEntryIO table ref () 
+addSysDef :: URef SysDefVal -> SysLogic -> VHDLM ()
+addSysDef ref logic = do table <- gets (compSysDefs.global)
+                         liftIO $ addEntryIO table ref logic 
 
 -- | Find a previously translated custom type
 lookupCustomType :: TypeRep -> VHDLM (Maybe SimpleName)
@@ -277,11 +295,11 @@ lookupCustomType rep = do
  return $ lookup rep transTable
 
 
--- | Check if a SysDef was previously traversed
-traversedSysDef :: URef SysDefVal -> VHDLM Bool
+-- | Check if a SysDef was previously traversed returning its
+--   type lof logic
+traversedSysDef :: URef SysDefVal -> VHDLM (Maybe SysLogic)
 traversedSysDef ref =  do table <- gets (compSysDefs.global)
-                          mUnit <- liftIO $ queryIO table ref
-                          return $ maybe False (\() -> True) mUnit 
+                          liftIO $ queryIO table ref
 
 
 -- | Add a type declaration to the global results and type translation table

@@ -49,14 +49,18 @@ import Data.TypeLevel.Num.Reps
 
 -- | Translate a System Definition to an Entity, explicitly returning
 --   the VHDL identifiers of its output signals.
-transSysDef2Ent :: SysDefVal -> VHDLM EntityDec
-transSysDef2Ent sysDefVal = do
+transSysDef2Ent :: SysLogic -- ^ logic of the system 
+                -> SysDefVal -- ^ system to translate 
+                -> VHDLM EntityDec
+transSysDef2Ent logic sysDefVal = do
  entId <- transSysId2VHDL (sid sysDefVal)
  inDecs  <- mapM (uncurry $ transPort2IfaceSigDec In)  (iIface sysDefVal) 
  outDecs <- mapM (uncurry $ transPort2IfaceSigDec Out) (oIface sysDefVal)
  -- clock and reset implicit declarations
- let implicitDecs = [IfaceSigDec resetId In std_logicTM, 
-                     IfaceSigDec clockId In std_logicTM]
+ let implicitDecs = if logic == Sequential then 
+                     [IfaceSigDec resetId In std_logicTM, 
+                      IfaceSigDec clockId In std_logicTM]
+                     else []
  return $ EntityDec entId (implicitDecs ++ inDecs ++ outDecs) 
  
 -- | Translate a 'ZipwithNSY' process to a block returning a declaration of
@@ -224,23 +228,25 @@ transDelay2Block vPid inS ast outS = do
 
 -- | Translate a System instance into a VHDL component instantion
 --   returning the declartion of the output signals
-transSysIns2CompIns :: Label -- ^ instance identifier
+transSysIns2CompIns :: SysLogic -- ^ parent system logic
+                    -> Label -- ^ instance identifier
                     -> [VHDLId] -- ^ input signals
                     -> [(VHDLId, TypeRep)] -- ^ output signals
                     -> SysId -- ^ parent system identifier
                     -> [PortId] -- ^ parent input identifiers
                     -> [PortId] -- ^ parent output identifiers
                     -> VHDLM (CompInsSm, [SigDec])
-transSysIns2CompIns vPid ins typedOuts parentId parentInIds parentOutIds = do
+transSysIns2CompIns logic vPid ins typedOuts parentId parentInIds parentOutIds = do
   -- Create the declarations for the signals
   decs <- mapM (\(name,typ) -> transVHDLName2SigDec name typ Nothing) typedOuts
   -- Create the portmap 
   vParentId <- transSysId2VHDL parentId
   vParentInIds <- liftEProne $ mapM mkVHDLExtId parentInIds
   vParentOutIds <- liftEProne $ mapM mkVHDLExtId parentOutIds
-  let assocs =  genAssocElems 
-                  ([resetId, clockId] ++ vParentInIds ++ vParentOutIds)
-                  ([resetId, clockId] ++ ins          ++ map fst typedOuts)
+  let implicitAssocIds = if logic == Sequential then [resetId, clockId] else []
+      assocs =  genAssocElems 
+                  (implicitAssocIds ++ vParentInIds ++ vParentOutIds)
+                  (implicitAssocIds ++ ins          ++ map fst typedOuts)
       entityName = NSelected (NSimple workId :.: SSimple vParentId)
       instantiation = CompInsSm vPid (IUEntity entityName) (PMapAspect assocs)
   return (instantiation, decs)
