@@ -219,9 +219,10 @@ data ArchBody = ArchBody VHDLId VHDLName [BlockDecItem] [ConcSm]
 data PackageDec = PackageDec VHDLId [PackageDecItem]
  deriving Show
 
+
 -- | package_declarative_item
 -- only type declarations and subprogram specifications allowed
-data PackageDecItem = PDITD TypeDec | PDISS SubProgSpec
+data PackageDecItem = PDITD TypeDec | PDISD SubProgSpec
  deriving Show
 
 -- | package_body

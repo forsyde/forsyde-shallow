@@ -66,7 +66,7 @@ genLibDesignFile  (GlobalTravResult typeDecs subProgBodies) =
                                    LUPackageBody packageBody]
  where packageDec = PackageDec typesId (packageTypeDecs ++ subProgSpecs)
        packageTypeDecs = map PDITD typeDecs
-       subProgSpecs = map (\(SubProgBody spec _) -> PDISS spec) subProgBodies
+       subProgSpecs = map (\(SubProgBody spec _) -> PDISD spec) subProgBodies
        packageBody = PackageBody typesId subProgBodies
 
   

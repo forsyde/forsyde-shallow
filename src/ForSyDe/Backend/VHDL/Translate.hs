@@ -149,8 +149,7 @@ transUnzipNSY2Block vPid inSig outSigs outTRTypes = do
      pMap = genPMap  (inPar : outPars) (inSig : outSigs)
  -- Generate the signal assignments
      genOrigExp n = (PrimName $ NSelected 
-                              (NSimple inPar :.: 
-                              (SSimple $ unsafeVHDLBasicId $ "tup_" ++ show n)))
+                              (NSimple inPar :.: tupVHDLSuffix n))
      genOutAssign outSig n = CSSASm $ genExprAssign outSig (genOrigExp n)
      outAssigns = zipWith genOutAssign outPars [(1::Int)..]              
  return  (BlockSm vPid iface pMap [] outAssigns,
@@ -204,7 +203,7 @@ transDelay2Block vPid inS ast outS = do
  initTR <- transTR2TM (expTyp ast)
  -- Translate the initial value
  let val = expVal ast
- initExp <- withProcValC val $ withNameTable [] $ (transExp2VHDL val)
+ initExp <- withProcValC val $ withEmptyTransNameSpace $ (transExp2VHDL val)
  -- Build the block
  let formalIn  = unsafeIdAppend vPid "_in"
      formalOut = unsafeIdAppend vPid "_out"
@@ -259,7 +258,7 @@ transVHDLName2SigDec ::  SimpleName -- ^ Signal name
              -> VHDLM SigDec
 transVHDLName2SigDec vId tr mExp = do
  tm <- transTR2TM tr
- mVExp <- DT.mapM (\e -> withNameTable [] (transExp2VHDL e)) mExp
+ mVExp <- DT.mapM (\e -> withEmptyTransNameSpace (transExp2VHDL e)) mExp
  return $ SigDec vId tm mVExp
 
 
@@ -281,7 +280,11 @@ transPort2IfaceSigDec :: Mode -> PortId -> TypeRep -> VHDLM IfaceSigDec
 transPort2IfaceSigDec m pid trep = do           
  sid <- transPortId2VHDL pid
  transVHDLId2IfaceSigDec m sid trep
- 
+
+-- | Translate a local TH name to a VHDL Identifier
+transTHName2VHDL :: TH.Name -> VHDLM VHDLId 
+transTHName2VHDL = transPortId2VHDL . nameBase 
+
 -- | Translate a system identifier to a VHDL identifier
 transSysId2VHDL :: SysId -> VHDLM VHDLId
 transSysId2VHDL = transPortId2VHDL
@@ -357,13 +360,11 @@ doCustomTR2TM rep | isFSVec = do
 doCustomTR2TM rep | isTuple = do
   -- Create the elements of the record
   fieldTMs <- mapM transTR2TM args
-  let elems = zipWith (\fieldId fieldTM -> ElementDec (unsafeVHDLBasicId fieldId)
-                                                      fieldTM )
-                   ["tup_" ++ show n | n <- [(1::Int)..]] fieldTMs              
+  let elems = zipWith (\fieldId fieldTM -> ElementDec fieldId fieldTM )
+                      [tupVHDLIdSuffix n | n <- [1..]] fieldTMs              
   -- Create the Type Declaration identifier
       recordId = unsafeVHDLBasicId $ 
-              "tup" ++ 
-              (show $ length fieldTMs) ++ "_" ++ 
+              (tupStrSuffix $ length fieldTMs) ++ "_" ++ 
               (concatMap fromVHDLId.intersperse (unsafeVHDLBasicId "_")) fieldTMs
   -- Add the default functions for the tuple type to the global results
       funs = genTupleFuns fieldTMs recordId
@@ -424,53 +425,132 @@ funErr err = throwFError $ UntranslatableVHDLFun err
 transProcFun2VHDL :: TypedProcFunAST  -- ^ input ast
     -> VHDLM (SubProgBody, VHDLId, [VHDLId], [TypeMark], TypeMark)
     -- ^ Function, Function name, name of inputs, type of inputs, return type   
-transProcFun2VHDL (TypedProcFunAST trep ast) = do
- let (argsTR, retTR) = unArrowT trep
- -- Get the interface
- argsTM <- mapM transTR2TM argsTR
- retTM <- transTR2TM retTR
+transProcFun2VHDL (TypedProcFunAST fType fAST) = do
+ -- Check if the procFunAST fullfils the restrictions of the VHDL Backend
  -- FIXME: translate the default arguments
- -- Check the and translate the function's spec
- (fName, pars, nameTable, bodyExp) <- checkProcFunSpec (length argsTM) ast
- let iface = zipWith (\name typ -> IfaceVarDec  name typ) pars argsTM
-     fSpec = Function fName iface retTM
+ (fName, fInputPats, fBodyExp) <- checkProcFunAST fAST
+ -- Get the function spec and initialize the translation namespace
+ (fSpec, fVHDLName, fVHDLPars, argsTM, retTM) <- 
+  transProcFunSpec fName fType fInputPats
  -- Translate the function's body
- bodySm <- withNameTable nameTable (transFunBodyExp2VHDL bodyExp)
+ bodySm <- transFunBodyExp2VHDL fBodyExp
  let  fBody = SubProgBody fSpec [bodySm]
- return (fBody, fName, pars, argsTM, retTM)
+ return (fBody, fVHDLName, fVHDLPars, argsTM, retTM)
 
--- |  Translate the name of a Process function and its formal parameters,
---    previously checking if the function fullfils the expected constraints of 
---    the VHDL backend.
-checkProcFunSpec ::  Int -- ^ expected number of parameters
-          -> ProcFunAST -- ^ the function AST
-          -> VHDLM (VHDLId, [VHDLId], [(TH.Name, VHDLName)],  TH.Exp)
- -- ^ translated function name, function parameters, initial namespace,  and
- --   function body
-checkProcFunSpec argN (ProcFunAST thName [Clause pats (NormalB exp) []] _)= do
- fName <-  thName2VHDL thName
- parTHNames <-  mapM getParName pats
- parVHDLIds <-  mapM thName2VHDL parTHNames
- let nameTable = zipWith (\thName vHDLId-> (thName,NSimple vHDLId)) parTHNames
-                                                                    parVHDLIds
-     parN = length nameTable
- when (parN /= argN) 
-   (funErr $ InsParamNum parN)
- return (fName, parVHDLIds, nameTable, exp)
-    where getParName (VarP name) = return name 
-          getParName pat = funErr $ NonVarPar pat
-          thName2VHDL name = (liftEProne.mkVHDLExtId.nameBase) name
-checkProcFunSpec _ (ProcFunAST _ [Clause _ _ whereConstruct@(_:_)] _) =  
+
+-- | Check if a process function AST fulfils the VHDL backend restrictions.
+--   It returs the function TH-name its input paterns and its body expression. 
+checkProcFunAST :: ProcFunAST
+                -> VHDLM (Name, [Pat], Exp)
+-- FIXME: translate the default arguments!
+checkProcFunAST (ProcFunAST thName [Clause pats (NormalB exp) []] []) =
+ return (thName, pats, exp)
+checkProcFunAST (ProcFunAST _ [Clause _ _ whereConstruct@(_:_)] _) =  
   funErr (FunWhereConstruct whereConstruct)
-checkProcFunSpec _ (ProcFunAST _ [Clause _ bdy@(GuardedB _) _] _) =  
+checkProcFunAST (ProcFunAST _ [Clause _ bdy@(GuardedB _) _] _) =  
   funErr (FunGuardedBody bdy)
-checkProcFunSpec _ (ProcFunAST _ clauses@(_:_:_) _) =  
+checkProcFunAST (ProcFunAST _ clauses@(_:_:_) _) =  
   funErr (MultipleClauses clauses)
 -- cannot happen
-checkProcFunSpec _ (ProcFunAST _ [] _) =  
- -- FIMXE, use a custom error
+checkProcFunAST (ProcFunAST _ [] _) =  
+ -- FIXME, use a custom error
  intError "ForSyDe.Backend.VHDL.Translate.checkProcFunSpec" 
           (UntranslatableVHDLFun $ GeneralErr (Other "inconsistentency"))
+
+
+
+-- |  Get the spec of a VHDL function from the Haskell function name, its type 
+--    and its input patterns. This function also takes care of initalizing the 
+--    translation namespace.
+transProcFunSpec :: TH.Name -- ^ Function name
+                 -> TypeRep -- ^ Function type
+                 -> [Pat]   -- ^ input patterns 
+                 -> VHDLM (SubProgSpec, VHDLId, [VHDLId], [TypeMark], TypeMark)
+-- ^ translated function spec, function name, inpt parameters, input types
+--   and return types
+transProcFunSpec fName fType fPats = do
+ -- FIXME: translate the default arguments!
+ -- Get the input and output types
+ let (argsTR, retTR) = unArrowT fType
+ -- Check that the number of patterns equal the function parameter number
+     expectedN = length argsTR
+     actualN = length fPats
+ when (expectedN /= actualN) (funErr $ InsParamNum actualN)
+ -- Get a VHDL identifier for each input pattern and
+ -- initialize the translation namespace
+ fVHDLParIds <- mapM transInputPat2VHDLId fPats 
+ -- Translate the function name
+ fVHDLName <- transTHName2VHDL fName 
+ -- Translate the types
+ argsTM <- mapM transTR2TM argsTR
+ retTM <- transTR2TM retTR
+ -- Create the spec
+ let iface = zipWith (\name typ -> IfaceVarDec  name typ) fVHDLParIds argsTM
+     fSpec = Function fVHDLName iface retTM
+ -- Finally, return the results
+ return (fSpec, fVHDLName, fVHDLParIds, argsTM, retTM)
+ 
+-- | Translate a function input pattern to a VHDLID, 
+--   making the necessary changes in the translation namespace
+transInputPat2VHDLId :: TH.Pat -> VHDLM VHDLId
+transInputPat2VHDLId  pat = do
+ -- Get the parameter identifier
+ id <- case pat of
+         -- if we get a variable or and @ patterm, we just translate it to VHDL
+         VarP name -> transTHName2VHDL name
+         AsP name _ -> transTHName2VHDL name
+         -- otherwise, generate a fresh identifier
+         _ -> genFreshVHDLId
+
+ -- Prepare the namespace for the pattern
+ preparePatNameSpace (NSimple id) pat
+ -- Finally return the generated id
+ return id 
+
+
+-- | prepare the translation namespace for an input pattern
+preparePatNameSpace :: Prefix -- ^ name prefix obtained so far 
+                    -> Pat    -- ^ pattern 
+                    -> VHDLM ()
+-- NOTE: a good alternative to adding selected names to the
+--       translation table would be declaring a variable
+--       assignment. It would probably make the generated code more
+--       readable but at the same times, it requires knowing the
+--       pattern type, and TH's AST is unfortunately not
+--       type-annotated which would make things more difficult.
+
+-- variable pattern
+preparePatNameSpace prefix (VarP name) = addTransNamePair name prefix
+
+-- '@' pattern 
+preparePatNameSpace prefix (AsP name pat) = do
+  addTransNamePair name prefix
+  preparePatNameSpace prefix pat
+
+-- wildcard pattern
+preparePatNameSpace _ WildP = return ()  
+
+-- tuple pattern 
+preparePatNameSpace prefix (TupP pats) = do
+  let prepTup n pat = preparePatNameSpace 
+                          (NSelected (prefix :.: tupVHDLSuffix n)) pat
+  zipWithM_ prepTup [1..] pats
+
+-- AbstExt patterns
+
+-- Since we only support one clause per function
+-- they are not really useful, but we accept them anyways 
+-- FIXME: true, they are not useful, but again, since we only support one
+--        clause per function they denote a programming error. Should they
+--        really be supported?
+preparePatNameSpace prefix (ConP name ~[pat]) | isAbstExt name =  
+  when isPrst (preparePatNameSpace (NSelected (prefix :.: valueSuffix)) pat) 
+ where isAbstExt name = isPrst || name == 'Abst
+       isPrst =  name == 'Prst
+
+-- otherwise the pattern is not supported
+preparePatNameSpace _ pat = funErr $ UnsupportedFunPat pat
+
 
 
 --------------------------
@@ -520,7 +600,7 @@ transMatch2VHDLCaseSmAlt contextExp (Match _ bdy@(GuardedB _) _) =
 -- | Translate a Haskell expression to a VHDL expression
 transExp2VHDL :: TH.Exp -> VHDLM VHDL.Expr
 
--- Is it an binary function application?
+-- Is it a binary function application?
 transExp2VHDL (VarE fName `AppE` arg1 `AppE` arg2)
  | isJust maybeInfixOp =
   do vHDLarg1 <- transExp2VHDL arg1
@@ -541,7 +621,7 @@ transExp2VHDL exp@(VarE fName `AppE` _) = expErr exp $ UnkownIdentifier fName
 -- Local variable or unknown identifier
 transExp2VHDL exp@(VarE name) = 
   do -- get the list of valid local names from the state monad
-     validLocalNames <- gets (nameTable.local)
+     validLocalNames <- gets (nameTable.transNameSpace.local)
      let mVHDLName = lookup name validLocalNames
      maybe (expErr exp $ UnkownIdentifier name) 
            (\name -> return $ PrimName name) 

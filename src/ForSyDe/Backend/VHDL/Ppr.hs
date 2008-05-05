@@ -103,18 +103,22 @@ instance Ppr ArchBody where
 instance Ppr PackageDec where
  ppr (PackageDec id decs) =
   text "package" <+> idDoc <+> text "is" $+$
-   nest nestVal (ppr_list (vNSpaces 1) decs) $+$
+   vSpace $++$
+   nest nestVal (ppr_list (vNSpaces 1) decs) $++$
+   vSpace $+$
   text "end package" <+> idDoc <> semi
   where idDoc = ppr id 
 
 instance Ppr PackageDecItem where
  ppr (PDITD typeDec) = ppr typeDec
- ppr (PDISS subProgSpec) = ppr subProgSpec
+ ppr (PDISD subProgSpec) = ppr subProgSpec <> semi
 
 instance Ppr PackageBody where
  ppr (PackageBody id decs) =
   text "package body" <+> idDoc <+> text "is" $+$
-   nest nestVal (ppr_list (vNSpaces 1) decs) $+$
+   vSpace $++$
+   nest nestVal (ppr_list (vNSpaces 1) decs) $++$
+   vSpace $++$
   text "end package body" <+> idDoc <> semi
   where idDoc = ppr id 
 
@@ -122,7 +126,7 @@ instance Ppr TypeDec where
  ppr (TypeDec id typeDef) = 
   text "type" <+> ppr id <+> text "is" $$
    nest  indentL (ppr typeDef <> semi)
-  where indentL = length "type " + (length.fromVHDLId) id + length "is "
+  where indentL = length "type " + (length.fromVHDLId) id + length " is "
 
 instance Ppr TypeDef where
  ppr (TDA arrayTD) = ppr arrayTD
@@ -302,11 +306,11 @@ instance Ppr Wform where
 
 instance Ppr CompInsSm where
  ppr (CompInsSm label insUnit assocElems) =
-   ppr label <+> colon $$ nest labelL (
+   ppr label <+> colon $$ nest indentL (
             ppr insUnit $+$
               nest nestVal (ppr assocElems)<>semi
             )  
-  where labelL = (length.fromVHDLId) label 
+  where indentL = (length.fromVHDLId) label + 3 
 
 instance Ppr InsUnit where
  ppr (IUEntity name) = text "entity" <+> ppr name
@@ -403,6 +407,14 @@ vComma doc1 doc2 = doc1 <> comma $+$ doc2
 -- Join two documents horizontally putting a comma in the middle
 hComma :: Doc -> Doc -> Doc
 hComma doc1 doc2 = doc1 <> comma <+> doc2
+
+
+-- | Only append if both of the documents are non-empty
+($++$) :: Doc -> Doc -> Doc
+d1 $++$ d2 
+ | isEmpty d1 || isEmpty d2 = empty
+ | otherwise = d1 $+$ d2
+
 
 -- | Only append if both of the documents are non-empty
 (<++>) :: Doc -> Doc -> Doc

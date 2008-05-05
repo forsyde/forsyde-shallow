@@ -80,6 +80,22 @@ import Data.Typeable (TypeRep)
 data SysLogic = Combinational | Sequential
  deriving (Eq, Show)
 
+-----------------
+-- TransNameSpace
+-----------------
+
+-- | Translation namespace.
+--
+-- This type provides the number of fresh names already generated and a tranlsation 
+-- table from Template Haskell Names to VHDL Names. It only makes sense
+-- in a process-function context. 
+data TransNameSpace = TransNameSpace 
+    {freshNameCount :: Int,
+     nameTable      :: [(Name, VHDLName)]}
+
+emptyTransNameSpace :: TransNameSpace
+emptyTransNameSpace = TransNameSpace 0 []
+
 -----------
 -- VHDLM --
 -----------
@@ -99,18 +115,16 @@ data VHDLTravST = VHDLTravST
                             -- recursively compiled)   
 
 data LocalVHDLST = LocalVHDLST
-   {currSysDef :: SysDefVal, -- System definition which is currently 
-                              -- being compiled
-   context     :: Context,    -- Error Context
-   logic       :: SysLogic,   -- Current system is sequential or combinational?
-   nameTable :: [(Name, VHDLName)],   -- Name translation table,
-                                      -- It tells what local variables are 
-                                      -- known in a function 
-                                      -- it only makes sense
-                                      -- in a process-function context  
-   localRes    :: LocalTravResult} -- Result accumulated during the 
-                                   -- traversal of current System Definition 
-                                   -- netlist
+   {currSysDef     :: SysDefVal, -- System definition which is currently 
+                                 -- being compiled
+   context         :: Context,  -- Error Context
+   logic           :: SysLogic,  -- Current system is sequential or combinational?
+   transNameSpace  :: TransNameSpace,  -- Translation namespace for functions
+                                       -- It only makes sense
+                                       -- in a process-function context 
+   localRes        :: LocalTravResult} -- Result accumulated during the 
+                                       -- traversal of current System Definition 
+                                       -- netlist
 
 
 
@@ -118,8 +132,8 @@ data LocalVHDLST = LocalVHDLST
 -- | initialize the local state
 initLocalST :: SysDefVal -> LocalVHDLST
 initLocalST sysDefVal = 
- LocalVHDLST sysDefVal (SysDefC (sid sysDefVal) (loc sysDefVal)) Combinational []
-             emptyLocalTravResult
+ LocalVHDLST sysDefVal (SysDefC (sid sysDefVal) (loc sysDefVal)) Combinational 
+             emptyTransNameSpace emptyLocalTravResult
 
 -- | Execute certain operation with a concrete local state.
 --   The initial local state is restored after the operation is executed
@@ -138,25 +152,26 @@ withLocalST l' action =  do
   -- return the result
   return res
 
--- | Execute certain operation with a concrete name table
---   The initial table is restored after the operation is executed
-withNameTable :: [(Name, VHDLName)] -> VHDLM a -> VHDLM a
-withNameTable table' action = do
-  -- get the initial name table
+-- | Execute certain operation with an empty translation namespace
+--   The initial namespace is restored after the operation is executed
+withEmptyTransNameSpace :: VHDLM a -> VHDLM a
+withEmptyTransNameSpace action = do
+  -- get the initial name space
   st <- get
   let l = local st
-      table = nameTable l
-  -- set the modified name table
-  put st{local=l{nameTable=table'}}
+      ns = transNameSpace l
+  -- set the empty name space
+  put st{local=l{transNameSpace=emptyTransNameSpace}}
   -- execute the action
   res <- action
   -- restore the initial name table
   st' <- get
   let l' = local st'
-  put st'{local=l'{nameTable=table}}
+  put st'{local=l'{transNameSpace=ns}}
   -- return the result
   return res
-                  
+      
+            
 
 data GlobalVHDLST = GlobalVHDLST
   {globalSysDef :: SysDefVal,
@@ -326,6 +341,31 @@ addSubProgBody newBody = do
                        {globalRes = gRes{subProgBodies = bodies ++ [newBody]}}})
 
 
+-- | Add a TH-name VHDL-name pair to the translation namespace table
+addTransNamePair :: Name -> VHDLName -> VHDLM ()
+addTransNamePair thName vHDLName = do
+ lState <- gets local
+ let ns = transNameSpace lState
+     table = nameTable ns
+ modify (\st -> st{local=lState{transNameSpace=ns{
+                                       nameTable=(thName,vHDLName):table}}})
+
+-- | Get a fresh VHDL Identifier and increment the
+--   tranlation-namespace-count of freshly generated identifiers.
+--
+--   Note that all user-supplied identifiers (process ids, port ids,
+--   and function parameters) are translated to extended VHDL
+--   identifiers. That, together with the fact that basic and extended
+--   VHDL identifers live in different namespaces, guarantees that
+--   freshly generated basic VHDL identifiers cannot clash with the
+--   ones supplied by the frontend.
+genFreshVHDLId :: VHDLM VHDLId
+genFreshVHDLId = do
+ lState <- gets local
+ let ns = transNameSpace lState
+     count = freshNameCount ns
+ modify (\st -> st{local=lState{transNameSpace=ns{freshNameCount=count+1}}})
+ return $ unsafeVHDLBasicId ("fresh_" ++ show count) 
 
 -- | Lift an 'EProne' value to the VHDL monad setting current error context
 --   for the error

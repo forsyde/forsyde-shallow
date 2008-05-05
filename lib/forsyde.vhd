@@ -1,6 +1,7 @@
 library ieee;
 use ieee.numeric_std.all;
-
+use ieee.std_logic_1164.all;
+  
 package types is
 
 -- Commented out due to representation overflow (modelsim integers
@@ -18,6 +19,8 @@ package types is
 
   type int8 is range -(2**(8-1)) to +(2**(8-1)-1);   -- 8 bit integers
   function default return int8;
+
+  function default return std_logic;
 
 end types;
 
@@ -45,4 +48,10 @@ package body types is
    return 0;
   end default;
 
+  function default return std_logic is
+  begin
+   return '0';
+  end default;
+
+  
 end types;

@@ -115,8 +115,8 @@ data ForSyDeErr =
 data VHDLFunErr =
   -- | Insufficient number of parameters 
   InsParamNum Int              |
-  -- | Non-variable parameter 
-  NonVarPar Pat                |
+  -- | Unsupported input pattern in function 
+  UnsupportedFunPat Pat        |
   -- | Multiple clauses
   MultipleClauses [Clause]     |
   -- | Guards in case alternatives are not supported
@@ -136,7 +136,8 @@ instance Show VHDLFunErr where
    "where constructs are not supported in functions:\n" ++
    (render.to_HPJ_Doc.where_clause) decs 
   show (InsParamNum n) = "insufficient number of parameters (" ++ show n ++ ")"
-  show (NonVarPar pat) = "parameter `" ++ pprint pat ++ "' is not a variable"
+  show (UnsupportedFunPat pat) = 
+      "input pattern `" ++ pprint pat ++ "' is not supported"
   show (MultipleClauses cs) = "multiple clauses (" ++ 
                               (show.length) cs ++ "):\n" ++ pprint cs
   show (GeneralErr err) = show err

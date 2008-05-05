@@ -76,6 +76,9 @@ unsafeFromAbstExtId = unsafeVHDLBasicId "unsafeFromAbstExt"
 valueId :: VHDLId
 valueId = unsafeVHDLBasicId "value"
 
+-- | value element suffix
+valueSuffix :: Suffix
+valueSuffix = SSimple valueId
 
 -- | isPresent function and element identifier
 isPresentId :: VHDLId
@@ -140,3 +143,15 @@ lowExpr = PrimLit "'0'"
 -- | \'1\' bit expression
 highExpr :: Expr
 highExpr = PrimLit "'1'"
+
+-- | tup string record suffix
+tupStrSuffix :: Int -> String
+tupStrSuffix n = "tup_" ++ show n
+
+-- | tup VHLID record suffix
+tupVHDLIdSuffix :: Int -> VHDLId
+tupVHDLIdSuffix = unsafeVHDLBasicId . tupStrSuffix
+
+-- | tup VHDLName suffix
+tupVHDLSuffix :: Int -> Suffix
+tupVHDLSuffix = SSimple . tupVHDLIdSuffix
