@@ -39,6 +39,7 @@ module ForSyDe.Process.SynchProc (
 
 
 import ForSyDe.Ids
+import ForSyDe.Process.ProcType
 import ForSyDe.Process.ProcFun
 import ForSyDe.Process.ProcVal
 import ForSyDe.OSharing
@@ -68,7 +69,7 @@ import Language.Haskell.TH.Syntax (Lift)
 -- | The process constructor 'mapSY' takes an identifier and a 
 --   combinational function as arguments and returns a process with one 
 --   input signal and one output signal.         
-mapSY :: (Typeable a, Typeable b) =>
+mapSY :: (ProcType a, ProcType b) =>
          ProcId           -- ^ Identifier of the process 
       -> ProcFun (a -> b) -- ^ Function applied to the input signal 
                           --   in every cycle
@@ -80,7 +81,7 @@ mapSY id  f s = Signal (newNodeOutSig nodeRef ZipWithNSYOut)
 -- | The process constructor 'zipWithSY' takes an identifier and a 
 --  combinational function as arguments and returns a process with 
 --  two input signals and one output signal.
-zipWithSY :: (Typeable a, Typeable b, Typeable c) => 
+zipWithSY :: (ProcType a, ProcType b, ProcType c) => 
              ProcId                -- ^ Identifier of the process
           -> ProcFun (a -> b -> c) -- ^ Function applied to the input signals 
                                    --   in every cycle
@@ -95,7 +96,7 @@ zipWithSY id f s1 s2 = Signal (newNodeOutSig nodeRef ZipWithNSYOut)
 -- | The process constructor 'zipWith3SY' takes an identifier and a 
 --   combinational function as arguments and returns a process with 
 --   three input signals and one output signal. 
-zipWith3SY :: (Typeable a, Typeable b, Typeable c, Typeable d) => 
+zipWith3SY :: (ProcType a, ProcType b, ProcType c, ProcType d) => 
               ProcId                -- ^ Identifier of the process
            -> ProcFun (a -> b -> c -> d) -- ^ Function applied to the input 
                                          -- signals in every cycle
@@ -115,7 +116,7 @@ zipWith3SY id f s1 s2 s3 = Signal (newNodeOutSig nodeRef ZipWithNSYOut)
 -- | The process constructor 'zipWith4SY' takes an identifier and a 
 --   combinational function as arguments and returns a process with 
 --   four input signals and one output signal. 
-zipWith4SY :: (Typeable a, Typeable b, Typeable c, Typeable d, Typeable e) => 
+zipWith4SY :: (ProcType a, ProcType b, ProcType c, ProcType d, ProcType e) => 
               ProcId                -- ^ Identifier of the process
            -> ProcFun (a -> b -> c -> d -> e) -- ^ Function applied to the  
                                               --   input signals in every cycle
@@ -135,8 +136,8 @@ zipWith4SY id f s1 s2 s3 s4 = Signal (newNodeOutSig nodeRef ZipWithNSYOut)
 -- | The process constructor 'zipWith4SY' takes an identifier and a 
 --   combinational function as arguments and returns a process with 
 --   five input signals and one output signal. 
-zipWith5SY :: (Typeable a, Typeable b, Typeable c, Typeable d, Typeable e,
-               Typeable f) => 
+zipWith5SY :: (ProcType a, ProcType b, ProcType c, ProcType d, ProcType e,
+               ProcType f) => 
               ProcId                -- ^ Identifier of the process
            -> ProcFun (a -> b -> c -> d -> e -> f) 
                                               -- ^ Function applied to the  
@@ -161,8 +162,8 @@ zipWith5SY id f s1 s2 s3 s4 s5 = Signal (newNodeOutSig nodeRef ZipWithNSYOut)
 -- | The process constructor 'zipWith4SY' takes an identifier and a 
 --   combinational function as arguments and returns a process with 
 --   five input signals and one output signal. 
-zipWith6SY :: (Typeable a, Typeable b, Typeable c, Typeable d, Typeable e,
-               Typeable f, Typeable g) => 
+zipWith6SY :: (ProcType a, ProcType b, ProcType c, ProcType d, ProcType e,
+               ProcType f, ProcType g) => 
               ProcId                -- ^ Identifier of the process
            -> ProcFun (a -> b -> c -> d -> e -> f -> g) 
                                               -- ^ Function applied to the  
@@ -188,7 +189,7 @@ zipWith6SY id f s1 s2 s3 s4 s5 s6 = Signal (newNodeOutSig nodeRef ZipWithNSYOut)
 -- function onto all signals in a vector of signals. The identifier is used 
 -- as the identifier prefix of the processes created (a number starting with 1
 -- will be appended to each identifier)
-mapxSY  :: (Nat s, Typeable a, Typeable b) => 
+mapxSY  :: (Nat s, ProcType a, ProcType b) => 
            ProcId
         -> ProcFun (a -> b) 
         -> FSVec s (Signal a) 
@@ -198,7 +199,7 @@ mapxSY id f = V.zipWith (\n s -> mapSY (id ++ show n) f s)
 
 -- | The process constructor 'zipWithxSY' works as 'zipWithSY', but takes a 
 --   vector of signals as input.                                             
-zipWithxSY      :: (Nat s, Typeable s, Typeable a, Typeable b) => 
+zipWithxSY      :: (Nat s, Typeable s, ProcType a, ProcType b) => 
                    ProcId
                 -> ProcFun (FSVec s a -> b) 
                 -> FSVec s (Signal a) 
@@ -227,7 +228,7 @@ zipWithxSY id f sv = Signal (newNodeOutSig nodeRef ZipWithxSYOut)
 --   One could argue that input and output signals are not fully synchronized,
 --   even though all input events are synchronous with a corresponding output 
 --   event. However, this is necessary to initialize feed-back loops.
-delaySY :: (Typeable a, Lift a) => 
+delaySY :: (ProcType a, Lift a) => 
            ProcId      -- ^ Identifier of the process
         -> a           -- ^ Initial value
         -> Signal a    -- ^ 'Signal' to be delayed         
@@ -240,7 +241,7 @@ delaySY id v s = Signal (newNodeOutSig nodeRef DelaySYOut)
 -- | The process constructor 'delaynSY' delays the signal n events by 
 --   introducing n identical default values. It creates a chain of 'delaySY'
 --   processes.
-delaynSY :: (Typeable a, Lift a) =>
+delaynSY :: (ProcType a, Lift a) =>
             ProcId    -- ^ Identifier prefix of the processes
                       --   a number from 1 to `Delay cycles` 
                       --   will be appended to each process.
@@ -270,7 +271,7 @@ delaynSY id e n s = (\(a,_,_) -> a) $ delaynSYacum (s, 1, n)
 -- 
 -- This is in contrast to the function 'scanldSY', which has its current 
 -- state as its output value. 
-scanlSY	:: (Lift a, Typeable a, Typeable b) =>
+scanlSY	:: (Lift a, ProcType a, ProcType b) =>
            ProcId -- ^Process Identifier
         -> ProcFun (a -> b -> a) -- ^Combinational function for next 
                                  -- state decoder
@@ -284,7 +285,7 @@ scanlSY id f mem s = s'
 
 -- | The process constructor 'scanl2SY' behaves like 'scanlSY', but has two 
 --   input signals.
-scanl2SY :: (Lift a, Typeable a, Typeable b, Typeable c) =>
+scanl2SY :: (Lift a, ProcType a, ProcType b, ProcType c) =>
            ProcId -- ^Process Identifier
         -> ProcFun (a -> b -> c -> a) -- ^Combinational function for next 
                                       -- state decoder
@@ -300,7 +301,7 @@ scanl2SY id f mem s1 s2 = s'
 
 -- | The process constructor 'scanl2SY' behaves like 'scanlSY', but has two 
 --   input signals.
-scanl3SY :: (Lift a, Typeable a, Typeable b, Typeable c, Typeable d) =>
+scanl3SY :: (Lift a, ProcType a, ProcType b, ProcType c, ProcType d) =>
            ProcId -- ^Process Identifier
         -> ProcFun (a -> b -> c -> d -> a) -- ^Combinational function for next 
                                            -- state decoder
@@ -327,7 +328,7 @@ scanl3SY id f mem s1 s2 s3 = s'
 -- > SynchronousLib> scanlSY (+) 0 (signal [1,2,3,4])
 --
 -- > {0,1,3,6} :: Signal Integer
-scanldSY :: (Lift a, Typeable a, Typeable b) => 
+scanldSY :: (Lift a, ProcType a, ProcType b) => 
            ProcId
         -> ProcFun (a -> b -> a) -- ^Combinational function 
                                  -- for next state decoder
@@ -341,7 +342,7 @@ scanldSY id f mem s = s'
 
 -- | The process constructor 'scanld2SY' behaves like 'scanldSY', but has 
 --   two input signals.
-scanld2SY :: (Lift a, Typeable a, Typeable b, Typeable c) => 
+scanld2SY :: (Lift a, ProcType a, ProcType b, ProcType c) => 
             ProcId
          -> ProcFun (a -> b -> c -> a) -- ^Combinational function 
                                        -- for next state decoder
@@ -358,7 +359,7 @@ scanld2SY id f mem s1 s2 = s'
 
 -- | The process constructor 'scanld2SY' behaves like 'scanldSY', but has 
 --   two input signals.
-scanld3SY :: (Lift a, Typeable a, Typeable b, Typeable c, Typeable d) => 
+scanld3SY :: (Lift a, ProcType a, ProcType b, ProcType c, ProcType d) => 
             ProcId
          -> ProcFun (a -> b -> c -> d -> a) -- ^Combinational function 
                                        -- for next state decoder
@@ -384,7 +385,7 @@ scanld3SY id f mem s1 s2 s3 = s'
 --
 -- In contrast the output of a process created by the process constructor
 -- 'mealySY' depends not only on the state, but also on the input values.
-mooreSY :: (Lift a, Typeable a, Typeable b, Typeable c) =>
+mooreSY :: (Lift a, ProcType a, ProcType b, ProcType c) =>
            ProcId
         -> ProcFun (a -> b -> a) -- ^ Combinational function for
                                  --   next state decoder
@@ -399,7 +400,7 @@ mooreSY id nextState output initial
 
 -- | The process constructor 'moore2SY' behaves like 'mooreSY', but has two 
 --   input signals.
-moore2SY :: (Lift a, Typeable a, Typeable b, Typeable c, Typeable d) =>
+moore2SY :: (Lift a, ProcType a, ProcType b, ProcType c, ProcType d) =>
             ProcId
          -> ProcFun (a -> b -> c -> a) -- ^ Combinational function for
                                        --   next state decoder
@@ -417,7 +418,7 @@ moore2SY id nextState output initial i1 i2
 -- | The process constructor 'moore2SY' behaves like 'mooreSY', but has two 
 --   input signals.
 moore3SY :: (Lift a, 
-             Typeable a, Typeable b, Typeable c, Typeable d, Typeable e) =>
+             ProcType a, ProcType b, ProcType c, ProcType d, ProcType e) =>
             ProcId
          -> ProcFun (a -> b -> c -> d -> a) -- ^ Combinational function for
                                             --   next state decoder
@@ -443,7 +444,7 @@ moore3SY id nextState output initial i1 i2 i3
 --
 -- In contrast the output of a process created by the process constructor 
 -- 'mooreSY' depends only on the state, but not on the input values.
-mealySY :: (Lift a, Typeable a, Typeable b, Typeable c) => 
+mealySY :: (Lift a, ProcType a, ProcType b, ProcType c) => 
            ProcId
         -> ProcFun (a -> b -> a) -- ^Combinational function for next 
                                  -- state decoder  
@@ -457,7 +458,7 @@ mealySY id nextState output initial i =
 
 -- | The process constructor 'mealy2SY' behaves like 'mealySY', but has 
 --   two input signals.
-mealy2SY :: (Lift a, Typeable a, Typeable b, Typeable c, Typeable d) => 
+mealy2SY :: (Lift a, ProcType a, ProcType b, ProcType c, ProcType d) => 
            ProcId
         -> ProcFun (a -> b -> c -> a) -- ^Combinational function for next 
                                       -- state decoder  
@@ -474,8 +475,8 @@ mealy2SY id nextState output initial i1 i2 =
 
 -- | The process constructor 'mealy2SY' behaves like 'mealySY', but has 
 --   two input signals.
-mealy3SY :: (Lift a, Typeable a, Typeable b, Typeable c, Typeable d, 
-             Typeable e) => 
+mealy3SY :: (Lift a, ProcType a, ProcType b, ProcType c, ProcType d, 
+             ProcType e) => 
            ProcId
         -> ProcFun (a -> b -> c -> d -> a) -- ^Combinational function for next 
                                            -- state decoder  
@@ -493,7 +494,7 @@ mealy3SY id nextState output initial i1 i2 i3 =
 
 
 -- | The process constructor 'filterSY' discards the values who do not fulfill a predicate given by a predicate function and replaces them with absent events.
-filterSY       :: Typeable a =>
+filterSY       :: ProcType a =>
                   ProcId
                -> ProcFun (a -> Bool) -- ^ Predicate function
                -> Signal a -- ^ Input signal
@@ -514,7 +515,7 @@ filterSY id pred = mapSY id (filterer `defArgPF` pred)
 -- con structed by                                                            
 --                                                                           
 -- sourceSY \"naturals\" (+1) 0
-sourceSY :: (Typeable a, Lift a) =>
+sourceSY :: (ProcType a, Lift a) =>
             ProcId 
          -> ProcFun (a -> a) 
          -> a 
@@ -529,7 +530,7 @@ sourceSY id f s0 = o
 -- | The process constructor 'fillSY' creates a process that 'fills' a signal 
 --   with present values by replacing absent values with a given value. The 
 --   output signal is not any more of the type 'AbstExt'.        
-fillSY :: (Typeable a, Lift a) =>
+fillSY :: (ProcType a, Lift a) =>
           ProcId
        -> a                  -- ^Default value                                
        -> Signal (AbstExt a) -- ^Absent extended input signal             
@@ -545,7 +546,7 @@ fillSY id v s = mapSY id (replaceAbst `defArgVal` v)  s
 --   Only in cases, where no preceding value exists, the absent value is 
 --   replaced by a default value. The output signal is not any more of the 
 --   type 'AbstExt'.
-holdSY :: (Lift a, Typeable a) => 
+holdSY :: (Lift a, ProcType a) => 
           ProcId -- ^Default value 
        -> a
        -> Signal (AbstExt a) -- ^Absent extended input signal 
@@ -565,7 +566,7 @@ holdSY id a s = scanlSY id hold a s
 --   signal of absent extended values with another signal of absent extended 
 --   values. The output signal has the value of the first signal whenever an 
 --   event has a present value and 'Abst' when the event has an absent value.
-whenSY :: (Typeable a, Typeable b) => 
+whenSY :: (ProcType a, ProcType b) => 
            ProcId
         -> Signal (AbstExt a) -> Signal (AbstExt b) -> Signal (AbstExt a)
 whenSY id = zipWithSY id whenF 
@@ -577,7 +578,7 @@ whenSY id = zipWithSY id whenF
 
 -- | The process 'zipSY' \"zips\" two incoming signals into one signal of 
 --   tuples.
-zipSY :: (Typeable a, Typeable b) => 
+zipSY :: (ProcType a, ProcType b) => 
          ProcId
       -> Signal a 
       -> Signal b 
@@ -588,7 +589,7 @@ zipSY id = zipWithSY id tup2
                                 tup2 a b = (a,b) |])
 
 -- | The process 'zip3SY' works as 'zipSY', but takes three input signals.
-zip3SY :: (Typeable a, Typeable b, Typeable c) => 
+zip3SY :: (ProcType a, ProcType b, ProcType c) => 
           ProcId ->
           Signal a -> 
           Signal b -> 
@@ -601,7 +602,7 @@ zip3SY id = zipWith3SY id tup3
 
 
 -- | The process 'zip4SY' works as 'zipSY', but takes four input signals.
-zip4SY :: (Typeable a, Typeable b, Typeable c, Typeable d) => 
+zip4SY :: (ProcType a, ProcType b, ProcType c, ProcType d) => 
           ProcId -> 
           Signal a -> 
           Signal b -> 
@@ -615,7 +616,7 @@ zip4SY id = zipWith4SY id tup4
 
 
 -- | The process 'zip5SY' works as 'zipSY', but takes five input signals.
-zip5SY :: (Typeable a, Typeable b, Typeable c, Typeable d, Typeable e) => 
+zip5SY :: (ProcType a, ProcType b, ProcType c, ProcType d, ProcType e) => 
           ProcId ->
           Signal a -> 
           Signal b -> 
@@ -630,8 +631,8 @@ zip5SY id = zipWith5SY id tup5
 
 
 -- | The process 'zip6SY' works as 'zipSY', but takes six input signals.
-zip6SY :: (Typeable a, Typeable b, Typeable c, Typeable d, Typeable e, 
-           Typeable f) =>
+zip6SY :: (ProcType a, ProcType b, ProcType c, ProcType d, ProcType e, 
+           ProcType f) =>
           ProcId -> 
           Signal a -> 
           Signal b -> 
@@ -648,7 +649,7 @@ zip6SY id = zipWith6SY id tup6
 
 
 -- | The process 'unzipSY' \"unzips\" a signal of tuples into two signals.
-unzipSY :: forall a b . (Typeable a, Typeable b) =>  
+unzipSY :: forall a b . (ProcType a, ProcType b) =>  
           ProcId
        -> Signal (a,b) 
        -> (Signal a,Signal b)
@@ -664,7 +665,7 @@ unzipSY id s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1)),
 
 
 -- | The process 'unzip3SY' \"unzips\" a signal of tuples into three signals.
-unzip3SY :: forall a b c . (Typeable a, Typeable b, Typeable c) =>  
+unzip3SY :: forall a b c . (ProcType a, ProcType b, ProcType c) =>  
            ProcId 
         -> Signal (a,b,c) 
         -> (Signal a, Signal b, Signal c)
@@ -681,8 +682,8 @@ unzip3SY id s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1)),
 
 
 -- | The process 'unzip4SY' \"unzips\" a signal of tuples into four signals.
-unzip4SY :: forall a b c d . (Typeable a, Typeable b, Typeable c, 
-                              Typeable d) => 
+unzip4SY :: forall a b c d . (ProcType a, ProcType b, ProcType c, 
+                              ProcType d) => 
            ProcId   
         -> Signal (a,b,c,d) 
         -> (Signal a, Signal b, Signal c, Signal d)
@@ -700,8 +701,8 @@ unzip4SY id s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1)),
 
 
 -- | The process 'unzip5SY' \"unzips\" a signal of tuples into five signals.
-unzip5SY :: forall a b c d e . (Typeable a, Typeable b, Typeable c, 
-                                Typeable d, Typeable e) => 
+unzip5SY :: forall a b c d e . (ProcType a, ProcType b, ProcType c, 
+                                ProcType d, ProcType e) => 
            ProcId 
         -> Signal (a,b,c,d,e) 
         -> (Signal a, Signal b, Signal c, Signal d, Signal e)
@@ -722,8 +723,8 @@ unzip5SY id s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1)),
 
 
 -- | The process 'unzip6SY' \"unzips\" a signal of tuples into six signals.
-unzip6SY :: forall a b c d e f . (Typeable a, Typeable b, Typeable c, 
-                                  Typeable d, Typeable e, Typeable f) =>  
+unzip6SY :: forall a b c d e f . (ProcType a, ProcType b, ProcType c, 
+                                  ProcType d, ProcType e, ProcType f) =>  
            ProcId 
         -> Signal (a,b,c,d,e,f) 
         -> (Signal a, Signal b, Signal c, Signal d, Signal e, Signal f)
@@ -745,7 +746,7 @@ unzip6SY id s = (Signal (newNodeOutSig nodeRef (UnzipNSYOut 1)),
                        toDyn t6]
 
 -- | The process 'zipxSY' \"zips\" a signal of vectors into a vector of signals.
-zipxSY :: (Nat s, Typeable s, Typeable a) =>
+zipxSY :: (Nat s, Typeable s, ProcType a) =>
           ProcId
        -> FSVec s (Signal a) 
        -> Signal (FSVec s a)
@@ -755,7 +756,7 @@ zipxSY id = zipWithxSY id vectId
 
 -- | The process 'unzipxSY' \"unzips\" a vector of n signals into a signal of 
 --   vectors.
-unzipxSY :: forall s a . (Typeable s, Nat s, Typeable a) => 
+unzipxSY :: forall s a . (Typeable s, Nat s, ProcType a) => 
             ProcId
          -> Signal (FSVec s a) 
          -> FSVec s (Signal a)
@@ -770,14 +771,14 @@ unzipxSY id vs = V.map (\tag -> Signal (newNodeOutSig nodeRef tag) )
                      in map toDyn (V.fromVector v)
 
 -- | The process 'fstSY' selects always the first value from a signal of pairs
-fstSY :: (Typeable a, Typeable b) => ProcId -> Signal (a,b) -> Signal a
+fstSY :: (ProcType a, ProcType b) => ProcId -> Signal (a,b) -> Signal a
 fstSY id = mapSY id  first
   where first = $(newProcFun [d| first :: (a,b) -> a
                                  first (a,_) = a |])
 
 
 -- | The process 'sndSY' selects always the second value from a signal of pairs
-sndSY :: (Typeable a, Typeable b) => ProcId -> Signal (a,b) -> Signal b
+sndSY :: (ProcType a, ProcType b) => ProcId -> Signal (a,b) -> Signal b
 sndSY id = mapSY id second
   where second = $(newProcFun [d| second :: (a,b) -> b
                                   second (_,b) = b |])
@@ -787,7 +788,7 @@ sndSY id = mapSY id second
 -- | The function 'groupSY' groups values into a vector of size n, which takes 
 --   n cycles. While the grouping takes place the output from this process 
 --   consists of absent values.
-groupSY :: forall k a . (Nat k, Typeable k, Lift k, Typeable a, Lift a) => 
+groupSY :: forall k a . (Nat k, Typeable k, Lift k, ProcType a, Lift a) => 
            ProcId -> k -> Signal a -> Signal (AbstExt (FSVec k a))
 groupSY id k = mooreSY id (f `defArgVal` kV)  (g `defArgVal` kV) s0 
   where

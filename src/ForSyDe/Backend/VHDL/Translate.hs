@@ -29,6 +29,7 @@ import ForSyDe.ForSyDeErr
 import ForSyDe.System.SysDef
 import ForSyDe.Process.ProcFun
 import ForSyDe.Process.ProcVal
+import ForSyDe.Process.ProcType
 
 import Data.Typeable.TypeRepLib (unArrowT)
 
@@ -38,6 +39,7 @@ import Data.List (intersperse, find)
 import Data.Maybe (isJust, fromJust)
 import Data.Bits ((.&.), (.|.), xor)
 import Control.Monad.State
+import qualified Data.Set as S
 import qualified Language.Haskell.TH as TH
 import Language.Haskell.TH hiding (global)
 import qualified Data.Traversable as DT
@@ -198,12 +200,13 @@ transDelay2Block ::  Label -- ^ process identifier
                                 -- of the delay process
                   -> VHDLId   -- ^ output signal
                   -> VHDLM (BlockSm, SigDec)
-transDelay2Block vPid inS ast outS = do
+transDelay2Block vPid inS (ProcValAST exp tr enums) outS = do
+ -- Add the enumerated types associated with the value to the global results
+ addEnumTypes enums
  -- Get the type of the initial value
- initTR <- transTR2TM (expTyp ast)
+ initTR <- transTR2TM tr
  -- Translate the initial value
- let val = expVal ast
- initExp <- withProcValC val $ withEmptyTransNameSpace $ (transExp2VHDL val)
+ initExp <- withProcValC exp $ withEmptyTransNameSpace $ (transExp2VHDL exp)
  -- Build the block
  let formalIn  = unsafeIdAppend vPid "_in"
      formalOut = unsafeIdAppend vPid "_out"
@@ -339,7 +342,7 @@ customTR2TM rep = do
 -- | Really do the translation (customTR2TM deals with caching)
 doCustomTR2TM :: TypeRep -> VHDLM TypeDec
 
--- | FSVec
+-- | FSVec?
 doCustomTR2TM rep | isFSVec = do
  -- Translate the type of the elements contained in the vector
  valTM <- transTR2TM valueType
@@ -356,7 +359,7 @@ doCustomTR2TM rep | isFSVec = do
          size = transTLNat2Int sizeType
  
 
--- | Tuples
+-- | Tuple?
 doCustomTR2TM rep | isTuple = do
   -- Create the elements of the record
   fieldTMs <- mapM transTR2TM args
@@ -376,7 +379,7 @@ doCustomTR2TM rep | isTuple = do
        isTuple = all (==',') conStr
        
 
--- | AbstExt
+-- | AbstExt?
 doCustomTR2TM rep | isAbsExt = do
   -- Create the elements of the record
   valueTM <- transTR2TM valueTR
@@ -395,9 +398,38 @@ doCustomTR2TM rep | isAbsExt = do
        absExtTyCon = (typeRepTyCon.typeOf) (undefined :: AbstExt ())
        isAbsExt = cons == absExtTyCon 
 
--- | Unkown custom type
-doCustomTR2TM rep = throwFError $ UnsupportedType rep               
-        
+-- | Finally, it is an Enumerated algebraic type 
+--   or an unkown custom type (in that case we throw an error)
+--
+--   NOTE: It would be cleaner to have a different clauses for each case but
+--   since we need to access the state to check if it's an enumerated 
+--   algebraic type, we cannot do it.
+doCustomTR2TM rep = do
+ -- Get the accumulated Enumerated Algebraic Types
+ eTys <- gets (enumTypes.global)
+ -- Check if current Type representation can be found in eTys
+ let equalsRep (EnumAlgTy name _) = name == (tyConString.typeRepTyCon) rep 
+ case (S.toList.(S.filter equalsRep)) eTys of
+   -- Found!
+   [enumDef] -> enumAlg2TypeDec enumDef 
+   -- Not found, unkown custom type
+   _ ->  throwFError $ UnsupportedType rep
+
+-- | Transform an enumerated Algebraic type to a VHDL
+--   TypeMark adding its default function to the global results
+enumAlg2TypeDec :: EnumAlgTy -- ^ Enumerated type definition
+                -> VHDLM TypeDec
+enumAlg2TypeDec (EnumAlgTy tn cons) = do
+ -- Get the TypeMark
+ tMark <- liftEProne $ mkVHDLExtId tn
+ -- Get the enumeration literals
+ enumLits@(firstLit:_) <- liftEProne $ mapM mkVHDLExtId cons
+ -- Add the default functions for the enumeration type
+ let funs = genEnumAlgFuns tMark firstLit
+ mapM_ addSubProgBody funs
+ -- Create the enumeration type
+ return (TypeDec tMark (TDE $ EnumTypeDef enumLits))
+   
 -- | Translation table for primitive types
 primTypeTable :: [(TypeRep, TypeMark)]
 primTypeTable = [-- Commented out due to representation overflow
@@ -425,7 +457,9 @@ funErr err = throwFError $ UntranslatableVHDLFun err
 transProcFun2VHDL :: TypedProcFunAST  -- ^ input ast
     -> VHDLM (SubProgBody, VHDLId, [VHDLId], [TypeMark], TypeMark)
     -- ^ Function, Function name, name of inputs, type of inputs, return type   
-transProcFun2VHDL (TypedProcFunAST fType fAST) = do
+transProcFun2VHDL (TypedProcFunAST fType fEnums fAST) = do
+ -- Add the enumerated types associated with the function to the global results
+ addEnumTypes fEnums
  -- Check if the procFunAST fullfils the restrictions of the VHDL Backend
  -- FIXME: translate the default arguments
  (fName, fInputPats, fBodyExp) <- checkProcFunAST fAST
@@ -548,6 +582,18 @@ preparePatNameSpace prefix (ConP name ~[pat]) | isAbstExt name =
  where isAbstExt name = isPrst || name == 'Abst
        isPrst =  name == 'Prst
 
+-- Unary Constructor patterns
+-- We try an enumerated type patterns 
+-- otherwise we throw an unknown constructor pattern error
+preparePatNameSpace prefix pat@(ConP name []) = do
+ mId <- getEnumConsId name
+ case mId of 
+   -- it is an enumerated data constructor, however, since we only admit
+   -- one clause per function there is nothing to do about it
+  Just _ -> return ()
+  -- it is an unknown data constructor
+  Nothing -> funErr $ UnsupportedFunPat pat
+
 -- otherwise the pattern is not supported
 preparePatNameSpace _ pat = funErr $ UnsupportedFunPat pat
 
@@ -584,6 +630,8 @@ transMatch2VHDLCaseSmAlt :: TH.Exp -> TH.Match -> VHDLM CaseSmAlt
 transMatch2VHDLCaseSmAlt contextExp (Match pat (NormalB matchExp) []) =
  do sm <- transFunBodyExp2VHDL matchExp
     case pat of
+     -- FIXME: support pattern matching with tuples, AbsExt, 
+     -- and enumerated types
      WildP -> return $ CaseSmAlt [Others] [sm] 
      LitP lit -> do vHDLExp <- transExp2VHDL (LitE lit)
                     return $ CaseSmAlt [ChoiceE vHDLExp] [sm]
@@ -633,13 +681,17 @@ transExp2VHDL  (ConE cName `AppE` arg) | isJust consTranslation =
      return $ (fromJust consTranslation)  vHDLarg
     where consTranslation = lookup cName validUnaryCons
 
--- Constant constructor
+-- Constant constructor located in the static table 'validConstantCons'
 transExp2VHDL  (ConE cName) | isJust consTranslation = 
    return $ fromJust consTranslation
     where consTranslation = lookup cName validConstantCons
 
--- Unkown constructor
-transExp2VHDL  con@(ConE cName) = expErr con $ UnkownIdentifier cName
+-- Enumerated data constructor or Unkown constructor
+transExp2VHDL con@(ConE cName) = do
+ mId <- getEnumConsId cName
+ case mId of
+  Just id -> return $ PrimName (NSimple id)
+  Nothing -> expErr con $ UnkownIdentifier cName
 
 -- Literals
 transExp2VHDL  (LitE (IntegerL integer))  = (return.transInteger2VHDL) integer
@@ -776,3 +828,4 @@ transInt2TLNat n
 -- Type constructor of FSVec
 fSVecTyCon :: TyCon
 fSVecTyCon =(typeRepTyCon.typeOf) (undefined :: V.FSVec () ())
+

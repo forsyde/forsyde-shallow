@@ -20,14 +20,14 @@ module ForSyDe.AbsentExt(
 	          isAbsent, isPresent, abstExtFunc)
 	        where
 
-import Data.Typeable
+import Data.Generics
 import Language.Haskell.TH.Lift
 
 
 -- |The data type 'AbstExt' has two constructors. The constructor 'Abst' is used to model the absence of a value, while the constructor 'Prst' is used to model present values.
 data AbstExt a		       =  Abst   
 			       |  Prst a 
-  deriving (Eq, Typeable)
+  deriving (Eq, Data, Typeable)
 $(deriveLift1 ''AbstExt)
 
 

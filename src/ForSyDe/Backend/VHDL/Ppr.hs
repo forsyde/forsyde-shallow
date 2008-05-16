@@ -131,6 +131,7 @@ instance Ppr TypeDec where
 instance Ppr TypeDef where
  ppr (TDA arrayTD) = ppr arrayTD
  ppr (TDR recordTD) = ppr recordTD
+ ppr (TDE enumTD) = ppr enumTD
 
 instance Ppr ArrayTypeDef where
  ppr (ArrayTypeDef init last tm) = 
@@ -145,6 +146,9 @@ instance Ppr RecordTypeDef where
 
 instance Ppr ElementDec where
  ppr (ElementDec id tm) = ppr id <+> colon <+> ppr tm <> semi 
+
+instance Ppr EnumTypeDef where
+ ppr (EnumTypeDef ids) = lparen <> ppr_list hComma ids <> rparen
 
 instance Ppr VHDLName where
  ppr (NSimple simple) = ppr simple

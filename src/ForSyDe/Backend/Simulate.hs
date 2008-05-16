@@ -26,6 +26,7 @@ import ForSyDe.System.SysFun
 import ForSyDe.ForSyDeErr
 import ForSyDe.Process.ProcVal
 
+import Data.Set (empty)
 import Control.Monad (liftM, replicateM, mapM_, zipWithM_)
 import Data.Maybe (fromJust)
 import Control.Monad.ST
@@ -343,7 +344,7 @@ toDelays = map link
                   let t = dynTypeRep val
                       -- The Exp and Type part won't be ever accessed
                       -- during simulation and can be left undefined
-                      procval x t = ProcVal x (ProcValAST undefined t)
+                      procval x t = ProcVal x (ProcValAST undefined t empty)
                   in node2NlSignal  
                       (newURef (Proc "" (DelaySY (procval val t) signal))) 
                       DelaySYOut

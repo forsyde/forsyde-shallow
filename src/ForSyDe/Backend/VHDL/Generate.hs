@@ -187,4 +187,14 @@ genAbstExtFuns elemTM absExtTM =
 
        
 
+-- | Generate the default functions for a custom enumeration type
+genEnumAlgFuns :: TypeMark -- ^ enumeration type
+             -> VHDLId -- ^ First enumeration literal of the type
+             -> [SubProgBody]
+genEnumAlgFuns enumTM firstLit = 
+  [SubProgBody defaultSpec [defaultExpr]]
+ where defaultSpec = Function defaultId [] enumTM
+       defaultExpr = ReturnSm (Just $ PrimName (NSimple firstLit))
+      
+
 

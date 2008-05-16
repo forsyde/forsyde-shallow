@@ -49,19 +49,19 @@ import Language.Haskell.TH.Syntax (Lift)
 -- >                   0.09562326700432, 0.08131651217682, 0.06318761339784 ])
 -- 
 
-fir :: (Fractional b, Lift b, Typeable b, Pos s, Typeable s) => 
+fir :: (Fractional b, Lift b, ProcType b, Pos s, Typeable s) => 
        ProcId -> FSVec s b -> Signal b -> Signal b
 fir id h = innerProd (id ++ "_innerProd") h . sipo (id ++ "_sipo") k 0.0
     where k = V.lengthT h
 
-sipo :: (Pos s, Typeable s, Fractional a, Lift a, Typeable a) =>
+sipo :: (Pos s, Typeable s, Fractional a, Lift a, ProcType a) =>
         ProcId -> s -> a -> Signal a -> FSVec s (Signal a)
 sipo id n s0 = unzipxSY (id ++ "_unzipxSY") . scanldSY (id ++ "_scanldSY") srV initState
     where initState = V.copy n s0
           srV = $(newProcFun [d| srV :: Pos s => FSVec s a -> a -> FSVec s a
                                  srV v a = V.shiftr v a |])
 
-innerProd :: (Fractional a, Lift a, Typeable a, Nat s, Typeable s) =>
+innerProd :: (Fractional a, Lift a, ProcType a, Nat s, Typeable s) =>
              ProcId -> FSVec s a -> FSVec s (Signal a) -> Signal a
 innerProd id h = zipWithxSY id (ipV `defArgVal` h)
    where ipV = $(newProcFun 

@@ -21,9 +21,14 @@ import ForSyDe.ForSyDeErr
 import ForSyDe.OSharing
 import ForSyDe.System.SysDef (SysDefVal(..))
 import ForSyDe.Netlist.Traverse (TravSEIO)
+import ForSyDe.Process.ProcType (EnumAlgTy(..))
 
+import Data.Generics (tyconUQname, tyconModule)
+import Data.Maybe (fromJust)
+import qualified Data.Set as S (filter)
+import Data.Set (Set, union, empty, toList)
 import Control.Monad.State
-import Language.Haskell.TH (Name, Exp)
+import Language.Haskell.TH (nameBase, nameModule, Name, Exp)
 import Data.Typeable (TypeRep)
 
 -------------------------------------
@@ -183,6 +188,10 @@ data GlobalVHDLST = GlobalVHDLST
                                             -- where already compiled
                                             -- indicating what type of
                                             -- logic
+   enumTypes    :: Set EnumAlgTy,          -- Set of the enumerated
+                                           -- algebraic types accumulated
+                                           -- by all ProcFuns and ProcVals
+                                           -- in the system      
    typeTable    :: [(TypeRep, TypeMark)]} -- Type translation table
 
 
@@ -190,7 +199,7 @@ data GlobalVHDLST = GlobalVHDLST
 initGlobalVHDLST :: SysDefVal -> IO GlobalVHDLST
 initGlobalVHDLST  sysDefVal = do
  t <- newURefTableIO
- return $ GlobalVHDLST sysDefVal defaultVHDLOps emptyGlobalTravResult t []
+ return $ GlobalVHDLST sysDefVal defaultVHDLOps emptyGlobalTravResult t empty []
 
 -- | Empty initial traversing state 
 initVHDLTravST :: SysDefVal -> IO VHDLTravST
@@ -316,7 +325,28 @@ traversedSysDef :: URef SysDefVal -> VHDLM (Maybe SysLogic)
 traversedSysDef ref =  do table <- gets (compSysDefs.global)
                           liftIO $ queryIO table ref
 
-
+-- | Add enumerated types to the global state
+addEnumTypes :: Set EnumAlgTy -> VHDLM ()
+addEnumTypes newETs = do
+ globalST <- gets global 
+ let oldETs = enumTypes globalST
+ modify (\st -> st{global = globalST {enumTypes = oldETs `union` newETs}})
+ 
+-- | Check if a Template haskell 'Name' corresponding to
+--   a Enumerated-type data constructor is present in the enumerated
+--   types accumulated in the global state and return the corresponding
+--   VHDL identifier.
+getEnumConsId :: Name -> VHDLM (Maybe VHDLId)
+getEnumConsId consName = do
+ let consModule = (fromJust.nameModule) consName
+     consBase = nameBase consName
+ enums <- gets (enumTypes.global)
+ let matchesName (EnumAlgTy dataName enums) = 
+                 tyconModule dataName == consModule && elem consBase enums
+ case (toList.(S.filter matchesName)) enums of
+   []  -> return Nothing
+   [_] -> liftM Just (liftEProne $ mkVHDLExtId consBase) 
+ 
 -- | Add a type declaration to the global results and type translation table
 addTypeDec :: TypeRep -> TypeDec -> VHDLM ()
 addTypeDec rep typeDec@(TypeDec id _) = do

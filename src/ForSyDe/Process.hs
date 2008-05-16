@@ -14,8 +14,10 @@
 -----------------------------------------------------------------------------
 module ForSyDe.Process 
  (ProcFun, newProcFun, defArgVal, defArgPF,
+  ProcType,
   module ForSyDe.Process.SynchProc) where
 
 import ForSyDe.Process.ProcFun (ProcFun, newProcFun, defArgVal, defArgPF)
 
 import ForSyDe.Process.SynchProc 
+import ForSyDe.Process.ProcType (ProcType)

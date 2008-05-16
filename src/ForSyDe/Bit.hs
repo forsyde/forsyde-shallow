@@ -16,12 +16,12 @@ module ForSyDe.Bit (Bit(..),not)where
 
 import Language.Haskell.TH.Lift
 import Data.Bits
-import Data.Typeable (Typeable)
+import Data.Generics (Data, Typeable)
 import Prelude hiding (not)
 
 data Bit = H -- ^ High value 
          | L -- ^ Low value
- deriving (Eq, Show, Typeable)
+ deriving (Eq, Show, Data, Typeable)
 
 $(deriveLift1 ''Bit)
 

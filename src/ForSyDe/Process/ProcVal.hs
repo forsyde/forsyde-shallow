@@ -15,8 +15,11 @@
 module ForSyDe.Process.ProcVal where
 
 
+import ForSyDe.Process.ProcType
+
 import Data.Typeable (Typeable(..), TypeRep)
 import Data.Dynamic (toDyn, Dynamic)
+import Data.Set
 import Language.Haskell.TH (Exp, runQ)
 import Language.Haskell.TH.Syntax (Lift(..))
 import System.IO.Unsafe (unsafePerformIO)
@@ -27,14 +30,17 @@ data ProcVal = ProcVal
                    valAST  :: ProcValAST} --  its AST
 
 data ProcValAST = ProcValAST
-                    {expVal :: Exp,       --  Its AST representation
-                     expTyp :: TypeRep}    --  Type of the value   
+                    {expVal   :: Exp,           -- Its AST representation
+                     expTyp   :: TypeRep,       -- Type of the expression 
+                     expEnums :: Set EnumAlgTy} -- Enumerated types associated
+                                                -- with the expression
 
 -- | 'ProcVal' constructor
-mkProcVal :: (Lift a, Typeable a) => a -> ProcVal
+mkProcVal :: (Lift a, ProcType a) => a -> ProcVal
 -- FIXME: would unsafePerformIO cause any harm to get the exp out of the
 --        Q monad in this context?
-mkProcVal val = ProcVal (toDyn val) (mkProcValAST val)
+mkProcVal val = ProcVal (toDyn val) (mkProcValAST val) 
 
-mkProcValAST :: (Lift a, Typeable a) => a -> ProcValAST 
+mkProcValAST :: (Lift a, ProcType a) => a -> ProcValAST 
 mkProcValAST val = ProcValAST (unsafePerformIO.runQ.lift $ val) (typeOf val) 
+                              (getEnums val)

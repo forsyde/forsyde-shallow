@@ -25,6 +25,7 @@ module ForSyDe.Process.ProcFun
   contProcFun2Dyn,
 ) where
 
+import ForSyDe.Process.ProcType
 import ForSyDe.Process.ProcVal (ProcValAST, mkProcValAST)
 import ForSyDe.ForSyDeErr
 
@@ -33,7 +34,7 @@ import Language.Haskell.TH.Syntax
 import Language.Haskell.TH.LiftInstances ()
 import Data.Dynamic
 import Data.Maybe (fromJust)
-
+import Data.Set (Set)
 -----------
 -- ProcFun
 -----------
@@ -61,7 +62,7 @@ data DefArg = FunAST ProcFunAST | ValAST ProcValAST
 
 
 -- | Sets a default value for an argument of the process function
-defArgVal :: (Lift a, Typeable a) => ProcFun (a -> b) -> a -> ProcFun b
+defArgVal :: (Lift a, ProcType a) => ProcFun (a -> b) -> a -> ProcFun b
 -- FIXME: inneficient, use a queue data structure
 defArgVal pf v = 
    pf{ ast = astPF {pars = ((pars astPF) ++ [ValAST (mkProcValAST v)])}, 
@@ -117,23 +118,28 @@ data TypedProcFun a =
 --     We need the context of the process to know what monomorphic types are 
 --     going to be used. Thus it is imposible to guess the TypeRep within
 --     the code of newProcFun.
-data TypedProcFunAST = TypedProcFunAST {tptyp  :: TypeRep,
-                                        tpast  :: ProcFunAST}
+data TypedProcFunAST = 
+     TypedProcFunAST {tptyp   :: TypeRep,        -- function type
+                      tpEnums :: Set EnumAlgTy,  -- enumerated types associated 
+                                                 -- with the function
+                      tpast   :: ProcFunAST}
 
 -- | transform a ProcFun into a Dynamic TypedProcFun
-procFun2Dyn :: Typeable a => ProcFun a -> TypedProcFun Dynamic
+procFun2Dyn :: ProcType a => ProcFun a -> TypedProcFun Dynamic
 procFun2Dyn (ProcFun v l a) = 
-  TypedProcFun (toDyn v) l (TypedProcFunAST (typeOf v) a)
+  TypedProcFun (toDyn v) l (TypedProcFunAST (typeOf v) (getEnums v) a)
 
 -- FIXME: probably not needed
 -- | tranform the arguments and return value of
 --   a ProcFun to dynamic
-contProcFun2Dyn :: (Typeable a, Typeable b, Functor container, 
-                    Typeable1 container) =>
+contProcFun2Dyn :: (ProcType (container a),
+                    ProcType b,
+                    Functor container, 
+                    Typeable a) =>
                    ProcFun (container a -> b) -> 
                    TypedProcFun (container Dynamic -> Dynamic)
 contProcFun2Dyn (ProcFun v l a) = 
-     TypedProcFun (fmapDyn v) l (TypedProcFunAST (typeOf v) a)
+     TypedProcFun (fmapDyn v) l (TypedProcFunAST (typeOf v) (getEnums v) a)
        where  fmapDyn f cont = toDyn (f (fmap (fromJust.fromDynamic) cont)) 
 
 

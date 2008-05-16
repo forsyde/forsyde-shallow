@@ -18,6 +18,7 @@ tested-with:    GHC==6.8.1
 Library
   build-depends:   type-level,
                    parameterized-data,
+                   containers,
                    packedstring,
                    base, 
                    regex-posix, 
@@ -54,6 +55,7 @@ Library
                    ForSyDe.System.Instantiate,
                    ForSyDe.Process.ProcFun,
                    ForSyDe.Process.ProcVal, 
+                   ForSyDe.Process.ProcType,
                    ForSyDe.Backend.VHDL.AST,
                    ForSyDe.Backend.VHDL.Ppr,
                    ForSyDe.Backend.VHDL.Constants,
