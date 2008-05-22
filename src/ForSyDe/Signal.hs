@@ -20,8 +20,7 @@ module ForSyDe.Signal  where
 
 
 import {-# SOURCE #-} ForSyDe.Netlist
--- import ForSyDe.OSharing
--- import Language.Haskell.TH.TypeLib
+
 
 import Data.Typeable (Typeable)
 
@@ -38,14 +37,6 @@ import Data.Typeable (Typeable)
 
 newtype Signal a = Signal {unSignal :: NlSignal}
  deriving Typeable
-
-{- FINISH and ... think about where to put signalize -}
--- | Creates a constant signal
-{-
-constSY :: (Typeable a, Lift a) => a -> Signal a
-constSY a = Signal (newNodeOutSig (newURef Const (mkProcVal a)) ConstOut )
-   where  outType = signalize 
--}
            
 
 

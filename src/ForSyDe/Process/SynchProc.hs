@@ -19,7 +19,7 @@ module ForSyDe.Process.SynchProc (
  -- * Combinational process constructors
  -- | Combinational process constructors are used for processes that do not 
  --   have a state.
- mapSY, zipWithSY, zipWith3SY, 
+ constSY, mapSY, zipWithSY, zipWith3SY, 
  zipWith4SY, zipWith5SY, zipWith6SY, zipWithxSY, 
  -- * Sequential process constructors
  -- | Sequential process constructors are used for processes that have a state.
@@ -65,6 +65,19 @@ import Language.Haskell.TH.Syntax (Lift)
 -- COMBINATIONAL PROCESS CONSTRUCTORS --                                      
 --                                    --                                      
 ----------------------------------------
+
+
+-- | Creates a constant process. A process which outputs the 
+--   same signal value in every clock cycle.
+constSY :: (ProcType a, Lift a) => 
+            ProcId   -- ^ Identifier of the process
+         -> a        -- ^ Value to output
+         -> Signal a -- ^ Resulting output signal
+constSY id v = Signal (newNodeOutSig nodeRef ConstOut) 
+  where nodeRef = newURef $ Proc id $ Const (mkProcVal v)
+
+
+
 
 -- | The process constructor 'mapSY' takes an identifier and a 
 --   combinational function as arguments and returns a process with one 
