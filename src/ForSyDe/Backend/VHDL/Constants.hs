@@ -52,9 +52,16 @@ typesId = unsafeVHDLBasicId "types"
 workId :: VHDLId
 workId = unsafeVHDLBasicId "work"
 
+-- | range attribute identifier
+rangeId :: VHDLId
+rangeId = unsafeVHDLBasicId "range"
+
 -- | default function identifier
 defaultId :: VHDLId
 defaultId = unsafeVHDLBasicId "default"
+
+
+-- AsbtExt function identifiers
 
 -- | absent function identifier
 absentId :: VHDLId
@@ -88,6 +95,20 @@ isPresentId = unsafeVHDLBasicId "isPresent"
 isAbsentId :: VHDLId
 isAbsentId = unsafeVHDLBasicId "isAbsent"
 
+-- FSVec function identifiers
+
+-- | ex (operator ! in original Haskell source) function identifier
+exId :: VHDLId
+exId = unsafeVHDLBasicId "ex"
+
+-- | sel (function select in original Haskell source) function identifier
+selId :: VHDLId
+selId = unsafeVHDLBasicId "sel"
+
+-- | empty function identifier
+emptyId :: VHDLId
+emptyId = unsafeVHDLBasicId "empty"
+
 
 --------
 -- Names
@@ -107,6 +128,10 @@ std_logicTM = unsafeVHDLBasicId "std_logic"
 -- | boolean type mark
 booleanTM :: TypeMark
 booleanTM = unsafeVHDLBasicId "boolean"
+
+-- | natural typemark
+naturalTM :: TypeMark
+naturalTM = unsafeVHDLBasicId "natural"
 
 -- | int32 typemark (defined in ForSyDe's VHDL library)
 int64TM :: TypeMark

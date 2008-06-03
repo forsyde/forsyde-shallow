@@ -67,7 +67,7 @@ unsafeVHDLExtId :: String -> VHDLId
 unsafeVHDLExtId str = Extended str
 
 
--- | Create a VHDL basic identifier from a String, previously checking if the 
+-- | Create a VHDL basic identifier from a String, previously checking if the  
 --   String is correct
 mkVHDLBasicId ::String -> EProne VHDLId
 -- FIXME: we relax the fact that two consecutive underlines 
@@ -191,7 +191,7 @@ data EntityDec = EntityDec VHDLId [IfaceSigDec]
 -- The Mode is mandatory
 -- Bus is not allowed 
 -- Preasigned values are not allowed
--- SubType indications are not allowed, just a typemark 
+-- Subtype indications are not allowed, just a typemark 
 -- Constraints are not allowed: just add a new type with the constarint
 --  in ForSyDe.vhd if it is required
 data IfaceSigDec = IfaceSigDec VHDLId Mode TypeMark
@@ -221,8 +221,9 @@ data PackageDec = PackageDec VHDLId [PackageDecItem]
 
 
 -- | package_declarative_item
--- only type declarations and subprogram specifications allowed
-data PackageDecItem = PDITD TypeDec | PDISD SubProgSpec
+-- only type declarations, subtype declarations and subprogram specifications 
+-- (working as subprogram_declaration) allowed
+data PackageDecItem = PDITD TypeDec | PDISD SubtypeDec | PDISS SubProgSpec
  deriving Show
 
 -- | package_body
@@ -230,9 +231,34 @@ data PackageDecItem = PDITD TypeDec | PDISD SubProgSpec
 data PackageBody = PackageBody VHDLId [PackageBodyDecItem]
  deriving Show
 
--- | package_body_declarative_item
---  only subprogram_body is allowed
+-- | only subprogram_body is allowed
 type PackageBodyDecItem = SubProgBody
+
+-- | subtype-declaration
+data SubtypeDec = SubtypeDec VHDLId SubtypeIn
+ deriving Show
+
+-- | subtype_indication
+--   resolution functions are not permitted
+data SubtypeIn = SubtypeIn TypeMark (Maybe Constraint)
+ deriving Show
+
+-- | constraint
+-- Only index constraints are allowed
+type Constraint = IndexConstraint
+
+-- | range
+--   the direction must always be \"to\"
+data Range = AttribRange AttribName | ToRange Expr Expr
+ deriving Show
+
+-- | index_constraint
+data IndexConstraint = IndexConstraint [DiscreteRange]
+ deriving Show
+
+-- | discrete_range
+--   only ranges are allowed
+type DiscreteRange = Range
 
 -- | type_declaration
 -- only full_type_declarations are allowed
@@ -245,13 +271,12 @@ data TypeDef = TDA ArrayTypeDef | TDR RecordTypeDef | TDE EnumTypeDef
  deriving Show
 
 -- | array_type_definition
--- only constrained arrays
--- no subtype_inidications allowed (just a type_mark)
--- Only a unique range (not a general index_constraint) allowed
--- The range can't be an attribute_name
--- Expressions in the range can only be ints
--- The direction will implicitly be ascending (i.e. \"to\") 
-data ArrayTypeDef = ArrayTypeDef Int Int TypeMark
+--     unconstrained_array_definition
+--     constrained_array_definition
+-- A TypeMark is used instead of a subtype_indication. If subtyping is required,
+-- declare a subtype explicitly.  
+data ArrayTypeDef = UnconsArrayDef [TypeMark] TypeMark |
+                    ConsArrayDef IndexConstraint TypeMark
  deriving Show
 
 -- | record_type_definition
@@ -259,7 +284,7 @@ data ArrayTypeDef = ArrayTypeDef Int Int TypeMark
 data RecordTypeDef = RecordTypeDef [ElementDec]
  deriving Show
 
--- | elemt_declaration 
+-- | element_declaration 
 -- multi-identifier element declarations not allowed
 -- element_subtype_definition is simplified to a type_mark
 data ElementDec = ElementDec VHDLId TypeMark
@@ -271,10 +296,12 @@ data EnumTypeDef = EnumTypeDef [VHDLId]
  deriving Show
 
 -- | name
--- Only simple_names (identifiers) and selected_names are allowed 
+-- operator_names are not allowed 
 data VHDLName = NSimple SimpleName     | 
                 NSelected SelectedName | 
-                NIndexed IndexedName
+                NIndexed IndexedName   |
+                NSlice SliceName       |
+                NAttribute AttribName 
  deriving Show
 
 -- | simple_name
@@ -300,6 +327,16 @@ type Prefix = VHDLName
 data Suffix = SSimple SimpleName | All
  deriving Show
 
+
+-- | slice_name
+data SliceName = SliceName Prefix DiscreteRange
+ deriving Show
+
+-- | attribute_name
+--   signatures are not allowed
+data AttribName = AttribName Prefix SimpleName (Maybe Expr)
+ deriving Show
+
 -- | block_declarative_item
 -- Only subprogram bodies and signal declarations are allowed
 data BlockDecItem = BDISPB SubProgBody | BDISD SigDec
@@ -307,15 +344,24 @@ data BlockDecItem = BDISPB SubProgBody | BDISD SigDec
 
 
 -- | subprogram_body
--- No declarations are allowed, (weird but we don't need them anyway) 
 -- No subprogram kind nor designator is allowed
-data SubProgBody = SubProgBody SubProgSpec [SeqSm]
+data SubProgBody = SubProgBody SubProgSpec [SubProgDecItem] [SeqSm]
+ deriving Show
+
+-- | subprogram_declarative_item
+--   only varaible declarations are allowed.
+data SubProgDecItem = SPVD VarDec
+ deriving Show
+
+-- | variable_declaration
+--   identifier lists are not allowed
+data VarDec = VarDec VHDLId SubtypeIn (Maybe Expr)
  deriving Show
 
 -- | subprogram_specification
 -- Only Functions are allowed
 -- [Pure | Impure] is not allowed
--- Only a VHDLName is valid as the designator
+-- Only an identifier is valid as the designator
 -- In the formal parameter list only variable declarations are accepted  
 data SubProgSpec = Function VHDLId [IfaceVarDec] TypeMark 
  deriving Show
@@ -325,16 +371,22 @@ data SubProgSpec = Function VHDLId [IfaceVarDec] TypeMark
 -- We don't allow the "id1,id2,id3" syntax, only one identifier is allowed
 -- Mode is not allowed
 -- Resolution functions and constraints are not allowed, thus a TypeMark
---  is used instead of a subtype_indication
+--  is used instead of a subtype_indication. If subtyping is required,
+--  declare a subtype explicitly.
 data IfaceVarDec = IfaceVarDec VHDLId TypeMark
  deriving Show
 
 -- | sequential_statement
--- Only If, case and return allowed
+-- Only If, case, return, for loops and assignment allowed
+-- Only for loops are allowed (thus loop_statement doesn't exist) and cannot
+-- be provided labels.
+-- The target cannot be an aggregate.
 -- It is incorrect to have an empty [CaseSmAlt]
 data SeqSm = IfSm  Expr [SeqSm] [ElseIf] (Maybe Else) |
              CaseSm Expr [CaseSmAlt]                  |
-             ReturnSm (Maybe Expr)
+             ReturnSm (Maybe Expr)                    |
+             ForSM VHDLId DiscreteRange [SeqSm]       |
+             VHDLName := Expr 
  deriving Show
 
 -- | helper type, they doesn't exist in the origianl grammar
@@ -496,9 +548,13 @@ data Expr = -- Logical operations
             PrimLit   Literal |
             PrimFCall FCall   |       
             -- Composite_types-related operators
-            Aggregate [Expr]   -- (exp1,exp2,exp3, ...)
+            Aggregate [ElemAssoc]   -- (exp1,exp2,exp3, ...)
  deriving Show            
 
+-- | element_association
+--   only one choice is allowed
+data ElemAssoc = ElemAssoc (Maybe Choice) Expr
+ deriving Show
 
 -- | literal
 -- Literals are expressed as a string (remember we are generating

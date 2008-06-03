@@ -328,9 +328,9 @@ instance Show Context where
                       show (SysDefC sysid sysloc)
  show (ProcFunC sysid sysloc pid fName fLoc) = 
    "process function `" ++ pprint fName ++ "' (created in " ++ fLoc ++ ") " ++
-   " used by process " ++  show (ProcC sysid sysloc pid)
+   " used by  " ++  show (ProcC sysid sysloc pid)
  show (ProcValC sysid sysloc pid valExp) =
-   "process argument `" ++ pprint valExp ++ "' used by process "
+   "process argument `" ++ pprint valExp ++ "' used by  "
    ++ show (ProcC sysid sysloc pid)
  
 

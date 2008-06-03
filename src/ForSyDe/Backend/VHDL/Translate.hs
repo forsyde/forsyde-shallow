@@ -35,7 +35,7 @@ import Data.Typeable.TypeRepLib (unArrowT)
 
 import Data.Int
 import Data.Char (digitToInt)
-import Data.List (intersperse, find)
+import Data.List (intersperse)
 import Data.Maybe (isJust, fromJust)
 import Data.Bits ((.&.), (.|.), xor)
 import Control.Monad.State
@@ -45,7 +45,7 @@ import Language.Haskell.TH hiding (global)
 import qualified Data.Traversable as DT
 import Data.Typeable
 import qualified Data.Param.FSVec as V
-
+import Text.Regex.Posix ((=~))
 
 import Data.TypeLevel.Num.Reps
 
@@ -105,10 +105,9 @@ transZipWithx2Block vPid ins loc ast out = do
  (f, fName, [inFPar], [inFType], retFType) <- 
         withProcFunC ((name.tpast) ast) loc $ transProcFun2VHDL ast
  -- Figure out the type of the inputs from the 
- -- function's input vector type (ugly hack, but it works)
- tdecs <- gets (typeDecs.globalRes.global)
- let TypeDec _ (TDA (ArrayTypeDef _ _ inType)) 
-      = fromJust $ find (\(TypeDec id _) -> id == inFType)  tdecs
+ -- function's input vector type (horrible hack, but it works)
+ let [[_,suffix]] = (fromVHDLId inFType) =~ "^fsvec_[0-9]*_(.*)$" 
+     inType = unsafeVHDLBasicId $ suffix
  -- Generate the formal parameters of the block
      inPars = map (\n -> unsafeIdAppend vPid ("_in" ++ show n)) [1..length ins]
      outPar = unsafeIdAppend vPid "_out"
@@ -119,7 +118,8 @@ transZipWithx2Block vPid ins loc ast out = do
  -- Generate the port map
      pMap = genPMap  (inPars ++ [outPar]) (ins ++ [out])
  -- Generate the function call and signal assignment
-     aggregate = Aggregate (map (PrimName . NSimple) inPars) 
+     aggregate = Aggregate $
+                  map (\e -> ElemAssoc Nothing (PrimName(NSimple e))) inPars 
      fCall = PrimFCall $ FCall (NSimple fName) 
                                [Just inFPar :=>: ADExpr aggregate]
      outAssign = genExprAssign outPar fCall
@@ -331,33 +331,60 @@ customTR2TM rep = do
    -- Not translated previously
    Nothing -> do
       -- translate it
-      typeDec@(TypeDec id _) <- doCustomTR2TM rep
+      e <- doCustomTR2TM rep
       -- update the translation table and the accumulated type declarations
-      addTypeDec rep typeDec
+      addCustomType rep e
       -- return the translation
-      return id
+      case e of
+        Left (TypeDec id _) -> return id
+        Right (SubtypeDec id _) -> return id
    -- Translated previously
    Just tm -> return tm
      
 -- | Really do the translation (customTR2TM deals with caching)
-doCustomTR2TM :: TypeRep -> VHDLM TypeDec
+doCustomTR2TM :: TypeRep -> VHDLM (Either TypeDec SubtypeDec)
 
 -- | FSVec?
+--   FSVecs are translated to subtypes of unconstrained vectors for which
+--   all the FSVec operations are generated.
 doCustomTR2TM rep | isFSVec = do
  -- Translate the type of the elements contained in the vector
  valTM <- transTR2TM valueType
- -- Create the vector type identifier
- let vectorId = unsafeVHDLBasicId ("fsvec_" ++ show size ++ "_" ++
-                                   fromVHDLId valTM)
-  -- Add the default functions for the vector type to the global results
-     funs =  genVectorFuns valTM size vectorId
- mapM_ addSubProgBody funs
- -- Create the vector declaration
- return $ TypeDec vectorId (TDA (ArrayTypeDef 0 (size-1) valTM))
+ -- Build the unconstrained vector identifier
+ let vectorId = unsafeVHDLBasicId ("fsvec_"++ fromVHDLId valTM)
+ -- Obtain the unconstrained vector together with its functions and add them
+ -- to the global traversing-results (if this wasn't previously done):
+ --  * Check if the unconstrained array was previously translated
+ vecs <- gets (transUnconsFSVecs.global)
+ -- *  if it wasn't ...
+ when (not $ elem valueType vecs) $ do
+      -- create the unconstrained vector type and add it to the global
+      -- results
+      addTypeDec $ TypeDec vectorId (TDA (UnconsArrayDef [naturalTM] valTM))
+      -- create the null subtype and add it to the results as well
+      let nullVectorId = unsafeVHDLBasicId ("fsvec_0_"++ fromVHDLId valTM)
+          nullVectorSubtype =  SubtypeDec nullVectorId (SubtypeIn vectorId 
+              (Just $ IndexConstraint [ToRange (PrimLit (show (1 :: Int)))
+                                               (PrimLit (show (0 :: Int))) ]))
+      addSubtypeDec $ nullVectorSubtype
+      -- Add the default functions for the vector type to the global results
+      let funs =  genVectorFuns valTM vectorId nullVectorId
+      mapM_ addSubProgBody funs
+      -- Mark the unconstrained array as translated
+      addUnconsFSVec valueType
+
+ -- Create the vector subtype identifier
+ let subvectorId = unsafeVHDLBasicId ("fsvec_" ++ show size ++ "_" ++
+                                     fromVHDLId valTM)
+ -- Create the vector subtype declaration
+ return $ Right $ 
+     SubtypeDec subvectorId (SubtypeIn vectorId 
+              (Just $ IndexConstraint [ToRange (PrimLit (show (0 ::Int)))
+                                               (PrimLit (show $ size-1)) ]))
    where (cons, ~[sizeType,valueType]) = splitTyConApp rep
          isFSVec = cons == fSVecTyCon
          size = transTLNat2Int sizeType
- 
+
 
 -- | Tuple?
 doCustomTR2TM rep | isTuple = do
@@ -373,7 +400,7 @@ doCustomTR2TM rep | isTuple = do
       funs = genTupleFuns fieldTMs recordId
   mapM_ addSubProgBody funs
   -- Create the record
-  return (TypeDec recordId (TDR $ RecordTypeDef elems))
+  return $ Left $ (TypeDec recordId (TDR $ RecordTypeDef elems))
  where (cons, args) = splitTyConApp rep
        conStr = tyConString cons
        isTuple = all (==',') conStr
@@ -393,7 +420,7 @@ doCustomTR2TM rep | isAbsExt = do
       funs =  genAbstExtFuns valueTM recordId
   mapM_ addSubProgBody funs
   -- Return the resulting the record
-  return (TypeDec recordId (TDR $ RecordTypeDef elems))
+  return $ Left $ (TypeDec recordId (TDR $ RecordTypeDef elems))
  where (cons, ~[valueTR]) = splitTyConApp rep
        absExtTyCon = (typeRepTyCon.typeOf) (undefined :: AbstExt ())
        isAbsExt = cons == absExtTyCon 
@@ -411,7 +438,7 @@ doCustomTR2TM rep = do
  let equalsRep (EnumAlgTy name _) = name == (tyConString.typeRepTyCon) rep 
  case (S.toList.(S.filter equalsRep)) eTys of
    -- Found!
-   [enumDef] -> enumAlg2TypeDec enumDef 
+   [enumDef] -> liftM Left $ enumAlg2TypeDec enumDef 
    -- Not found, unkown custom type
    _ ->  throwFError $ UnsupportedType rep
 
@@ -468,7 +495,7 @@ transProcFun2VHDL (TypedProcFunAST fType fEnums fAST) = do
   transProcFunSpec fName fType fInputPats
  -- Translate the function's body
  bodySm <- transFunBodyExp2VHDL fBodyExp
- let  fBody = SubProgBody fSpec [bodySm]
+ let  fBody = SubProgBody fSpec [] [bodySm]
  return (fBody, fVHDLName, fVHDLPars, argsTM, retTM)
 
 
@@ -585,7 +612,7 @@ preparePatNameSpace prefix (ConP name ~[pat]) | isAbstExt name =
 -- Unary Constructor patterns
 -- We try an enumerated type patterns 
 -- otherwise we throw an unknown constructor pattern error
-preparePatNameSpace prefix pat@(ConP name []) = do
+preparePatNameSpace _ pat@(ConP name []) = do
  mId <- getEnumConsId name
  case mId of 
    -- it is an enumerated data constructor, however, since we only admit
@@ -648,6 +675,18 @@ transMatch2VHDLCaseSmAlt contextExp (Match _ bdy@(GuardedB _) _) =
 -- | Translate a Haskell expression to a VHDL expression
 transExp2VHDL :: TH.Exp -> VHDLM VHDL.Expr
 
+
+-- Is it a quaternary function application?
+transExp2VHDL (VarE fName `AppE` arg1 `AppE` arg2 `AppE` arg3 `AppE` arg4)
+ | isJust maybeQuatFun =
+  do vHDLarg1 <- transExp2VHDL arg1
+     vHDLarg2 <- transExp2VHDL arg2
+     vHDLarg3 <- transExp2VHDL arg3
+     vHDLarg4 <- transExp2VHDL arg4
+     return $ (fromJust maybeQuatFun) vHDLarg1 vHDLarg2 vHDLarg3 vHDLarg4
+ where maybeQuatFun = lookup fName validQuatFuns
+
+
 -- Is it a binary function application?
 transExp2VHDL (VarE fName `AppE` arg1 `AppE` arg2)
  | isJust maybeInfixOp =
@@ -655,6 +694,12 @@ transExp2VHDL (VarE fName `AppE` arg1 `AppE` arg2)
      vHDLarg2 <- transExp2VHDL arg2
      return $ (fromJust maybeInfixOp) vHDLarg1 vHDLarg2
  where maybeInfixOp = lookup fName validBinaryFuns
+
+-- Is it static constant found in validConstants?
+transExp2VHDL (VarE fName) | isJust maybeConstant =
+     return $ (fromJust maybeConstant)      
+ where maybeConstant = lookup fName validConstants
+
 
 -- Is it a unary function application?
 transExp2VHDL (VarE fName `AppE` arg) | isJust maybeUnaryOp =
@@ -665,6 +710,20 @@ transExp2VHDL (VarE fName `AppE` arg) | isJust maybeUnaryOp =
 
 -- Unkown function
 transExp2VHDL exp@(VarE fName `AppE` _) = expErr exp $ UnkownIdentifier fName
+
+-- TypeLevel-package numerical constant aliases
+transExp2VHDL (VarE name) | isTypeLevelAlias = do
+ let constant = nameBase name
+     ([baseSym], val) = splitAt 1 constant
+     basePrefix = case baseSym of
+       'b' -> "2#" 
+       'o' -> "8#" 
+       'h' -> "16#"
+       'd' -> ""
+       _   -> error "unexpected base symbol"
+ return (PrimLit $ basePrefix ++ val) 
+ where isTypeLevelAlias = (show name =~ aliasPat)
+       aliasPat = "^Data\\.TypeLevel\\.Num\\.Aliases\\.(b[0-1]+|o[0-7]+|d[0-9]+|h[0-9A-F]+)$"
 
 -- Local variable or unknown identifier
 transExp2VHDL exp@(VarE name) = 
@@ -715,7 +774,7 @@ transExp2VHDL infixExp@(InfixE _ (VarE _) _) = expErr infixExp Section
 -- Tuples: e.g. (1,2)
 transExp2VHDL (TupE exps) = do
  vExps <- mapM transExp2VHDL exps
- return $ Aggregate vExps
+ return $ Aggregate $ map (\expr -> ElemAssoc Nothing expr) vExps
 
 -- Unsupported expressions
 transExp2VHDL lamE@(LamE _ _) = expErr lamE  LambdaAbstraction
@@ -757,27 +816,36 @@ validConstantCons = [('True , trueExpr ),
                      ('Abst , PrimName $ NSimple absentId)]
 
 
+-- | Translation table of valid quaternary functions
+validQuatFuns :: [(TH.Name, (Expr -> Expr -> Expr -> Expr -> Expr))]
+validQuatFuns = [('V.select, genExprFCall4 selId)]
+
+
 -- | Translation table of valid binary functions
 validBinaryFuns :: [(TH.Name, (Expr -> Expr -> Expr))]
-validBinaryFuns = [('(&&) , And   ),
-                   ('(||) , Or    ),
-                   ('(.&.), And   ),
-                   ('(.|.), Or    ),
-                   ('xor  , Xor   ),
-                   ('(==) , (:=:) ),
-                   ('(/=) , (:/=:)),
-                   ('(<)  , (:<:) ), 
-                   ('(<=) , (:<=:)),
-                   ('(>)  , (:>:) ),
-                   ('(>=) , (:>=:)),  
-                   ('(+)  , (:+:) ),
-                   ('(-)  , (:-:) ),
-                   ('(*)  , (:*:) ),
-                   ('div  , (:/:) ),
-                   ('mod  , (Mod) ),
-                   ('rem  , (Rem) ),
-                   ('(^)  , (:**:))] 
-                 
+validBinaryFuns = [('(&&)  , And   ),
+                   ('(||)  , Or    ),
+                   ('(.&.) , And   ),
+                   ('(.|.) , Or    ),
+                   ('xor   , Xor   ),
+                   ('(==)  , (:=:) ),
+                   ('(/=)  , (:/=:)),
+                   ('(<)   , (:<:) ), 
+                   ('(<=)  , (:<=:)),
+                   ('(>)   , (:>:) ),
+                   ('(>=)  , (:>=:)),  
+                   ('(+)   , (:+:) ),
+                   ('(-)   , (:-:) ),
+                   ('(*)   , (:*:) ),
+                   ('div   , (:/:) ),
+                   ('mod   , (Mod) ),
+                   ('rem   , (Rem) ),
+                   ('(^)   , (:**:)),
+                   ('(V.+>), (:&:) ),
+                   ('(V.<+), (:&:) ),
+                   ('(V.++), (:&:) ),
+                   ('(V.!) , genExprFCall2 exId)]
+
 
 -- | Translation table of valid unary functions
 validUnaryFuns :: [(TH.Name, (Expr -> Expr))]
@@ -785,7 +853,14 @@ validUnaryFuns = [('B.not , Not  ),
                   ('not   , Not  ),
                   ('negate, Neg  ),
                   ('abs   , Abs  ),
-                  ('abstExt, genExprFCall1 presentId) ]
+                  ('abstExt, genExprFCall1 presentId),
+                  ('V.singleton, inlineSingleton) ]
+ where inlineSingleton expr = expr :&: genExprFCall0 emptyId
+
+-- | Translation table of valid Constants
+validConstants :: [(TH.Name, Expr)]
+validConstants = [('V.empty, genExprFCall0 emptyId )]
+
 
 --------------------
 -- Helper Functions

@@ -23,7 +23,7 @@ import ForSyDe.System.SysDef (SysDefVal(..))
 import ForSyDe.Netlist.Traverse (TravSEIO)
 import ForSyDe.Process.ProcType (EnumAlgTy(..))
 
-import Data.Generics (tyconUQname, tyconModule)
+import Data.Generics (tyconModule)
 import Data.Maybe (fromJust)
 import qualified Data.Set as S (filter)
 import Data.Set (Set, union, empty, toList)
@@ -179,27 +179,31 @@ withEmptyTransNameSpace action = do
             
 
 data GlobalVHDLST = GlobalVHDLST
-  {globalSysDef :: SysDefVal,
-   ops          :: VHDLOps,   -- Compilation options
+  {globalSysDef :: SysDefVal, -- global system definition 
+                              -- (the first-level system being compiled)
+   ops          :: VHDLOps,  -- Compilation options
    globalRes    :: GlobalTravResult, -- Result accumulated during the 
-                                    -- whole compilation
+                                     -- whole compilation
    compSysDefs  :: URefTableIO SysDefVal SysLogic, -- Table containing the
                                             -- System Definitions which
                                             -- where already compiled
                                             -- indicating what type of
                                             -- logic
-   enumTypes    :: Set EnumAlgTy,          -- Set of the enumerated
-                                           -- algebraic types accumulated
-                                           -- by all ProcFuns and ProcVals
-                                           -- in the system      
-   typeTable    :: [(TypeRep, TypeMark)]} -- Type translation table
+   enumTypes    :: Set EnumAlgTy, -- Set of the enumerated
+                                  -- algebraic types accumulated
+                                  -- by all ProcFuns and ProcVals
+                                  -- in the system      
+   typeTable    :: [(TypeRep, TypeMark)],  -- Type translation table
+   transUnconsFSVecs :: [TypeRep]} -- Unconstrained FSVecs previously translated.
+                                   -- Each unconstrained FSVec is represented by 
+                                   -- the 'TypeRep' of its elements
 
 
 -- | Empty initial traversing state
 initGlobalVHDLST :: SysDefVal -> IO GlobalVHDLST
 initGlobalVHDLST  sysDefVal = do
  t <- newURefTableIO
- return $ GlobalVHDLST sysDefVal defaultVHDLOps emptyGlobalTravResult t empty []
+ return $ GlobalVHDLST sysDefVal defaultVHDLOps emptyGlobalTravResult t empty [] []
 
 -- | Empty initial traversing state 
 initVHDLTravST :: SysDefVal -> IO VHDLTravST
@@ -226,6 +230,7 @@ emptyLocalTravResult = LocalTravResult [] []
 -- | Global Results accumulated throughout the whole compilation
 data GlobalTravResult = GlobalTravResult 
  {typeDecs      :: [TypeDec], -- Types translated during the traversal
+  subtypeDecs   :: [SubtypeDec], -- Subtypes translated during the traversal
   subProgBodies :: [SubProgBody] } -- Functions or procedures generated during
                                    -- the traversal
 
@@ -233,7 +238,7 @@ data GlobalTravResult = GlobalTravResult
 
 -- | empty global VHDL compilation result
 emptyGlobalTravResult :: GlobalTravResult
-emptyGlobalTravResult = GlobalTravResult [] []
+emptyGlobalTravResult = GlobalTravResult [] [] []
 
 
 ----------
@@ -347,18 +352,56 @@ getEnumConsId consName = do
    []  -> return Nothing
    [_] -> liftM Just (liftEProne $ mkVHDLExtId consBase) 
  
--- | Add a type declaration to the global results and type translation table
-addTypeDec :: TypeRep -> TypeDec -> VHDLM ()
-addTypeDec rep typeDec@(TypeDec id _) = do
+-- | Add a cutom type to the global results and type translation table
+addCustomType :: TypeRep -> Either TypeDec SubtypeDec -> VHDLM ()
+addCustomType rep eTD = do
  globalST <- gets global 
  let transTable = typeTable globalST
      gRes = globalRes globalST 
      tDecs =  typeDecs gRes
+     stDecs = subtypeDecs gRes
  -- FIXME: use queues
- modify (\st -> st{global = globalST
+ modify (\st -> st{global = 
+                    case eTD of
+                     Left td@(TypeDec id _) -> 
+                        globalST
                              {typeTable = transTable ++ [(rep, id)],
-                              globalRes = gRes{typeDecs = tDecs ++ [typeDec]}}})
-  
+                              globalRes = gRes{typeDecs = tDecs ++ [td]}}
+                     Right std@(SubtypeDec id _) -> 
+                        globalST
+                             {typeTable = transTable ++ [(rep, id)],
+                              globalRes = gRes{subtypeDecs = stDecs ++ [std]}}
+                   })
+
+-- | Add type declaration to the global results
+addTypeDec :: TypeDec  -> VHDLM ()
+addTypeDec td = do
+ globalST <- gets global 
+ let gRes = globalRes globalST 
+     tDecs =  typeDecs gRes
+ -- FIXME: use queues
+ modify (\st -> st{global = globalST{globalRes = gRes{typeDecs = tDecs ++ [td]}}})
+
+
+-- | Add subtype declaration to the global results
+addSubtypeDec :: SubtypeDec  -> VHDLM ()
+addSubtypeDec std = do
+ globalST <- gets global 
+ let gRes = globalRes globalST 
+     stDecs =  subtypeDecs gRes
+ -- FIXME: use queues
+ modify (\st -> st{global = globalST{
+                              globalRes = gRes{subtypeDecs = stDecs ++ [std]}}})
+
+
+-- | Add an unconstrained FSVec to the global results
+addUnconsFSVec :: TypeRep -> VHDLM ()
+addUnconsFSVec trep = do
+ globalST <- gets global 
+ -- FIXME: use queues
+ modify (\st -> st{global = 
+                    globalST{
+                     transUnconsFSVecs = (transUnconsFSVecs globalST) ++ [trep]}})
 
 -- | Add a subprogram to the global results
 addSubProgBody :: SubProgBody -> VHDLM ()

@@ -61,12 +61,15 @@ genSysDesignFile globalSysId ent@(EntityDec id _) (LocalTravResult decs stms) =
 
 -- | Generate a library design file from the global results
 genLibDesignFile :: GlobalTravResult -> DesignFile
-genLibDesignFile  (GlobalTravResult typeDecs subProgBodies) = 
+genLibDesignFile  (GlobalTravResult typeDecs subtypeDecs subProgBodies) = 
    DesignFile commonContextClause [LUPackageDec packageDec, 
                                    LUPackageBody packageBody]
- where packageDec = PackageDec typesId (packageTypeDecs ++ subProgSpecs)
+ where packageDec = PackageDec typesId (packageTypeDecs ++ 
+                                        packageSubtypeDecs ++
+                                        subProgSpecs)
        packageTypeDecs = map PDITD typeDecs
-       subProgSpecs = map (\(SubProgBody spec _) -> PDISD spec) subProgBodies
+       packageSubtypeDecs = map PDISD subtypeDecs
+       subProgSpecs = map (\(SubProgBody spec _ _) -> PDISS spec) subProgBodies
        packageBody = PackageBody typesId subProgBodies
 
   
@@ -96,14 +99,26 @@ genExprFCall fName args =
    PrimFCall $ FCall (NSimple fName)  $
              map (\exp -> Nothing :=>: ADExpr exp) args
 
+
+-- | Generate a function call from the Function Name (constant function)
+genExprFCall0 :: VHDLId -> Expr
+genExprFCall0 fName = genExprFCall fName []
+
+
 -- | Generate a function call from the Function Name and an expression argument
 genExprFCall1 :: VHDLId -> Expr -> Expr
 genExprFCall1 fName arg = genExprFCall fName [arg]
 
 
--- | Generate a function call from the Function Name and two expression arguments
+-- | Generate a function call from the Function Name and four expression arguments
 genExprFCall2 :: VHDLId -> Expr -> Expr -> Expr
 genExprFCall2 fName arg1 arg2 = genExprFCall fName [arg1,arg2]
+
+
+-- | Generate a function call from the Function Name and two expression arguments
+genExprFCall4 :: VHDLId -> Expr -> Expr -> Expr -> Expr -> Expr
+genExprFCall4 fName arg1 arg2 arg3 arg4 = 
+ genExprFCall fName [arg1,arg2,arg2,arg3,arg4]
 
 
 -- Generate an association of a formal and actual parameter
@@ -111,26 +126,72 @@ genAssoc :: VHDLId -> VHDLId -> AssocElem
 genAssoc formal actual = Just formal :=>: ADName (NSimple actual)
 
 
--- | Generate the default functions for a custom vector type
+-- | Generate the default functions for an unconstrained custom vector type
 genVectorFuns :: TypeMark -- ^ type of the vector elements
-             -> Int -- ^ vector size
              -> TypeMark -- ^ type of the vector
+             -> TypeMark -- ^ type of the null vector
              -> [SubProgBody]
-genVectorFuns elemTM size vectorTM = 
-  [SubProgBody defaultSpec [defaultExpr]]
- where defaultSpec = Function defaultId [] vectorTM
+genVectorFuns elemTM vectorTM nullVectorTM = 
+  [SubProgBody defaultSpec []              [defaultExpr]  ,
+   SubProgBody exSpec      []              [exExpr]       ,
+   SubProgBody selSpec     [SPVD selVar]   [selFor,selRet],
+   SubProgBody emptySpec   [SPVD emptyVar] [emptyExpr]    ]
+ where ixPar  = unsafeVHDLBasicId "ix"
+       vecPar = unsafeVHDLBasicId "vec"
+       fPar = unsafeVHDLBasicId "f"
+       nPar = unsafeVHDLBasicId "n"
+       sPar = unsafeVHDLBasicId "s"
+       iId = unsafeVHDLBasicId "i"
+       resId = unsafeVHDLBasicId "res"
+       defaultSpec = Function defaultId [] vectorTM
        defaultExpr = 
-          ReturnSm (Just $ Aggregate (replicate size (PrimName defaultSN)))
+          ReturnSm (Just $ Aggregate [ElemAssoc (Just Others) 
+                                                (PrimName defaultSN)])
+       exSpec = Function exId [IfaceVarDec vecPar vectorTM,
+                               IfaceVarDec ixPar  naturalTM] elemTM
+       exExpr = 
+          ReturnSm (Just $ PrimName $ NIndexed 
+                        (IndexedName (NSimple vecPar) [PrimName $ NSimple ixPar]))
+       selSpec = Function selId [IfaceVarDec fPar   naturalTM,
+                                 IfaceVarDec nPar   naturalTM,
+                                 IfaceVarDec sPar   naturalTM,
+                                 IfaceVarDec vecPar vectorTM ] vectorTM
+       -- variable res : fsvec_x (0 to n-1);
+       selVar = 
+         VarDec resId 
+                (SubtypeIn vectorTM
+                  (Just $ IndexConstraint 
+                   [ToRange (PrimLit (show (0::Int)))
+                               ((PrimName (NSimple nPar)) :-:
+                                (PrimLit (show (1::Int))))   ]))
+                Nothing
+       -- for i in 0 to (n-1) loop
+       --   res(i) := vec(f+i*s);
+       -- end loop;
+       selFor = ForSM iId (AttribRange $ applyRangeAttrib resId) [selAssign]
+       -- res(i) := vec(f+i*s);
+       selAssign = let origExp = PrimName (NSimple fPar) :+: 
+                                   (PrimName (NSimple iId) :*: 
+                                    PrimName (NSimple sPar)) in
+         NIndexed (IndexedName (NSimple resId) [PrimName (NSimple iId)]) :=
+         (PrimName $ NIndexed (IndexedName (NSimple vecPar) [origExp]))
+       -- return res;
+       selRet =  ReturnSm (Just $ PrimName (NSimple resId))
+       emptySpec = Function emptyId [] nullVectorTM
+       emptyVar = VarDec resId (SubtypeIn nullVectorTM Nothing) Nothing
+       emptyExpr = ReturnSm (Just $ PrimName (NSimple resId))
+
 
 -- | Generate the default functions for a custom tuple type
 genTupleFuns :: [TypeMark] -- ^ type of each tuple element
              -> TypeMark -- ^ type of the tuple
              -> [SubProgBody]
 genTupleFuns elemTMs tupleTM = 
-  [SubProgBody defaultSpec [defaultExpr]]
+  [SubProgBody defaultSpec [] [defaultExpr]]
  where defaultSpec = Function defaultId [] tupleTM
        defaultExpr = 
-          ReturnSm (Just $ Aggregate (replicate tupSize (PrimName defaultSN)))
+          ReturnSm (Just $ Aggregate (replicate tupSize 
+                                       (ElemAssoc Nothing $ PrimName defaultSN)))
        tupSize = length elemTMs
 
 -- | Generate the default functions for a custom abst_ext_ type
@@ -138,13 +199,13 @@ genAbstExtFuns :: TypeMark -- ^ type of the values nested in AbstExt
              -> TypeMark -- ^ type of the extended values
              -> [SubProgBody]
 genAbstExtFuns elemTM absExtTM = 
-  [SubProgBody defaultSpec           [defaultExpr],
-   SubProgBody absentSpec            [absentExpr] ,
-   SubProgBody presentSpec           [presentExpr],
-   SubProgBody fromAbstExtSpec       [fromAbstExtExpr],
-   SubProgBody unsafeFromAbstExtSpec [unsafeFromAbstExtExpr],
-   SubProgBody isPresentSpec         [isPresentExpr],
-   SubProgBody isAbsentSpec          [isAbsentExpr]]
+  [SubProgBody defaultSpec           [] [defaultExpr],
+   SubProgBody absentSpec            [] [absentExpr] ,
+   SubProgBody presentSpec           [] [presentExpr],
+   SubProgBody fromAbstExtSpec       [] [fromAbstExtExpr],
+   SubProgBody unsafeFromAbstExtSpec [] [unsafeFromAbstExtExpr],
+   SubProgBody isPresentSpec         [] [isPresentExpr],
+   SubProgBody isAbsentSpec          [] [isAbsentExpr]]
 
  where defaultPar = unsafeVHDLBasicId "default"
        extPar = unsafeVHDLBasicId "extabst"
@@ -153,11 +214,14 @@ genAbstExtFuns elemTM absExtTM =
           ReturnSm (Just $ PrimName $ NSimple absentId)
        absentSpec = Function absentId [] absExtTM
        absentExpr = 
-          ReturnSm (Just $ Aggregate [falseExpr, PrimName $ defaultSN ])
+          ReturnSm (Just $ Aggregate 
+                             [ElemAssoc Nothing falseExpr, 
+                              ElemAssoc Nothing $ PrimName $ defaultSN ])
        presentSpec = 
           Function absentId [IfaceVarDec extPar elemTM] absExtTM
        presentExpr = 
-          ReturnSm (Just $ Aggregate [trueExpr, PrimName $ NSimple extPar ])
+          ReturnSm (Just $ Aggregate [ElemAssoc Nothing trueExpr, 
+                                      ElemAssoc Nothing $ PrimName $ NSimple extPar ])
        fromAbstExtSpec = Function absentId [IfaceVarDec defaultPar elemTM,
                                             IfaceVarDec extPar     absExtTM] 
                                            elemTM
@@ -192,9 +256,13 @@ genEnumAlgFuns :: TypeMark -- ^ enumeration type
              -> VHDLId -- ^ First enumeration literal of the type
              -> [SubProgBody]
 genEnumAlgFuns enumTM firstLit = 
-  [SubProgBody defaultSpec [defaultExpr]]
+  [SubProgBody defaultSpec [] [defaultExpr]]
  where defaultSpec = Function defaultId [] enumTM
        defaultExpr = ReturnSm (Just $ PrimName (NSimple firstLit))
       
 
+
+-- | Apply the range attribute  out of a simple name
+applyRangeAttrib :: SimpleName -> AttribName
+applyRangeAttrib sName = AttribName (NSimple sName) rangeId Nothing
 
