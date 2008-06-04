@@ -1,9 +1,27 @@
 \documentclass[preprint,natbib]{sigplanconf}
 
+%\usepackage[T1]{fontenc}
+\usepackage{helvet}
 \usepackage{amsmath}
 \usepackage{natbib}
+\usepackage{color}
+\usepackage{graphicx}
 \bibpunct();A{},
 \let\cite=\citep
+
+
+\graphicspath{{figures/}}
+
+% Comments (1: Comments visible in text; 0: Comments not visible in text)
+\def\commandmode{1}
+
+\ifnum \commandmode=1
+  \newcommand{\ingo}[1]{\smallskip \textbf{Comment Ingo:} \textsl{#1} \smallskip}
+  \newcommand{\alfonso}[1]{\smallskip \textbf{Comment Alfonso:} \textsl{#1} \smallskip}
+\else
+  \newcommand{\ingo}[1]{}
+  \newcommand{\alfonso}[1]{}
+\fi
 
 \begin{document}
 
@@ -18,13 +36,14 @@
 \subtitle{Deep-embedding a behavioural and polymorphic DSL in Haskell}
 
 \authorinfo{Alfonso Acosta\and Ingo Sander}
-           {Royal Institute of Technology}
+           {Royal Institute of Technology, Stockholm, Sweden}
            {\{alfonsoa,ingo\}@kth.se}
 
 \maketitle
 
 \begin{abstract}
-This is the text of the abstract.
+This paper introduces a general technique based on dynamic types and Template Haskell to deep-embed DSLs in Haskell without losing the power of polymorhic types and to describe computations in plain Haskell. We successfully applied the technique for the analysis of systems in the ForSyDe design methodology. ForSyDe system models can be described using any Haskell type for signal values and any Haskell expression to describe computations. Depending on the restrictions of the analyzer backend, the backend can either support the full language (simulation) or a restricted subset of the language (synthesis to VHDL). 
+
 \end{abstract}
 
 \category{D.3.2}{Programming Languages}{Language Classifications}[Haskell]
@@ -49,6 +68,7 @@ keyword1, keyword2
 
 
 \appendix
+
 \section{Appendix Title}
 
 This is the text of the appendix, if you need one.
@@ -57,7 +77,7 @@ This is the text of the appendix, if you need one.
 
 Acknowledgments, if needed.
 
-\bibliography{paper}
+\bibliography{paper,ref_ingo}
 \bibliographystyle{plainnat}
 
 

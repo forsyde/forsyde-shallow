@@ -1,0 +1,49 @@
+\begin{picture}(0,0)%
+\includegraphics{ProcessConstructor.pdf}%
+\end{picture}%
+\setlength{\unitlength}{3947sp}%
+%
+\begingroup\makeatletter\ifx\SetFigFontNFSS\undefined%
+\gdef\SetFigFontNFSS#1#2#3#4#5{%
+  \reset@font\fontsize{#1}{#2pt}%
+  \fontfamily{#3}\fontseries{#4}\fontshape{#5}%
+  \selectfont}%
+\fi\endgroup%
+\begin{picture}(7074,1437)(4489,-3973)
+\put(7351,-2686){\makebox(0,0)[b]{\smash{{\SetFigFontNFSS{12}{14.4}{\rmdefault}{\bfdefault}{\updefault}{\color[rgb]{0,0,0}Functions}%
+}}}}
+\put(7126,-3436){\makebox(0,0)[b]{\smash{{\SetFigFontNFSS{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}$f$}%
+}}}}
+\put(7651,-3436){\makebox(0,0)[b]{\smash{{\SetFigFontNFSS{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}$g$}%
+}}}}
+\put(8701,-2686){\makebox(0,0)[b]{\smash{{\SetFigFontNFSS{12}{14.4}{\rmdefault}{\bfdefault}{\updefault}{\color[rgb]{0,0,0}Variables}%
+}}}}
+\put(8701,-3436){\makebox(0,0)[b]{\smash{{\SetFigFontNFSS{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}$v$}%
+}}}}
+\put(6676,-3436){\makebox(0,0)[b]{\smash{{\SetFigFontNFSS{12}{14.4}{\rmdefault}{\bfdefault}{\updefault}{\color[rgb]{0,0,0}+}%
+}}}}
+\put(8101,-3436){\makebox(0,0)[b]{\smash{{\SetFigFontNFSS{12}{14.4}{\rmdefault}{\bfdefault}{\updefault}{\color[rgb]{0,0,0}+}%
+}}}}
+\put(9376,-3436){\makebox(0,0)[b]{\smash{{\SetFigFontNFSS{12}{14.4}{\rmdefault}{\bfdefault}{\updefault}{\color[rgb]{0,0,0}=}%
+}}}}
+\put(7351,-3886){\makebox(0,0)[b]{\smash{{\SetFigFontNFSS{12}{14.4}{\sfdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Computation}%
+}}}}
+\put(8701,-3886){\makebox(0,0)[b]{\smash{{\SetFigFontNFSS{12}{14.4}{\sfdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Initial State}%
+}}}}
+\put(10576,-3061){\makebox(0,0)[b]{\smash{{\SetFigFontNFSS{12}{14.4}{\sfdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}mooreSY}%
+}}}}
+\put(10351,-3361){\makebox(0,0)[b]{\smash{{\SetFigFontNFSS{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}$f$}%
+}}}}
+\put(10801,-3361){\makebox(0,0)[b]{\smash{{\SetFigFontNFSS{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}$g$}%
+}}}}
+\put(10576,-3736){\makebox(0,0)[b]{\smash{{\SetFigFontNFSS{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}$v$}%
+}}}}
+\put(10576,-2686){\makebox(0,0)[b]{\smash{{\SetFigFontNFSS{12}{14.4}{\rmdefault}{\bfdefault}{\updefault}{\color[rgb]{0,0,0}Process}%
+}}}}
+\put(5476,-3061){\makebox(0,0)[b]{\smash{{\SetFigFontNFSS{12}{14.4}{\sfdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}mooreSY}%
+}}}}
+\put(5476,-2686){\makebox(0,0)[b]{\smash{{\SetFigFontNFSS{12}{14.4}{\rmdefault}{\bfdefault}{\updefault}{\color[rgb]{0,0,0}Process Constructor}%
+}}}}
+\put(5476,-3886){\makebox(0,0)[b]{\smash{{\SetFigFontNFSS{12}{14.4}{\sfdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Communication}%
+}}}}
+\end{picture}%

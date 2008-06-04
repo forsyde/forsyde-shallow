@@ -1,0 +1,25 @@
+\begin{picture}(0,0)%
+\includegraphics{ConcurrentProcesses.pdf}%
+\end{picture}%
+\setlength{\unitlength}{4144sp}%
+%
+\begingroup\makeatletter\ifx\SetFigFontNFSS\undefined%
+\gdef\SetFigFontNFSS#1#2#3#4#5{%
+  \reset@font\fontsize{#1}{#2pt}%
+  \fontfamily{#3}\fontseries{#4}\fontshape{#5}%
+  \selectfont}%
+\fi\endgroup%
+\begin{picture}(2724,1779)(-11,-3313)
+\put(1351,-1816){\makebox(0,0)[b]{\smash{{\SetFigFontNFSS{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}$P_{Sys}$}%
+}}}}
+\put(1891,-2536){\makebox(0,0)[b]{\smash{{\SetFigFontNFSS{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}$P_2$}%
+}}}}
+\put(1936,-2941){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{9}{10.8}{\sfdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Signal}%
+}}}}
+\put(811,-2536){\makebox(0,0)[b]{\smash{{\SetFigFontNFSS{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}$P_1$}%
+}}}}
+\put(1306,-3076){\makebox(0,0)[b]{\smash{{\SetFigFontNFSS{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}$P_3$}%
+}}}}
+\put(1306,-2806){\makebox(0,0)[b]{\smash{{\SetFigFontNFSS{9}{10.8}{\sfdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Process}%
+}}}}
+\end{picture}%

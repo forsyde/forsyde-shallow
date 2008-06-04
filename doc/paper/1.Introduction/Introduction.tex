@@ -1,35 +1,83 @@
+
 \section{Introduction}
 \label{sec:Introduction}
 
 % Intro ForSyDe modeling language 
 ForSyDe is a design methodology that has been designed to raise the abstraction level of system design. It uses a behavioral system domain specific language (DSL) with polymorphic signal values, which means that signal values can be of any Haskell type.
- 
+
 % Objectives
-The initial implementation of the modeling environment was shallow embedded in Haskell, which restricted its use to simulation and did not allow to analyse the systems model. 
+The initial implementation of the modeling environment was shallow-embedded in Haskell, which restricted its use to simulation and did not allow to analyse the system model. 
 
-% Solution
-This paper introduces a general technique based on dynamic types and Template
-Haskell \cite{} to deep embed DSLs in Haskell without losing the power
-of polymorhic types (values in all deep embedded DSLs so far are
-monomorphic (check!!!)) and to describe computations in plain Haskell
-(no need to create an specific DSL for that). We successfully applied
-the technique for the analysis ForSyDe of systems. This means that
-system models can be described using any Haskell type for signal
-values and any Haskell expression to describe computations. Depending
-on the restrictions of the analyzer backend, the backend can either
-support the full language (simulation) or a restricted subset of the
-language (Synthesis to VHDL). 
+To overcome the limitations of the existing approach we decided to deep-embed ForSyDe in Haskell after studying related approaches like Lava \cite{BjeCla1998}. Of particular interest was the development of a synthesis backend to be able to automatically synthesize ForSyDe system models in the corresponding VHDL-description. 
 
-% Outcome
-% -- Compiler
-% -- Simulation
-% -- Graphical Backend
+The result of this work is a \emph{general technique} based on dynamic types and Template Haskell \cite{} that can be used to deep-embed DSLs in Haskell without losing the power of polymorhic types \footnote{So far values in all existing deep-embedded DSLs are monomorphic} and to describe computations in plain Haskell.
+ 
+We successfully applied this technique for the analysis of ForSyDe systems. ForSyDe system models can be described using any Haskell type for signal values and any Haskell expression to describe computations. Depending on the restrictions of the analyzer backend, the backend can either support the full language (simulation) or a restricted subset of the language (Synthesis to VHDL). 
 
-ForSyDe has been design as a system design methodology for heterogeneous embedded systems \cite{SanJan2004a}. A ForSyDe system model is a hierarchical concurrent process network, where processes communicate via signals. ForSyDe supports different models of computation (MoCs), which are connected via domain interfaces. The ForSyDe library comprises modeling elements for the different models of computation and is written in Haskell. 
+\section{ForSyDe}
+\label{sec:ForSyDe}
 
-%This paper presents an embedded hardware compiler for the synchronous MoC of ForSyDe. A signal is defined as a sequence of events, where each event has a tag and a value. Although ForSyDe supports several models of computation \cite{}, we focus in this paper only on the synchronous model of computation, since 
+ForSyDe (Formal System Design) \cite{SanJan2004a} is a design methodology that has been developed to raise the abstraction level of system design. A system is modeled as a hierarchical concurrent process network, where processes communicate via signals, as illustrated in Figure \ref{fig:SystemModel}.
+
+\begin{figure}[htb]
+  \centering
+  \resizebox{0.4\columnwidth}{!}{\input{figures/ConcurrentProcesses.pdf_t}}
+  \caption{A ForSyDe system model is a hierarchical process network, where processes communicate via signals.}
+  \label{fig:SystemModel}
+\end{figure}
+
+ForSyDe supports different models of computation (MoCs), which are connected via domain interfaces. The ForSyDe library contains modeling elements for the different models of computation and is written in Haskell. The current version of the deep-embedded implementation of ForSyDe uses only the synchronous model of computation, since our first objective was to be able to generate hardware from synchronous ForSyDe models.
+
+The synchronous model of computation is the base for the family of synchronous languages \cite{BenBer1991}. Prominent languages are Esterel, Lustre, Signal or Lucid Synchrone. Timing is defined by the \emph{perfect synchrony hypothesis}, which implies that output events are produced synchronously with the input events. Thus the reaction of the system to the input events takes \emph{zero time}. To be able to cope with asynchronous signals or signals with different data rates, the synchronous model defines a special value 'Absent' ($\perp$), which denotes the absence of an event.   
+
+ForSyDe signals are based on lists. A synchronous process takes in each activation cycle one event from each input signal and produces an event for each output signal. We use a special data type to model absent values similar to \texttt{Maybe}. Either the value is present and has a value or it is absent.
+
+\begin{figure}[htb]
+  \centering
+  \resizebox{\columnwidth}{!}{\input{figures/ProcessConstructor.pdf_t}}
+  \caption{A process (here \emph{mooreSY f g v}) is constructed by means of a process constructor, functions and variables.}
+  \label{fig:ProcessConstructor}
+\end{figure}
+
+Leaf processes are constructed by \emph{process constructors}, which are modelled by higher-order functions in Haskell. Figure \ref{fig:ProcessConstructor} illustrates the construction of a process that models a Moore state machine in the synchronous model of computation. The process constructor determines the interface and the model of computation. The functions $f$ and $g$ define the computation of the process in form of a function for the next state ($f$) and an output function ($g$). Finally the variable $v$ gives the initial state of the process. All processes are free from side effects, but may as the process in Figure \ref{fig:ProcessConstructor} have a local internal state. Since the system model is composed of leaf processes, it is also free from side effects.
+
+The concept of process constructors leads to a well-structured system model with a clear separation of communication and computation and has been the base for our work on design transformations \cite{SanJan2004a, RauSan2008a}. The initial proposal for synthesis for the shallow-embedded version of ForSyDe \cite{SanJan1999b} is an almost direct mapping  to VHDL-constructs. To create a VHDL component, process constructors are mapped to their corresponding VHDL templates and ForSyDe functions are translated to VHDL-functions. The ForSyDe process network, which is described as a set of equations, is finally translated into a network of VHDL components.  
 
 
 
-\cite{BjeCla1998}
+% "ForSyDe descriptions can be translated to VHDL. The initial translation approach, planned for the shallow-embedded version of ForSyDe,  was based on a mapping ruleset, in charge of translating process descriptions using VHDL templates." 
+
+ 
+% The concept of process constructors gives a number of benefits, which we use to our advantage in ForSyDe. Communication (process constructor) is separated from computation (functions).
+%\item Since the system model uses extensively higher-order functions and function composition, it gives a solid base for formal reasoning, which we have applied for design transformations. 
+%\item Process constructors can be equipped with an implementation semantics.
+%\end{itemize}
+
+% ---- Hardware Semantics of ForSyDe 
+
+
+
+
+
+
+
+% --- Synthesis, Mapping Rules
+
+
+
+ 
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
 
