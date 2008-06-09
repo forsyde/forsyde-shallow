@@ -110,6 +110,76 @@ emptyId :: VHDLId
 emptyId = unsafeVHDLBasicId "empty"
 
 
+-- | length function identifier
+lengthId :: VHDLId
+lengthId = unsafeVHDLBasicId "length"
+
+
+-- | null function identifier
+nullId :: VHDLId
+nullId = unsafeVHDLBasicId "null"
+
+
+-- | replace function identifier
+replaceId :: VHDLId
+replaceId = unsafeVHDLBasicId "replace"
+
+
+-- | head function identifier
+headId :: VHDLId
+headId = unsafeVHDLBasicId "head"
+
+
+-- | last function identifier
+lastId :: VHDLId
+lastId = unsafeVHDLBasicId "last"
+
+
+-- | init function identifier
+initId :: VHDLId
+initId = unsafeVHDLBasicId "init"
+
+
+-- | tail function identifier
+tailId :: VHDLId
+tailId = unsafeVHDLBasicId "tail"
+
+
+-- | take function identifier
+takeId :: VHDLId
+takeId = unsafeVHDLBasicId "take"
+
+
+-- | drop function identifier
+dropId :: VHDLId
+dropId = unsafeVHDLBasicId "drop"
+
+-- | shiftl function identifier
+shiftlId :: VHDLId
+shiftlId = unsafeVHDLBasicId "shiftl"
+
+-- | shiftr function identifier
+shiftrId :: VHDLId
+shiftrId = unsafeVHDLBasicId "shiftr"
+
+-- | rotl function identifier
+rotlId :: VHDLId
+rotlId = unsafeVHDLBasicId "rotl"
+
+-- | reverse function identifier
+rotrId :: VHDLId
+rotrId = unsafeVHDLBasicId "rotr"
+
+-- | reverse function identifier
+reverseId :: VHDLId
+reverseId = unsafeVHDLBasicId "reverse"
+
+
+-- | copy function identifier
+copyId :: VHDLId
+copyId = unsafeVHDLBasicId "copy"
+
+
 --------
 -- Names
 --------

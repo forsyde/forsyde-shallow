@@ -132,16 +132,34 @@ genVectorFuns :: TypeMark -- ^ type of the vector elements
              -> TypeMark -- ^ type of the null vector
              -> [SubProgBody]
 genVectorFuns elemTM vectorTM nullVectorTM = 
-  [SubProgBody defaultSpec []              [defaultExpr]  ,
-   SubProgBody exSpec      []              [exExpr]       ,
-   SubProgBody selSpec     [SPVD selVar]   [selFor,selRet],
-   SubProgBody emptySpec   [SPVD emptyVar] [emptyExpr]    ]
- where ixPar  = unsafeVHDLBasicId "ix"
+  [SubProgBody defaultSpec []              [defaultExpr]   ,
+   SubProgBody exSpec      []              [exExpr]        ,
+   SubProgBody selSpec     [SPVD selVar]   [selFor, selRet],
+   SubProgBody emptySpec   [SPVD emptyVar] [emptyExpr]     ,
+   SubProgBody lengthSpec  []              [lengthExpr]    ,
+   SubProgBody nullSpec    []              [nullExpr]      ,
+   SubProgBody replaceSpec []              [replaceExpr]   ,
+   SubProgBody headSpec    []              [headExpr]      ,
+   SubProgBody lastSpec    []              [lastExpr]      ,
+   SubProgBody initSpec    []              [initExpr]      ,
+   SubProgBody tailSpec    []              [tailExpr]      ,
+   SubProgBody takeSpec    []              [takeExpr]      ,
+   SubProgBody dropSpec    []              [dropExpr]      ,
+   SubProgBody shiftlSpec  []              [shiftlExpr]    ,
+   SubProgBody shiftrSpec  []              [shiftrExpr]    ,
+   SubProgBody rotlSpec    []              [rotlExpr]      ,
+   SubProgBody rotrSpec    []              [rotrExpr]      ,
+   SubProgBody reverseSpec []              [reverseExpr]   ,
+   SubProgBody copySpec    [SPVD copyVar]  [copyExpr]      ]
+
+ where ixPar = unsafeVHDLBasicId "ix"
        vecPar = unsafeVHDLBasicId "vec"
        fPar = unsafeVHDLBasicId "f"
        nPar = unsafeVHDLBasicId "n"
        sPar = unsafeVHDLBasicId "s"
        iId = unsafeVHDLBasicId "i"
+       iPar = iId
+       aPar = unsafeVHDLBasicId "a"
        resId = unsafeVHDLBasicId "res"
        defaultSpec = Function defaultId [] vectorTM
        defaultExpr = 
@@ -151,7 +169,7 @@ genVectorFuns elemTM vectorTM nullVectorTM =
                                IfaceVarDec ixPar  naturalTM] elemTM
        exExpr = 
           ReturnSm (Just $ PrimName $ NIndexed 
-                        (IndexedName (NSimple vecPar) [PrimName $ NSimple ixPar]))
+                      (IndexedName (NSimple vecPar) [PrimName $ NSimple ixPar]))
        selSpec = Function selId [IfaceVarDec fPar   naturalTM,
                                  IfaceVarDec nPar   naturalTM,
                                  IfaceVarDec sPar   naturalTM,
@@ -161,9 +179,9 @@ genVectorFuns elemTM vectorTM nullVectorTM =
          VarDec resId 
                 (SubtypeIn vectorTM
                   (Just $ IndexConstraint 
-                   [ToRange (PrimLit (show (0::Int)))
+                   [ToRange (PrimLit (show "0"))
                                ((PrimName (NSimple nPar)) :-:
-                                (PrimLit (show (1::Int))))   ]))
+                                (PrimLit "1"))   ]))
                 Nothing
        -- for i in 0 to (n-1) loop
        --   res(i) := vec(f+i*s);
@@ -180,8 +198,126 @@ genVectorFuns elemTM vectorTM nullVectorTM =
        emptySpec = Function emptyId [] nullVectorTM
        emptyVar = VarDec resId (SubtypeIn nullVectorTM Nothing) Nothing
        emptyExpr = ReturnSm (Just $ PrimName (NSimple resId))
-
-
+       lengthSpec = Function lengthId [IfaceVarDec vecPar vectorTM] naturalTM
+       lengthExpr = ReturnSm (Just $ PrimName (NAttribute $ 
+                                AttribName (NSimple vecPar) lengthId Nothing))
+       nullSpec = Function nullId [IfaceVarDec vecPar vectorTM] booleanTM
+       -- return vec'length = 0
+       nullExpr = ReturnSm (Just $ 
+                        PrimName (NAttribute $ 
+                              AttribName (NSimple vecPar) lengthId Nothing) :=:
+                        PrimLit "0")
+       replaceSpec = Function replaceId [IfaceVarDec vecPar vectorTM,
+                                         IfaceVarDec iPar   naturalTM,
+                                         IfaceVarDec aPar   elemTM   ] vectorTM 
+       -- return vec(0 to i-1) & a & vec(i+1 to length'vec-1)
+       replaceExpr = ReturnSm (Just $
+           vecSlice (PrimLit "0") (PrimName (NSimple iPar) :-: PrimLit "1") :&:
+            PrimName (NSimple aPar) :&: 
+             vecSlice (PrimName (NSimple iPar) :+: PrimLit "1")
+                          ((PrimName (NAttribute $ 
+                                AttribName (NSimple vecPar) lengthId Nothing)) 
+                                                              :-: PrimLit "1")) 
+       vecSlice init last =  PrimName (NSlice 
+                                        (SliceName 
+                                              (NSimple vecPar) 
+                                              (ToRange init last)))
+       headSpec = Function headId [IfaceVarDec vecPar vectorTM] elemTM
+       -- return vec(0);
+       headExpr = ReturnSm (Just $ (PrimName $ NIndexed (IndexedName 
+                    (NSimple vecPar) [PrimLit "0"])))
+       lastSpec = Function lastId [IfaceVarDec vecPar vectorTM] elemTM
+       -- return vec(vec'length-1);
+       lastExpr = ReturnSm (Just $ (PrimName $ NIndexed (IndexedName 
+                    (NSimple vecPar) 
+                    [PrimName (NAttribute $ 
+                                AttribName (NSimple vecPar) lengthId Nothing) 
+                                                             :-: PrimLit "1"])))
+       initSpec = Function initId [IfaceVarDec vecPar vectorTM] vectorTM 
+       -- return vec(0 to vec'length-2)
+       initExpr = ReturnSm (Just $ vecSlice 
+                               (PrimLit "0") 
+                               (PrimName (NAttribute $ 
+                                  AttribName (NSimple vecPar) lengthId Nothing) 
+                                                             :-: PrimLit "2"))
+       tailSpec = Function tailId [IfaceVarDec vecPar vectorTM] vectorTM 
+       -- return vec(1 to vec'length-1)
+       tailExpr = ReturnSm (Just $ vecSlice 
+                               (PrimLit "1") 
+                               (PrimName (NAttribute $ 
+                                  AttribName (NSimple vecPar) lengthId Nothing) 
+                                                             :-: PrimLit "1"))
+       takeSpec = Function takeId [IfaceVarDec nPar   naturalTM,
+                                   IfaceVarDec vecPar vectorTM ] vectorTM
+       -- return vec(0 to n-1)
+       takeExpr = ReturnSm (Just $ vecSlice 
+                               (PrimLit "1") 
+                               (PrimName (NSimple $ nPar) :-: PrimLit "1")) 
+       dropSpec = Function dropId [IfaceVarDec nPar   naturalTM,
+                                   IfaceVarDec vecPar vectorTM ] vectorTM 
+       -- return vec(n to vec'length-1)
+       dropExpr = ReturnSm (Just $ vecSlice 
+                               (PrimName $ NSimple nPar) 
+                               (PrimName (NAttribute $ 
+                                  AttribName (NSimple vecPar) lengthId Nothing) 
+                                                             :-: PrimLit "1"))
+       shiftlSpec = Function shiftlId [IfaceVarDec vecPar vectorTM,
+                                       IfaceVarDec aPar   elemTM  ] vectorTM 
+       -- return a & init(vec)
+       shiftlExpr = ReturnSm (Just $ 
+                      PrimName (NSimple aPar) :&:
+                      genExprFCall1 initId (PrimName $ NSimple vecPar))
+       shiftrSpec = Function shiftrId [IfaceVarDec vecPar vectorTM,
+                                       IfaceVarDec aPar   elemTM  ] vectorTM 
+       -- return tail(vec) & a
+       shiftrExpr = ReturnSm (Just $ 
+                      genExprFCall1 tailId (PrimName $ NSimple vecPar) :&:
+                      PrimName (NSimple aPar))
+       rotlSpec = Function rotlId [IfaceVarDec vecPar vectorTM] vectorTM 
+       -- if null(vec) then vec else return last(vec) & init(vec)
+       rotlExpr = IfSm (genExprFCall1 nullId (PrimName $ NSimple vecPar)) 
+                       [ReturnSm (Just $ (PrimName $ NSimple vecPar))]
+                       []
+                       (Just $ Else [rotlExprRet])
+        where rotlExprRet = 
+                  ReturnSm (Just $ 
+                          genExprFCall1 lastId (PrimName $ NSimple vecPar) :&:
+                          genExprFCall1 initId (PrimName $ NSimple vecPar))
+       rotrSpec = Function rotlId [IfaceVarDec vecPar vectorTM] vectorTM 
+       -- if null(vec) then return vec else return tail(vec) & head(vec)
+       rotrExpr = IfSm (genExprFCall1 nullId (PrimName $ NSimple vecPar)) 
+                       [ReturnSm (Just $ (PrimName $ NSimple vecPar))]
+                       []
+                       (Just $ Else [rotrExprRet])  
+        where rotrExprRet = 
+                  ReturnSm (Just $ 
+                      genExprFCall1 lastId (PrimName $ NSimple vecPar) :&:
+                      genExprFCall1 initId (PrimName $ NSimple vecPar))
+       reverseSpec = Function reverseId [IfaceVarDec vecPar vectorTM] vectorTM
+       -- if null(vec) the return vec else return reverse(vec) & head(vec) 
+       reverseExpr = IfSm (genExprFCall1 nullId (PrimName $ NSimple vecPar)) 
+                       [ReturnSm (Just $ (PrimName $ NSimple vecPar))]
+                       []
+                       (Just $ Else [reverseExprRet])  
+        where reverseExprRet = 
+                  ReturnSm (Just $ 
+                      genExprFCall1 reverseId (PrimName $ NSimple vecPar) :&:
+                      genExprFCall1 headId (PrimName $ NSimple vecPar))      
+       copySpec = Function copyId [IfaceVarDec nPar   naturalTM,
+                                      IfaceVarDec aPar   elemTM   ] vectorTM 
+       -- variable res : fsvec_x (0 to n-1) := (others => a);
+       copyVar = 
+         VarDec resId 
+                (SubtypeIn vectorTM
+                  (Just $ IndexConstraint 
+                   [ToRange (PrimLit (show "0"))
+                               ((PrimName (NSimple nPar)) :-:
+                                (PrimLit "1"))   ]))
+                (Just $ Aggregate [ElemAssoc (Just Others) 
+                                             (PrimName $ NSimple aPar)])
+       -- return res
+       copyExpr = ReturnSm (Just $ PrimName $ NSimple resId)
+                
 -- | Generate the default functions for a custom tuple type
 genTupleFuns :: [TypeMark] -- ^ type of each tuple element
              -> TypeMark -- ^ type of the tuple
@@ -206,7 +342,6 @@ genAbstExtFuns elemTM absExtTM =
    SubProgBody unsafeFromAbstExtSpec [] [unsafeFromAbstExtExpr],
    SubProgBody isPresentSpec         [] [isPresentExpr],
    SubProgBody isAbsentSpec          [] [isAbsentExpr]]
-
  where defaultPar = unsafeVHDLBasicId "default"
        extPar = unsafeVHDLBasicId "extabst"
        defaultSpec = Function defaultId [] absExtTM

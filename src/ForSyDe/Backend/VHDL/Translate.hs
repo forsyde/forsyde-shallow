@@ -364,8 +364,8 @@ doCustomTR2TM rep | isFSVec = do
       -- create the null subtype and add it to the results as well
       let nullVectorId = unsafeVHDLBasicId ("fsvec_0_"++ fromVHDLId valTM)
           nullVectorSubtype =  SubtypeDec nullVectorId (SubtypeIn vectorId 
-              (Just $ IndexConstraint [ToRange (PrimLit (show (1 :: Int)))
-                                               (PrimLit (show (0 :: Int))) ]))
+              (Just $ IndexConstraint [ToRange (PrimLit (show "1"))
+                                               (PrimLit (show "0")) ]))
       addSubtypeDec $ nullVectorSubtype
       -- Add the default functions for the vector type to the global results
       let funs =  genVectorFuns valTM vectorId nullVectorId
@@ -379,7 +379,7 @@ doCustomTR2TM rep | isFSVec = do
  -- Create the vector subtype declaration
  return $ Right $ 
      SubtypeDec subvectorId (SubtypeIn vectorId 
-              (Just $ IndexConstraint [ToRange (PrimLit (show (0 ::Int)))
+              (Just $ IndexConstraint [ToRange (PrimLit (show "0"))
                                                (PrimLit (show $ size-1)) ]))
    where (cons, ~[sizeType,valueType]) = splitTyConApp rep
          isFSVec = cons == fSVecTyCon
@@ -823,39 +823,58 @@ validQuatFuns = [('V.select, genExprFCall4 selId)]
 
 -- | Translation table of valid binary functions
 validBinaryFuns :: [(TH.Name, (Expr -> Expr -> Expr))]
-validBinaryFuns = [('(&&)  , And   ),
-                   ('(||)  , Or    ),
-                   ('(.&.) , And   ),
-                   ('(.|.) , Or    ),
-                   ('xor   , Xor   ),
-                   ('(==)  , (:=:) ),
-                   ('(/=)  , (:/=:)),
-                   ('(<)   , (:<:) ), 
-                   ('(<=)  , (:<=:)),
-                   ('(>)   , (:>:) ),
-                   ('(>=)  , (:>=:)),  
-                   ('(+)   , (:+:) ),
-                   ('(-)   , (:-:) ),
-                   ('(*)   , (:*:) ),
-                   ('div   , (:/:) ),
-                   ('mod   , (Mod) ),
-                   ('rem   , (Rem) ),
-                   ('(^)   , (:**:)),
-                   ('(V.+>), (:&:) ),
-                   ('(V.<+), (:&:) ),
-                   ('(V.++), (:&:) ),
-                   ('(V.!) , genExprFCall2 exId)]
+validBinaryFuns = [('(&&)  ,   And   ),
+                   ('(||)  ,   Or    ),
+                   ('(.&.) ,   And   ),
+                   ('(.|.) ,   Or    ),
+                   ('xor   ,   Xor   ),
+                   ('(==)  ,   (:=:) ),
+                   ('(/=)  ,   (:/=:)),
+                   ('(<)   ,   (:<:) ), 
+                   ('(<=)  ,   (:<=:)),
+                   ('(>)   ,   (:>:) ),
+                   ('(>=)  ,   (:>=:)),  
+                   ('(+)   ,   (:+:) ),
+                   ('(-)   ,   (:-:) ),
+                   ('(*)   ,   (:*:) ),
+                   ('div   ,   (:/:) ),
+                   ('mod   ,   (Mod) ),
+                   ('rem   ,   (Rem) ),
+                   ('(^)   ,   (:**:)),
+                   ('(V.+>),   (:&:) ),
+                   ('(V.<+),   (:&:) ),
+                   ('(V.++),   (:&:) ),
+                   ('(V.!) ,   genExprFCall2 exId),
+                   ('V.take,   genExprFCall2 takeId),
+                   ('V.drop,   genExprFCall2 dropId),
+                   ('V.shiftl, genExprFCall2 shiftlId),
+                   ('V.shiftr, genExprFCall2 shiftrId),
+                   ('V.copy,   genExprFCall2 copyId)]
 
 
 -- | Translation table of valid unary functions
 validUnaryFuns :: [(TH.Name, (Expr -> Expr))]
-validUnaryFuns = [('B.not , Not  ),
-                  ('not   , Not  ),
-                  ('negate, Neg  ),
-                  ('abs   , Abs  ),
-                  ('abstExt, genExprFCall1 presentId),
-                  ('V.singleton, inlineSingleton) ]
+validUnaryFuns = [('B.not ,          Not  ),
+                  ('not   ,          Not  ),
+                  ('negate,          Neg  ),
+                  ('abs   ,          Abs  ),
+                  ('abstExt,         genExprFCall1 presentId),
+                  ('V.singleton,     inlineSingleton),
+                  ('V.length,        genExprFCall1 lengthId),
+                  ('V.lengthT,       genExprFCall1 lengthId),
+                  ('V.genericLength, genExprFCall1 lengthId),
+                  ('V.null,          genExprFCall1 nullId),
+                  ('V.head,          genExprFCall1 headId),
+                  ('V.last,          genExprFCall1 lastId),
+                  ('V.init,          genExprFCall1 initId),
+                  ('V.tail,          genExprFCall1 tailId),
+                  ('V.rotl,          genExprFCall1 rotlId),
+                  ('V.rotr,          genExprFCall1 rotrId),
+                  ('V.reverse,       genExprFCall1 reverseId)]
  where inlineSingleton expr = expr :&: genExprFCall0 emptyId
+
+       
+       
 
 -- | Translation table of valid Constants
 validConstants :: [(TH.Name, Expr)]
