@@ -4,6 +4,8 @@ use ieee.std_logic_1164.all;
   
 package types is
 
+  
+  
 -- Commented out due to representation overflow (modelsim integers
 -- are 32bits long)
 --  type int64 is range -(2**(64-1)) to +(2**(64-1)-1);  -- 64 bit integers 
@@ -22,6 +24,12 @@ package types is
 
   function default return std_logic;
 
+  function default return boolean;
+
+  -- Indexes for unconstrained fsvecs:
+  --  -1 is used to express the null vector, with bounds (0 to -1)
+  subtype fsvec_index is integer range -1 to integer'high;
+  
 end types;
 
 package body types is
@@ -51,6 +59,11 @@ package body types is
   function default return std_logic is
   begin
    return '0';
+  end default;
+
+  function default return boolean is
+  begin
+   return true;
   end default;
 
   
