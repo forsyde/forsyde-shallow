@@ -206,8 +206,7 @@ genVectorFuns elemTM vectorTM  =
                 (SubtypeIn vectorTM
                   (Just $ IndexConstraint 
                    [ToRange (PrimLit "0")
-                               ((PrimName (NSimple nPar)) :-:
-                                (PrimLit "-1"))   ]))
+                            (PrimLit "-1")]))
                 Nothing
        emptyExpr = ReturnSm (Just $ PrimName (NSimple resId))
        lengthSpec = Function lengthId [IfaceVarDec vecPar vectorTM] naturalTM
@@ -493,13 +492,14 @@ genVectorFuns elemTM vectorTM  =
        plusplusRet = ReturnSm (Just $ PrimName $ NSimple resId)
        singletonSpec = Function singletonId [IfaceVarDec aPar elemTM ] 
                                             vectorTM
-       -- variable res : fsvec_x (0 to 0);
+       -- variable res : fsvec_x (0 to 0) := (others => a);
        singletonVar = 
          VarDec resId 
                 (SubtypeIn vectorTM
                   (Just $ IndexConstraint 
                    [ToRange (PrimLit "0") (PrimLit "0")]))
-                (Just $ Aggregate [ElemAssoc Nothing (PrimName $ NSimple aPar)])
+                (Just $ Aggregate [ElemAssoc (Just Others) 
+                                             (PrimName $ NSimple aPar)])
        singletonRet = ReturnSm (Just $ PrimName $ NSimple resId)
     
                 
