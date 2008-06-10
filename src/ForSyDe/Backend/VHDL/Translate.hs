@@ -360,15 +360,9 @@ doCustomTR2TM rep | isFSVec = do
  when (not $ elem valueType vecs) $ do
       -- create the unconstrained vector type and add it to the global
       -- results
-      addTypeDec $ TypeDec vectorId (TDA (UnconsArrayDef [naturalTM] valTM))
-      -- create the null subtype and add it to the results as well
-      let nullVectorId = unsafeVHDLBasicId ("fsvec_0_"++ fromVHDLId valTM)
-          nullVectorSubtype =  SubtypeDec nullVectorId (SubtypeIn vectorId 
-              (Just $ IndexConstraint [ToRange (PrimLit (show "1"))
-                                               (PrimLit (show "0")) ]))
-      addSubtypeDec $ nullVectorSubtype
+      addTypeDec $ TypeDec vectorId (TDA (UnconsArrayDef [fsvec_indexTM] valTM))
       -- Add the default functions for the vector type to the global results
-      let funs =  genVectorFuns valTM vectorId nullVectorId
+      let funs =  genVectorFuns valTM vectorId
       mapM_ addSubProgBody funs
       -- Mark the unconstrained array as translated
       addUnconsFSVec valueType
@@ -379,7 +373,7 @@ doCustomTR2TM rep | isFSVec = do
  -- Create the vector subtype declaration
  return $ Right $ 
      SubtypeDec subvectorId (SubtypeIn vectorId 
-              (Just $ IndexConstraint [ToRange (PrimLit (show "0"))
+              (Just $ IndexConstraint [ToRange (PrimLit "0")
                                                (PrimLit (show $ size-1)) ]))
    where (cons, ~[sizeType,valueType]) = splitTyConApp rep
          isFSVec = cons == fSVecTyCon
@@ -841,9 +835,9 @@ validBinaryFuns = [('(&&)  ,   And   ),
                    ('mod   ,   (Mod) ),
                    ('rem   ,   (Rem) ),
                    ('(^)   ,   (:**:)),
-                   ('(V.+>),   (:&:) ),
-                   ('(V.<+),   (:&:) ),
-                   ('(V.++),   (:&:) ),
+                   ('(V.+>),   genExprFCall2 plusgtId),
+                   ('(V.<+),   genExprFCall2 ltplusId),
+                   ('(V.++),   genExprFCall2 plusplusId),
                    ('(V.!) ,   genExprFCall2 exId),
                    ('V.take,   genExprFCall2 takeId),
                    ('V.drop,   genExprFCall2 dropId),
@@ -859,11 +853,11 @@ validUnaryFuns = [('B.not ,          Not  ),
                   ('negate,          Neg  ),
                   ('abs   ,          Abs  ),
                   ('abstExt,         genExprFCall1 presentId),
-                  ('V.singleton,     inlineSingleton),
+                  ('V.singleton,     genExprFCall1 singletonId),
                   ('V.length,        genExprFCall1 lengthId),
                   ('V.lengthT,       genExprFCall1 lengthId),
                   ('V.genericLength, genExprFCall1 lengthId),
-                  ('V.null,          genExprFCall1 nullId),
+                  ('V.null,          genExprFCall1 isnullId),
                   ('V.head,          genExprFCall1 headId),
                   ('V.last,          genExprFCall1 lastId),
                   ('V.init,          genExprFCall1 initId),
@@ -871,7 +865,7 @@ validUnaryFuns = [('B.not ,          Not  ),
                   ('V.rotl,          genExprFCall1 rotlId),
                   ('V.rotr,          genExprFCall1 rotrId),
                   ('V.reverse,       genExprFCall1 reverseId)]
- where inlineSingleton expr = expr :&: genExprFCall0 emptyId
+
 
        
        

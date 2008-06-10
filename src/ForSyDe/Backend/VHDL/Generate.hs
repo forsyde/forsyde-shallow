@@ -129,31 +129,36 @@ genAssoc formal actual = Just formal :=>: ADName (NSimple actual)
 -- | Generate the default functions for an unconstrained custom vector type
 genVectorFuns :: TypeMark -- ^ type of the vector elements
              -> TypeMark -- ^ type of the vector
-             -> TypeMark -- ^ type of the null vector
              -> [SubProgBody]
-genVectorFuns elemTM vectorTM nullVectorTM = 
-  [SubProgBody defaultSpec []              [defaultExpr]   ,
-   SubProgBody exSpec      []              [exExpr]        ,
-   SubProgBody selSpec     [SPVD selVar]   [selFor, selRet],
-   SubProgBody emptySpec   [SPVD emptyVar] [emptyExpr]     ,
-   SubProgBody lengthSpec  []              [lengthExpr]    ,
-   SubProgBody nullSpec    []              [nullExpr]      ,
-   SubProgBody replaceSpec []              [replaceExpr]   ,
-   SubProgBody headSpec    []              [headExpr]      ,
-   SubProgBody lastSpec    []              [lastExpr]      ,
-   SubProgBody initSpec    []              [initExpr]      ,
-   SubProgBody tailSpec    []              [tailExpr]      ,
-   SubProgBody takeSpec    []              [takeExpr]      ,
-   SubProgBody dropSpec    []              [dropExpr]      ,
-   SubProgBody shiftlSpec  []              [shiftlExpr]    ,
-   SubProgBody shiftrSpec  []              [shiftrExpr]    ,
-   SubProgBody rotlSpec    []              [rotlExpr]      ,
-   SubProgBody rotrSpec    []              [rotrExpr]      ,
-   SubProgBody reverseSpec []              [reverseExpr]   ,
-   SubProgBody copySpec    [SPVD copyVar]  [copyExpr]      ]
+genVectorFuns elemTM vectorTM  = 
+  [SubProgBody defaultSpec   []                  [defaultExpr]               ,
+   SubProgBody exSpec        []                  [exExpr]                    ,
+   SubProgBody selSpec       [SPVD selVar]       [selFor, selRet]            ,
+   SubProgBody emptySpec     [SPVD emptyVar]     [emptyExpr]                 ,
+   SubProgBody lengthSpec    []                  [lengthExpr]                ,
+   SubProgBody isnullSpec    []                  [isnullExpr]                ,
+   SubProgBody replaceSpec   [SPVD replaceVar]   [replaceExpr, replaceRet]   ,
+   SubProgBody headSpec      []                  [headExpr]                  ,
+   SubProgBody lastSpec      []                  [lastExpr]                  ,
+   SubProgBody initSpec      [SPVD initVar]      [initExpr, initRet]         ,
+   SubProgBody tailSpec      [SPVD tailVar]      [tailExpr, tailRet]         ,
+   SubProgBody takeSpec      [SPVD takeVar]      [takeExpr, takeRet]         ,
+   SubProgBody dropSpec      [SPVD dropVar]      [dropExpr, dropRet]         ,
+   SubProgBody shiftlSpec    [SPVD shiftlVar]    [shiftlExpr, shiftlRet]     ,
+   SubProgBody shiftrSpec    [SPVD shiftrVar]    [shiftrExpr, shiftrRet]     ,
+   SubProgBody rotlSpec      [SPVD rotlVar]      [rotlExpr, rotlRet]         ,
+   SubProgBody rotrSpec      [SPVD rotrVar]      [rotrExpr, rotrRet]         ,
+   SubProgBody reverseSpec   [SPVD reverseVar]   [reverseFor, reverseRet]    ,
+   SubProgBody copySpec      [SPVD copyVar]      [copyExpr]                  ,
+   SubProgBody plusgtSpec    [SPVD plusgtVar]    [plusgtExpr, plusgtRet]     ,
+   SubProgBody ltplusSpec    [SPVD ltplusVar]    [ltplusExpr, ltplusRet]     ,
+   SubProgBody plusplusSpec  [SPVD plusplusVar]  [plusplusExpr, plusplusRet] ,
+   SubProgBody singletonSpec [SPVD singletonVar] [singletonRet] ]
 
  where ixPar = unsafeVHDLBasicId "ix"
        vecPar = unsafeVHDLBasicId "vec"
+       vec1Par = unsafeVHDLBasicId "vec1"
+       vec2Par = unsafeVHDLBasicId "vec2"
        fPar = unsafeVHDLBasicId "f"
        nPar = unsafeVHDLBasicId "n"
        sPar = unsafeVHDLBasicId "s"
@@ -179,11 +184,11 @@ genVectorFuns elemTM vectorTM nullVectorTM =
          VarDec resId 
                 (SubtypeIn vectorTM
                   (Just $ IndexConstraint 
-                   [ToRange (PrimLit (show "0"))
+                   [ToRange (PrimLit "0")
                                ((PrimName (NSimple nPar)) :-:
                                 (PrimLit "1"))   ]))
                 Nothing
-       -- for i in 0 to (n-1) loop
+       -- for i res'range loop
        --   res(i) := vec(f+i*s);
        -- end loop;
        selFor = ForSM iId (AttribRange $ applyRangeAttrib resId) [selAssign]
@@ -195,29 +200,47 @@ genVectorFuns elemTM vectorTM nullVectorTM =
          (PrimName $ NIndexed (IndexedName (NSimple vecPar) [origExp]))
        -- return res;
        selRet =  ReturnSm (Just $ PrimName (NSimple resId))
-       emptySpec = Function emptyId [] nullVectorTM
-       emptyVar = VarDec resId (SubtypeIn nullVectorTM Nothing) Nothing
+       emptySpec = Function emptyId [] vectorTM
+       emptyVar = 
+            VarDec resId 
+                (SubtypeIn vectorTM
+                  (Just $ IndexConstraint 
+                   [ToRange (PrimLit "0")
+                               ((PrimName (NSimple nPar)) :-:
+                                (PrimLit "-1"))   ]))
+                Nothing
        emptyExpr = ReturnSm (Just $ PrimName (NSimple resId))
        lengthSpec = Function lengthId [IfaceVarDec vecPar vectorTM] naturalTM
        lengthExpr = ReturnSm (Just $ PrimName (NAttribute $ 
                                 AttribName (NSimple vecPar) lengthId Nothing))
-       nullSpec = Function nullId [IfaceVarDec vecPar vectorTM] booleanTM
+       isnullSpec = Function isnullId [IfaceVarDec vecPar vectorTM] booleanTM
        -- return vec'length = 0
-       nullExpr = ReturnSm (Just $ 
+       isnullExpr = ReturnSm (Just $ 
                         PrimName (NAttribute $ 
                               AttribName (NSimple vecPar) lengthId Nothing) :=:
                         PrimLit "0")
        replaceSpec = Function replaceId [IfaceVarDec vecPar vectorTM,
                                          IfaceVarDec iPar   naturalTM,
                                          IfaceVarDec aPar   elemTM   ] vectorTM 
-       -- return vec(0 to i-1) & a & vec(i+1 to length'vec-1)
-       replaceExpr = ReturnSm (Just $
-           vecSlice (PrimLit "0") (PrimName (NSimple iPar) :-: PrimLit "1") :&:
+       -- variable res : fsvec_x (0 to vec'length-1);
+       replaceVar =
+         VarDec resId 
+                (SubtypeIn vectorTM
+                  (Just $ IndexConstraint 
+                   [ToRange (PrimLit "0")
+                            (PrimName (NAttribute $ 
+                              AttribName (NSimple vecPar) lengthId Nothing) :-:
+                                (PrimLit "1"))   ]))
+                Nothing
+       --  res := vec(0 to i-1) & a & vec(i+1 to length'vec-1)
+       replaceExpr = NSimple resId :=
+           (vecSlice (PrimLit "0") (PrimName (NSimple iPar) :-: PrimLit "1") :&:
             PrimName (NSimple aPar) :&: 
              vecSlice (PrimName (NSimple iPar) :+: PrimLit "1")
-                          ((PrimName (NAttribute $ 
+                      ((PrimName (NAttribute $ 
                                 AttribName (NSimple vecPar) lengthId Nothing)) 
-                                                              :-: PrimLit "1")) 
+                                                              :-: PrimLit "1"))
+       replaceRet =  ReturnSm (Just $ PrimName $ NSimple resId)
        vecSlice init last =  PrimName (NSlice 
                                         (SliceName 
                                               (NSimple vecPar) 
@@ -234,75 +257,177 @@ genVectorFuns elemTM vectorTM nullVectorTM =
                                 AttribName (NSimple vecPar) lengthId Nothing) 
                                                              :-: PrimLit "1"])))
        initSpec = Function initId [IfaceVarDec vecPar vectorTM] vectorTM 
-       -- return vec(0 to vec'length-2)
-       initExpr = ReturnSm (Just $ vecSlice 
+       -- variable res : fsvec_x (0 to vec'length-2);
+       initVar = 
+         VarDec resId 
+                (SubtypeIn vectorTM
+                  (Just $ IndexConstraint 
+                   [ToRange (PrimLit "0")
+                            (PrimName (NAttribute $ 
+                              AttribName (NSimple vecPar) lengthId Nothing) :-:
+                                (PrimLit "2"))   ]))
+                Nothing
+       -- res:= vec(0 to vec'length-2)
+       initExpr = NSimple resId := (vecSlice 
                                (PrimLit "0") 
                                (PrimName (NAttribute $ 
                                   AttribName (NSimple vecPar) lengthId Nothing) 
                                                              :-: PrimLit "2"))
-       tailSpec = Function tailId [IfaceVarDec vecPar vectorTM] vectorTM 
+       initRet =  ReturnSm (Just $ PrimName $ NSimple resId)
+       tailSpec = Function tailId [IfaceVarDec vecPar vectorTM] vectorTM
+       -- variable res : fsvec_x (0 to vec'length-2); 
+       tailVar = 
+         VarDec resId 
+                (SubtypeIn vectorTM
+                  (Just $ IndexConstraint 
+                   [ToRange (PrimLit "0")
+                            (PrimName (NAttribute $ 
+                              AttribName (NSimple vecPar) lengthId Nothing) :-:
+                                (PrimLit "2"))   ]))
+                Nothing       
        -- return vec(1 to vec'length-1)
        tailExpr = ReturnSm (Just $ vecSlice 
                                (PrimLit "1") 
                                (PrimName (NAttribute $ 
                                   AttribName (NSimple vecPar) lengthId Nothing) 
                                                              :-: PrimLit "1"))
+       tailRet = ReturnSm (Just $ PrimName $ NSimple resId)
        takeSpec = Function takeId [IfaceVarDec nPar   naturalTM,
                                    IfaceVarDec vecPar vectorTM ] vectorTM
-       -- return vec(0 to n-1)
-       takeExpr = ReturnSm (Just $ vecSlice 
-                               (PrimLit "1") 
-                               (PrimName (NSimple $ nPar) :-: PrimLit "1")) 
+       -- variable res : fsvec_x (0 to n-1);
+       takeVar = 
+         VarDec resId 
+                (SubtypeIn vectorTM
+                  (Just $ IndexConstraint 
+                   [ToRange (PrimLit "0")
+                               ((PrimName (NSimple nPar)) :-:
+                                (PrimLit "1"))   ]))
+                Nothing
+       -- res := vec(0 to n-1)
+       takeExpr = NSimple resId := 
+                    (vecSlice (PrimLit "1") 
+                              (PrimName (NSimple $ nPar) :-: PrimLit "1"))
+       takeRet =  ReturnSm (Just $ PrimName $ NSimple resId)
        dropSpec = Function dropId [IfaceVarDec nPar   naturalTM,
                                    IfaceVarDec vecPar vectorTM ] vectorTM 
-       -- return vec(n to vec'length-1)
-       dropExpr = ReturnSm (Just $ vecSlice 
+       -- variable res : fsvec_x (0 to vec'length-n-1);
+       dropVar = 
+         VarDec resId 
+                (SubtypeIn vectorTM
+                  (Just $ IndexConstraint 
+                   [ToRange (PrimLit "0")
+                            (PrimName (NAttribute $ 
+                              AttribName (NSimple vecPar) lengthId Nothing) :-:
+                               (PrimName $ NSimple nPar):-: (PrimLit "1")) ]))
+               Nothing
+       -- res := vec(n to vec'length-1)
+       dropExpr = NSimple resId := (vecSlice 
                                (PrimName $ NSimple nPar) 
                                (PrimName (NAttribute $ 
                                   AttribName (NSimple vecPar) lengthId Nothing) 
                                                              :-: PrimLit "1"))
+       dropRet =  ReturnSm (Just $ PrimName $ NSimple resId)
        shiftlSpec = Function shiftlId [IfaceVarDec vecPar vectorTM,
                                        IfaceVarDec aPar   elemTM  ] vectorTM 
-       -- return a & init(vec)
-       shiftlExpr = ReturnSm (Just $ 
-                      PrimName (NSimple aPar) :&:
-                      genExprFCall1 initId (PrimName $ NSimple vecPar))
+       -- variable res : fsvec_x (0 to vec'length-1);
+       shiftlVar = 
+         VarDec resId 
+                (SubtypeIn vectorTM
+                  (Just $ IndexConstraint 
+                   [ToRange (PrimLit "0")
+                            (PrimName (NAttribute $ 
+                              AttribName (NSimple vecPar) lengthId Nothing) :-:
+                               (PrimLit "1")) ]))
+                Nothing
+       -- res := a & init(vec)
+       shiftlExpr = NSimple resId :=
+                      (PrimName (NSimple aPar) :&:
+                       genExprFCall1 initId (PrimName $ NSimple vecPar))
+       shiftlRet =  ReturnSm (Just $ PrimName $ NSimple resId)       
        shiftrSpec = Function shiftrId [IfaceVarDec vecPar vectorTM,
                                        IfaceVarDec aPar   elemTM  ] vectorTM 
-       -- return tail(vec) & a
-       shiftrExpr = ReturnSm (Just $ 
-                      genExprFCall1 tailId (PrimName $ NSimple vecPar) :&:
-                      PrimName (NSimple aPar))
+       -- variable res : fsvec_x (0 to vec'length-1);
+       shiftrVar = 
+         VarDec resId 
+                (SubtypeIn vectorTM
+                  (Just $ IndexConstraint 
+                   [ToRange (PrimLit "0")
+                            (PrimName (NAttribute $ 
+                              AttribName (NSimple vecPar) lengthId Nothing) :-:
+                               (PrimLit "1")) ]))
+                Nothing
+       -- res := tail(vec) & a
+       shiftrExpr = NSimple resId :=
+                      (genExprFCall1 tailId (PrimName $ NSimple vecPar) :&:
+                       PrimName (NSimple aPar))
+       shiftrRet =  ReturnSm (Just $ PrimName $ NSimple resId)       
        rotlSpec = Function rotlId [IfaceVarDec vecPar vectorTM] vectorTM 
-       -- if null(vec) then vec else return last(vec) & init(vec)
-       rotlExpr = IfSm (genExprFCall1 nullId (PrimName $ NSimple vecPar)) 
-                       [ReturnSm (Just $ (PrimName $ NSimple vecPar))]
+       -- variable res : fsvec_x (0 to vec'length-1);
+       rotlVar = 
+         VarDec resId 
+                (SubtypeIn vectorTM
+                  (Just $ IndexConstraint 
+                   [ToRange (PrimLit "0")
+                            (PrimName (NAttribute $ 
+                              AttribName (NSimple vecPar) lengthId Nothing) :-:
+                               (PrimLit "1")) ]))
+                Nothing
+       -- if null(vec) then res := vec else res := last(vec) & init(vec)
+       rotlExpr = IfSm (genExprFCall1 isnullId (PrimName $ NSimple vecPar)) 
+                       [NSimple resId := (PrimName $ NSimple vecPar)]
                        []
                        (Just $ Else [rotlExprRet])
         where rotlExprRet = 
-                  ReturnSm (Just $ 
-                          genExprFCall1 lastId (PrimName $ NSimple vecPar) :&:
-                          genExprFCall1 initId (PrimName $ NSimple vecPar))
-       rotrSpec = Function rotlId [IfaceVarDec vecPar vectorTM] vectorTM 
-       -- if null(vec) then return vec else return tail(vec) & head(vec)
-       rotrExpr = IfSm (genExprFCall1 nullId (PrimName $ NSimple vecPar)) 
-                       [ReturnSm (Just $ (PrimName $ NSimple vecPar))]
+                  NSimple resId := 
+                          (genExprFCall1 lastId (PrimName $ NSimple vecPar) :&:
+                           genExprFCall1 initId (PrimName $ NSimple vecPar))
+       rotlRet =  ReturnSm (Just $ PrimName $ NSimple resId)       
+       rotrSpec = Function rotrId [IfaceVarDec vecPar vectorTM] vectorTM 
+       -- variable res : fsvec_x (0 to vec'length-1);
+       rotrVar = 
+         VarDec resId 
+                (SubtypeIn vectorTM
+                  (Just $ IndexConstraint 
+                   [ToRange (PrimLit "0")
+                            (PrimName (NAttribute $ 
+                              AttribName (NSimple vecPar) lengthId Nothing) :-:
+                               (PrimLit "1")) ]))
+                Nothing
+       -- if null(vec) then res := vec else res := tail(vec) & head(vec)
+       rotrExpr = IfSm (genExprFCall1 isnullId (PrimName $ NSimple vecPar)) 
+                       [NSimple resId := (PrimName $ NSimple vecPar)]
                        []
                        (Just $ Else [rotrExprRet])  
         where rotrExprRet = 
-                  ReturnSm (Just $ 
-                      genExprFCall1 lastId (PrimName $ NSimple vecPar) :&:
-                      genExprFCall1 initId (PrimName $ NSimple vecPar))
+                  NSimple resId := 
+                      (genExprFCall1 lastId (PrimName $ NSimple vecPar) :&:
+                       genExprFCall1 initId (PrimName $ NSimple vecPar))
+       rotrRet =  ReturnSm (Just $ PrimName $ NSimple resId)       
        reverseSpec = Function reverseId [IfaceVarDec vecPar vectorTM] vectorTM
-       -- if null(vec) the return vec else return reverse(vec) & head(vec) 
-       reverseExpr = IfSm (genExprFCall1 nullId (PrimName $ NSimple vecPar)) 
-                       [ReturnSm (Just $ (PrimName $ NSimple vecPar))]
-                       []
-                       (Just $ Else [reverseExprRet])  
-        where reverseExprRet = 
-                  ReturnSm (Just $ 
-                      genExprFCall1 reverseId (PrimName $ NSimple vecPar) :&:
-                      genExprFCall1 headId (PrimName $ NSimple vecPar))      
+       reverseVar = 
+         VarDec resId 
+                (SubtypeIn vectorTM
+                  (Just $ IndexConstraint 
+                   [ToRange (PrimLit "0")
+                            (PrimName (NAttribute $ 
+                              AttribName (NSimple vecPar) lengthId Nothing) :-:
+                               (PrimLit "1")) ]))
+                Nothing
+       -- for i in 0 to res'range loop
+       --   res(vec'length-i-1) := vec(i);
+       -- end loop;
+       reverseFor = 
+          ForSM iId (AttribRange $ applyRangeAttrib resId) [reverseAssign]
+       -- res(vec'length-i-1) := vec(i);
+       reverseAssign = NIndexed (IndexedName (NSimple resId) [destExp]) :=
+         (PrimName $ NIndexed (IndexedName (NSimple vecPar) 
+                              [PrimName $ NSimple iId]))
+           where destExp = PrimName (NAttribute $ AttribName (NSimple vecPar) 
+                                      lengthId Nothing) :-: 
+                           PrimName (NSimple iId) :-: 
+                           (PrimLit "1") 
+       -- return res;
+       reverseRet =  ReturnSm (Just $ PrimName (NSimple resId))
        copySpec = Function copyId [IfaceVarDec nPar   naturalTM,
                                       IfaceVarDec aPar   elemTM   ] vectorTM 
        -- variable res : fsvec_x (0 to n-1) := (others => a);
@@ -310,13 +435,73 @@ genVectorFuns elemTM vectorTM nullVectorTM =
          VarDec resId 
                 (SubtypeIn vectorTM
                   (Just $ IndexConstraint 
-                   [ToRange (PrimLit (show "0"))
+                   [ToRange (PrimLit "0")
                                ((PrimName (NSimple nPar)) :-:
                                 (PrimLit "1"))   ]))
                 (Just $ Aggregate [ElemAssoc (Just Others) 
                                              (PrimName $ NSimple aPar)])
        -- return res
        copyExpr = ReturnSm (Just $ PrimName $ NSimple resId)
+       plusgtSpec = Function plusgtId [IfaceVarDec aPar   elemTM,
+                                       IfaceVarDec vecPar vectorTM] vectorTM 
+       -- variable res : fsvec_x (0 to vec'length);
+       plusgtVar = 
+         VarDec resId 
+                (SubtypeIn vectorTM
+                  (Just $ IndexConstraint 
+                   [ToRange (PrimLit "0")
+                            (PrimName (NAttribute $ 
+                              AttribName (NSimple vecPar) lengthId Nothing))]))
+                Nothing
+       plusgtExpr = NSimple resId := 
+                       ((PrimName $ NSimple aPar) :&: 
+                        (PrimName $ NSimple vecPar))
+       plusgtRet = ReturnSm (Just $ PrimName $ NSimple resId)
+       ltplusSpec = Function ltplusId [IfaceVarDec vecPar vectorTM,
+                                       IfaceVarDec aPar   elemTM] vectorTM 
+       -- variable res : fsvec_x (0 to vec'length);
+       ltplusVar = 
+         VarDec resId 
+                (SubtypeIn vectorTM
+                  (Just $ IndexConstraint 
+                   [ToRange (PrimLit "0")
+                            (PrimName (NAttribute $ 
+                              AttribName (NSimple vecPar) lengthId Nothing))]))
+                Nothing
+       ltplusExpr = NSimple resId := 
+                       ((PrimName $ NSimple vecPar) :&: 
+                        (PrimName $ NSimple aPar))
+       ltplusRet = ReturnSm (Just $ PrimName $ NSimple resId)
+       plusplusSpec = Function plusplusId [IfaceVarDec vec1Par vectorTM,
+                                           IfaceVarDec vec2Par vectorTM  ] 
+                               vectorTM 
+       -- variable res : fsvec_x (0 to vec1'length + vec2'length -1);
+       plusplusVar = 
+         VarDec resId 
+                (SubtypeIn vectorTM
+                  (Just $ IndexConstraint 
+                   [ToRange (PrimLit "0")
+                            (PrimName (NAttribute $ 
+                              AttribName (NSimple vec1Par) lengthId Nothing) :+:
+                             PrimName (NAttribute $ 
+                              AttribName (NSimple vec2Par) lengthId Nothing) :-:
+                             PrimLit "1")]))
+                Nothing
+       plusplusExpr = NSimple resId := 
+                       ((PrimName $ NSimple vec1Par) :&: 
+                        (PrimName $ NSimple vec2Par))
+       plusplusRet = ReturnSm (Just $ PrimName $ NSimple resId)
+       singletonSpec = Function singletonId [IfaceVarDec aPar elemTM ] 
+                                            vectorTM
+       -- variable res : fsvec_x (0 to 0);
+       singletonVar = 
+         VarDec resId 
+                (SubtypeIn vectorTM
+                  (Just $ IndexConstraint 
+                   [ToRange (PrimLit "0") (PrimLit "0")]))
+                (Just $ Aggregate [ElemAssoc Nothing (PrimName $ NSimple aPar)])
+       singletonRet = ReturnSm (Just $ PrimName $ NSimple resId)
+    
                 
 -- | Generate the default functions for a custom tuple type
 genTupleFuns :: [TypeMark] -- ^ type of each tuple element

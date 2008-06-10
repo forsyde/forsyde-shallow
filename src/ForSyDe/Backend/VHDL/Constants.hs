@@ -105,19 +105,37 @@ exId = unsafeVHDLBasicId "ex"
 selId :: VHDLId
 selId = unsafeVHDLBasicId "sel"
 
+
+-- | ltplus (function (<+) in original Haskell source) function identifier
+ltplusId :: VHDLId
+ltplusId = unsafeVHDLBasicId "ltplus"
+
+
+-- | plusplus (function (++) in original Haskell source) function identifier
+plusplusId :: VHDLId
+plusplusId = unsafeVHDLBasicId "plusplus"
+
+
 -- | empty function identifier
 emptyId :: VHDLId
 emptyId = unsafeVHDLBasicId "empty"
 
+-- | plusgt (function (+>) in original Haskell source) function identifier
+plusgtId :: VHDLId
+plusgtId = unsafeVHDLBasicId "plusgt"
+
+-- | singleton function identifier
+singletonId :: VHDLId
+singletonId = unsafeVHDLBasicId "singleton"
 
 -- | length function identifier
 lengthId :: VHDLId
 lengthId = unsafeVHDLBasicId "length"
 
 
--- | null function identifier
-nullId :: VHDLId
-nullId = unsafeVHDLBasicId "null"
+-- | isnull (function null in original Haskell source) function identifier
+isnullId :: VHDLId
+isnullId = unsafeVHDLBasicId "isnull"
 
 
 -- | replace function identifier
@@ -198,6 +216,10 @@ std_logicTM = unsafeVHDLBasicId "std_logic"
 -- | boolean type mark
 booleanTM :: TypeMark
 booleanTM = unsafeVHDLBasicId "boolean"
+
+-- | fsvec_index typemark
+fsvec_indexTM :: TypeMark
+fsvec_indexTM = unsafeVHDLBasicId "fsvec_index"
 
 -- | natural typemark
 naturalTM :: TypeMark
