@@ -1,5 +1,20 @@
 {-# LANGUAGE TemplateHaskell #-}
 
+-- The following example is designed as tutorial example for the paper.
+--
+-- It implements a simple ALU, which has the following modes
+--   HH: out <- a AND b 
+--   HL: out <- a OR b 
+--   LH: (cout, out) <- ADD a b
+--   LL: out <- shiftl a 0
+--
+-- The expressiveness of the compiler could be clearly improved, if the
+-- higher-order function 'zipWith' that works on vectors would be synthesizable. 
+-- Check 'and4BitFun'!
+--
+-- We could improve the example even further, if we use enumeration types for the 
+-- multiplexer. So far I have not done it, but should only be a matter of time!
+ 
 module SimpleALU where
 
 import ForSyDe
@@ -8,7 +23,6 @@ import Data.Param.FSVec
 import Data.TypeLevel.Num.Reps
 import Data.TypeLevel.Num.Aliases
 import CarrySelectAdder
---import Multiplexer_FSVector
 
 ----- AND - 4 Bit
 
@@ -63,7 +77,7 @@ simOr4Bit = $(simulate 'or4BitSys)
 
 vhdlOr4Bit = writeVHDL or4BitSys
 
------ LSL 
+----- Logical Shift Left
 
 lslFun :: ProcFun (FSVec D4 Bit -> FSVec D4 Bit) 
 lslFun = $(newProcFun [d| lslFun :: FSVec D4 Bit -> FSVec D4 Bit
@@ -126,12 +140,10 @@ vhdlMux41 = writeVHDL mux41Sys
 
 ----- Convert FSVector to Tuple (Size 4)
 
-convFromFSVec4 :: FSVec D4 a -> (a, a, a, a)
-convFromFSVec4 v = (v!d3, v!d2, v!d1, v!d0)
-
 convFromFSVec4Fun :: ProcFun (FSVec D4 Bit -> (Bit, Bit, Bit, Bit))
-convFromFSVec4Fun = $(newProcFun [d| convFromFSVec4Fun v 
-                                       = convFromFSVec4 v 
+convFromFSVec4Fun = $(newProcFun [d| convFromFSVec4Fun :: FSVec D4 Bit -> (Bit, Bit, Bit, Bit)
+				     convFromFSVec4Fun v
+                                       = (v!d3, v!d2, v!d1, v!d0)
                                    |])
 
 convFromFSVec4Proc :: Signal (FSVec D4 Bit) -> (Signal Bit, Signal Bit, Signal Bit, Signal Bit)
@@ -147,13 +159,10 @@ vhdlConvFromFSVec4 =  writeVHDL convFromFSVec4Sys
 
 ----- Convert To FSVector (Size 4)
 
-convToFSVec4 :: a -> a -> a -> a -> FSVec D4 a
-convToFSVec4 x3 x2 x1 x0 = x3 +> x2 +> x1 +> x0 +> empty
-
 convToFSVec4Fun :: ProcFun (Bit -> Bit -> Bit -> Bit -> FSVec D4 Bit)
 convToFSVec4Fun = $(newProcFun [d| convToFSVec4Fun :: Bit -> Bit -> Bit -> Bit -> FSVec D4 Bit
                                    convToFSVec4Fun x3 x2 x1 x0 
-                                      = convToFSVec4 x3 x2 x1 x0 |])
+                                      = x3 +> x2 +> x1 +> x0 +> empty |])
 
 convToFSVec4Proc :: Signal Bit -> Signal Bit -> Signal Bit -> Signal Bit -> Signal (FSVec D4 Bit)
 convToFSVec4Proc = zipWith4SY "toVector4" convToFSVec4Fun
@@ -219,10 +228,10 @@ vhdlALU = writeVHDL aluSys
 
 ----- Test-Inputs
 
-sel = [reallyUnsafeVector [H,H], 
-       reallyUnsafeVector [H,L],
-       reallyUnsafeVector [L,H],
-       reallyUnsafeVector [L,L]]
+sel = [reallyUnsafeVector [H,H], -- AND
+       reallyUnsafeVector [H,L], -- OR
+       reallyUnsafeVector [L,H], -- ADD
+       reallyUnsafeVector [L,L]] -- LSL
 
 a = [reallyUnsafeVector [L,H,H,H],
      reallyUnsafeVector [L,H,L,H],
