@@ -31,7 +31,7 @@ fullAddProc :: Signal Bit -> Signal Bit -> Signal Bit -> (Signal Bit, Signal Bit
 fullAddProc a b c_in = (unzipSY "unzipSY") $ (zipWith3SY "fulladd" fullAddFun a b c_in)
 
 fullAddSys :: SysDef (Signal Bit -> Signal Bit -> Signal Bit -> (Signal Bit, Signal Bit))
-fullAddSys = $(newSysDef 'fullAddProc ["a", "b", "c_in"] ["sum", "c_out"])
+fullAddSys = $(newSysDef 'fullAddProc ["a", "b", "c_in"] ["cout", "sum"])
 
 simFullAdd :: [Bit] -> [Bit] -> [Bit] -> ([Bit], [Bit])
 simFullAdd = $(simulate 'fullAddSys)
@@ -81,10 +81,10 @@ fourBitAdder :: Signal Bit   -- C_IN
 	         Signal Bit) -- SUM0
 fourBitAdder c_in a3 a2 a1 a0 b3 b2 b1 b0 
                 = (c_out, sum3, sum2, sum1, sum0)
-		  where (sum3, c_out) = $(instantiate "add3" 'fullAddSys) a3 b3 c2
-		        (sum2, c2)    = $(instantiate "add2" 'fullAddSys) a2 b2 c1
-		        (sum1, c1)    = $(instantiate "add1" 'fullAddSys) a1 b1 c0
-		        (sum0, c0)    = $(instantiate "add0" 'fullAddSys) a0 b0 c_in
+		  where (c_out, sum3) = $(instantiate "add3" 'fullAddSys) a3 b3 c2
+		        (c2, sum2)    = $(instantiate "add2" 'fullAddSys) a2 b2 c1
+		        (c1, sum1)    = $(instantiate "add1" 'fullAddSys) a1 b1 c0
+		        (c0, sum0)    = $(instantiate "add0" 'fullAddSys) a0 b0 c_in
 
 fourBitAdderSys :: SysDef (Signal Bit   -- C_IN
 			-> Signal Bit   -- A3

@@ -233,12 +233,12 @@ sel = [reallyUnsafeVector [H,H], -- AND
        reallyUnsafeVector [L,H], -- ADD
        reallyUnsafeVector [L,L]] -- LSL
 
-a = [reallyUnsafeVector [L,H,H,H],
+a = [reallyUnsafeVector [L,H,H,H], -- LSB D1 D2 MSB
      reallyUnsafeVector [L,H,L,H],
-     reallyUnsafeVector [L,H,H,H],
+     reallyUnsafeVector [H,H,H,H],
      reallyUnsafeVector [L,H,H,H]]
 
 b = [reallyUnsafeVector [H,H,H,H],
      reallyUnsafeVector [H,H,L,H],
-     reallyUnsafeVector [H,H,H,H],
+     reallyUnsafeVector [H,L,L,L], 
      reallyUnsafeVector [H,H,H,H]]
