@@ -22,7 +22,7 @@ import Data.Bits
 import Data.Param.FSVec
 import Data.TypeLevel.Num.Reps
 import Data.TypeLevel.Num.Aliases
-import CarrySelectAdder
+
 
 ----- AND - 4 Bit
 
@@ -174,6 +174,90 @@ simConvToFSVec4 = $(simulate 'convToFSVec4Sys)
 
 vhdlConvToFSVec4 = writeVHDL convToFSVec4Sys
 
+------ Full Adder
+
+fullAddFun :: ProcFun (Bit -> Bit -> Bit -> (Bit, Bit))
+fullAddFun = $(newProcFun [d|fullAddFun :: Bit -> Bit -> Bit -> (Bit, Bit)
+                             -- I would like to use 'where'-clauses. Is this possible?
+                             -- fullAddFun a b c_in = (c_out, sum)
+                             --  where c_out = (a .&. b) .|. (a .&. c_in) .|. (b .&. c_in)
+                             --        sum = (a `xor` b) `xor` c_in  |])
+                             fullAddFun a b c_in = ((a .&. b) .|. (a .&. c_in) .|. (b .&. c_in),
+						    (a `xor` b) `xor` c_in) |])
+
+--fullAddProc :: Signal Bit -> Signal Bit -> Signal Bit -> Signal (Bit, Bit)
+--fullAddProc = zipWith3SY "fulladd" fullAddFun
+fullAddProc :: Signal Bit -> Signal Bit -> Signal Bit -> (Signal Bit, Signal Bit)
+fullAddProc a b c_in = (unzipSY "unzipSY") $ (zipWith3SY "fulladd" fullAddFun a b c_in)
+
+fullAddSys :: SysDef (Signal Bit -> Signal Bit -> Signal Bit -> (Signal Bit, Signal Bit))
+fullAddSys = $(newSysDef 'fullAddProc ["a", "b", "c_in"] ["cout", "sum"])
+
+simFullAdd :: [Bit] -> [Bit] -> [Bit] -> ([Bit], [Bit])
+simFullAdd = $(simulate 'fullAddSys)
+
+--vhdlFullAdd = writeVHDL fullAddSys
+
+a_in = [L,L,L,L,H,H,H,H]
+b_in = [L,H,L,H,L,H,L,H]
+c_in = [L,L,H,H,L,L,H,H]
+
+------ 4-bit Adder Chain
+
+fourBitAdder :: Signal Bit   -- C_IN
+	     -> Signal Bit   -- A3
+             -> Signal Bit   -- A2
+             -> Signal Bit   -- A1
+	     -> Signal Bit   -- A0
+             -> Signal Bit   -- B3
+	     -> Signal Bit   -- B2
+	     -> Signal Bit   -- B1
+	     -> Signal Bit   -- B0
+	     -> (Signal Bit, -- C_OUT
+	         Signal Bit, -- SUM3
+	         Signal Bit, -- SUM2
+	         Signal Bit, -- SUM1
+	         Signal Bit) -- SUM0
+fourBitAdder c_in a3 a2 a1 a0 b3 b2 b1 b0 
+                = (c_out, sum3, sum2, sum1, sum0)
+		  where (c_out, sum3) = $(instantiate "add3" 'fullAddSys) a3 b3 c2
+		        (c2, sum2)    = $(instantiate "add2" 'fullAddSys) a2 b2 c1
+		        (c1, sum1)    = $(instantiate "add1" 'fullAddSys) a1 b1 c0
+		        (c0, sum0)    = $(instantiate "add0" 'fullAddSys) a0 b0 c_in
+
+fourBitAdderSys :: SysDef (Signal Bit   -- C_IN
+			-> Signal Bit   -- A3
+			-> Signal Bit   -- A2
+			-> Signal Bit   -- A1
+			-> Signal Bit   -- A0
+			-> Signal Bit   -- B3
+			-> Signal Bit   -- B2
+			-> Signal Bit   -- B1
+			-> Signal Bit   -- B0
+			-> (Signal Bit, -- C_OUT
+			    Signal Bit, -- SUM3
+			    Signal Bit, -- SUM2
+			    Signal Bit, -- SUM1
+			    Signal Bit)) -- SUM0 	
+fourBitAdderSys = $(newSysDef 'fourBitAdder ["C_IN", "A3", "A2", "A1", "A0",
+                                             "B3", "B2", "B1", "B0"]
+                                            ["C_OUT", "SUM3", "SUM2", "SUM1", "SUM0"])
+
+simFourBitAdder = $(simulate 'fourBitAdderSys)
+
+vhdlFourBitAdder = writeVHDL fourBitAdderSys
+
+a0 = [L,L,L,L,L,L,L,L,H,H,H,H,H,H,H,H]
+a1 = [L,L,L,L,H,H,H,H,L,L,L,L,H,H,H,H]
+a2 = [L,L,H,H,L,L,H,H,L,L,H,H,L,L,H,H]
+a3 = [L,H,L,H,L,H,L,H,L,H,L,H,L,H,L,H]
+zero = [L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L]
+one = [H,H,H,H,H,H,H,H,H,H,H,H,H,H,H,H]
+
+
+simAdd_0 = simFourBitAdder zero a3 a2 a1 a0 a3 a2 a1 a0 
+simAdd_1 = simFourBitAdder one a3 a2 a1 a0 a3 a2 a1 a0  
+
 
 ----- FSVec Adder
 add4FSVecProc :: Signal (FSVec D4 Bit)
@@ -196,6 +280,21 @@ simAdd4FSVecSys = $(simulate 'add4FSVecSys)
 
 vhdlAdd4FSVecSys = writeVHDL add4FSVecSys
 
+----- Constant Signals
+
+-- Constant input 'H' modeled with constSY
+oneProc :: Signal Bit
+oneProc = constSY "high" H
+
+oneSys :: SysDef (Signal Bit)
+oneSys = $(newSysDef 'oneProc [] ["one"])
+
+-- Constant input 'L' modeled with constSY
+zeroProc :: Signal Bit
+zeroProc = constSY "low" L
+ 
+zeroSys :: SysDef (Signal Bit)
+zeroSys = $(newSysDef 'zeroProc [] ["zero"])
 
 ----- ALU
 
