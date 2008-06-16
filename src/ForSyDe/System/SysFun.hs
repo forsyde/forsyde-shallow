@@ -9,28 +9,106 @@
 -- Stability   :  experimental
 -- Portability :  non-portable (Template Haskell)
 --
--- This module provides a function to check whether a 'Type' complies
--- with the expected type of a system function not.
+-- This module provides the 'SysFun' class and a Template Haskell 
+-- function to check whether a 'Type' complies with the expected 
+-- type of a system function not.
 --
 ----------------------------------------------------------------------------- 
-module ForSyDe.System.SysFun (checkSysFType) where
+module ForSyDe.System.SysFun 
+ (SysFun(..), 
+  sysFunOutInstance, 
+  checkSysFType) where
 
-import ForSyDe.Signal
+import ForSyDe.Ids(PortId)
+import {-# SOURCE #-} ForSyDe.Netlist(NlSignal)
+import ForSyDe.Signal(Signal(..))
 import ForSyDe.ForSyDeErr
 
+import Data.Typeable
 import Control.Monad (when)
 import Text.Regex.Posix ((=~))
 import Language.Haskell.TH
+
 import Language.Haskell.TH.TypeLib
 
--- | Given a function type, check whether it complies with the expected
---   type of a system function and, in that case, provide the type and number
---   of the system inputs and outputs.
+---------------
+-- SysFun class
+---------------
+
+-- | Class used to describe a System function. It uses the same trick
+--   as 'Text.Printf' to implement the variable number of arguments.
+-- Note, due to a GHC restriction on the number of elements of a tuple
+-- the maximum number of outputs is 62. 
+class SysFun f where
+ -- | Gets the result of applying a system function to input port signals
+ --   whose name is given in first argument.
+ --   In case the input id list is not long enough, \"default\" will be used
+ --   as the id of the remaining ports.
+ applySysFun :: f 
+             -> [PortId] -- ^ ids used to build the input ports
+             -> ([NlSignal], [TypeRep], [TypeRep])
+               -- ^ (output signals returned by the system function,
+               --    types of input ports, 
+               --    types of output ports)
+
+
+
+
+-- Function to automatically generate instances for the system function outputs 
+-- with Template Haskell. For example, in the case of 2 outputs, the code
+-- generated would be:
+--
+-- @
+-- instance (Typeable o1, Typeable o2) => SysFun (Signal o1, Signal o2) where
+--  applyFun (o1, o2) is = 
+--             ([unSignal o1, unSignal o2], [], [typeOf o1, typeOf o2]) 
+-- @
+sysFunOutInstance :: Int -- ^ number of outputs to generate
+                  -> DecQ
+sysFunOutInstance n = do
+ -- Generate a input tuple pattern of n elements for the output signals:
+ -- (o1, o2, ..., on)
+ outNames <- replicateM n (newName "o")
+ let tupPat = tupP (map varP outNames)
+ -- Generate the output primitive signal list expression
+ -- [unsignal o1, unsignal o2, ...., unsignal on]
+ let outPrimSignals = 
+        listE $ map (\oName -> varE 'unSignal `appE` varE oName) outNames
+ -- Generate the output signal types
+ -- [typeOf o1, typeOf o2, ...., typeOf on]
+     outTypeReps =
+        listE $ map (\oName -> varE 'typeOf `appE` varE oName) outNames
+ -- Generate the full output expression
+     outE = [| ($outPrimSignals, [], $outTypeReps) |]
+ -- Finally, generate the instance itself
+ -- 1) We create the declaration for applySysFun
+     applySysFunDec = 
+       funD 'applySysFun [clause [tupPat, wildP] (normalB outE) []]
+ -- 2) We reuse the output signal names for the head type variables
+ --   (Signal o1, Signal o2, ..., Signal on)
+     signalTupT = if n == 1 then conT ''Signal `appT` varT (head outNames)
+                             else foldr accumApp (tupleT n) outNames 
+       where accumApp vName accumT =  
+                       accumT `appT` (conT ''Signal `appT` varT vName)
+ -- 3) Create the Typeable context
+     typeableCxt = map (\vName -> conT ''Typeable `appT` varT vName) outNames
+ -- Finally return the instance declaration
+ instanceD (cxt typeableCxt) (conT ''SysFun `appT` signalTupT) [applySysFunDec]
+  
+
+---------------------------------------------------------------
+-- Checking the type of a System Function with Template Haskell
+---------------------------------------------------------------
+
+-- | Given a function type expressed with Template Haskell, check
+--   whether it complies with the expected type of a system function
+--   and, in that case, provide the type and number of the system
+--   inputs and outputs.
 checkSysFType :: Type -> Q (([Type],Int),([Type],Int))
 checkSysFType t = do let (inputTypes, retType, context) = unArrowT t
                          (outCons, outTypes,  _)        = unAppT retType     
                      -- Discard polymorphic system functions
-                     -- FIXME: We could support polymorphic signals, but 
+                     -- FIXME: We could support polymorphic signals, but it
                      -- requires more work and we don't still know if it 
                      -- will be necessary anyway.
                      when (isPoly context) (qGiveUp name)

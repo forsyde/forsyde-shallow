@@ -39,7 +39,7 @@ writeGraphMLM = do
   debugMsg $ "Compiling system definition `" ++ lSysDefId ++ "' ...\n"
   -- Obtain the output Nodes of the system
   -- Obtain the netlist of the system definition 
-  let nl = getSymNetlist lSysDefVal
+  let nl = netlist lSysDefVal
   -- Traverse the netlist, and get the traversing results
   intOutsInfo <- traverseGraphML nl 
   LocalTravResult nodes edges <- gets (localRes.local)

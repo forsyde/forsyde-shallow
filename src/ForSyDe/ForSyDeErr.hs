@@ -24,6 +24,7 @@ module ForSyDe.ForSyDeErr
   Loc,
   EProne,
   liftEither,
+  uError,
   intError,
   qError,
   qGiveUp,
@@ -37,6 +38,7 @@ module ForSyDe.ForSyDeErr
 
 import ForSyDe.Ids
 
+import Data.Maybe (fromMaybe)
 import Debug.Trace
 import Control.Monad.Error 
 import Data.Dynamic
@@ -63,9 +65,9 @@ data ForSyDeErr =
   -- | Incompatible system function
   IncomSysF  Name Type                       | 
   -- | Incompatible input interface length                
-  InIfaceLength   (Name,Int) ([String],Int)  | 
+  InIfaceLength   (SysId,Int) ([String],Int)  | 
   -- | Incompatible output interface length
-  OutIfaceLength  (Name,Int) ([String],Int)  |
+  OutIfaceLength  (SysId,Int) ([String],Int)  |
   -- | Multiply defined port identifier                
   MultPortId  String                         |
   -- | Not a SysDef variable
@@ -222,10 +224,10 @@ instance Show ForSyDeErr where
    "However " ++ strFName ++ " has type\n  " ++
    "  " ++ pprint inctype
   where strFName = show fName
- show (InIfaceLength   sysFInInfo portIdsInInfo) =
-    showIfaceLength "input interface" sysFInInfo portIdsInInfo
- show (OutIfaceLength   sysFOutInfo portIdsOutInfo) =
-    showIfaceLength "output interface" sysFOutInfo portIdsOutInfo
+ show (InIfaceLength sysInInfo portIdsInInfo) =
+    showIfaceLength "input interface" sysInInfo portIdsInInfo
+ show (OutIfaceLength sysOutInfo portIdsOutInfo) =
+    showIfaceLength "output interface" sysOutInfo portIdsOutInfo
  show (MultPortId  portId) = 
    "Multiply defined port identifier " ++ show portId
  show (NonSysDef name t) = 
@@ -262,12 +264,12 @@ instance Show ForSyDeErr where
  show (Other str) = str 
 
 -- | help function for the show instance
-showIfaceLength :: String -> (Name,Int) -> ([String],Int) -> String
-showIfaceLength ifaceMsg  (sysFName,sysFIfaceL) (ifaceIds, ifaceL) = 
+showIfaceLength :: String -> (SysId, Int) -> ([String],Int) -> String
+showIfaceLength ifaceMsg  (sysName, sysIfaceL) (ifaceIds, ifaceL) = 
    "Incorrect length of " ++ ifaceMsg  ++ " (" ++ show ifaceL ++ ")\n" ++
    "  " ++ show ifaceIds ++ "\n" ++    
-   show sysFName ++ " expects an " ++ show ifaceMsg ++ " length of " ++
-   show sysFIfaceL 
+   sysName ++ " expects an " ++ show ifaceMsg ++ " length of " ++
+   show sysIfaceL 
 
 -----------------
 -- Context Error
@@ -282,13 +284,13 @@ data Context =
  -- | Empty context 
  EmptyC | 
  -- | In a System definition 
- SysDefC SysId Loc | 
+ SysDefC SysId (Maybe Loc) | 
  -- | In a Process
- ProcC   SysId Loc ProcId | 
+ ProcC   SysId (Maybe Loc) ProcId | 
  -- | In a Proces Function
- ProcFunC SysId Loc ProcId Name Loc | 
+ ProcFunC SysId (Maybe Loc) ProcId Name Loc | 
  -- | In  a Process value
- ProcValC SysId Loc ProcId Exp
+ ProcValC SysId (Maybe Loc) ProcId Exp
 
 -- | type indicating a location in the user's source
 --   code
@@ -298,7 +300,7 @@ type Loc = String
 setProcC :: ProcId -- ^ Identifier of the process
         -> Context -- ^ system context
         -> Context
-setProcC pid (SysDefC sysid sysloc) = ProcC sysid sysloc pid 
+setProcC pid (SysDefC sysid mSysloc) = ProcC sysid mSysloc pid 
 setProcC _ _ = intError funName InconsistentContexts
  where funName = "ForSyDe.ForSyDeErr.setProcC" 
 
@@ -322,8 +324,9 @@ setProcValC _ _ = intError funName InconsistentContexts
 
 instance Show Context where
  show EmptyC = ""
- show (SysDefC id loc)   = "system definition `" ++ id ++ 
-                           "' (created in " ++ loc ++ ")"
+ show (SysDefC id mLoc)   = "system definition `" ++ id ++ 
+                           "' (created in " ++ finalLoc ++ ")"
+  where finalLoc = fromMaybe "<unkown>" mLoc
  show (ProcC sysid sysloc pid) = "process `" ++ pid ++ "' belonging to " ++ 
                       show (SysDefC sysid sysloc)
  show (ProcFunC sysid sysloc pid fName fLoc) = 
@@ -366,6 +369,14 @@ type EProne = Either ForSyDeErr
 -------------------
 -- Helper functions
 -------------------
+
+-- | Throws a an error caused by improper use of a user-exported function
+uError :: String -- ^ User-exported function which cuased the error 
+          -> ForSyDeErr -- ^ Error to show
+          -> a
+uError funName err = error $ "User error in " ++ funName ++ ": " ++ 
+                             show err ++ "\n"
+
 
 -- | Throws an internal error
 intError :: String     -- ^ Function which caused the internal error 

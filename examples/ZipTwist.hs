@@ -27,7 +27,7 @@ zipTwist :: SysDef (Signal Int32 -> Signal Int32 -> Signal Int32
             -> Signal Int32 -> Signal Int32 -> Signal Int32
             -> (Signal Int32, Signal Int32, Signal Int32,
                 Signal Int32, Signal Int32, Signal Int32))
-zipTwist = $(newSysDef 'zipTwistFun 
+zipTwist = $(newSysDefTHName 'zipTwistFun 
                              ["in1","in2","in3","in4","in5","in6"]
                              ["out1","out2","out3","out4","out5","out6"])
 

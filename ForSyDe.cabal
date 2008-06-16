@@ -51,6 +51,7 @@ Library
                    ForSyDe.OSharing,
                    ForSyDe.OSharing.UDynamic,
                    ForSyDe.System.SysFun,
+                   ForSyDe.System.SysFun.Instances,
                    ForSyDe.System.SysDef,
                    ForSyDe.System.Instantiate,
                    ForSyDe.Process.ProcFun,

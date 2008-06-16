@@ -32,5 +32,5 @@ buttonEncoder = mapSY "encoder" transFun
                                   if down == H then Down else Unknown |])
 
 buttonEncoderSysDef :: SysDef (Signal ButtonPress -> Signal Direction)
-buttonEncoderSysDef = $(newSysDef 'buttonEncoder ["buttonPress"] ["direction"])
+buttonEncoderSysDef = $(newSysDefTHName 'buttonEncoder ["buttonPress"] ["direction"])
                                                     

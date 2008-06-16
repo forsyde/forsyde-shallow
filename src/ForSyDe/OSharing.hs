@@ -48,7 +48,7 @@ import Control.Monad.ST
 
 
 -- FIXME FIXME FIXME: Add pragmas to avoid breaking optimizations in the
--- functions where unsafe* optimizations are used.
+-- functions where unsafe* functions are used.
 
 -- | An Unsafe Unmutable Reference to a value of type a 
 --

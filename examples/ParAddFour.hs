@@ -16,7 +16,7 @@ addProc s1 s2 = zipWithSY "zip1" add s1 s2
 
 
 addSys :: SysDef (Signal Int32 -> Signal Int32 -> Signal Int32)
-addSys = $(newSysDef 'addProc ["in1","in2"] ["sum"])
+addSys = $(newSysDefTHName 'addProc ["in1","in2"] ["sum"])
 
 simAdd :: [Int32] -> [Int32] -> [Int32]
 simAdd = $(simulate 'addSys)
@@ -33,7 +33,7 @@ parAddFour toAdd s1 s2 s3 s4 = (sum1, sum2, sum3, sum4)
 parAddFourSys :: SysDef (Signal Int32 
            -> Signal Int32 -> Signal Int32 -> Signal Int32 -> Signal Int32 
            -> (Signal Int32, Signal Int32, Signal Int32, Signal Int32))
-parAddFourSys = $(newSysDef 'parAddFour ["toAdd","s1","s2","s3","s4"]
+parAddFourSys = $(newSysDefTHName 'parAddFour ["toAdd","s1","s2","s3","s4"]
                                         ["sum1","sum2","sum3","sum4"])
 
 

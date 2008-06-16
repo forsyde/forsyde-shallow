@@ -18,15 +18,16 @@ module ForSyDe.System.SysDef
    PrimSysDef(..),
    SysDefVal(..), 
    newSysDef,
-   Iface,
-   getSymNetlist) where
+   newSysDefTH,
+   newSysDefTHName,
+   Iface) where
 
 import ForSyDe.Ids
 import ForSyDe.Signal
 import {-# SOURCE #-} ForSyDe.Netlist 
 import ForSyDe.OSharing
 import ForSyDe.ForSyDeErr
-import ForSyDe.System.SysFun (checkSysFType)
+import ForSyDe.System.SysFun (checkSysFType, SysFun(..))
 
 import Data.Maybe (isJust, fromJust)
 import Control.Monad (when, replicateM)
@@ -53,40 +54,96 @@ newtype PrimSysDef = PrimSysDef {unPrimSysDef :: URef SysDefVal}
 
 -- | The System Definition value
 data SysDefVal = SysDefVal 
-     {sid     :: SysId,                     -- ^ Identifier of the System 
-      t       :: TypeRep,                   -- ^ Type of the system
-      sysFun  :: [NlSignal] -> [NlSignal],  -- ^ System function
-                                            --   in internal untyped form
-      iIface  :: Iface,                     -- ^ Input  interface
-      oIface  :: Iface,                     -- ^ Output interface 
-      loc     :: Loc}                       -- ^ Location of the call to 
-                                            --   newSysDef which created this 
-                                            --   System definition  
-                                            --   (used for later error 
-                                            --    reporting)
+     {sid     :: SysId,      -- ^ Identifier of the System 
+      netlist :: Netlist [], -- ^ System netlist
+      iIface  :: Iface,      -- ^ Input  interface
+      oIface  :: Iface,      -- ^ Output interface 
+      loc     :: Maybe Loc}  -- ^ Location of the call to newSysDef
+                             --   which created this System definition
+                             --   (used for later error reporting)
+                             --   It will initialized or not depending
+                             --   on the newSysDef* function used
 
 
--- | 'Sysdef' constructor
---   Builds a 'SysDef' out of the name of a function describing the system 
---   (system function) and the its port identifers.
+
+-- | 'SysDef' constructor
+--
+--   Builds a system definition out of a system function describing the system 
+--   and its port identifers.   
+newSysDef :: SysFun f => f -- ^ system function 
+                      -> SysId    -- ^ System identifier 
+                      -> [PortId] -- ^ Input interface port identifiers 
+                      -> [PortId] -- ^ Output interface port identifiers 
+                      -> SysDef f
+newSysDef f sysId inIds outIds = either currError id eProneResult
+ where currError = uError "newSysDef"
+       eProneResult = newSysDefEProne f Nothing sysId inIds outIds
+
+-- |'SysDef' constructor, Template Haskell version
+--  FIXME: currently broken.
+--
+--   Builds a system definition out of a system function, a system identifiers 
+--   and its port identifers.
+--
+--  For example @$(newSysDefTH mySysFun "mysys" ["in1] ["out1"])@ creates a
+--  system definition from system funcion @mySysFun@ which should have 
+--  one input and output signals.
+--
+--  The advantage of 'newSysDefTH' over 'newSysDef' is that it 
+--  reports errors (e.g duplicated port process identifier) earlier, 
+--  at host-language (Haskell) compile-time.
+newSysDefTH :: SysFun f => f -- ^ system function 
+                        -> SysId    -- ^ System identifier 
+                        -> [PortId] -- ^ Input interface port identifiers 
+                        -> [PortId] -- ^ Output interface port identifiers 
+                        -> ExpQ
+newSysDefTH f sysId inIds outIds = 
+ case eProneResult of
+   Left err -> currError err
+   -- unfortunately SysDef can't easily be an instance of Lift 
+   -- due to the unsafe, unmutable references used in observable sharing 
+   -- Right sysDef -> [| sysDef |]
+   Right _ -> intError "newSysDef" (Other "Unimplemented")
+{-
+   Right _ -> do
+    loc <- currentModule
+    [| let iIds = inIds
+           oIds = outIds
+           (nlist, inTypes, outTypes) = applySysFun f iIds
+       in SysDef $ PrimSysDef $ newURef $ SysDefVal sysId
+                                          (Netlist nlist)
+                                          (zip iIds inTypes)
+                                          (zip oIds outTypes)
+                                          (Just loc) |]
+-}
+ where currError = qError "newSysDefTH"
+       eProneResult = newSysDefEProne f Nothing sysId inIds outIds
+
+
+-- | 'SysDef' constructor, Template Haskell 'Name' version
+--
+--   Builds a 'SysDef' out of the name of a system function
+--   and its port identifers.
 --
 --   The system will later be identified by the basename 
 --   (i.e. unqualified name) of the function.
---   Using different functions with the same basename to define different
---    'SysDef's can later cause name-clashes.
---   
---   Note: the function (f) whose name is provided is required to have the type
---         f :: Signal i1 -> Signal i2 -> ...... -> Signal in -> \-\- inputs
---              (Signal o1, Signal o2, .... , Signal om)         \-\- outputs
 --
---         where n <- |N U {0}
---               m <- |N U {0}
---               i1 .. in and o1 .. om are monomorphic
-newSysDef :: Name     -- ^ Name of the system function 
+--  For example @$(newSysDefTHName 'mySysFun ["in1] ["out1"])@ creates a
+--  system definition from system funcion @mySysFun@ which has one input and
+--  output signals.
+-- 
+--   The advantage of 'newSysDefTHName' over 'newSysDefTH' is that it 
+--   doesn't suffer from the Template Haskell bug <http://hackage.haskell.org/trac/ghc/ticket/1800>, or in other words, it allows to declare the system 
+--   defintion and system function in the same module.
+--
+--   However, since it doesn't have acces to the system function itself,
+--   it can only give early error reports related to incorrect port identifiers
+--   (process identifier duplicate errors will be reported at runtime).
+newSysDefTHName :: Name     -- ^ Name of the system function 
          -> [PortId] -- ^ Input interface port identifiers 
          -> [PortId] -- ^ Output interface port identifiers
          -> ExpQ 
-newSysDef sysFName inIds outIds =  do
+newSysDefTHName sysFName inIds outIds =  do
            sysFInfo <- reify sysFName
            -- Check that a function name was provided
            sysFType <- case sysFInfo of
@@ -97,67 +154,41 @@ newSysDef sysFName inIds outIds =  do
            ((inTypes,inN),(outTypes, outN)) <- recover
                           (currError $ IncomSysF sysFName sysFType)
                           (checkSysFType sysFType)
-           -- Check that the port-id lists have the proper length
-           let inIdsL  = length inIds
-               outIdsL = length outIds
-           when (inN  /= inIdsL) 
-             (currError  (InIfaceLength (sysFName,inN) (inIds,inIdsL)))
-           when (outN /= outIdsL) 
-             (currError  (OutIfaceLength (sysFName,outN) (outIds,outIdsL)))
-           -- Check that the port identifiers are unique
-           let maybeDup = findDup (inIds ++ outIds)
-           when (isJust maybeDup)
-             (currError  (MultPortId  (fromJust maybeDup)))
+           -- Check the ports
+           let portCheck = checkSysDefPorts (show sysFName)
+                                            (inIds, inN) 
+                                            (outIds, outN)
+           when (isJust portCheck) (currError (fromJust portCheck))
            -- Build the system definition
            errInfo <- currentModule
-           -- Names used to build the internal untyped version of the 
-           -- system function
-           names <- replicateM inN (newName "i")
            let
-            -- Input patern for the internal system function
-            inListPat = listP [varP n | n <- names ]
-            -- Input arguments passed to the "real" system function
-            inArgs    = [ [| Signal $(varE n) |] | n <- names ]
+            -- Input arguments passed to the  system function
+            -- in order to get the netlist
+            inArgs = [ [| Signal $ newInPort $(litE $ stringL id) |] 
+                       | id <- inIds ]
             -- The system definition without type signature for the
             -- phantom parameter 
             untypedSysDef =
             -- The huge let part of this quasiquote is not
             -- really necesary but generates clearer code
              [|let 
-               -- Generate the system function
+               -- Generate the system netlist
                toList = $(signalTup2List outN)
-               sysFun = $(lam1E 
-                            inListPat 
-                            (appE [| toList |]
-                                  (appsE $ varE sysFName : inArgs)) )  
+               outNlSignals = toList $ $(appsE $ varE sysFName : inArgs)
                -- Rest of the system defintion
-               sysType   = $(type2TypeRep sysFType)
                inIface   = $(genIface inIds inTypes)
                outIface  = $(genIface outIds outTypes)
                errorInfo = errInfo
                in  SysDef $ PrimSysDef $ newURef $ 
                          SysDefVal (nameBase sysFName)
-                                   sysType
-                                   sysFun
+                                   (Netlist outNlSignals)
                                    inIface 
                                    outIface  
-                                   errorInfo |] 
+                                   (Just errorInfo) |] 
            -- We are done, we simply specify the concrete type of the SysDef
            sigE untypedSysDef (return $ ConT ''SysDef `AppT` sysFType)
  where currError  = qError "newSysDef"
 
-
-
--- | Transform an interface into a list of input signals
-iface2InPorts :: Iface -> [NlSignal]
-iface2InPorts = map (newInPort.fst)          
-
-
--- | Obtain the symbolic Netlist of a 'PrimSysDef' by applying its system 
---   function to InPort nodes.
-getSymNetlist :: SysDefVal -> Netlist []
-getSymNetlist sysDefVal = 
- Netlist $ (sysFun sysDefVal) (iface2InPorts $ iIface sysDefVal) 
 
         
 
@@ -165,6 +196,41 @@ getSymNetlist sysDefVal =
 -- Internal Helper Functions
 ----------------------------
 
+-- | Error prone version of 'newSysDef'
+newSysDefEProne :: SysFun f => f -- ^ system function 
+                -> Maybe Loc -- ^ Location where the originating 
+                             -- call took place (if available)
+                -> SysId     -- ^ System function 
+                -> [PortId]  -- ^ Input interface port identifiers 
+                -> [PortId]  -- ^ Output interface port identifiers 
+                -> EProne (SysDef f)
+newSysDefEProne f mLoc sysId inIds outIds 
+  -- check the ports for problems
+  | isJust portCheck = throwError (fromJust portCheck)
+  | otherwise = return (SysDef $ PrimSysDef $ newURef $ SysDefVal sysId
+                                                        (Netlist nlist)
+                                                        (zip inIds  inTypes)
+                                                        (zip outIds outTypes)
+                                                        mLoc)
+ where (nlist, inTypes, outTypes) = applySysFun f inIds
+       inN = length inIds
+       outN = length outIds
+       portCheck = checkSysDefPorts sysId (inIds, inN) (outIds, outN) 
+
+-- | Check that the system definition ports match certain lengths and
+--   don't containt duplicates
+checkSysDefPorts :: SysId -- ^ System currently being checked
+                 -> ([PortId], Int) -- ^ input ports and expected length
+                 -> ([PortId], Int) -- ^ output ports and expected length
+                 -> Maybe ForSyDeErr
+checkSysDefPorts sysId (inIds, inN) (outIds, outN)  
+  | inN  /= inIdsL = Just $ InIfaceLength (sysId, inN) (inIds, inIdsL)
+  | outN /= outIdsL = Just $ OutIfaceLength (sysId, outN) (outIds, outIdsL)
+  | isJust (maybeDup) = Just $ MultPortId  (fromJust maybeDup)
+  | otherwise = Nothing
+ where inIdsL  = length inIds
+       outIdsL = length outIds
+       maybeDup = findDup (inIds ++ outIds)
 
 -- | Generate a lambda expression to transform a tuple of N 'Signal's into a 
 -- a list of 'NlSignal's
@@ -201,3 +267,4 @@ genIface (i:ix) (t:tx)  = do
  ListE rest <- genIface ix tx
  tupExp <- tupE [[| i |], type2TypeRep t]
  return (ListE (tupExp:rest)) 
+

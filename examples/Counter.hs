@@ -14,7 +14,7 @@ counter  = sourceSY "counterSource" add1 (0 :: Int32)
 
 
 counterSys :: SysDef (Signal Int32)
-counterSys = $(newSysDef 'counter [] ["countVal"])
+counterSys = $(newSysDefTHName 'counter [] ["countVal"])
 
 simCounter :: [Int32]
 simCounter = $(simulate 'counterSys)

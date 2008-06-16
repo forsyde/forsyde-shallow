@@ -31,7 +31,7 @@ selectProc = zipWithSY "select1" selectf
 
 -- System definition associated to the system process 'selectProc' 
 muxSysDef :: SysDef (Signal (FSVec D2 Bit) -> Signal (FSVec D4 Bit) -> Signal Bit)
-muxSysDef = $(newSysDef 'selectProc ["sel", "data"] ["out1"])
+muxSysDef = $(newSysDefTHName 'selectProc ["sel", "data"] ["out1"])
 
 -- we simulate the system
 simMux :: [FSVec D2 Bit] -> [FSVec D4 Bit] -> [Bit]

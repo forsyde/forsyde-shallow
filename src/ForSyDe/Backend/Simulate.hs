@@ -26,7 +26,6 @@ import ForSyDe.System.SysFun
 import ForSyDe.ForSyDeErr
 import ForSyDe.Process.ProcVal
 
-import Data.Set (empty)
 import Control.Monad (liftM, replicateM, mapM_, zipWithM_)
 import Data.Maybe (fromJust)
 import Control.Monad.ST
@@ -169,8 +168,7 @@ simulateDyn pSysDef inps = runST (
                             do {ref <- newSTRef inputL; return (id,ref)}) 
                          sysDefInIface inps
 
-     let sysF = sysFun  sysDefVal
-         -- Add a Var to the roots list 
+     let -- Add a Var to the roots list 
          root r =
            do rs <- readSTRef roots
               writeSTRef roots (r:rs)
@@ -223,7 +221,7 @@ simulateDyn pSysDef inps = runST (
                   sr  <- traverseST 
                            (newInstance taggedIns)
                            defineInstance 
-                           (getSymNetlist sysDefVal)
+                           (netlist sysDefVal)
 
                   let relateIns prevVar@(prevValR,_) (_,nextVar) =
                          relate nextVar [prevVar] (readSTRef prevValR)
@@ -263,7 +261,7 @@ simulateDyn pSysDef inps = runST (
                        writeSTRef state (Just s)
                        return s
      
-     sr   <- traverseST new define (getSymNetlist sysDefVal)
+     sr   <- traverseST new define (netlist sysDefVal)
      rs   <- readSTRef roots
      -- remove tags of the resulting vars (all the root nodes should only
      -- have one output and thus a must return a unique list)
@@ -330,24 +328,6 @@ lazyloop m =
   do a  <- m
      as <- unsafeInterleaveST (lazyloop m)
      return (a:as)
-
--- transform a list of dynamic input values into a circular 
--- chain of linked delay processes
-toDelays :: [[Dynamic]] -> [NlSignal]
-toDelays = map link
-  where 
-    link :: [Dynamic] -> NlSignal
-    link xs = let out = foldr delay out xs
-              in out
-    delay :: Dynamic -> NlSignal -> NlSignal  
-    delay val signal = 
-                  let t = dynTypeRep val
-                      -- The Exp and Type part won't be ever accessed
-                      -- during simulation and can be left undefined
-                      procval x t = ProcVal x (ProcValAST undefined t empty)
-                  in node2NlSignal  
-                      (newURef (Proc "" (DelaySY (procval val t) signal))) 
-                      DelaySYOut
 
 -- | check that there will only be output as long as there are inputs 
 checkIns :: Int -- ^ number of inputs 

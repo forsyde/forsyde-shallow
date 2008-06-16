@@ -23,7 +23,7 @@ import ForSyDe.Ids
 -- It is important to note that, due to the use of trees, the only way to
 -- traverse a 'Netlist' is from its outputs to its inputs.
 
-newtype Netlist container = Netlist (container NlTree)
+newtype Netlist container = Netlist {netlistOuts :: (container NlTree)}
 
 
 

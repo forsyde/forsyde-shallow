@@ -57,7 +57,7 @@ writeLocalVHDLM = do
   let lSysDefId =  sid lSysDefVal
   debugMsg $ "Compiling system definition `" ++ lSysDefId ++ "' ...\n"
   -- Obtain the netlist of the system definition 
-  let nl = getSymNetlist lSysDefVal
+  let nl = netlist lSysDefVal
   -- Traverse the netlist, and get the traversing results
   intOutsInfo <- traverseVHDLM nl 
   LocalTravResult decs stms <- gets (localRes.local)

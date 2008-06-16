@@ -23,7 +23,7 @@ addOneProc = mapSY "addOne" addOnef
 
 -- System definition associated to the system function
 addOneSysDef :: SysDef (Signal Int32 -> Signal Int32)
-addOneSysDef = $(newSysDef 'addOneProc ["in1"] ["out1"])
+addOneSysDef = newSysDef addOneProc "addOne" ["in1"] ["out1"]
 
 
 -- Finally, we create the sequential add four system function
@@ -35,7 +35,7 @@ addFour = $(instantiate "addOne3" 'addOneSysDef) .
 
 -- We build the system
 addFourSys :: SysDef (Signal Int32 -> Signal Int32)
-addFourSys = $(newSysDef 'addFour ["in1"] ["out1"])
+addFourSys = newSysDef addFour "addFour" ["in1"] ["out1"]
 
 -- we simulate the system
 simAddFour :: [Int32] -> [Int32]
