@@ -103,7 +103,7 @@ newSysDefTH f sysId inIds outIds =
    -- unfortunately SysDef can't easily be an instance of Lift 
    -- due to the unsafe, unmutable references used in observable sharing 
    -- Right sysDef -> [| sysDef |]
-   Right _ -> intError "newSysDef" (Other "Unimplemented")
+   Right _ -> intError "newSysDefTH" (Other "Unimplemented")
 {-
    Right _ -> do
     loc <- currentModule
