@@ -20,7 +20,7 @@ module ForSyDe.System.SysFun
   checkSysFType) where
 
 import ForSyDe.Ids(PortId)
-import {-# SOURCE #-} ForSyDe.Netlist(NlSignal)
+import {-# SOURCE #-} ForSyDe.Netlist (NlSignal)
 import ForSyDe.Signal(Signal(..))
 import ForSyDe.ForSyDeErr
 
@@ -51,8 +51,15 @@ class SysFun f where
                --    types of input ports, 
                --    types of output ports)
 
-
-
+ -- | Transforms a primitive-signal-list version of a system function
+ --   into a standard system function.
+ --   Note the length of input/output lists of the list version must match with 
+ --   the argument number and return tuple size of the system function.
+ fromListSysFun :: ([NlSignal] -> [NlSignal]) -- ^ primitive-signal-list sysfun
+                -> [NlSignal] -- ^ accumulated primitive signals
+                              --   (must be initialized to [])
+                -> f
+                   
 
 -- Function to automatically generate instances for the system function outputs 
 -- with Template Haskell. For example, in the case of 2 outputs, the code
@@ -60,40 +67,68 @@ class SysFun f where
 --
 -- @
 -- instance (Typeable o1, Typeable o2) => SysFun (Signal o1, Signal o2) where
---  applyFun (o1, o2) is = 
---             ([unSignal o1, unSignal o2], [], [typeOf o1, typeOf o2]) 
+--  applyFun (o1, o2) _ = 
+--         ([unSignal o1, unSignal o2], [], [typeOf o1, typeOf o2]) 
+--  fromListSysFun f accum = (Signal o1, Signal o2)
+--          where [o1, o2] = f (reverse accum) 
 -- @
 sysFunOutInstance :: Int -- ^ number of outputs to generate
                   -> DecQ
 sysFunOutInstance n = do
- -- Generate a input tuple pattern of n elements for the output signals:
- -- (o1, o2, ..., on)
+ -- Generate N output names
  outNames <- replicateM n (newName "o")
- let tupPat = tupP (map varP outNames)
- -- Generate the output primitive signal list expression
- -- [unsignal o1, unsignal o2, ...., unsignal on]
- let outPrimSignals = 
+ 
+ -- 1) Generate applyFun
+ --    Generate an input tuple pattern for applyFun
+ --    (o1, o2, ..., on)
+ let tupPatApply = tupP (map varP outNames)
+ --     Generate the output primitive signal list expression for applyFun
+ --    [unsignal o1, unsignal o2, ...., unsignal on]
+     outPrimSignalsApply = 
         listE $ map (\oName -> varE 'unSignal `appE` varE oName) outNames
- -- Generate the output signal types
- -- [typeOf o1, typeOf o2, ...., typeOf on]
-     outTypeReps =
+ --    Generate the output signal types for ApplyFun
+ --    [typeOf o1, typeOf o2, ...., typeOf on]
+     outTypeRepsApply =
         listE $ map (\oName -> varE 'typeOf `appE` varE oName) outNames
- -- Generate the full output expression
-     outE = [| ($outPrimSignals, [], $outTypeReps) |]
- -- Finally, generate the instance itself
- -- 1) We create the declaration for applySysFun
+ --    Generate the full output expression
+     outEApply = [| ($outPrimSignalsApply, [], $outTypeRepsApply) |]
+ --    Finally, the full declaration of applyFun 
      applySysFunDec = 
-       funD 'applySysFun [clause [tupPat, wildP] (normalB outE) []]
- -- 2) We reuse the output signal names for the head type variables
- --   (Signal o1, Signal o2, ..., Signal on)
+       funD 'applySysFun [clause [tupPatApply, wildP] (normalB outEApply) []]
+ -- 2) Generate fromListSysFun
+ --    Generate the parameter names
+ fParFrom <- newName "f"
+ accumParFrom <- newName "accum"
+ --    Generate the parametter patterns
+ let fPatFrom = varP fParFrom
+     accumPatFrom = varP accumParFrom 
+ --    Generate the list pattern: [o1, o2, .., on]
+     listPatFrom = listP $ map varP outNames
+ --    Generate the rhs of the where declaration
+     whereRHSFrom = [| $(varE fParFrom) (reverse $(varE accumParFrom)) |]
+ --    Generate the where clause declaration
+     whereDecFrom = valD listPatFrom (normalB whereRHSFrom) []
+ --    Generate output expression: (Signal o1, Signal o2, ..., Signal on)
+     outEFrom = tupE $ map (\oName -> conE 'Signal `appE` varE oName) outNames
+ --    Finally, the full declaration of fromListSysFun
+     fromListSysFunDec = 
+          funD 'fromListSysFun [clause [fPatFrom, accumPatFrom] 
+                                       (normalB outEFrom) 
+                                       [whereDecFrom]           ]   
+ -- 3) Generate the instance itself
+ --    We reuse the output signal names for the head type variables
+ --    (Signal o1, Signal o2, ..., Signal on)
      signalTupT = if n == 1 then conT ''Signal `appT` varT (head outNames)
                              else foldr accumApp (tupleT n) outNames 
        where accumApp vName accumT =  
                        accumT `appT` (conT ''Signal `appT` varT vName)
- -- 3) Create the Typeable context
+ --    Create the Typeable context
      typeableCxt = map (\vName -> conT ''Typeable `appT` varT vName) outNames
- -- Finally return the instance declaration
- instanceD (cxt typeableCxt) (conT ''SysFun `appT` signalTupT) [applySysFunDec]
+ --    Finally return the instance declaration
+ runIO (putStrLn $ show n)
+ instanceD (cxt typeableCxt) 
+           (conT ''SysFun `appT` signalTupT) 
+           [applySysFunDec, fromListSysFunDec]                   
   
 
 ---------------------------------------------------------------

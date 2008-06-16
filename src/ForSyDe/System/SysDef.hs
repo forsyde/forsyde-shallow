@@ -65,6 +65,10 @@ data SysDefVal = SysDefVal
                              --   on the newSysDef* function used
 
 
+-- FIXME FIXME FIXME: The frontend doesn't currently check for duplicates in 
+--                    process identifiers. newSysDef* should take care of that.
+
+
 
 -- | 'SysDef' constructor
 --
@@ -80,7 +84,7 @@ newSysDef f sysId inIds outIds = either currError id eProneResult
        eProneResult = newSysDefEProne f Nothing sysId inIds outIds
 
 -- |'SysDef' constructor, Template Haskell version
---  FIXME: currently broken.
+--  FIXME: currently broken, do not use.
 --
 --   Builds a system definition out of a system function, a system identifiers 
 --   and its port identifers.
@@ -90,8 +94,12 @@ newSysDef f sysId inIds outIds = either currError id eProneResult
 --  one input and output signals.
 --
 --  The advantage of 'newSysDefTH' over 'newSysDef' is that it 
---  reports errors (e.g duplicated port process identifier) earlier, 
---  at host-language (Haskell) compile-time.
+--  reports errors (e.g duplicated port and process identifiers) earlier, 
+--  at host-language (Haskell) compile-time. 
+--
+--  In addition, due to the use of Template Haskell, 'newSysDefTH' is
+--  aware of the source location at which it was called, making
+--  further error reports friendlier to the user.
 newSysDefTH :: SysFun f => f -- ^ system function 
                         -> SysId    -- ^ System identifier 
                         -> [PortId] -- ^ Input interface port identifiers 
@@ -104,6 +112,8 @@ newSysDefTH f sysId inIds outIds =
    -- due to the unsafe, unmutable references used in observable sharing 
    -- Right sysDef -> [| sysDef |]
    Right _ -> intError "newSysDefTH" (Other "Unimplemented")
+-- FIXME: Fix this function or remove (updating the documentation of
+--        newSysDef* in the latter case).
 {-
    Right _ -> do
     loc <- currentModule

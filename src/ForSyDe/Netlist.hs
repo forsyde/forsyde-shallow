@@ -205,10 +205,6 @@ newNodeOutSig :: URef (NlNode NlSignal)  -- ^ Reference to the node
               -> NlSignal
 newNodeOutSig ref mTag  = NlTree (NlEdge ref mTag)
 
--- | Create one of the output signals of a node
-node2NlSignal :: URef (NlNode NlSignal) -> NlNodeOut -> NlSignal
-node2NlSignal ref tag = NlTree (NlEdge ref tag)
-
 
 -- | Evaluate the output of a process within a synchronous period
 --   The inputs and outputs are given in dynamic form

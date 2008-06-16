@@ -28,10 +28,10 @@ addOneSysDef = newSysDef addOneProc "addOne" ["in1"] ["out1"]
 
 -- Finally, we create the sequential add four system function
 addFour :: Signal Int32 -> Signal Int32
-addFour = $(instantiate "addOne3" 'addOneSysDef) .
-          $(instantiate "addOne2" 'addOneSysDef) .
-          $(instantiate "addOne1" 'addOneSysDef) .
-          $(instantiate "addOne0" 'addOneSysDef)
+addFour = instantiate "addOne3" addOneSysDef .
+          instantiate "addOne2" addOneSysDef .
+          instantiate "addOne1" addOneSysDef .
+          instantiate "addOne0" addOneSysDef
 
 -- We build the system
 addFourSys :: SysDef (Signal Int32 -> Signal Int32)

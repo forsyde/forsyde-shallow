@@ -14,7 +14,7 @@ nullSysDef :: SysDef ()
 nullSysDef = $(newSysDefTHName 'nullSysF [] [])
 
 nullIns0 :: ()
-nullIns0 = $(instantiate "null0" 'nullSysDef)
+nullIns0 = instantiate "null0" nullSysDef
 
 simNull :: ()
 simNull = $(simulate 'nullSysDef) 

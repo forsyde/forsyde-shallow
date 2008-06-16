@@ -91,9 +91,16 @@ instance (ProcType a, ProcType b, ProcType c, ProcType d, ProcType e,
       `union` getEnums (undefined :: e) `union` getEnums (undefined :: f)      
       `union` getEnums (undefined :: g)
 
+-- FIXME: Shouldn't we support even larger tuples?
+
 instance (Typeable c, Nat c, ProcType a) => ProcType (FSVec c a) where
  getEnums _ = getEnums (undefined :: a)
 
+-- FIXME: Even if this instance helps the implementation of
+--        procFun2Dyn and contProcFun2Dyn it shouldn't be here since ..
+--        It allows things as:
+-- mapSY :: ProcFun ((Int->Int)->(Int->Int)) -> Signal (Int -> Int) ->
+--          Signal(Int->Int)       
 instance (ProcType a, ProcType b) => ProcType (a -> b) where
  getEnums _ = getEnums (undefined :: a) `union` getEnums (undefined :: b)
 

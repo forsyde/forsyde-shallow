@@ -25,10 +25,10 @@ parAddFour :: Signal Int32
            -> Signal Int32 -> Signal Int32 -> Signal Int32 -> Signal Int32 
            -> (Signal Int32, Signal Int32, Signal Int32, Signal Int32)
 parAddFour toAdd s1 s2 s3 s4 = (sum1, sum2, sum3, sum4)
-  where sum1 = $(instantiate "adder1" 'addSys) toAdd s1
-        sum2 = $(instantiate "adder2" 'addSys) toAdd s2
-        sum3 = $(instantiate "adder3" 'addSys) toAdd s3
-        sum4 = $(instantiate "adder4" 'addSys) toAdd s4
+  where sum1 = (instantiate "adder1" addSys) toAdd s1
+        sum2 = (instantiate "adder2" addSys) toAdd s2
+        sum3 = (instantiate "adder3" addSys) toAdd s3
+        sum4 = (instantiate "adder4" addSys) toAdd s4
 
 parAddFourSys :: SysDef (Signal Int32 
            -> Signal Int32 -> Signal Int32 -> Signal Int32 -> Signal Int32 

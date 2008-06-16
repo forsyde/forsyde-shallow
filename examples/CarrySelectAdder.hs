@@ -81,10 +81,10 @@ fourBitAdder :: Signal Bit   -- C_IN
 	         Signal Bit) -- SUM0
 fourBitAdder c_in a3 a2 a1 a0 b3 b2 b1 b0 
                 = (c_out, sum3, sum2, sum1, sum0)
-		  where (c_out, sum3) = $(instantiate "add3" 'fullAddSys) a3 b3 c2
-		        (c2, sum2)    = $(instantiate "add2" 'fullAddSys) a2 b2 c1
-		        (c1, sum1)    = $(instantiate "add1" 'fullAddSys) a1 b1 c0
-		        (c0, sum0)    = $(instantiate "add0" 'fullAddSys) a0 b0 c_in
+		  where (c_out, sum3) = (instantiate "add3" fullAddSys) a3 b3 c2
+		        (c2, sum2)    = (instantiate "add2" fullAddSys) a2 b2 c1
+		        (c1, sum1)    = (instantiate "add1" fullAddSys) a1 b1 c0
+		        (c0, sum0)    = (instantiate "add0" fullAddSys) a0 b0 c_in
 
 fourBitAdderSys :: SysDef (Signal Bit   -- C_IN
 			-> Signal Bit   -- A3
@@ -138,19 +138,19 @@ fourBitCSAdder :: Signal Bit   -- C_IN
 	          Signal Bit) -- SUM0fourBitCSAdder :: 
 fourBitCSAdder c_in a3 a2 a1 a0 b3 b2 b1 b0
                = (c_out, sum3, sum2, sum1, sum0)
-                 where c_out = $(instantiate "mux4" 'mux21Sys) c_in c_out_1 c_out_0
-                       sum3  = $(instantiate "mux3" 'mux21Sys) c_in sum3_1 sum3_0
-                       sum2  = $(instantiate "mux2" 'mux21Sys) c_in sum2_1 sum2_0
-                       sum1  = $(instantiate "mux1" 'mux21Sys) c_in sum1_1 sum1_0 
-                       sum0  = $(instantiate "mux0" 'mux21Sys) c_in sum0_1 sum0_0
+                 where c_out = (instantiate "mux4" mux21Sys) c_in c_out_1 c_out_0
+                       sum3  = (instantiate "mux3" mux21Sys) c_in sum3_1 sum3_0
+                       sum2  = (instantiate "mux2" mux21Sys) c_in sum2_1 sum2_0
+                       sum1  = (instantiate "mux1" mux21Sys) c_in sum1_1 sum1_0 
+                       sum0  = (instantiate "mux0" mux21Sys) c_in sum0_1 sum0_0
                        (c_out_1, sum3_1, sum2_1, sum1_1, sum0_1) 
-                             = $(instantiate "Adder_1" 'fourBitAdderSys) 
+                             = (instantiate "Adder_1" fourBitAdderSys) 
                                 one a3 a2 a1 a0 b3 b2 b1 b0
                        (c_out_0, sum3_0, sum2_0, sum1_0, sum0_0) 
-                             = $(instantiate "Adder_1" 'fourBitAdderSys) 
+                             = (instantiate "Adder_1" fourBitAdderSys) 
                                 zero a3 a2 a1 a0 b3 b2 b1 b0
-                       one = $(instantiate "One" 'oneSys)
-                       zero = $(instantiate "Zero" 'zeroSys)
+                       one = instantiate "One" oneSys
+                       zero = instantiate "Zero" zeroSys
 
 fourBitCSAdderSys = $(newSysDefTHName 'fourBitCSAdder ["C_IN", "A3", "A2", "A1", "A0",
                                              "B3", "B2", "B1", "B0"]
@@ -192,8 +192,8 @@ fourBitCSAdder' :: Signal Bit   -- C_IN
 	        -> Signal (FSVec D5 Bit) -- <C_OUT, SUM3, SUM2, SUM1, SUM0>
 fourBitCSAdder' c_in a3 a2 a1 a0 b3 b2 b1 b0 = out5
                where
-                  out5 = $(instantiate "toVector5" 'convOutputSys) c_out sum3 sum2 sum1 sum0
-                  (c_out, sum3, sum2, sum1, sum0) = $(instantiate "Adder" 'fourBitCSAdderSys) c_in a3 a2 a1 a0 b3 b2 b1 b0  
+                  out5 = (instantiate "toVector5" convOutputSys) c_out sum3 sum2 sum1 sum0
+                  (c_out, sum3, sum2, sum1, sum0) = (instantiate "Adder" fourBitCSAdderSys) c_in a3 a2 a1 a0 b3 b2 b1 b0  
 
 fourBitCSAdderSys2 :: SysDef (Signal Bit   -- C_IN
 	        -> Signal Bit   -- A3
@@ -289,12 +289,12 @@ zeroSys = $(newSysDefTHName 'zeroProc [] ["zero"])
 -- The 4-Bit carry select adder is implemented as a composition of components
 csAdder4BitProc :: Signal Bit -> Signal (FSVec D4 Bit) -> Signal (FSVec D4 Bit) -> (Signal Bit, Signal (FSVec D4 Bit))
 csAdder4BitProc cin a b = (cout, sum) where
-                          cout = $(instantiate "mux" 'mux21Sys) cin cout_1 cout_0
-                          sum = $(instantiate "mux4Bit" 'mux21_4BitSys) cin sum_1 sum_0
-                          (cout_1, sum_1) = $(instantiate "adder1" 'adder4BitSys) one a b
-                          (cout_0, sum_0) = $(instantiate "adder0" 'adder4BitSys) zero a b                  
-                          one = $(instantiate "One" 'oneSys)
-                          zero = $(instantiate "Zero" 'zeroSys)
+                          cout = (instantiate "mux" mux21Sys) cin cout_1 cout_0
+                          sum = (instantiate "mux4Bit" mux21_4BitSys) cin sum_1 sum_0
+                          (cout_1, sum_1) = (instantiate "adder1" adder4BitSys) one a b
+                          (cout_0, sum_0) = (instantiate "adder0" adder4BitSys) zero a b                  
+                          one = instantiate "One" oneSys
+                          zero = instantiate "Zero" zeroSys
                            
 csAdder4BitSys :: SysDef (Signal Bit -> Signal (FSVec D4 Bit) -> Signal (FSVec D4 Bit) -> (Signal Bit, Signal (FSVec D4 Bit)))
 csAdder4BitSys = $(newSysDefTHName 'csAdder4BitProc ["cin", "a", "b"] ["cout", "sum"])
@@ -308,10 +308,10 @@ vhdlCSAdder4Bit = writeVHDL csAdder4BitSys
 csAdder16BitProc :: Signal (FSVec D16 Bit) -> Signal (FSVec D16 Bit) -> (Signal Bit, Signal (FSVec D16 Bit))
 csAdder16BitProc a b = (cout, sum) where
                        sum = zipWith4SY "concat4" concat4Fun sum3_0 sum7_4 sum11_8 sum15_12
-                       (cout, sum15_12) = $(instantiate "csadder3" 'csAdder4BitSys) c11 a15_12 b15_12
-                       (c11, sum11_8) = $(instantiate "csadder2" 'csAdder4BitSys) c7 a11_8 b11_8
-                       (c7, sum7_4) = $(instantiate "csadder3" 'csAdder4BitSys) c3 a7_4 b7_4
-                       (c3, sum3_0) = $(instantiate "csadder3" 'csAdder4BitSys) zero a3_0 b3_0
+                       (cout, sum15_12) = (instantiate "csadder3" csAdder4BitSys) c11 a15_12 b15_12
+                       (c11, sum11_8) = (instantiate "csadder2" csAdder4BitSys) c7 a11_8 b11_8
+                       (c7, sum7_4) = (instantiate "csadder3" csAdder4BitSys) c3 a7_4 b7_4
+                       (c3, sum3_0) = (instantiate "csadder3" csAdder4BitSys) zero a3_0 b3_0
                        a15_12 = mapSY "a15_12" select15_12Fun a
                        a11_8  = mapSY "a11_8"  select11_8Fun a
                        a7_4   = mapSY "a7_4"   select7_4Fun a
@@ -320,7 +320,7 @@ csAdder16BitProc a b = (cout, sum) where
                        b11_8  = mapSY "b11_8"  select11_8Fun b
                        b7_4   = mapSY "b7_4"   select7_4Fun b
                        b3_0   = mapSY "b3 _0"  select3_0Fun b
-                       zero = $(instantiate "Zero" 'zeroSys)         
+                       zero = instantiate "Zero" zeroSys         
 
 
 csAdder16BitSys = $(newSysDefTHName 'csAdder16BitProc ["a", "b"] ["cout", "sum"])

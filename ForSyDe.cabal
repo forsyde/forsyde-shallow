@@ -45,6 +45,7 @@ Library
   other-modules:   Language.Haskell.TH.TypeLib,
                    Data.Typeable.TypeRepLib,
                    Data.Traversable.GenericZipWith,
+                   ForSyDe.Config,
                    ForSyDe.ForSyDeErr,
                    ForSyDe.Netlist,
                    ForSyDe.Netlist.Traverse,

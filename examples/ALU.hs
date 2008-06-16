@@ -220,10 +220,10 @@ fourBitAdder :: Signal Bit   -- C_IN
 	         Signal Bit) -- SUM0
 fourBitAdder c_in a3 a2 a1 a0 b3 b2 b1 b0 
                 = (c_out, sum3, sum2, sum1, sum0)
-		  where (c_out, sum3) = $(instantiate "add3" 'fullAddSys) a3 b3 c2
-		        (c2, sum2)    = $(instantiate "add2" 'fullAddSys) a2 b2 c1
-		        (c1, sum1)    = $(instantiate "add1" 'fullAddSys) a1 b1 c0
-		        (c0, sum0)    = $(instantiate "add0" 'fullAddSys) a0 b0 c_in
+		  where (c_out, sum3) = (instantiate "add3" fullAddSys) a3 b3 c2
+		        (c2, sum2)    = (instantiate "add2" fullAddSys) a2 b2 c1
+		        (c1, sum1)    = (instantiate "add1" fullAddSys) a1 b1 c0
+		        (c0, sum0)    = (instantiate "add0" fullAddSys) a0 b0 c_in
 
 fourBitAdderSys :: SysDef (Signal Bit   -- C_IN
 			-> Signal Bit   -- A3
@@ -265,11 +265,11 @@ add4FSVecProc :: Signal (FSVec D4 Bit)
               -> (Signal Bit, Signal (FSVec D4 Bit))
 add4FSVecProc a b = (cout, sum)
                     where
-                       (a3,a2,a1,a0) = $(instantiate "split_a" 'convFromFSVec4Sys) a
-                       (b3,b2,b1,b0) = $(instantiate "split_b" 'convFromFSVec4Sys) b 
-                       (cout, s3, s2, s1, s0) = $(instantiate "adder" 'fourBitAdderSys) zero a3 a2 a1 a0 b3 b2 b1 b0                
-                       sum = $(instantiate "merge" 'convToFSVec4Sys) s3 s2 s1 s0
-                       zero = $(instantiate "Zero" 'zeroSys)          
+                       (a3,a2,a1,a0) = (instantiate "split_a" convFromFSVec4Sys) a
+                       (b3,b2,b1,b0) = (instantiate "split_b" convFromFSVec4Sys) b 
+                       (cout, s3, s2, s1, s0) = (instantiate "adder" fourBitAdderSys) zero a3 a2 a1 a0 b3 b2 b1 b0                
+                       sum = (instantiate "merge" convToFSVec4Sys) s3 s2 s1 s0
+                       zero = instantiate "Zero" zeroSys          
 
 add4FSVecSys :: SysDef (Signal (FSVec D4 Bit)
               -> Signal (FSVec D4 Bit)
@@ -304,11 +304,11 @@ aluProc :: Signal(FSVec D2 Bit)
         ->  (Signal Bit, Signal (FSVec D4 Bit))
 aluProc sel a b = (cout, out)
                   where
-                     andOut = $(instantiate "and" 'and4BitSys) a b
-                     orOut = $(instantiate "or" 'or4BitSys) a b
-                     (cout, sum) = $(instantiate "add" 'add4FSVecSys) a b
-                     lslOut = $(instantiate "lsl" 'lslSys) a
-                     out =  $(instantiate "mux" 'mux41Sys) sel andOut orOut sum lslOut
+                     andOut = (instantiate "and" and4BitSys) a b
+                     orOut = (instantiate "or" or4BitSys) a b
+                     (cout, sum) = (instantiate "add" add4FSVecSys) a b
+                     lslOut = (instantiate "lsl" lslSys) a
+                     out =  (instantiate "mux" mux41Sys) sel andOut orOut sum lslOut
 
                      
 
