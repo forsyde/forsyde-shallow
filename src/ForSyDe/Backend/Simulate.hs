@@ -1,5 +1,4 @@
-{-# LANGUAGE TemplateHaskell, ScopedTypeVariables #-} 
--- Due to template haskell and Lexically scoped type variables  
+{-# LANGUAGE ScopedTypeVariables #-} 
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  ForSyDe.Backend.Simulate
@@ -20,121 +19,24 @@ module ForSyDe.Backend.Simulate (simulate) where
 import ForSyDe.OSharing
 import ForSyDe.Netlist
 import ForSyDe.Netlist.Traverse
-import ForSyDe.Signal
 import ForSyDe.System.SysDef
-import ForSyDe.System.SysFun
+import ForSyDe.System.SysFun(SysFunToSimFun(..))
 import ForSyDe.ForSyDeErr
 import ForSyDe.Process.ProcVal
 
-import Control.Monad (liftM, replicateM, mapM_, zipWithM_)
+import Control.Monad (liftM, mapM_, zipWithM_)
 import Data.Maybe (fromJust)
 import Control.Monad.ST
 import Data.STRef
 import qualified Data.Traversable as DT
 import Data.List (lookup, transpose)
 import Data.Dynamic
-import Language.Haskell.TH
-import Language.Haskell.TH.TypeLib
 
-
--- | 'simulate' is a Template Haskell function which Generates another 
---   function able to simulate a System using a list-based representation 
---   of its signals. 'simulate' needs the name of a 'SysDef' variable as 
---   argument. 
---   TODO: provide a use-case example.
-simulate :: Name -> ExpQ
--- FIXME: refactor code with SysDef and Instantiate
-simulate sysDefN =            
-           do i <- reify sysDefN
-              -- check if a SysDef variable name was provided
-              sysFType <- case i of
-                 VarI _ t  _  _ -> 
-                   case t  of 
-                    ConT name `AppT` syst | name == ''SysDef -> return syst
-                    _  -> currError (NonSysDef sysDefN t) 
-                 _  -> currError  (NonVarName sysDefN)
-              -- Get the number and types of the inputs and outputs of 
-              -- the system
-              ((inTypes, nIn),(outTypes, nOut)) <- checkSysFType sysFType
-              -- Generate a pattern for each input 
-              inNames <- replicateM nIn (newName "i")     
-              let inPats  = [varP n | n <- inNames]
-              -- Generate a list with all the inputs in dynamic form
-                  inList  = listE [ [| map toDyn $(varE n) |] | n <- inNames]
-              -- Generate the body of the simulation function
-                  simBody  =    
-                    [|
-                      let 
-                      -- The primary system definition
-                      primSysDef = unSysDef $(varE sysDefN) 
-                      -- Put all the inputs in a list
-                      dynIns = $inList
-                      -- Get the dynamic output of the simulation
-                      dynOuts = simulateDyn primSysDef dynIns
-                      -- Put the outputs in a tuple of lists 
-                      toTup = $(dynLists2Tup nOut)       
-                      in  toTup dynOuts |]
-              -- Done, just add the input pattern and the concrete
-              -- type signature 
-              sigE (lamE inPats simBody) (return $ simType inTypes outTypes)
-    
-  where currError = qError "simulate"
-
-
-
-
-----------------------------
--- Internal Helper Functions
-----------------------------
-
-
--- | Generate a lambda expression to transform a list containing 
---   N Dynamic lists into a tuple of 'Signal's
-dynLists2Tup :: Int  -- ^ size of the tuple
-            -> ExpQ
-dynLists2Tup n = 
-    do -- Generate a list pattern of n elements
-       -- and a tuple including those elements transformed in Signal
-       names <- replicateM n (newName "elem")
-       -- use pattern (elem1:elem2:elem3:.. :xs) and not not [elem1,elem2,elem3]
-       -- because the second one doesn't work with infinite data structures
-       let consName = '(:)
-           listPat = foldr (\name pat -> infixP (varP name) consName pat) 
-                           wildP names 
-           tupExp  = tupE  [ [| map fromDynErr $(varE n) |] | n <- names]
-       lamE [listPat] tupExp
-
--- | Transform a dynamic value into a specific one giving an error
---   if the type of the dynamic object doesn't match with the target
-fromDynErr :: forall a . Typeable a => Dynamic -> a
-fromDynErr dyn = fromDyn dyn (intError funName error)   
- where  funName = "ForSyDe.Backend.Simulate.fromDynErr"
-        expectedType = typeOf (undefined :: a) 
-        error =  DynMisMatch dyn expectedType
-
--- | Obtains the type of the simulation function from the type of the
---   input and output signal types of the system
-simType :: [Type] -> [Type] -> Type
-simType inTypes outTypes = 
-   reArrowT (map signal2List inTypes, retType outTypes, monoContext) 
- where -- Obtain the simulation output type using the individual
-       -- output signal types
-       retType :: [Type] -> Type
-       -- Just one signal output
-       retType [out] = signal2List out
-       -- None or multiple outputs
-       retType outs  = 
-            reAppT (TupleT (length outs), map signal2List outs, monoContext) 
-       
-       -- Transform a Signal type into a list type
-       signal2List :: Type -> Type
-       -- FIMXE: refactor with isSignal
-       signal2List (ConT name `AppT` arg) | name == ''Signal = ListT `AppT` arg
-       signal2List typ = intError "ForSyDe.Simulate.simType" (SigMisMatch typ) 
-       
---------------------
--- Simulation itself
---------------------
+-- | 'simulate' takes a system definition and generates a function 
+--   able simulate a System using a list-based representation 
+--   of its signals.
+simulate :: SysFunToSimFun sysFun simFun => SysDef sysFun -> simFun
+simulate sysDef = fromListSimFun (simulateDyn (unSysDef sysDef)) []
 
 -- FIXME: clean and document the following horrible code!
 
@@ -152,7 +54,7 @@ data Wire s
     }
 
 ----------------------------------------------------------------
--- simulate
+-- simulateDyn
 
 
 simulateDyn :: PrimSysDef  -> [[Dynamic]] -> [[Dynamic]]
@@ -342,8 +244,5 @@ checkIns nIns (i:is) ~(o:os) |  length i == nIns = o : checkIns nIns is os
 checkIns _ _ _ = []
 
 
-
-----------------------------------------------------------------
--- the end.
 
 

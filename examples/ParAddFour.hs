@@ -19,7 +19,7 @@ addSys :: SysDef (Signal Int32 -> Signal Int32 -> Signal Int32)
 addSys = $(newSysDefTHName 'addProc ["in1","in2"] ["sum"])
 
 simAdd :: [Int32] -> [Int32] -> [Int32]
-simAdd = $(simulate 'addSys)
+simAdd = simulate addSys
 
 parAddFour :: Signal Int32 
            -> Signal Int32 -> Signal Int32 -> Signal Int32 -> Signal Int32 
@@ -40,4 +40,4 @@ parAddFourSys = $(newSysDefTHName 'parAddFour ["toAdd","s1","s2","s3","s4"]
 simParAddFour :: [Int32]
               -> [Int32] -> [Int32] -> [Int32] -> [Int32]
               -> ([Int32], [Int32], [Int32], [Int32]) 
-simParAddFour = $(simulate 'parAddFourSys)
+simParAddFour = simulate parAddFourSys

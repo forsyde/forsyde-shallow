@@ -34,7 +34,7 @@ fullAddSys :: SysDef (Signal Bit -> Signal Bit -> Signal Bit -> (Signal Bit, Sig
 fullAddSys = $(newSysDefTHName 'fullAddProc ["a", "b", "c_in"] ["cout", "sum"])
 
 simFullAdd :: [Bit] -> [Bit] -> [Bit] -> ([Bit], [Bit])
-simFullAdd = $(simulate 'fullAddSys)
+simFullAdd = simulate fullAddSys
 
 --vhdlFullAdd = writeVHDL fullAddSys
 
@@ -59,7 +59,7 @@ mux21Sys :: SysDef (Signal Bit -> Signal Bit -> Signal Bit -> Signal Bit)
 mux21Sys = $(newSysDefTHName 'mux21Proc ["sel", "d1", "d0"] ["out"])
 
 simMux21 :: [Bit] -> [Bit] -> [Bit] -> [Bit]
-simMux21 = $(simulate 'mux21Sys)
+simMux21 = simulate mux21Sys
 
 vhdlMux21 = writeVHDL mux21Sys
 
@@ -104,7 +104,7 @@ fourBitAdderSys = $(newSysDefTHName 'fourBitAdder ["C_IN", "A3", "A2", "A1", "A0
                                              "B3", "B2", "B1", "B0"]
                                             ["C_OUT", "SUM3", "SUM2", "SUM1", "SUM0"])
 
-simFourBitAdder = $(simulate 'fourBitAdderSys)
+simFourBitAdder = simulate fourBitAdderSys
 
 vhdlFourBitAdder = writeVHDL fourBitAdderSys
 
@@ -157,7 +157,7 @@ fourBitCSAdderSys = $(newSysDefTHName 'fourBitCSAdder ["C_IN", "A3", "A2", "A1",
                                             ["C_OUT", "SUM3", "SUM2", "SUM1", "SUM0"])
 
 
-simFourBitCSAdder = $(simulate 'fourBitCSAdderSys)
+simFourBitCSAdder = simulate fourBitCSAdderSys
 
 vhdlFourBitCSAdder = writeVHDL fourBitCSAdderSys
                            
@@ -209,7 +209,7 @@ fourBitCSAdderSys2 = $(newSysDefTHName 'fourBitCSAdder' ["C_IN", "A3", "A2", "A1
                                              "B3", "B2", "B1", "B0"]
                                             ["vect5"])
 
-simFourBitCSAdder2 = $(simulate 'fourBitCSAdderSys2)
+simFourBitCSAdder2 = simulate fourBitCSAdderSys2
 
 vhdlFourBitCSAdder2 = writeVHDL fourBitCSAdderSys2
 
@@ -241,7 +241,7 @@ adder4BitProc cin a b = (unzipSY "unzip") $ (zipWith3SY "4BitAdder" adder4BitFun
 adder4BitSys :: SysDef (Signal Bit -> Signal (FSVec D4 Bit) -> Signal (FSVec D4 Bit) -> (Signal Bit, Signal (FSVec D4 Bit)))
 adder4BitSys = $(newSysDefTHName 'adder4BitProc ["cin", "a", "b"] ["cout", "sum"])
 
-simAdder4Bit = $(simulate 'adder4BitSys)
+simAdder4Bit = simulate adder4BitSys
 
 vhdlAdder4Bit = writeVHDL adder4BitSys
 
@@ -263,7 +263,7 @@ mux21_4BitSys :: SysDef (Signal Bit -> Signal ( FSVec D4 Bit) -> Signal (FSVec D
 mux21_4BitSys = $(newSysDefTHName 'mux21_4BitProc ["sel", "d1", "d0"] ["out"])
 
 simMux21_4Bit :: [Bit] -> [FSVec D4 Bit] -> [FSVec D4 Bit] -> [FSVec D4 Bit]
-simMux21_4Bit = $(simulate 'mux21_4BitSys)
+simMux21_4Bit = simulate mux21_4BitSys
 
 vhdlMux21_4Bit = writeVHDL mux21_4BitSys
 
@@ -299,7 +299,7 @@ csAdder4BitProc cin a b = (cout, sum) where
 csAdder4BitSys :: SysDef (Signal Bit -> Signal (FSVec D4 Bit) -> Signal (FSVec D4 Bit) -> (Signal Bit, Signal (FSVec D4 Bit)))
 csAdder4BitSys = $(newSysDefTHName 'csAdder4BitProc ["cin", "a", "b"] ["cout", "sum"])
 
-simCSAdder4Bit = $(simulate 'csAdder4BitSys)
+simCSAdder4Bit = simulate csAdder4BitSys
 
 vhdlCSAdder4Bit = writeVHDL csAdder4BitSys
 
@@ -325,7 +325,7 @@ csAdder16BitProc a b = (cout, sum) where
 
 csAdder16BitSys = $(newSysDefTHName 'csAdder16BitProc ["a", "b"] ["cout", "sum"])
 
-simCSAdder16Bit = $(simulate 'csAdder16BitSys)
+simCSAdder16Bit = simulate csAdder16BitSys
 
 vhdlCSAdder16Bit = writeVHDL csAdder16BitSys
 

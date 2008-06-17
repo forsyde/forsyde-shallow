@@ -17,4 +17,4 @@ nullIns0 :: ()
 nullIns0 = instantiate "null0" nullSysDef
 
 simNull :: ()
-simNull = $(simulate 'nullSysDef) 
+simNull = simulate nullSysDef

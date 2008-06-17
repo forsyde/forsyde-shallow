@@ -1,4 +1,5 @@
-{-# LANGUAGE TemplateHaskell, FlexibleInstances, ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell, FlexibleInstances, ScopedTypeVariables,
+             MultiParamTypeClasses, UndecidableInstances #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  ForSyDe.System.SysFun.Instances
@@ -17,15 +18,17 @@
 ----------------------------------------------------------------------------- 
 module ForSyDe.System.SysFun.Instances () where
 
-import Data.Typeable
+import Data.Dynamic
+import Control.Monad (liftM)
+import Language.Haskell.TH (runIO)
 
 import ForSyDe.Config (maxTupleSize)
-import ForSyDe.System.SysFun (SysFun(..), sysFunOutInstance)
+import ForSyDe.System.SysFun (SysFun(..), SysFunToSimFun(..), funOutInstances)
 import ForSyDe.Netlist
 import ForSyDe.Signal
 
--- This instance is the one in charge of providing the necessary recursion step
--- needed to support the variable number of arguments.
+-- This two instances are the ones in charge of providing the necessary 
+-- recursion step needed to support the variable number of arguments.
 -- In each step, the system function is provided with a new input signal port
 -- until the output signals are obtained.
 instance (Typeable a, SysFun f) => SysFun (Signal a -> f) where
@@ -36,7 +39,20 @@ instance (Typeable a, SysFun f) => SysFun (Signal a -> f) where
             (i:is) -> applySysFun (f (Signal (newInPort i))) is 
         currInType = typeOf (undefined :: Signal a)
  fromListSysFun f accum s = fromListSysFun f ((unSignal s):accum)
- 
+
+instance (Typeable a, SysFunToSimFun sysFun simFun) => 
+         SysFunToSimFun (Signal a -> sysFun) ([a] -> simFun) where
+ fromListSimFun f accum s = fromListSimFun f ((map toDyn s):accum)
+
+
 -- Generate instances for the system function outputs up to the maximum
 -- tuple size
-$(mapM sysFunOutInstance [0..maxTupleSize])
+$(let concatMapM f xs = liftM concat (mapM f xs) 
+      listFunOutInstances = liftM (\(a,b) -> [a,b]) . funOutInstances
+      msg = "Generating and compiling " ++ show maxTupleSize ++ 
+            " output instances of " ++
+            show ''SysFun ++ " and " ++ show ''SysFunToSimFun ++ 
+            ", this might take some time ... \n"
+  in runIO (putStrLn $ msg) >>
+     concatMapM listFunOutInstances [0..maxTupleSize]
+  )

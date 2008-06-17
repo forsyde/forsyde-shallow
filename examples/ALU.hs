@@ -47,7 +47,7 @@ and4BitSys :: SysDef (Signal (FSVec D4 Bit)
 and4BitSys =  $(newSysDefTHName 'and4BitProc ["a", "b"] ["y"])
 
 simAnd4Bit :: [FSVec D4 Bit] -> [FSVec D4 Bit] -> [FSVec D4 Bit]
-simAnd4Bit = $(simulate 'and4BitSys)
+simAnd4Bit = simulate and4BitSys
 
 vhdlAnd4Bit = writeVHDL and4BitSys
 
@@ -73,7 +73,7 @@ or4BitSys :: SysDef (Signal (FSVec D4 Bit)
 or4BitSys =  $(newSysDefTHName 'or4BitProc ["a", "b"] ["y"])
 
 simOr4Bit :: [FSVec D4 Bit] -> [FSVec D4 Bit] -> [FSVec D4 Bit]
-simOr4Bit = $(simulate 'or4BitSys)
+simOr4Bit = simulate or4BitSys
 
 vhdlOr4Bit = writeVHDL or4BitSys
 
@@ -91,7 +91,7 @@ lslSys :: SysDef (Signal (FSVec D4 Bit) -> Signal (FSVec D4 Bit))
 lslSys = $(newSysDefTHName 'lslProc ["in"] ["out"])
 
 simLsl :: [FSVec D4 Bit] -> [FSVec D4 Bit]
-simLsl = $(simulate 'lslSys)
+simLsl = simulate lslSys
 
 vhdlLsl = writeVHDL lslSys
 
@@ -134,7 +134,7 @@ mux41Sys = $(newSysDefTHName 'mux41Proc ["sel", "d3", "d2", "d1", "d0"] ["out"])
 
 simMux41 :: [FSVec D2 Bit] -> [FSVec D4 Bit] -> [FSVec D4 Bit] 
          -> [FSVec D4 Bit] -> [FSVec D4 Bit] -> [FSVec D4 Bit]
-simMux41 = $(simulate 'mux41Sys)
+simMux41 = simulate mux41Sys
 
 vhdlMux41 = writeVHDL mux41Sys
 
@@ -153,7 +153,7 @@ convFromFSVec4Sys :: SysDef (Signal (FSVec D4 Bit) -> (Signal Bit, Signal Bit, S
 convFromFSVec4Sys = $(newSysDefTHName 'convFromFSVec4Proc ["vector4"] ["v3", "v2", "v1", "v0"])
 
 simConvFromFSVec4 :: [FSVec D4 Bit] -> ([Bit], [Bit], [Bit], [Bit])
-simConvFromFSVec4 = $(simulate 'convFromFSVec4Sys)
+simConvFromFSVec4 = simulate convFromFSVec4Sys
 
 vhdlConvFromFSVec4 =  writeVHDL convFromFSVec4Sys 
 
@@ -170,7 +170,7 @@ convToFSVec4Proc = zipWith4SY "toVector4" convToFSVec4Fun
 convToFSVec4Sys :: SysDef (Signal Bit -> Signal Bit -> Signal Bit -> Signal Bit -> Signal (FSVec D4 Bit))
 convToFSVec4Sys =  $(newSysDefTHName 'convToFSVec4Proc ["x3", "x2", "x1", "x0"] ["vec4"])
 
-simConvToFSVec4 = $(simulate 'convToFSVec4Sys)
+simConvToFSVec4 = simulate convToFSVec4Sys
 
 vhdlConvToFSVec4 = writeVHDL convToFSVec4Sys
 
@@ -194,7 +194,7 @@ fullAddSys :: SysDef (Signal Bit -> Signal Bit -> Signal Bit -> (Signal Bit, Sig
 fullAddSys = $(newSysDefTHName 'fullAddProc ["a", "b", "c_in"] ["cout", "sum"])
 
 simFullAdd :: [Bit] -> [Bit] -> [Bit] -> ([Bit], [Bit])
-simFullAdd = $(simulate 'fullAddSys)
+simFullAdd = simulate fullAddSys
 
 --vhdlFullAdd = writeVHDL fullAddSys
 
@@ -243,7 +243,7 @@ fourBitAdderSys = $(newSysDefTHName 'fourBitAdder ["C_IN", "A3", "A2", "A1", "A0
                                              "B3", "B2", "B1", "B0"]
                                             ["C_OUT", "SUM3", "SUM2", "SUM1", "SUM0"])
 
-simFourBitAdder = $(simulate 'fourBitAdderSys)
+simFourBitAdder = simulate fourBitAdderSys
 
 vhdlFourBitAdder = writeVHDL fourBitAdderSys
 
@@ -276,7 +276,7 @@ add4FSVecSys :: SysDef (Signal (FSVec D4 Bit)
               -> (Signal Bit, Signal (FSVec D4 Bit)))
 add4FSVecSys = $(newSysDefTHName 'add4FSVecProc ["a", "b"] ["cout", "sum"])
 
-simAdd4FSVecSys = $(simulate 'add4FSVecSys)
+simAdd4FSVecSys = simulate add4FSVecSys
 
 vhdlAdd4FSVecSys = writeVHDL add4FSVecSys
 
@@ -320,7 +320,7 @@ aluSys = $(newSysDefTHName 'aluProc ["sel", "a", "b"] ["cout", "data"])
     
 
 simALU :: [FSVec D2 Bit] ->  [FSVec D4 Bit] -> [FSVec D4 Bit] -> ([Bit], [FSVec D4 Bit])
-simALU = $(simulate 'aluSys)
+simALU = simulate aluSys
 
 vhdlALU = writeVHDL aluSys
                                       

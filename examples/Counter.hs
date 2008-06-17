@@ -17,4 +17,4 @@ counterSys :: SysDef (Signal Int32)
 counterSys = $(newSysDefTHName 'counter [] ["countVal"])
 
 simCounter :: [Int32]
-simCounter = $(simulate 'counterSys)
+simCounter = simulate counterSys

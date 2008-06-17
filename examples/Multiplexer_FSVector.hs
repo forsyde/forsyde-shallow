@@ -35,7 +35,7 @@ muxSysDef = $(newSysDefTHName 'selectProc ["sel", "data"] ["out1"])
 
 -- we simulate the system
 simMux :: [FSVec D2 Bit] -> [FSVec D4 Bit] -> [Bit]
-simMux = $(simulate 'muxSysDef)
+simMux = simulate muxSysDef
 
 selIn = [$(vectorTH [L,L]), $(vectorTH [H,L]), $(vectorTH [L,H]) ]
 dataIn = [$(vectorTH [L,H,H,H]), $(vectorTH [H,L,H,H]), $(vectorTH [H,H,L,H])]
