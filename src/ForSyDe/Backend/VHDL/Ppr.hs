@@ -81,7 +81,7 @@ instance Ppr [IfaceSigDec] where
 -- S1    : bit
 -- Ssdds : bit
  ppr []   = empty
- ppr decs = text "port" <+> (parens (ppr_list vComma decs) <> semi)
+ ppr decs = text "port" <+> (parens (ppr_list vSemi decs) <> semi)
 
 
 instance Ppr IfaceSigDec where
