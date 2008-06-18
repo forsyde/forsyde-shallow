@@ -551,6 +551,54 @@ data Expr = -- Logical operations
             Aggregate [ElemAssoc]   -- (exp1,exp2,exp3, ...)
  deriving Show            
 
+-- operand precedences, according to the VHDL LRM: 
+--  "Where the language
+--   allows a sequence of operators, operators with the same
+--   precedence level are associated with their operands in textual
+--   order, from left to right." In other words, they are all left associative
+--
+--   For example: a / b / c    = (a/b)/c
+--                a and b or c = (a and b) or c
+
+infixl 2 `And`, `Or`, `Xor`, `Nand`, `Nor`
+infixl 3 :=:, :/=:, :<:, :<=:, :>:, :>=:
+infixl 4 `Sll`, `Srl`, `Sla`, `Sra`, `Rol`, `Ror`
+infixl 5 :+:, :-:, :&:
+infix  6 `Neg`, `Pos`  
+infixl 7 :*:, :/:, `Mod`, `Rem`
+infixl 8 :**:, `Abs`,  `Not` 
+
+-- | Logical Operators precedence
+logicalPrec :: Int
+logicalPrec = 2
+
+-- | Relational Operators Precedence
+relationalPrec :: Int
+relationalPrec = 3
+
+-- | Shift Operators Precedence
+shiftPrec :: Int
+shiftPrec = 4
+
+-- | Plus Operators precedence
+plusPrec :: Int
+plusPrec = 5
+
+-- | Sign Operators Precedence
+signPrec :: Int
+signPrec = 6
+
+-- | Multplying Operators Precedecne
+multPrec :: Int
+multPrec = 7
+
+-- | Miscellaneous Operators Precedence
+miscPrec :: Int
+miscPrec = 8
+
+
+
+
 -- | element_association
 --   only one choice is allowed
 data ElemAssoc = ElemAssoc (Maybe Choice) Expr

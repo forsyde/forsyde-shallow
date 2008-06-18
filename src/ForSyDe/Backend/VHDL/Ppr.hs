@@ -367,48 +367,79 @@ instance Ppr InsUnit where
 
 -- FIXME, remove parenthesis according to precedence
 instance Ppr Expr where
- ppr (And e1 e2)  = parens (ppr e1) <+> text "and"  <+> parens (ppr e2) 
- ppr (Or  e1 e2)  = parens (ppr e1) <+> text "or"   <+> parens (ppr e2)
- ppr (Xor e1 e2)  = parens (ppr e1) <+> text "xor"  <+> parens (ppr e2)
- ppr (Nand e1 e2) = parens (ppr e1) <+> text "nand" <+> parens (ppr e2)
- ppr (Nor  e1 e2) = parens (ppr e1) <+> text "nor"  <+> parens (ppr e2)
- -- Relational Operators
- ppr (e1 :=:  e2) = parens (ppr e1) <+> text "="  <+> parens (ppr e2)
- ppr (e1 :/=: e2) = parens (ppr e1) <+> text "/=" <+> parens (ppr e2)
- ppr (e1 :<:  e2) = parens (ppr e1) <+> text "<"  <+> parens (ppr e2) 
- ppr (e1 :<=: e2) = parens (ppr e1) <+> text "<=" <+> parens (ppr e2)
- ppr (e1 :>:  e2) = parens (ppr e1) <+> text ">"  <+> parens (ppr e2)
- ppr (e1 :>=: e2) = parens (ppr e1) <+> text ">=" <+> parens (ppr e2)
- -- Shift Operators
- ppr (Sll e1 e2) = parens (ppr e1) <+> text "sll" <+> parens (ppr e2)
- ppr (Srl e1 e2) = parens (ppr e1) <+> text "srl" <+> parens (ppr e2)
- ppr (Sla e1 e2) = parens (ppr e1) <+> text "sla" <+> parens (ppr e2)
- ppr (Sra e1 e2) = parens (ppr e1) <+> text "sra" <+> parens (ppr e2)
- ppr (Rol e1 e2) = parens (ppr e1) <+> text "rol" <+> parens (ppr e2)
- ppr (Ror e1 e2) = parens (ppr e1) <+> text "ror" <+> parens (ppr e2)
- -- Adding Operators
- ppr (e1 :+: e2) = parens (ppr e1) <+> text "+" <+> parens (ppr e2) 
- ppr (e1 :-: e2) = parens (ppr e1) <+> text "-" <+> parens (ppr e2)
- ppr (e1 :&: e2) = parens (ppr e1) <+> text "&" <+> parens (ppr e2)
- -- Sign Operators
- ppr (Neg e) = text "-" <> parens(ppr e) 
- ppr (Pos e) = text "+" <> parens(ppr e)
- -- Multiplying Operators
- ppr (e1 :*: e2) = parens (ppr e1) <+> text "*" <+> parens (ppr e2) 
- ppr (e1 :/: e2) = parens (ppr e1) <+> text "/" <+> parens (ppr e2)
- ppr (Mod e1 e2) = parens (ppr e1) <+> text "mod" <+> parens (ppr e2)
- ppr (Rem e1 e2) = parens (ppr e1) <+> text "rem" <+> parens (ppr e2)
- -- Miscellaneous Operators
- ppr (e1 :**: e2) = parens (ppr e1) <+> text "**" <+> parens (ppr e2)
- ppr (Abs e)      = text "abs" <+> parens (ppr e)
- ppr (Not e)      = text "not" <+> parens (ppr e)
- -- Primary expressions
- -- Only literals, names and function calls  are allowed
- ppr (PrimName name)    = ppr name
- ppr (PrimLit  lit)     = text lit
- ppr (PrimFCall fCall)  = ppr fCall
- -- Composite-type  expressions
- ppr (Aggregate assocs)   = parens (ppr_list hComma  assocs)
+ ppr = pprExprPrec 0
+
+
+-- | Prettyprint an binary infix operator 
+pprExprPrecInfix :: Int -- ^ Accumulated precedence value (initialized to 0)
+                 -> Int -- ^ Precedence of current infox operator   
+                 -> Expr -- ^ lhs expression
+                 -> String -- ^ operator name
+                 -> Expr -- ^ rhs expression
+                 -> Doc
+-- Note that, to avoid priting parenthesis, based on the left associativity
+-- of all operators, the precedence passed to the left branch is curr and not
+-- (curr+1).
+pprExprPrecInfix ac curr lhs op rhs = parensIf (ac>curr) $
+  pprExprPrec (curr) lhs <+> text op <+> pprExprPrec (curr+1) rhs
+
+-- | Prettyprint unary prefix operators
+pprExprPrecPrefix :: Int -- ^ Accumulated precedence value (initialized to 0)
+                  -> Int -- ^ Precedence of current infox operator   
+                  -> String -- ^ operator name
+                  -> Expr -- ^ operator argument
+                  -> Doc
+pprExprPrecPrefix ac curr op arg = parensIf (ac>curr) $
+  text op <+> pprExprPrec (curr+1) arg
+
+
+-- | Prints an expression taking precedence and left associativity
+--   in account
+pprExprPrec :: Int  -- ^ Accumulated precedence value (initialized to 0)
+            -> Expr -- ^ Expression curently prettyprinted 
+            -> Doc
+-- Logical operations
+pprExprPrec p (And e1 e2)  = pprExprPrecInfix p logicalPrec e1 "and"  e2
+pprExprPrec p (Or  e1 e2)  = pprExprPrecInfix p logicalPrec e1 "or"   e2
+pprExprPrec p (Xor e1 e2)  = pprExprPrecInfix p logicalPrec e1 "xor"  e2
+pprExprPrec p (Nand e1 e2) = pprExprPrecInfix p logicalPrec e1 "nand" e2
+pprExprPrec p (Nor  e1 e2) = pprExprPrecInfix p logicalPrec e1 "nor"  e2
+-- Relational Operators
+pprExprPrec p (e1 :=:  e2) = pprExprPrecInfix p relationalPrec e1 "="  e2
+pprExprPrec p (e1 :/=: e2) = pprExprPrecInfix p relationalPrec e1 "/=" e2
+pprExprPrec p (e1 :<:  e2) = pprExprPrecInfix p relationalPrec e1 "<"  e2
+pprExprPrec p (e1 :<=: e2) = pprExprPrecInfix p relationalPrec e1 "<=" e2
+pprExprPrec p (e1 :>:  e2) = pprExprPrecInfix p relationalPrec e1 ">"  e2
+pprExprPrec p (e1 :>=: e2) = pprExprPrecInfix p relationalPrec e1 ">=" e2
+-- Shift Operators
+pprExprPrec p (Sll e1 e2) = pprExprPrecInfix p shiftPrec e1 "sll" e2
+pprExprPrec p (Srl e1 e2) = pprExprPrecInfix p shiftPrec e1 "srl" e2
+pprExprPrec p (Sla e1 e2) = pprExprPrecInfix p shiftPrec e1 "sla" e2
+pprExprPrec p (Sra e1 e2) = pprExprPrecInfix p shiftPrec e1 "sra" e2
+pprExprPrec p (Rol e1 e2) = pprExprPrecInfix p shiftPrec e1 "rol" e2
+pprExprPrec p (Ror e1 e2) = pprExprPrecInfix p shiftPrec e1 "ror" e2
+-- Adding Operators
+pprExprPrec p (e1 :+: e2) = pprExprPrecInfix p plusPrec e1 "+" e2
+pprExprPrec p (e1 :-: e2) = pprExprPrecInfix p plusPrec e1 "-" e2
+pprExprPrec p (e1 :&: e2) = pprExprPrecInfix p plusPrec e1 "&" e2
+-- Sign Operators
+pprExprPrec p (Neg e) = pprExprPrecPrefix p signPrec "-" e 
+pprExprPrec p (Pos e) = pprExprPrecPrefix p signPrec "+" e 
+-- Multiplying Operators
+pprExprPrec p (e1 :*: e2) = pprExprPrecInfix p multPrec e1 "*" e2
+pprExprPrec p (e1 :/: e2) = pprExprPrecInfix p multPrec e1 "/" e2
+pprExprPrec p (Mod e1 e2) = pprExprPrecInfix p multPrec e1 "mod" e2
+pprExprPrec p (Rem e1 e2) = pprExprPrecInfix p multPrec e1 "rem" e2
+-- Miscellaneous Operators
+pprExprPrec p (e1 :**: e2) = pprExprPrecInfix p miscPrec e1 "**" e2
+pprExprPrec p (Abs e)      = pprExprPrecPrefix p signPrec "abs" e 
+pprExprPrec p (Not e)      = pprExprPrecPrefix p signPrec "not" e 
+-- Primary expressions
+pprExprPrec _ (PrimName name)    = ppr name
+pprExprPrec _ (PrimLit  lit)     = text lit
+pprExprPrec _ (PrimFCall fCall)  = ppr fCall
+-- Composite-type  expressions
+pprExprPrec _ (Aggregate assocs) = parens (ppr_list hComma  assocs)
 
 instance Ppr ElemAssoc where
  ppr (ElemAssoc mChoice expr) = (ppr mChoice <++> text "=>") <+> ppr expr
@@ -478,3 +509,7 @@ d1 <++> d2
 parensNonEmpty :: Doc -> Doc
 parensNonEmpty doc | isEmpty doc = empty
 parensNonEmpty doc = parens doc
+
+-- | Enclose in parenthesis only if the predicate is True
+parensIf :: Bool -> Doc -> Doc
+parensIf p d = if p then parens d else d
