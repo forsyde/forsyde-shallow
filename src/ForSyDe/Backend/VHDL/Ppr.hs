@@ -17,7 +17,7 @@
 -- FIXME:  we could avoid the LANGUAGE extensions by adding ppr_list to the Ppr 
 --         class (see Language.Haskell.TH.Ppr)
 
-module ForSyDe.Backend.VHDL.Ppr where
+module ForSyDe.Backend.VHDL.Ppr(Ppr(..)) where
 
 import Text.PrettyPrint.HughesPJ hiding (Mode)
 import ForSyDe.Backend.VHDL.AST
@@ -81,9 +81,7 @@ instance Ppr [IfaceSigDec] where
 -- S1    : bit
 -- Ssdds : bit
  ppr []   = empty
- ppr decs = text "port"  $$ nest identL (parens decDoc <> semi) 
-   where identL = length "port " 
-         decDoc = ppr_list vSemi decs
+ ppr decs = text "port" <+> (parens (ppr_list vComma decs) <> semi)
 
 
 instance Ppr IfaceSigDec where
@@ -145,9 +143,7 @@ instance Ppr IndexConstraint where
 
 instance Ppr TypeDec where
  ppr (TypeDec id typeDef) = 
-  text "type" <+> ppr id <+> text "is" $$
-   nest  indentL (ppr typeDef <> semi)
-  where indentL = length "type " + (length.fromVHDLId) id + length " is "
+  hang (text "type" <+> ppr id <+> text "is") nestVal (ppr typeDef <> semi)
 
 instance Ppr TypeDef where
  ppr (TDA arrayTD) = ppr arrayTD
@@ -165,8 +161,7 @@ instance Ppr ArrayTypeDef where
 
 instance Ppr RecordTypeDef where
  ppr (RecordTypeDef elementDecs) =
-  text "record" $+$
-   nest nestVal (ppr_list ($+$) elementDecs) $+$ 
+  text "record" <+> (ppr_list ($+$) elementDecs) $+$ 
   text "end record"
 
 instance Ppr ElementDec where
@@ -236,12 +231,9 @@ instance Ppr SubProgSpec where
 -- (S1    : bit;
 --  Ssdds : bit)
  ppr (Function name decList returnType) =
-    text "function"  <+> ppr name               $$
-       nest indentL (parensNonEmpty (ppr_decs decList)) $$
-       nest indentL (text "return" <+> ppr returnType)
-   where nameDoc = ppr name
-         indentL = length "function " + (length.render) nameDoc + 1
-         ppr_decs ds = ppr_list vSemi ds
+    text "function"  <+> ppr name  <+> (parensNonEmpty (ppr_decs decList) $+$
+                                        text "return" <+> ppr returnType)
+   where ppr_decs ds = ppr_list vSemi ds
 
          
 
@@ -334,10 +326,8 @@ instance Ppr ActualDesig where
  ppr Open          = text "open"
 
 instance Ppr ConSigAssignSm where
- ppr (target :<==: cWforms) = targetDoc <+> text "<=" $$
-                                nest indentL (ppr cWforms) <> semi
-  where  targetDoc = ppr target
-         indentL = (length.render) targetDoc + length " <= "
+ ppr (target :<==: cWforms) = ppr target <+> text "<=" <+> (ppr cWforms <> semi)
+
 
 instance Ppr ConWforms where
  ppr (ConWforms whenElses wform lastElse) = ppr_list ($+$) whenElses $+$
@@ -356,11 +346,8 @@ instance Ppr Wform where
 
 instance Ppr CompInsSm where
  ppr (CompInsSm label insUnit assocElems) =
-   ppr label <+> colon $$ nest indentL (
-            ppr insUnit $+$
-              nest nestVal (ppr assocElems)<>semi
-            )  
-  where indentL = (length.fromVHDLId) label + 3 
+   ppr label <+> colon <+> (ppr insUnit $+$
+                            nest nestVal (ppr assocElems) <> semi)
 
 instance Ppr InsUnit where
  ppr (IUEntity name) = text "entity" <+> ppr name
@@ -381,7 +368,7 @@ pprExprPrecInfix :: Int -- ^ Accumulated precedence value (initialized to 0)
 -- of all operators, the precedence passed to the left branch is curr and not
 -- (curr+1).
 pprExprPrecInfix ac curr lhs op rhs = parensIf (ac>curr) $
-  pprExprPrec (curr) lhs <+> text op <+> pprExprPrec (curr+1) rhs
+  sep [pprExprPrec (curr) lhs <+> text op, pprExprPrec (curr+1) rhs]
 
 -- | Prettyprint unary prefix operators
 pprExprPrecPrefix :: Int -- ^ Accumulated precedence value (initialized to 0)
@@ -445,7 +432,8 @@ instance Ppr ElemAssoc where
  ppr (ElemAssoc mChoice expr) = (ppr mChoice <++> text "=>") <+> ppr expr
 
 instance Ppr FCall where
- ppr (FCall name assocs) = ppr name <> parensNonEmpty (ppr_list hComma assocs)
+ ppr (FCall name assocs) = 
+   ppr name <> parensNonEmpty (commaSep assocs)
 
 
 -------------------
@@ -475,7 +463,7 @@ ppr_list join (a1:rest) = go a1 rest
 -- | Join two documents vertically leaving n vertical spaces between them
 vNSpaces :: Int -> Doc -> Doc -> Doc
 vNSpaces n doc1 doc2 = doc1 $+$ 
-                        foldr ($+$) empty (replicate n vSpace) $+$
+                        multiVSpace n $+$
                        doc2
 
 -- Join two documents vertically putting a semicolon in the middle
@@ -491,6 +479,12 @@ vComma doc1 doc2 = doc1 <> comma $+$ doc2
 hComma :: Doc -> Doc -> Doc
 hComma doc1 doc2 = doc1 <> comma <+> doc2
 
+
+-- | apply sep to a list of prettyprintable elements, 
+--   previously interspersing commas
+commaSep :: Ppr a => [a] -> Doc
+commaSep = sep.(punctuate comma).(map ppr)
+ 
 
 -- | Only append if both of the documents are non-empty
 ($++$) :: Doc -> Doc -> Doc
