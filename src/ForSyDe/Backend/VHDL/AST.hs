@@ -558,7 +558,8 @@ data Expr = -- Logical operations
 --   order, from left to right." In other words, they are all left associative
 --
 --   For example: a / b / c    = (a/b)/c
---                a and b or c = (a and b) or c
+--                a and b or c  is illegal (mixing operators is not allowed
+--                                          by the language)
 
 infixl 2 `And`, `Or`, `Xor`, `Nand`, `Nor`
 infixl 3 :=:, :/=:, :<:, :<=:, :>:, :>=:
