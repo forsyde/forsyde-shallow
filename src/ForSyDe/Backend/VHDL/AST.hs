@@ -512,6 +512,7 @@ data Expr = -- Logical operations
             Xor  Expr Expr    |
             Nand Expr Expr    |
             Nor  Expr Expr    |
+            Xnor Expr Expr    |
             -- Relational Operators
             Expr :=:  Expr    |
             Expr :/=: Expr    |
@@ -559,9 +560,11 @@ data Expr = -- Logical operations
 --
 --   For example: a / b / c    = (a/b)/c
 --                a and b or c  is illegal (mixing operators is not allowed
---                                          by the language)
+--                                          by the language and only
+--                                          can avoid parenthesis in some 
+--                                          cases)
 
-infixl 2 `And`, `Or`, `Xor`, `Nand`, `Nor`
+infixl 2 `And`, `Or`, `Xor`, `Nand`, `Nor`, `Xnor`
 infixl 3 :=:, :/=:, :<:, :<=:, :>:, :>=:
 infixl 4 `Sll`, `Srl`, `Sla`, `Sra`, `Rol`, `Ror`
 infixl 5 :+:, :-:, :&:

@@ -365,15 +365,36 @@ pprExprPrecInfix :: Int -- ^ Accumulated precedence value (initialized to 0)
                  -> String -- ^ operator name
                  -> Expr -- ^ rhs expression
                  -> Doc
--- Note that, to avoid priting parenthesis, based on the left
--- associativity of all operators, the precedence passed to the left
--- branch is curr and not (curr+1). However, the VHDL grammar doesn't
--- allow mixing up different operators without parenthesis i.e.
--- "and a or b and d" is illegal. Thus, we keep track of the enclosing
--- operator, and we only avoid parenthesis if they are equal.
+-- To avoid priting parenthesis based on the left
+-- associativity of all operators within the same precedence class, 
+-- the precedence passed to the left branch is curr instead of
+-- curr+1.
+--
+-- However, the VHDL grammar sometimes doesn't allow it 
+-- e.g. "and a or b and d" is illegal. In fact,
+-- you can only put two operators together without parenthesis
+-- in some cases:
+-- 
+-- * logical operators: "and", "or", "xor", "xnor", but cannot be mixed up.
+-- * relational operators: none
+-- * shift operators: none
+-- * adding operators: all, can be mixed up
+-- * multiplying operator: all, can be mixed up
+-- * misc operator: none
+--
+-- Thus, we keep track of the enclosing
+-- operator, and skip parenthesis according to left parsing associativity
+-- in the cases stated above.
+--
+-- Note that we are only making use of semantic associativity. e.g.
+-- even if "+" is semantially associative: a+(b+c)=(a+b)+c,
+-- we will only skip parenthesis in (a+b)+c
+
 pprExprPrecInfix ac encop curr lhs op rhs = 
- parensIf (ac>curr || (ac == curr && encop /= op)) $
-   sep [pprExprPrec (curr) op lhs <+> text op, pprExprPrec (curr+1) op rhs]
+ parensIf (ac>curr || (ac == curr && not skipParenSameLevel)) $
+   sep [pprExprPrec curr op lhs <+> text op, pprExprPrec (curr+1) op rhs]
+  where skipParenSameLevel = curr == plusPrec || curr == multPrec ||
+            (encop == op && op `elem` ["and","or","xor","xnor"])
 
 -- | Prettyprint unary prefix operators
 pprExprPrecPrefix :: Int -- ^ Accumulated precedence value (initialized to 0)
@@ -397,6 +418,7 @@ pprExprPrec p e (Or  e1 e2)  = pprExprPrecInfix p e logicalPrec e1 "or"   e2
 pprExprPrec p e (Xor e1 e2)  = pprExprPrecInfix p e logicalPrec e1 "xor"  e2
 pprExprPrec p e (Nand e1 e2) = pprExprPrecInfix p e logicalPrec e1 "nand" e2
 pprExprPrec p e (Nor  e1 e2) = pprExprPrecInfix p e logicalPrec e1 "nor"  e2
+pprExprPrec p e (Xnor e1 e2) = pprExprPrecInfix p e logicalPrec e1 "xnor" e2
 -- Relational Operators
 pprExprPrec p e (e1 :=:  e2) = pprExprPrecInfix p e relationalPrec e1 "="  e2
 pprExprPrec p e (e1 :/=: e2) = pprExprPrecInfix p e relationalPrec e1 "/=" e2
