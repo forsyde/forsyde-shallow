@@ -16,4 +16,4 @@ module ForSyDe.Config (maxTupleSize) where
 -- | Maximum tuple size
 maxTupleSize :: Int
 -- 62: this is the GHC-hardcoded value as of version 6.8.2
-maxTupleSize = 10
+maxTupleSize = 62
