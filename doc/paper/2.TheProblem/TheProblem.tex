@@ -1,0 +1,54 @@
+\section{The Problem}
+\subsection{Why the shallow-embedded implementation is not enough}
+
+
+\subsection{Sumarizing the problem}
+\alfonso{We should further elaborate on this, but the explanation must
+  cover these points }
+
+The analysis capabilities of ForSyDe's initial implementation, a
+shallow-embedded Haskell DSL, were sadly reduced to sequential simulation.
+
+Being able to analyze and process the structure of system models is a
+basic need for any system design environment. Thus, the ForSyDe
+methology required a new tool, which should cumply with the following
+requisites:
+
+\begin{itemize}
+\item Natively simulate and analyze the structure of systems. As it
+  will latter be seen, here are a few examples of what is offered by
+  our final solution:
+  \begin{itemize}
+    \item Sequential simulation (the only feature included in
+      ForSyDe's early implementation).
+    \item Compilation to VHDL.
+    \item Integration with third party EDA tools with which to
+      simulate, verify and synthesize the generated VHDL code.
+    \item Compilation to a graphical format (GraphML).
+  \end{itemize}
+\item As it happened before, process constructors must be
+  polymorphic and systems should be able to use signals of
+  of any Haskell type.
+\item The new tool should also preserve the ability to express 
+  process computations in plain standard Haskell, without
+  restrictions or the need of a DSL specifically designed for that purpose.
+\item The simulation backend must fully support every possible system
+  model. However, there are other backends, such as hardware
+  synthesis, in which certain Haskell types and expressions are
+  meanigless or difficult to support (e.g. lists and list
+  comprehensions). Thus, the tool can be more restrictive based on the
+  analysis performed. Depending on such analysis, system models might
+  be forced to comply with a set of primitive signal types, however, that
+  set must alwasy contain:
+  \begin{itemize}
+  \item User-defined enumerated types
+    (i.e. Algebraic types of kind one, whose data constructors have all
+    zero arity)
+  \item Container types, nested as deeply as it is
+    required: fixed-sized vectors, tuples of arbitrary
+    size\footnote{upper-bounded by the maximum tuple size} and
+    \texttt{AbstExt} values.
+  \end{itemize}
+  
+
+\end{itemize}
