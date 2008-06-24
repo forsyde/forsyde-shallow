@@ -48,7 +48,7 @@ compile_forsyde_vhd :: FilePath -- ^ absolute directory to which forsyde.vhd
                     -> IO Bool
 compile_forsyde_vhd dir = 
  (runWait "Executing: vlib forsyde" "vlib" ["forsyde"])            <&&> 
- (runWait "Executing: vlib forsyde" "vmap" ["forsyde","forsyde"])  <&&>
+ (runWait "Executing: vmap forsyde forsyde" "vmap" ["forsyde","forsyde"])  <&&>
  (runWait "Executing: vcom -93 -work forsyde forsyde.vhd"
           "vcom" ["-93", "-work","forsyde", "forsyde.vhd"])
  where runWait :: String -> FilePath -> [String] -> IO Bool
