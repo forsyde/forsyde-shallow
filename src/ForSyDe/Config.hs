@@ -11,7 +11,9 @@
 -- Configuration values of ForSyDe
 --
 -----------------------------------------------------------------------------
-module ForSyDe.Config (maxTupleSize) where
+module ForSyDe.Config (maxTupleSize, module Paths_ForSyDe) where
+
+import Paths_ForSyDe 
 
 -- | Maximum tuple size
 maxTupleSize :: Int

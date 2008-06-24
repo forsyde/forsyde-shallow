@@ -14,6 +14,7 @@ synopsis:
  DSEL library implementing the ForSyDe system design methodology.
 category:       DSEL
 tested-with:    GHC==6.8.1
+data-files:     lib/forsyde.vhd
 
 Library
   build-depends:   type-level,
@@ -24,7 +25,8 @@ Library
                    regex-posix, 
                    mtl, 
                    pretty, 
-                   template-haskell > 2.0
+                   template-haskell > 2.0,
+                   process
   hs-source-dirs:  src
   exposed-modules: Language.Haskell.TH.Lift,
                    Language.Haskell.TH.LiftInstances,
