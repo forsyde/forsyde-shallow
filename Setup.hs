@@ -12,20 +12,31 @@ import System.Directory
 import System.FilePath
 
 main :: IO ()
-main = defaultMainWithHooks simpleUserHooks{postInst=forsydePostInst}
+main = defaultMainWithHooks simpleUserHooks{postInst=forsydePostInst,
+                                            postCopy=forsydePostCopy}
 
-forsydePostInst :: Args -> InstallFlags -> PackageDescription -> LocalBuildInfo
-                -> IO ()
-forsydePostInst _ _ pd lbi = do
+forsydePostInst :: Args -> InstallFlags -> PackageDescription -> 
+                   LocalBuildInfo -> IO () 
+forsydePostInst _ _  = compile_forsyde_vhd NoCopyDest
+
+forsydePostCopy :: Args -> CopyFlags -> PackageDescription -> 
+                   LocalBuildInfo -> IO ()
+forsydePostCopy _ cf  = compile_forsyde_vhd (copyDest cf)
+
+
+-- Compile forsyde.vhd if possible, showing what's going on to the end user
+compile_forsyde_vhd :: CopyDest -> PackageDescription -> LocalBuildInfo 
+                    -> IO ()
+compile_forsyde_vhd cd pd lbi = do
     putStrLn "Compiling ForSyDe's VHDL library with Modelsim ..." 
     (ifNot isModelsimInstalled  
            (modelsimError "Modelsim executables could not be found.")) <&&>
-     (ifNot (compile_forsyde_vhd forsyde_vhd_dir)
+     (ifNot (do_compile_forsyde_vhd forsyde_vhd_dir)
             ( modelsimError "Compilation failed.")) <&&>
      (putStrLn "Compilation succeded." >> return True)                        
     return ()
  where 
-   forsyde_vhd_dir = (datadir $ absoluteInstallDirs pd lbi NoCopyDest) </> 
+   forsyde_vhd_dir = (datadir $ absoluteInstallDirs pd lbi cd) </> 
                      "lib"
    modelsimError err = putStrLn $ 
      "Error: " ++ err ++ "\n" ++
@@ -43,10 +54,10 @@ isModelsimInstalled =  executablePresent "vlib" <&&>
  
 -- Create a modelsim library for forsyde.vhd 
 -- in the same directory in which forsyde.vhd was copied
-compile_forsyde_vhd :: FilePath -- ^ absolute directory to which forsyde.vhd 
-                                --   was copied 
-                    -> IO Bool
-compile_forsyde_vhd dir = 
+do_compile_forsyde_vhd :: FilePath -- ^ absolute directory  which 
+                                   --   forsyde.vhd was copied into 
+                      -> IO Bool
+do_compile_forsyde_vhd dir = 
  (runWait "Executing: vlib forsyde" "vlib" ["forsyde"])            <&&> 
  (runWait "Executing: vmap forsyde forsyde" "vmap" ["forsyde","forsyde"])  <&&>
  (runWait "Executing: vcom -93 -work forsyde forsyde.vhd"
