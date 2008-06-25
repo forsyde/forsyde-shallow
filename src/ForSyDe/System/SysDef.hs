@@ -83,13 +83,13 @@ newSysDef f sysId inIds outIds = either currError id eProneResult
  where currError = uError "newSysDef"
        eProneResult = newSysDefEProne f Nothing sysId inIds outIds
 
--- |'SysDef' constructor, Template Haskell version
+-- | 'SysDef' constructor, Template Haskell version
 --  FIXME: currently broken, do not use.
 --
 --   Builds a system definition out of a system function, a system identifiers 
 --   and its port identifers.
 --
---  For example @$(newSysDefTH mySysFun "mysys" ["in1] ["out1"])@ creates a
+--  For example @$(newSysDefTH mySysFun \"mysys\" [\"in1\"] [\"out1\"])@ creates a
 --  system definition from system funcion @mySysFun@ which should have 
 --  one input and output signals.
 --
@@ -138,7 +138,7 @@ newSysDefTH f sysId inIds outIds =
 --   The system will later be identified by the basename 
 --   (i.e. unqualified name) of the function.
 --
---  For example @$(newSysDefTHName 'mySysFun ["in1] ["out1"])@ creates a
+--  For example @$(newSysDefTHName \'mySysFun [\"in1\"] [\"out1\"])@ creates a
 --  system definition from system funcion @mySysFun@ which has one input and
 --  output signals.
 -- 

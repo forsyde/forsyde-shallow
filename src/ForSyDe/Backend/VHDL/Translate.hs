@@ -356,7 +356,7 @@ doCustomTR2TM rep | isFSVec = do
  -- to the global traversing-results (if this wasn't previously done):
  --  * Check if the unconstrained array was previously translated
  vecs <- gets (transUnconsFSVecs.global)
- -- *  if it wasn't ...
+ --  * if it wasn't ...
  when (not $ elem valueType vecs) $ do
       -- create the unconstrained vector type and add it to the global
       -- results
