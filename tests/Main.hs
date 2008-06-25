@@ -1,3 +1,4 @@
+-- Main test module, it must be run from the root directory of the project
 module Main (main) where
 
 import Install
@@ -6,19 +7,13 @@ import Control.Monad (liftM)
 import System.Environment (getArgs, getEnv)
 import System.FilePath (splitDirectories)
 
--- Main test module
 
-
--- It must be run from the root directory of the project
 main :: IO ()
--- FIXME, use getopts
---        and show help info
 main = do
- args <- getArgs
  needed <- testNeeded
  if needed 
-   then testInstall args
-   else return ()
+   then testInstall
+   else putStrLn "There is no need to run the test suite."
 
 
 -- Check if we need to do the tests, This will be true unless an

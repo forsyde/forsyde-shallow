@@ -14,18 +14,28 @@ import System.IO
 -- Note that this test will only work with ghc because the creation
 -- of a new package database relies on ghc-pkg.
 -- Also note current working directory must be the root of the project.
-testInstall :: [String]    -- ^ extra arguments to Setup.hs configure 
-            -> IO ()
-testInstall configFlags = do
-  setupCWD (["configure","--user","--prefix=testInstallation"] ++ configFlags)
-  setupCWD ["build"]
-  setupCWD ["haddock"]
-  setupCWD ["copy"]
-  setupCWD ["register", "--gen-pkg-config=pkgconfig"]
+testInstall :: IO ()
+testInstall = do
+  putStrLn "Configuring ForSyDe ..." 
+  setupCWD ["configure","--user","--prefix=testInstallation","-v0"]
+  putStrLn "  done.\n"  
+  putStrLn "Building ForSyDe ..." 
+  setupCWD ["build","-v0"]
+  putStrLn "  done.\n"
+  putStrLn "Testing the haddock markup of ForSyDe ... " 
+  setupCWD ["haddock", "-v0"]
+  putStrLn "  done.\n"
+  putStrLn "Copying ForSyDe under testInstallation/ ... "
+  setupCWD ["copy", "-v0"]
+  putStrLn "  done.\n"
+  putStrLn ("Registering ForSyDe in fresh package database " ++
+            "(testInstallation.conf) ...")
+  setupCWD ["register", "--gen-pkg-config=ForSyDeconfig","-v0"]
   writeFile "testInstallation.conf" "[]" 
   code <- waitForProcess =<< 
-          runCommand  "ghc-pkg -f testInstallation.conf register pkgconfig"
+          runCommand  "ghc-pkg -f testInstallation.conf register ForSyDeconfig"
   case code of
      ExitSuccess -> return ()
      e@(ExitFailure _) -> exitWith e
+  putStrLn "done."
  where setupCWD command = setupWrapper command Nothing 
