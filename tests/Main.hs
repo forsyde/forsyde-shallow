@@ -5,7 +5,7 @@ import Install
 
 import Control.Monad (liftM)
 import System.Environment (getArgs, getEnv)
-import System.FilePath (splitDirectories)
+import System.FilePath (splitDirectories, normalise)
 
 
 main :: IO ()
@@ -28,8 +28,10 @@ testNeeded = do
     Nothing -> return True
     Just multiLine -> (return.checkAffected) multiLine
   where checkAffected str = any affected (lines str) 
-        affected file = file `elem` ["Setup.hs", "ForSyDe.cabal"] ||
-                        firstDir file `elem` ["src", "tests", "lib"]         
+        affected file = let nfile = normalise file in
+                        nfile `elem` ["Setup.hs", "ForSyDe.cabal"] ||
+                        firstDir nfile `elem` ["src", "tests", "lib"]         
+          
         firstDir filePath = 
                let sDirName = splitDirectories filePath
                in case sDirName of
