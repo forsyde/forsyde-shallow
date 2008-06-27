@@ -2,7 +2,7 @@
 name:           ForSyDe
 version:        0.1
 cabal-version:  >= 1.2
-build-type:     Simple
+build-type:     Custom
 license:        BSD3
 license-file:   LICENSE
 copyright:      Copyright (c) 2003-2007 The ForSyDe Team
