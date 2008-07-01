@@ -22,7 +22,7 @@ module ForSyDe.System.SysFun
   checkSysFType) where
 
 import ForSyDe.Ids(PortId)
-import {-# SOURCE #-} ForSyDe.Netlist (NlSignal)
+import ForSyDe.Netlist (NlSignal)
 import ForSyDe.Signal(Signal(..))
 import ForSyDe.ForSyDeErr
 

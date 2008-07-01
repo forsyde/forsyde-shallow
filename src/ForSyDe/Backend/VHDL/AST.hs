@@ -350,7 +350,7 @@ data SubProgBody = SubProgBody SubProgSpec [SubProgDecItem] [SeqSm]
 
 -- | subprogram_declarative_item
 --   only varaible declarations are allowed.
-data SubProgDecItem = SPVD VarDec
+data SubProgDecItem = SPVD VarDec | SPSB SubProgBody
  deriving Show
 
 -- | variable_declaration

@@ -39,8 +39,8 @@ writeVHDL = writeVHDLOps defaultVHDLOps
 writeVHDLOps :: VHDLOps -> SysDef a -> IO ()
 writeVHDLOps ops sysDef = do
   -- initiate the compilation State
-  s <- initVHDLTravST $ (readURef.unPrimSysDef.unSysDef) sysDef
+  let sinit = initVHDLTravST $ (readURef.unPrimSysDef.unSysDef) sysDef
   -- Compile te code
-  res <- runErrorT $ evalStateT  (setVHDLOps ops >> writeVHDLM) s
+  res <- runErrorT $ evalStateT  (setVHDLOps ops >> writeVHDLM) sinit
   -- Check if the  compilation went well and print an error in case it didn't
   either printVHDLError return res

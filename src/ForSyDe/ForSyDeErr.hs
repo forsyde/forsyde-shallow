@@ -69,7 +69,12 @@ data ForSyDeErr =
   -- | Incompatible output interface length
   OutIfaceLength  (SysId,Int) ([String],Int)  |
   -- | Multiply defined port identifier                
-  MultPortId  String                         |
+  MultPortId  PortId                         |
+  -- | Multiply defined process identifier                
+  MultProcId  ProcId                         |
+  -- | The system contains components from different subsystems with
+  --   the same Identifiers                
+  SubSysIdClash SysId (Maybe Loc) (Maybe Loc) |
   -- | Not a SysDef variable
   NonSysDef Name Type                        |
 
@@ -230,6 +235,14 @@ instance Show ForSyDeErr where
     showIfaceLength "output interface" sysOutInfo portIdsOutInfo
  show (MultPortId  portId) = 
    "Multiply defined port identifier " ++ show portId
+ show (MultProcId procId) = 
+   "Multiply defined process identifier " ++ show procId
+ show (SubSysIdClash subSysId mLoc1 mLoc2) =
+   "System contains components of different subsystems " ++ 
+   "(defined at locations " ++ finalLoc1 ++ " and " ++ finalLoc2 ++ ") " ++
+   "which share the same system identifier (`"++subSysId++")"
+  where finalLoc1 = fromMaybe "<unkown>" mLoc1
+        finalLoc2 = fromMaybe "<unkown>" mLoc2 
  show (NonSysDef name t) = 
    "A variable with SysDef type was expected\n" ++
    "However " ++ show name ++ " has type " ++ pprint t

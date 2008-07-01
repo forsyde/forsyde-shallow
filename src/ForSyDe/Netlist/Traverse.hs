@@ -129,6 +129,39 @@ traverseSEIO new define (Netlist rootSignals) =
 
      DT.mapM gather rootSignals
 
+-- | Traversing monad, stacking state and error transformers over ST
+type TravSEST s e st a = (StateT s (ErrorT e (ST st))) a
+
+-- | 'ST'-monad  version of 'traverseSEIO'
+traverseSEST :: (DT.Traversable container, Error e) => 
+         (NlNode NlSignal -> TravSEST s e st [(NlNodeOut, oinfo)]) -- ^ new
+      -> ([(NlNodeOut, oinfo)] -> NlNode oinfo -> TravSEST s e st ()) -- ^ define
+      -> Netlist container 
+      -> TravSEST s e st (container oinfo)
+traverseSEST new define (Netlist rootSignals) =
+  do let lift2 = lift.lift
+     uRefTable <- lift2 $ newURefTableST
+     let gather (NlTree (NlEdge nodeRef tag)) =
+           do visited <- lift2 $ queryST uRefTable nodeRef
+              case visited of
+                Just infoPairs  -> return (specifyOut tag infoPairs)
+                Nothing -> do 
+                  let node = readURef nodeRef
+                  infoPairs <- new node
+                  lift2 $ addEntryST uRefTable nodeRef infoPairs
+                  childInfo <- DT.mapM gather node
+                  define infoPairs childInfo
+                  return (specifyOut tag infoPairs)
+
+         specifyOut :: NlNodeOut -> [(NlNodeOut, a)] -> a
+         specifyOut tag pairs = fromMaybe err maybeOut
+             where funName = "ForSyDe.NetList.Traverse.traverseIO"
+                   err = intError funName InconsOutTag
+                   maybeOut = lookup tag pairs
+
+     DT.mapM gather rootSignals
+
+-- deprecated, do not use
 traverseST :: DT.Traversable container => 
              (NlNode NlSignal -> ST s [(NlNodeOut, oinfo)]) 
           -> ([(NlNodeOut, oinfo)] -> NlNode oinfo -> ST s ()) 

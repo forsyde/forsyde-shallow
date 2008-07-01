@@ -215,6 +215,7 @@ instance Ppr SubProgBody where
 
 instance Ppr SubProgDecItem where
  ppr (SPVD vd) = ppr vd
+ ppr (SPSB sb) = ppr sb
 
 instance Ppr VarDec where
  ppr (VarDec id st mExpr) = 

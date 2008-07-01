@@ -25,6 +25,9 @@ import Language.Haskell.TH (runIO)
 import ForSyDe.Config (maxTupleSize)
 import ForSyDe.System.SysFun (SysFun(..), SysFunToSimFun(..), funOutInstances)
 import ForSyDe.Netlist
+-- This aparently unnecesary SysDef import is needed as a workaround for 
+-- http://hackage.haskell.org/trac/ghc/ticket/1012
+import ForSyDe.System.SysDef()
 import ForSyDe.Signal
 
 -- This two instances are the ones in charge of providing the necessary 

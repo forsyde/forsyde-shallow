@@ -18,7 +18,6 @@ import ForSyDe.Backend.VHDL.AST
 
 import ForSyDe.Ids
 import ForSyDe.ForSyDeErr
-import ForSyDe.OSharing
 import ForSyDe.System.SysDef (SysDefVal(..))
 import ForSyDe.Netlist.Traverse (TravSEIO)
 import ForSyDe.Process.ProcType (EnumAlgTy(..))
@@ -75,16 +74,6 @@ import Data.Typeable (TypeRep)
 --          1) generate and write to disk the corresponding Design File
 --          2) add the System Definition to the table
 
------------
--- SysLogic
------------
-
--- | Indicates wether a system is combinational or sequential
---   In practice, a system is sequential if if contains a delay process or
---   a sequential system instance, otherwise its combinational.
-data SysLogic = Combinational | Sequential
- deriving (Eq, Show)
-
 -----------------
 -- TransNameSpace
 -----------------
@@ -123,7 +112,6 @@ data LocalVHDLST = LocalVHDLST
    {currSysDef     :: SysDefVal, -- System definition which is currently 
                                  -- being compiled
    context         :: Context,  -- Error Context
-   logic           :: SysLogic,  -- Current system is sequential or combinational?
    transNameSpace  :: TransNameSpace,  -- Translation namespace for functions
                                        -- It only makes sense
                                        -- in a process-function context 
@@ -137,7 +125,7 @@ data LocalVHDLST = LocalVHDLST
 -- | initialize the local state
 initLocalST :: SysDefVal -> LocalVHDLST
 initLocalST sysDefVal = 
- LocalVHDLST sysDefVal (SysDefC (sid sysDefVal) (loc sysDefVal)) Combinational 
+ LocalVHDLST sysDefVal (SysDefC (sid sysDefVal) (loc sysDefVal)) 
              emptyTransNameSpace emptyLocalTravResult
 
 -- | Execute certain operation with a concrete local state.
@@ -184,11 +172,6 @@ data GlobalVHDLST = GlobalVHDLST
    ops          :: VHDLOps,  -- Compilation options
    globalRes    :: GlobalTravResult, -- Result accumulated during the 
                                      -- whole compilation
-   compSysDefs  :: URefTableIO SysDefVal SysLogic, -- Table containing the
-                                            -- System Definitions which
-                                            -- where already compiled
-                                            -- indicating what type of
-                                            -- logic
    enumTypes    :: Set EnumAlgTy, -- Set of the enumerated
                                   -- algebraic types accumulated
                                   -- by all ProcFuns and ProcVals
@@ -200,16 +183,14 @@ data GlobalVHDLST = GlobalVHDLST
 
 
 -- | Empty initial traversing state
-initGlobalVHDLST :: SysDefVal -> IO GlobalVHDLST
-initGlobalVHDLST  sysDefVal = do
- t <- newURefTableIO
- return $ GlobalVHDLST sysDefVal defaultVHDLOps emptyGlobalTravResult t empty [] []
+initGlobalVHDLST :: SysDefVal -> GlobalVHDLST
+initGlobalVHDLST  sysDefVal = 
+ GlobalVHDLST sysDefVal defaultVHDLOps emptyGlobalTravResult empty [] []
 
 -- | Empty initial traversing state 
-initVHDLTravST :: SysDefVal -> IO VHDLTravST
-initVHDLTravST sysDefVal = do 
- gst <- initGlobalVHDLST sysDefVal
- return $ VHDLTravST (initLocalST sysDefVal) gst
+initVHDLTravST :: SysDefVal -> VHDLTravST
+initVHDLTravST sysDefVal = 
+ VHDLTravST (initLocalST sysDefVal) (initGlobalVHDLST sysDefVal)
 
 -------------
 -- TravResult
@@ -286,11 +267,6 @@ setVHDLOps options =  modify (\st -> st{global=(global st){ops=options}})
 -- Useful functions in the VHDL Monad
 -------------------------------------
 
--- | Set local System as sequential
-setSeqCurrSys :: VHDLM ()
-setSeqCurrSys = modify setSeq
- where setSeq st = st{local=(local st){logic=Sequential}}
-
 
 -- | Add a signal declaration to the 'LocalTravResult' in the State
 addSigDec :: SigDec -> VHDLM ()
@@ -312,23 +288,12 @@ addStm sm = modify addFun
                aSms = archSms r 
 
  
--- | Add an element to the 'SysDef' table in the global state
-addSysDef :: URef SysDefVal -> SysLogic -> VHDLM ()
-addSysDef ref logic = do table <- gets (compSysDefs.global)
-                         liftIO $ addEntryIO table ref logic 
-
 -- | Find a previously translated custom type
 lookupCustomType :: TypeRep -> VHDLM (Maybe SimpleName)
 lookupCustomType rep = do
  transTable <- gets (typeTable.global)
  return $ lookup rep transTable
 
-
--- | Check if a SysDef was previously traversed returning its
---   type lof logic
-traversedSysDef :: URef SysDefVal -> VHDLM (Maybe SysLogic)
-traversedSysDef ref =  do table <- gets (compSysDefs.global)
-                          liftIO $ queryIO table ref
 
 -- | Add enumerated types to the global state
 addEnumTypes :: Set EnumAlgTy -> VHDLM ()
@@ -351,7 +316,8 @@ getEnumConsId consName = do
  case (toList.(S.filter matchesName)) enums of
    []  -> return Nothing
    [_] -> liftM Just (liftEProne $ mkVHDLExtId consBase) 
- 
+   -- _ -> this shouldn't happen since the enumerated types stored are unique
+
 -- | Add a cutom type to the global results and type translation table
 addCustomType :: TypeRep -> Either TypeDec SubtypeDec -> VHDLM ()
 addCustomType rep eTD = do

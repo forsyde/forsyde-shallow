@@ -19,7 +19,7 @@
 module ForSyDe.Signal  where
 
 
-import {-# SOURCE #-} ForSyDe.Netlist
+import ForSyDe.Netlist
 
 
 import Data.Typeable (Typeable)

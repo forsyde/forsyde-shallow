@@ -56,6 +56,12 @@ workId = unsafeVHDLBasicId "work"
 rangeId :: VHDLId
 rangeId = unsafeVHDLBasicId "range"
 
+
+-- | range attribute identifier
+imageId :: VHDLId
+imageId = unsafeVHDLBasicId "image"
+
+
 -- | default function identifier
 defaultId :: VHDLId
 defaultId = unsafeVHDLBasicId "default"
@@ -198,6 +204,11 @@ copyId :: VHDLId
 copyId = unsafeVHDLBasicId "copy"
 
 
+-- | show function identifier
+showId :: VHDLId
+showId = unsafeVHDLBasicId "show"
+
+
 --------
 -- Names
 --------
@@ -240,6 +251,10 @@ int16TM = unsafeVHDLBasicId "int16"
 -- | int8 typemark (defined in ForSyDe's VHDL library)
 int8TM :: TypeMark
 int8TM = unsafeVHDLBasicId "int8"
+
+-- | string typemark
+stringTM :: TypeMark
+stringTM = unsafeVHDLBasicId "string"
 
 --------------
 -- Expressions

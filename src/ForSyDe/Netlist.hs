@@ -23,7 +23,7 @@ module ForSyDe.Netlist  where
 
 import ForSyDe.Ids
 import ForSyDe.OSharing (URef, newURef, readURef)
-import ForSyDe.System.SysDef 
+import {-# SOURCE #-} ForSyDe.System.SysDef 
  (SysDef(..), PrimSysDef(..), oIface)
 import ForSyDe.Process.ProcFun (TypedProcFun(..))
 import ForSyDe.ForSyDeErr

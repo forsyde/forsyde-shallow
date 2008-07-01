@@ -345,8 +345,11 @@ customTR2TM rep = do
 doCustomTR2TM :: TypeRep -> VHDLM (Either TypeDec SubtypeDec)
 
 -- | FSVec?
---   FSVecs are translated to subtypes of unconstrained vectors for which
---   all the FSVec operations are generated.
+--   FSVecs are translated to subtypes of unconstrained vectors.
+--   Apart from default function (which cannot be defined for unconstrained vectors, since
+--   others is forbidden) 
+--   all FSVec operations can be translated as operations for the
+--   unconstrained type.
 doCustomTR2TM rep | isFSVec = do
  -- Translate the type of the elements contained in the vector
  valTM <- transTR2TM valueType
@@ -361,8 +364,9 @@ doCustomTR2TM rep | isFSVec = do
       -- create the unconstrained vector type and add it to the global
       -- results
       addTypeDec $ TypeDec vectorId (TDA (UnconsArrayDef [fsvec_indexTM] valTM))
-      -- Add the default functions for the vector type to the global results
-      let funs =  genVectorFuns valTM vectorId
+      -- Add the default functions for the unconstrained
+      -- vector type to the global results
+      let funs =  genUnconsVectorFuns valTM vectorId
       mapM_ addSubProgBody funs
       -- Mark the unconstrained array as translated
       addUnconsFSVec valueType
@@ -370,11 +374,14 @@ doCustomTR2TM rep | isFSVec = do
  -- Create the vector subtype identifier
  let subvectorId = unsafeVHDLBasicId ("fsvec_" ++ show size ++ "_" ++
                                      fromVHDLId valTM)
+ -- Add the default functions for the vector subtype to the global results
+     funs = genSubVectorFuns valTM vectorId
+ mapM_ addSubProgBody funs      
  -- Create the vector subtype declaration
  return $ Right $ 
      SubtypeDec subvectorId (SubtypeIn vectorId 
               (Just $ IndexConstraint [ToRange (PrimLit "0")
-                                               (PrimLit (show $ size-1)) ]))
+                                               (PrimLit (show $ size-1))]))
    where (cons, ~[sizeType,valueType]) = splitTyConApp rep
          isFSVec = cons == fSVecTyCon
          size = transTLNat2Int sizeType

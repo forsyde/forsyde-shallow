@@ -17,6 +17,7 @@ module ForSyDe.System.SysDef
   (SysDef(..),
    PrimSysDef(..),
    SysDefVal(..), 
+   SysLogic(..),
    newSysDef,
    newSysDefTH,
    newSysDefTHName,
@@ -24,13 +25,16 @@ module ForSyDe.System.SysDef
 
 import ForSyDe.Ids
 import ForSyDe.Signal
-import {-# SOURCE #-} ForSyDe.Netlist 
+import ForSyDe.Netlist 
+import ForSyDe.Netlist.Traverse
 import ForSyDe.OSharing
 import ForSyDe.ForSyDeErr
 import ForSyDe.System.SysFun (checkSysFType, SysFun(..))
 
 import Data.Maybe (isJust, fromJust)
-import Control.Monad (when, replicateM)
+import Control.Monad.Error
+import Control.Monad.ST
+import Control.Monad.State
 import Data.Typeable
 import Language.Haskell.TH
 import Language.Haskell.TH.LiftInstances ()
@@ -52,17 +56,32 @@ newtype SysDef a = SysDef {unSysDef :: PrimSysDef}
 --   to allow sharing between instances.
 newtype PrimSysDef = PrimSysDef {unPrimSysDef :: URef SysDefVal}
 
+
+
+-- | Indicates wether a system is combinational or sequential
+--   In practice, a system is sequential if if contains a delay process or
+--   a sequential system instance, otherwise its combinational.
+data SysLogic = Combinational | Sequential
+ deriving (Eq, Show)
+
+
 -- | The System Definition value
 data SysDefVal = SysDefVal 
-     {sid     :: SysId,      -- ^ Identifier of the System 
-      netlist :: Netlist [], -- ^ System netlist
-      iIface  :: Iface,      -- ^ Input  interface
-      oIface  :: Iface,      -- ^ Output interface 
-      loc     :: Maybe Loc}  -- ^ Location of the call to newSysDef
-                             --   which created this System definition
-                             --   (used for later error reporting)
-                             --   It will initialized or not depending
-                             --   on the newSysDef* function used
+     {sid     :: SysId,        -- ^ Identifier of the System 
+      netlist :: Netlist [],   -- ^ System netlist
+      subSys  :: [PrimSysDef], -- ^ List of all unique nested subsystems
+                               --   (i.e. flattened tree, without duplicates,
+                               --    of all the systems in lower levels of the 
+                               --    hierarchy)
+      logic   :: SysLogic,     -- ^ 'SysLogic' of the system 
+                                          
+      iIface  :: Iface,        -- ^ Input  interface
+      oIface  :: Iface,        -- ^ Output interface 
+      loc     :: Maybe Loc}    -- ^ Location of the call to newSysDef
+                               --   which created this System definition
+                               --   (used for later error reporting)
+                               --   It will initialized or not depending
+                               --   on the newSysDef* function used
 
 
 -- FIXME FIXME FIXME: The frontend doesn't currently check for duplicates in 
@@ -189,15 +208,21 @@ newSysDefTHName sysFName inIds outIds =  do
                inIface   = $(genIface inIds inTypes)
                outIface  = $(genIface outIds outTypes)
                errorInfo = errInfo
+               nlist = Netlist outNlSignals
+               (subSys,logic) = either (intError currFun) id
+                                (checkSysDef nlist) 
                in  SysDef $ PrimSysDef $ newURef $ 
                          SysDefVal (nameBase sysFName)
-                                   (Netlist outNlSignals)
+                                   nlist
+                                   subSys
+                                   logic
                                    inIface 
                                    outIface  
                                    (Just errorInfo) |] 
            -- We are done, we simply specify the concrete type of the SysDef
            sigE untypedSysDef (return $ ConT ''SysDef `AppT` sysFType)
- where currError  = qError "newSysDef"
+ where currError  = qError currFun
+       currFun = "newSysDef"
 
 
         
@@ -217,8 +242,13 @@ newSysDefEProne :: SysFun f => f -- ^ system function
 newSysDefEProne f mLoc sysId inIds outIds 
   -- check the ports for problems
   | isJust portCheck = throwError (fromJust portCheck)
-  | otherwise = return (SysDef $ PrimSysDef $ newURef $ SysDefVal sysId
-                                                        (Netlist nlist)
+  | otherwise = do
+      let nl = Netlist nlist
+      (subSys, logic) <- checkSysDef nl
+      return (SysDef $ PrimSysDef $ newURef $ SysDefVal sysId
+                                                        nl
+                                                        subSys
+                                                        logic
                                                         (zip inIds  inTypes)
                                                         (zip outIds outTypes)
                                                         mLoc)
@@ -241,6 +271,105 @@ checkSysDefPorts sysId (inIds, inN) (outIds, outN)
  where inIdsL  = length inIds
        outIdsL = length outIds
        maybeDup = findDup (inIds ++ outIds)
+
+
+-- | In order to check the system for identifier duplicates we keep track
+--   of the process identifiers and of the accumulated subsytem definitions
+data CheckState = CheckState {accumSubSys  :: [PrimSysDef],
+                              accumProcIds :: [ProcId]    ,
+                              accumLogic   :: SysLogic    }
+
+-- Monad used to traverse the system in order to check that there are no 
+-- duplicates
+type CheckSysM st a = TravSEST CheckState ForSyDeErr st a
+
+-- | Check that the system netlist does not contain process identifier
+--   duplicates (i.e. different processes with the same process
+--   identifier) or instances of different systems with the same identifier.
+--   In case there are no duplicates, the list of nested subsystems together
+--   with the the logic is returned.
+checkSysDef :: Netlist [] -> EProne ([PrimSysDef], SysLogic)
+checkSysDef nl = do
+  endSt <- runST (runErrorT 
+            (execStateT (traverseSEST newCheckSys defineCheckSys nl) initState))
+  let finalSubSys = accumSubSys endSt
+  -- we already checked all the delay processes of the system
+  -- but the system can still be sequential if any of the subsystems is 
+  -- sequential
+      finalLogic = 
+        if (accumLogic endSt == Sequential) ||
+         (any (\s -> (logic.readURef.unPrimSysDef) s == Sequential) finalSubSys)
+              then Sequential
+              else Combinational
+  return (finalSubSys, finalLogic)
+ where initState = CheckState [] [] Combinational
+       
+
+defineCheckSys :: [(NlNodeOut, ())] -> NlNode () -> CheckSysM st ()
+defineCheckSys _ _= return ()
+       
+newCheckSys :: NlNode NlSignal -> CheckSysM st [(NlNodeOut, ())]
+newCheckSys node = do
+  st <- get
+  let acIds = accumProcIds st
+      acSys = accumSubSys st
+      acLog = accumLogic st
+  -- check the process Id of current node for duplicates
+  acIds' <- case node of 
+            -- input ports don't count as process identifiers
+              InPort _  -> return acIds 
+              Proc pid _ -> if pid `elem` acIds 
+                              then throwError $ MultProcId pid
+                              else return (pid:acIds)
+  -- If the node is a system instance, check that
+  -- the system and all its subsytems are either:
+  --  * already in the accumulated systems
+  --  * not in the accumulated systems, but have a different system
+  --    identifiers
+  -- FIXME: in order to avoid making so many comparisons, it
+  --        would probably be more efficient to also mark which
+  --        subsystems belong to the first hierarchy level in
+  --        SysVal (i.e.  creating a tree-structure as a reult).
+  --        Then, if the system to compare (psys) matches a
+  --        root in the accumulated subsystems there would be
+  --        no need to continue comparing the childs of psys.
+  acSys' <- case node of 
+             Proc _ (SysIns pSys _) -> 
+              liftEither $ 
+                 mergeSysIds (pSys:(subSys.readURef.unPrimSysDef) pSys) acSys
+             _ -> return acSys
+  let acLog' = case node of
+                    Proc _ (DelaySY _ _) -> Sequential 
+                    _ -> acLog
+  put $ CheckState acSys' acIds' acLog'
+  -- return a phony value for each output of the node
+  return $ map (\tag -> (tag,())) (outTags node)      
+
+ where mergeSysIds :: [PrimSysDef] -> [PrimSysDef] -> EProne [PrimSysDef]
+       mergeSysIds xs  [] = return xs
+       mergeSysIds [] xs  = return xs
+       mergeSysIds (x:xs) ys = do 
+               shouldAdd <- addSysId x ys 
+               if shouldAdd then do rest <- mergeSysIds xs ys
+                                    return (x:rest)
+                            else mergeSysIds xs ys
+        -- should we add the Id to the accumulated ones?
+       addSysId :: PrimSysDef -> [PrimSysDef] -> EProne Bool
+       addSysId _ [] = return True
+       addSysId psdef (x:xs)  
+                -- Both systems are equal
+                | unx == unpsdef = return False
+                -- Both systems are different, but their ids
+                -- are equal
+                | sdefid == sid xval = 
+                     throwError (SubSysIdClash sdefid (loc sdefval) (loc xval))
+                | otherwise = addSysId psdef xs
+          where unpsdef = unPrimSysDef psdef
+                unx = unPrimSysDef x
+                xval = readURef unx
+                sdefval = readURef unpsdef
+                sdefid = sid sdefval
+
 
 -- | Generate a lambda expression to transform a tuple of N 'Signal's into a 
 -- a list of 'NlSignal's

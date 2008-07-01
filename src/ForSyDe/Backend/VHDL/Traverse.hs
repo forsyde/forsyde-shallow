@@ -33,7 +33,19 @@ import Control.Monad.State
 
 -- | Internal VHDL-Monad version of 'ForSyDe.Backend.writeVHDL'
 writeVHDLM :: VHDLM ()
-writeVHDLM = writeLocalVHDLM >> writeGlobalVHDLM
+writeVHDLM = do
+   -- write the local results for the firs-level entity
+   writeLocalVHDLM
+   -- if we are in recursive mode, also write the local results
+   -- for the rest of the subsystems
+   rec <- isRecursiveSet
+   when rec $ do subs <- gets (subSys.globalSysDef.global)
+                 let writeSub s = 
+                        withLocalST (initLocalST ((readURef.unPrimSysDef) s))
+                                    writeLocalVHDLM 
+                 mapM_ writeSub subs
+   -- write the global results
+   writeGlobalVHDLM
 
 -- | Write the global traversing results (i.e. the library design file)
 --   accumulated  in the state of the monad
@@ -53,7 +65,6 @@ writeGlobalVHDLM = do
 writeLocalVHDLM :: VHDLM ()
 writeLocalVHDLM = do
   lSysDefVal <- gets (currSysDef.local)
-  gSysDefVal <- gets (globalSysDef.global)
   let lSysDefId =  sid lSysDefVal
   debugMsg $ "Compiling system definition `" ++ lSysDefId ++ "' ...\n"
   -- Obtain the netlist of the system definition 
@@ -61,7 +72,7 @@ writeLocalVHDLM = do
   -- Traverse the netlist, and get the traversing results
   intOutsInfo <- traverseVHDLM nl 
   LocalTravResult decs stms <- gets (localRes.local)
-  finalLogic <- gets (logic.local)
+  let finalLogic = logic lSysDefVal
   -- Obtain the entity declaration of the system and the VHDL identifiers
   -- of the output signals.
   entity@(EntityDec _ eIface) <- transSysDef2Ent finalLogic lSysDefVal 
@@ -72,7 +83,7 @@ writeLocalVHDLM = do
       outAssigns = genOutAssigns outIds intOutsInfo
       finalRes = LocalTravResult decs (stms ++ outAssigns)
   -- Finally, generate the design file
-      sysDesignFile = genSysDesignFile (sid gSysDefVal) entity finalRes
+      sysDesignFile = genSysDesignFile (sid lSysDefVal) entity finalRes
   -- and write it to disk
   liftIO $ writeDesignFile sysDesignFile (lSysDefId ++ ".vhd") 
  where mapFilter f p = foldr (\x ys -> if p x then (f x):ys else ys) []
@@ -170,26 +181,25 @@ defineVHDL outs ins = do
      addStm $ CSBSm block
      -- Generate a signal declaration for the resulting delayed signal
      addSigDec dec 
-     -- Since the system has at least a delay process, set it as sequential
-     setSeqCurrSys
+  
     (intOuts, SysIns pSys intIns) -> do
       let parentSysRef = unPrimSysDef pSys
           parentSysVal = readURef parentSysRef
+          parentLogic = logic parentSysVal
           parentInIface = iIface parentSysVal
           parentOutIface = oIface parentSysVal
           typedOuts = zipWith (\(_, t) (_, int) -> (int,t)) parentOutIface
                                                             intOuts 
           parentId = sid parentSysVal 
-      -- Compile the parent system 
-      --  (i.e. the system associated with the instance)
-      logic <- writeVHDLInsParent parentSysRef
-      -- If the parent system was sequential, then so is current system
-      when (logic==Sequential)
-           setSeqCurrSys
       -- Translate the instance to a component instantiation 
       -- and get the declaration of the output signals
-      (compIns, decs) <- transSysIns2CompIns logic vPid intIns typedOuts parentId 
-                              (map fst parentInIface) (map fst parentOutIface)
+      (compIns, decs) <- transSysIns2CompIns parentLogic 
+                                             vPid 
+                                             intIns 
+                                             typedOuts 
+                                             parentId 
+                                             (map fst parentInIface) 
+                                             (map fst parentOutIface)
       addStm $ CSISm compIns
       -- Generate a signal declaration for each of the resulting signals
       mapM_ addSigDec decs
@@ -201,30 +211,3 @@ defineVHDL outs ins = do
 
 
 
-
--- | Compile the parent system of an instance
-writeVHDLInsParent :: URef SysDefVal -> VHDLM SysLogic
-writeVHDLInsParent parentSysRef = do
-      -- Only compile when the Recursive option was provided and
-      -- the parent system wasn't compiled before
-      rec <- isRecursiveSet
-      if rec then
-         -- Check if it was compiled
-         do wasCompiled <- traversedSysDef parentSysRef
-            case wasCompiled of
-              Nothing ->  do let parentSysVal = readURef parentSysRef
-                             -- Compile the parent system
-                             logic <- withLocalST (initLocalST parentSysVal) $ 
-                                         do  writeLocalVHDLM
-                                             currLogic <- gets (logic.local) 
-                                             -- Mark the parent system as compiled
-                                             addSysDef parentSysRef currLogic 
-                                             return currLogic
-                             return logic
-
-              Just logic -> return logic
-               
-      -- If we are not in recursive mode we can't figure out the SysLogic of
-      -- the parent system, thus we arbitrarily return Sequential
-      -- FIXME: this breaks the non-recursive compilation mode!
-       else return Sequential 

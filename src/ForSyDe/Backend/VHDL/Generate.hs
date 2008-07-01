@@ -127,12 +127,11 @@ genAssoc formal actual = Just formal :=>: ADName (NSimple actual)
 
 
 -- | Generate the default functions for an unconstrained custom vector type
-genVectorFuns :: TypeMark -- ^ type of the vector elements
-             -> TypeMark -- ^ type of the vector
-             -> [SubProgBody]
-genVectorFuns elemTM vectorTM  = 
-  [SubProgBody defaultSpec   []                  [defaultExpr]               ,
-   SubProgBody exSpec        []                  [exExpr]                    ,
+genUnconsVectorFuns :: TypeMark -- ^ type of the vector elements
+                    -> TypeMark -- ^ type of the vector
+                    -> [SubProgBody]
+genUnconsVectorFuns elemTM vectorTM  = 
+  [SubProgBody exSpec        []                  [exExpr]                    ,
    SubProgBody selSpec       [SPVD selVar]       [selFor, selRet]            ,
    SubProgBody emptySpec     [SPVD emptyVar]     [emptyExpr]                 ,
    SubProgBody lengthSpec    []                  [lengthExpr]                ,
@@ -153,8 +152,8 @@ genVectorFuns elemTM vectorTM  =
    SubProgBody plusgtSpec    [SPVD plusgtVar]    [plusgtExpr, plusgtRet]     ,
    SubProgBody ltplusSpec    [SPVD ltplusVar]    [ltplusExpr, ltplusRet]     ,
    SubProgBody plusplusSpec  [SPVD plusplusVar]  [plusplusExpr, plusplusRet] ,
-   SubProgBody singletonSpec [SPVD singletonVar] [singletonRet] ]
-
+   SubProgBody singletonSpec [SPVD singletonVar] [singletonRet]              ,
+   SubProgBody showSpec      [SPSB doShowDef]    [showRet]                   ]
  where ixPar = unsafeVHDLBasicId "ix"
        vecPar = unsafeVHDLBasicId "vec"
        vec1Par = unsafeVHDLBasicId "vec1"
@@ -166,10 +165,6 @@ genVectorFuns elemTM vectorTM  =
        iPar = iId
        aPar = unsafeVHDLBasicId "a"
        resId = unsafeVHDLBasicId "res"
-       defaultSpec = Function defaultId [] vectorTM
-       defaultExpr = 
-          ReturnSm (Just $ Aggregate [ElemAssoc (Just Others) 
-                                                (PrimName defaultSN)])
        exSpec = Function exId [IfaceVarDec vecPar vectorTM,
                                IfaceVarDec ixPar  naturalTM] elemTM
        exExpr = 
@@ -501,6 +496,53 @@ genVectorFuns elemTM vectorTM  =
                 (Just $ Aggregate [ElemAssoc (Just Others) 
                                              (PrimName $ NSimple aPar)])
        singletonRet = ReturnSm (Just $ PrimName $ NSimple resId)
+       showSpec  = Function showId [IfaceVarDec vecPar vectorTM] stringTM
+       doShowId  = unsafeVHDLBasicId "doshow"
+       doShowDef = SubProgBody doShowSpec [] [doShowRet]
+          where doShowSpec = Function doShowId [IfaceVarDec vecPar vectorTM] 
+                                               stringTM
+                -- case vec'len is
+                --  when  0 => return "";
+                --  when  1 => return show(vec(0));
+                --  when others => return show(vec(0)) & ',' &
+                --                        doshow (vec (1 to vec'legnth -1));
+                -- end case;
+                doShowRet = 
+                  CaseSm (PrimName (NAttribute $ 
+                              AttribName (NSimple vecPar) lengthId Nothing))
+                  [CaseSmAlt [ChoiceE $ PrimLit "0"] 
+                             [ReturnSm (Just $ PrimLit "\"\"")],
+                   CaseSmAlt [ChoiceE $ PrimLit "1"] 
+                             [ReturnSm (Just $ 
+                              genExprFCall1 doShowId (PrimName $ NSimple vecPar))],
+                   CaseSmAlt [Others] 
+                             [ReturnSm (Just $ 
+                              genExprFCall1 showId (PrimName $ NIndexed $ IndexedName 
+                                                               (NSimple vecPar)
+                                                               [PrimLit "0"]) :&:
+                              PrimLit "','" :&:
+                              genExprFCall1 doShowId 
+                                    (vecSlice (PrimLit "1") 
+                                              (PrimName (NAttribute $ 
+                                                  AttribName (NSimple vecPar) lengthId Nothing) 
+                                                                 :-: PrimLit "1")))]]
+                              
+       -- return '<' & doshow(vec) & '>';
+       showRet =  ReturnSm (Just $ PrimLit "'<'" :&:
+                                   genExprFCall1 doShowId (PrimName $ NSimple vecPar) :&:
+                                   PrimLit "'>'" )
+       
+
+-- | Generate the default functions for a custom vector subtype
+genSubVectorFuns :: TypeMark -- ^ type of the vector elements
+                 -> TypeMark -- ^ type of the vector subtype
+                 -> [SubProgBody]
+genSubVectorFuns _ vectorTM  = [SubProgBody defaultSpec [] [defaultExpr]]
+ where defaultSpec = Function defaultId [] vectorTM
+       defaultExpr = 
+          ReturnSm (Just $ Aggregate [ElemAssoc (Just Others) 
+                                                (PrimName defaultSN)])
+       
     
                 
 -- | Generate the default functions for a custom tuple type
@@ -508,11 +550,20 @@ genTupleFuns :: [TypeMark] -- ^ type of each tuple element
              -> TypeMark -- ^ type of the tuple
              -> [SubProgBody]
 genTupleFuns elemTMs tupleTM = 
-  [SubProgBody defaultSpec [] [defaultExpr]]
- where defaultSpec = Function defaultId [] tupleTM
+  [SubProgBody defaultSpec [] [defaultExpr],
+   SubProgBody showSpec    [] [showExpr]]
+ where tupPar = unsafeVHDLBasicId "tup" 
+       defaultSpec = Function defaultId [] tupleTM
        defaultExpr = 
           ReturnSm (Just $ Aggregate (replicate tupSize 
                                        (ElemAssoc Nothing $ PrimName defaultSN)))
+       showSpec = Function showId [IfaceVarDec tupPar tupleTM ] stringTM
+       -- return '(' & show(tup.
+       showExpr = ReturnSm (Just $
+                      PrimLit "'('" :&: showMiddle :&: PrimLit "')'")
+         where showMiddle = foldr1 (\e1 e2 -> e1 :&: PrimLit "','" :&: e2) $ 
+                  map (PrimName . NSelected.(NSimple tupPar:.:).tupVHDLSuffix) 
+                      [1..tupSize]
        tupSize = length elemTMs
 
 -- | Generate the default functions for a custom abst_ext_ type
@@ -526,7 +577,8 @@ genAbstExtFuns elemTM absExtTM =
    SubProgBody fromAbstExtSpec       [] [fromAbstExtExpr],
    SubProgBody unsafeFromAbstExtSpec [] [unsafeFromAbstExtExpr],
    SubProgBody isPresentSpec         [] [isPresentExpr],
-   SubProgBody isAbsentSpec          [] [isAbsentExpr]]
+   SubProgBody isAbsentSpec          [] [isAbsentExpr],
+   SubProgBody showSpec              [] [showExpr]             ]
  where defaultPar = unsafeVHDLBasicId "default"
        extPar = unsafeVHDLBasicId "extabst"
        defaultSpec = Function defaultId [] absExtTM
@@ -567,7 +619,20 @@ genAbstExtFuns elemTM absExtTM =
        isAbsentExpr =
            ReturnSm (Just $
              Not $ PrimName (NSelected (NSimple extPar :.: SSimple isPresentId)))
-
+       showSpec = Function showId [IfaceVarDec extPar absExtTM ] stringTM
+       -- if extabs.isPresent 
+       --    return "Prst " & show(extabs.value);
+       -- else
+       --    return "Abst";
+       -- end if;  
+       showExpr = 
+          IfSm (PrimName $ NSelected (NSimple extPar :.: SSimple isPresentId))
+               [ReturnSm (Just $ PrimLit "\"Prst \"" :&:
+                  genExprFCall1 showId (PrimName $ 
+                 (NSelected (NSimple extPar :.: SSimple valueId))))]
+               []
+               (Just $ Else
+                 [ReturnSm (Just $ PrimLit "\"Abst\"")])
 
        
 
@@ -576,11 +641,23 @@ genEnumAlgFuns :: TypeMark -- ^ enumeration type
              -> VHDLId -- ^ First enumeration literal of the type
              -> [SubProgBody]
 genEnumAlgFuns enumTM firstLit = 
-  [SubProgBody defaultSpec [] [defaultExpr]]
- where defaultSpec = Function defaultId [] enumTM
+  [SubProgBody defaultSpec [] [defaultExpr],
+   SubProgBody showSpec [] [showExpr]]
+ where enumPar = unsafeVHDLBasicId "enum"
+       defaultSpec = Function defaultId [] enumTM
        defaultExpr = ReturnSm (Just $ PrimName (NSimple firstLit))
-      
-
+       showSpec = Function showId [IfaceVarDec enumPar enumTM] stringTM
+       -- we slice the resulting image in order to eliminate the
+       -- leading and trailing slashes
+       -- 
+       -- return enumTM'image(enum)(2 to enumTM'image(enum)'length-1);
+       showExpr = ReturnSm (Just $ PrimName $ NSlice $ SliceName image
+                  (ToRange (PrimLit "2")
+                           ((PrimName $ NAttribute $
+                             AttribName image lengthId Nothing) :-:
+                             PrimLit "1")))
+        where image = NAttribute$ AttribName (NSimple enumTM) imageId 
+                                  (Just $ PrimName $ NSimple enumPar)
 
 -- | Apply the range attribute  out of a simple name
 applyRangeAttrib :: SimpleName -> AttribName
