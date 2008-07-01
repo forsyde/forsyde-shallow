@@ -27,7 +27,7 @@ Library
                    pretty, 
                    template-haskell > 2.0,
                    process
-  hs-source-dirs:  src
+  hs-source-dirs:  src, dist/build/autogen
   exposed-modules: Language.Haskell.TH.Lift,
                    Language.Haskell.TH.LiftInstances,
                    ForSyDe,
@@ -44,7 +44,8 @@ Library
                    ForSyDe.Backend.Simulate,
                    ForSyDe.Backend.VHDL,
                    ForSyDe.Backend.GraphML
-  other-modules:   Language.Haskell.TH.TypeLib,
+  other-modules:   Paths_ForSyDe,
+                   Language.Haskell.TH.TypeLib,
                    Data.Typeable.TypeRepLib,
                    Data.Traversable.GenericZipWith,
                    ForSyDe.Config,
