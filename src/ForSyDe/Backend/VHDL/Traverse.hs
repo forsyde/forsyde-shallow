@@ -30,11 +30,18 @@ import ForSyDe.Netlist
 import ForSyDe.OSharing
 
 import Control.Monad.State
+import System.Directory
+import System.FilePath
 
 -- | Internal VHDL-Monad version of 'ForSyDe.Backend.writeVHDL'
 writeVHDLM :: VHDLM ()
 writeVHDLM = do
-   -- write the local results for the firs-level entity
+   -- create and change to systemName/vhdl/work
+   rootDir <- gets (sid.globalSysDef.global)
+   let workDir = rootDir </> "vhdl" </> "work"
+   liftIO $ createDirectoryIfMissing True workDir
+   liftIO $ setCurrentDirectory workDir
+   -- write the local results for the first-level entity
    writeLocalVHDLM
    -- if we are in recursive mode, also write the local results
    -- for the rest of the subsystems
@@ -44,8 +51,14 @@ writeVHDLM = do
                         withLocalST (initLocalST ((readURef.unPrimSysDef) s))
                                     writeLocalVHDLM 
                  mapM_ writeSub subs
+   -- create and change to systemName/vhdl/systemName_lib
+   -- (remember we are in workDir)
+   let libDir = ".." </> rootDir ++ "_lib"
+   liftIO $ createDirectoryIfMissing True libDir
+   liftIO $ setCurrentDirectory $ libDir
    -- write the global results
    writeGlobalVHDLM
+ 
 
 -- | Write the global traversing results (i.e. the library design file)
 --   accumulated  in the state of the monad
