@@ -30,8 +30,10 @@ testInstall = do
   putStrLn "  done.\n"
   putStrLn ("Registering ForSyDe in fresh package database " ++
             "(testInstallation.conf) ...")
+  -- Cabal doesn't allow specifying an alternative package database:
+  -- http://hackage.haskell.org/trac/hackage/ticket/307
+  -- Thus, we register the package by hand using ghc-pkg
   setupCWD ["register", "--gen-pkg-config=ForSyDeconfig","-v0"]
-  writeFile "testInstallation.conf" "[]" 
   code <- waitForProcess =<< 
           runCommand  "ghc-pkg -f testInstallation.conf register ForSyDeconfig"
   case code of
