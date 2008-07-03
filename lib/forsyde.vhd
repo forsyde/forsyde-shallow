@@ -11,9 +11,12 @@ package types is
 -- are 32bits long)
 -- subtype int64 is integer range -(2**(64-1)) to +(2**(64-1)-1);  
 
--- Commented out due to a overflow in 2**32
+-- Commented out due to a overflow in 2**32:
 -- subtype int32 is integer range -(2**(32-1)) to +(2**(32-1)-1);  
-  subtype int32 is integer range -2147483648 to +2147483647;  
+
+-- Note the lower bound is not -2147483648 because the LRM doesn't
+-- force to include it.
+  subtype int32 is integer range -2147483647 to +2147483647;  
   
   subtype int16 is integer range -(2**(16-1)) to +(2**(16-1)-1);  
 

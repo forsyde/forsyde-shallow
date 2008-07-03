@@ -20,6 +20,7 @@ import ForSyDe.Backend.VHDL.Translate
 import ForSyDe.Backend.VHDL.Generate
 import ForSyDe.Backend.VHDL.FileIO
 import ForSyDe.Backend.VHDL.AST
+import ForSyDe.Backend.VHDL.Quartus
 
 import ForSyDe.ForSyDeErr
 import ForSyDe.System.SysDef
@@ -58,7 +59,11 @@ writeVHDLM = do
    liftIO $ setCurrentDirectory $ libDir
    -- write the global results
    writeGlobalVHDLM
- 
+   -- go back to the vhdl directory
+   liftIO $ setCurrentDirectory $ ".."
+   -- analyze with quartus if necessary
+   analyze <- isAnalyzeQuartusSet
+   when analyze analyzeResultsQuartus
 
 -- | Write the global traversing results (i.e. the library design file)
 --   accumulated  in the state of the monad
@@ -77,6 +82,7 @@ writeGlobalVHDLM = do
 -- | Traverse the netlist and write the local results (i.e. system design files)
 writeLocalVHDLM :: VHDLM ()
 writeLocalVHDLM = do
+  gSysDefVal <- gets (globalSysDef.global)
   lSysDefVal <- gets (currSysDef.local)
   let lSysDefId =  sid lSysDefVal
   debugMsg $ "Compiling system definition `" ++ lSysDefId ++ "' ...\n"
@@ -96,7 +102,7 @@ writeLocalVHDLM = do
       outAssigns = genOutAssigns outIds intOutsInfo
       finalRes = LocalTravResult decs (stms ++ outAssigns)
   -- Finally, generate the design file
-      sysDesignFile = genSysDesignFile (sid lSysDefVal) entity finalRes
+      sysDesignFile = genSysDesignFile (sid gSysDefVal) entity finalRes
   -- and write it to disk
   liftIO $ writeDesignFile sysDesignFile (lSysDefId ++ ".vhd") 
  where mapFilter f p = foldr (\x ys -> if p x then (f x):ys else ys) []

@@ -54,7 +54,7 @@ genSysDesignFile globalSysId ent@(EntityDec id _) (LocalTravResult decs stms) =
  where archBody = ArchBody archId  (NSimple id) decs stms      
        archId = unsafeVHDLBasicId "synthesizable"
        libName = globalSysId ++ "_lib"
-       libId = unsafeVHDLExtId libName
+       libId = unsafeVHDLBasicId libName
        contextClause = commonContextClause ++ 
                    [Library libId,
                     Use $ NSelected (NSimple libId :.: SSimple typesId) :.: All]

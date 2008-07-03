@@ -71,6 +71,7 @@ Library
                    ForSyDe.Backend.VHDL.Traverse.VHDLM,
                    ForSyDe.Backend.VHDL.Translate,
                    ForSyDe.Backend.VHDL.Generate,
+                   ForSyDe.Backend.VHDL.Quartus,
                    ForSyDe.Backend.GraphML.AST,
                    ForSyDe.Backend.GraphML.Ppr,
                    ForSyDe.Backend.GraphML.FileIO,

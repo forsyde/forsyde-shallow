@@ -227,7 +227,9 @@ emptyGlobalTravResult = GlobalTravResult [] [] []
 ----------
 
 -- | VHDL Compilation options
-data VHDLOps = VHDLOps {debugVHDL :: VHDLDebugLevel, recursivityVHDL :: VHDLRecursivity}
+data VHDLOps = VHDLOps {debugVHDL :: VHDLDebugLevel, 
+                        recursivityVHDL :: VHDLRecursivity,
+                        analyzeQuartus  :: Bool}
  deriving (Eq, Show)
 
 -- | Debug level
@@ -252,10 +254,14 @@ isRecursiveSet = do
   recOp <- gets (recursivityVHDL.ops.global)
   return $ recOp == VHDLRecursive
 
+-- | Check if we want to analyze the results with quartus
+isAnalyzeQuartusSet :: VHDLM Bool
+isAnalyzeQuartusSet = gets (analyzeQuartus.ops.global)
+
 
 -- | Default traversing options
 defaultVHDLOps :: VHDLOps
-defaultVHDLOps =  VHDLOps VHDLNormal VHDLRecursive
+defaultVHDLOps =  VHDLOps VHDLNormal VHDLRecursive False
 
 
 -- | Set VHDL options inside the VHDL monad
