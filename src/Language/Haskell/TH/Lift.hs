@@ -1,4 +1,5 @@
-{-# OPTIONS_GHC -XMagicHash -XTemplateHaskell -fno-warn-deprecations #-}  
+{-# LANGUAGE MagicHash, TemplateHaskell  #-}  
+{-# OPTIONS_GHC -fno-warn-deprecations #-}
 -- Due to the use of unboxed types, TH, and deprecated Packed Strings
 -- Taken from HackageDB
 -- (c) Ian Lynagh, 2006
