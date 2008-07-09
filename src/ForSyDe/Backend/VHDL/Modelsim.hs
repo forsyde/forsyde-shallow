@@ -22,7 +22,7 @@ import ForSyDe.Config (getDataDir)
 import Data.List (intersperse)
 import Control.Monad (liftM, when)
 import Control.Monad.State (gets)
-import System.Directory (findExecutable, setCurrentDirectory)
+import System.Directory (findExecutable)
 import System.Process (runProcess, waitForProcess)
 import System.Exit (ExitCode(..))
 import System.FilePath ((</>))
@@ -50,18 +50,14 @@ compileResultsModelsim = do
  
  -- compile the library of current model
  let modelsimLib = syslib </> "modelsim"
- liftIO $ setCurrentDirectory syslib
- run_vlib ["modelsim"]
- liftIO $ setCurrentDirectory ".."
+ run_vlib [modelsimLib]
  run_vcom [libFile, "-work", modelsimLib]
  -- map the directory of the library to its logical name
  run_vmap [syslib, modelsimLib]
  
  -- compile the work files
  let modelsimWork = "work" </> "modelsim"
- liftIO $ setCurrentDirectory "work"
- run_vlib ["modelsim"]
- liftIO $ setCurrentDirectory ".."
+ run_vlib [modelsimWork]
  run_vcom (workFiles ++ ["-work", modelsimWork])
  -- map the directory work library to its logical name
  run_vmap ["work", modelsimWork]
@@ -91,7 +87,7 @@ runModelsimCommand :: String -- ^ Command to execute
                    -> [String] -- ^ Command arguments
                    -> VHDLM ()
 runModelsimCommand command args = do
-  success <- liftIO $ runWait msg "vmap" args
+  success <- liftIO $ runWait msg command args
   when (not success) (throwFError ModelsimFailed)
  where msg = "Running: " ++ command ++ " " ++ (concat $ intersperse " " args)
 
