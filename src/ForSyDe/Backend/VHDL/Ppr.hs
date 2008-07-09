@@ -257,6 +257,10 @@ instance Ppr SeqSm where
      nest nestVal (ppr sms) $+$
    text "end loop" <> semi
  ppr (target := orig) = ppr target <+> text ":=" <+> ppr orig <> semi
+ ppr (WaitFor expr) = text "wait for" <+> ppr expr <> semi
+ ppr (targ `SigAssign` orig) = ppr targ <+> text "<=" <+> ppr orig <> semi
+ ppr (ProcCall name assocs) = 
+   ppr name <> parensNonEmpty (commaSep assocs) <> semi
 
 instance Ppr [SeqSm] where
  ppr = ppr_list ($+$)
@@ -298,6 +302,7 @@ instance Ppr ConcSm where
  ppr (CSBSm blockSm) = ppr blockSm
  ppr (CSSASm conSigAssignSm) = ppr conSigAssignSm
  ppr (CSISm compInsSm) = ppr compInsSm
+ ppr (CSPSm procSm) = ppr procSm
 
 instance Ppr BlockSm where
  ppr (BlockSm label ifaceSigDecs pMapAspect blockDecItems concSms) =
@@ -345,10 +350,23 @@ instance Ppr Wform where
  ppr (Wform elems) = ppr_list hComma elems
  ppr Unaffected    = text "unaffected"
 
+instance Ppr WformElem where
+ ppr (WformElem exp mAfter) = ppr exp <+> (text "after" <++> ppr mAfter)
+
+
 instance Ppr CompInsSm where
  ppr (CompInsSm label insUnit assocElems) =
    ppr label <+> colon <+> (ppr insUnit $+$
                             nest nestVal (ppr assocElems) <> semi)
+
+instance Ppr ProcSm where
+ ppr (ProcSm label sensl seqSms) =
+   ppr label <+> colon <+> text "process" <+> 
+   parensNonEmpty (ppr_list hComma sensl) $+$
+   text "begin" $+$
+        nest nestVal (ppr seqSms) $+$
+   text "end process" <+> labelDoc <> semi
+  where labelDoc = ppr label
 
 instance Ppr InsUnit where
  ppr (IUEntity name) = text "entity" <+> ppr name
@@ -387,7 +405,7 @@ pprExprPrecInfix :: Int -- ^ Accumulated precedence value (initialized to 0)
 -- operator, and skip parenthesis according to left parsing associativity
 -- in the cases stated above.
 --
--- Note that we are only making use of semantic associativity. e.g.
+-- Note that we are only making use of syntactic associativity. e.g.
 -- even if "+" is semantially associative: a+(b+c)=(a+b)+c,
 -- we will only skip parenthesis in (a+b)+c
 

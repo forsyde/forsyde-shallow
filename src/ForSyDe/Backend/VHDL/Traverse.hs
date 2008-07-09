@@ -21,6 +21,7 @@ import ForSyDe.Backend.VHDL.Generate
 import ForSyDe.Backend.VHDL.FileIO
 import ForSyDe.Backend.VHDL.AST
 import ForSyDe.Backend.VHDL.Quartus
+import ForSyDe.Backend.VHDL.Modelsim
 
 import ForSyDe.ForSyDeErr
 import ForSyDe.System.SysDef
@@ -64,7 +65,12 @@ writeVHDLM = do
    -- analyze with quartus if necessary
    analyze <- isAnalyzeQuartusSet
    when analyze analyzeResultsQuartus
-
+   -- analyze with modelsim if necessary
+   compile <- isCompileModelsimSet
+   when compile compileResultsModelsim
+   -- go back to the original directory
+   liftIO $ setCurrentDirectory $ ".."
+   
 -- | Write the global traversing results (i.e. the library design file)
 --   accumulated  in the state of the monad
 writeGlobalVHDLM :: VHDLM ()

@@ -43,7 +43,8 @@ genFCallAssign dest fName formal actual =
 -- | Generate a simple assignment from an expression to a name
 genExprAssign :: VHDLId -> Expr -> ConSigAssignSm
 genExprAssign dest origExpr =
-   NSimple dest :<==: (ConWforms [] (Wform [origExpr]) Nothing)  
+   NSimple dest :<==: (ConWforms [] (Wform [WformElem origExpr Nothing]) 
+                       Nothing)  
 
 -- | Generate a system design file for a system from the global system 
 --   identifier,
@@ -120,6 +121,35 @@ genExprFCall4 :: VHDLId -> Expr -> Expr -> Expr -> Expr -> Expr
 genExprFCall4 fName arg1 arg2 arg3 arg4 = 
  genExprFCall fName [arg1,arg2,arg2,arg3,arg4]
 
+-- | Generate a procedure call from the Function Name and a list of expressions
+--   (its arguments)
+genExprProcCall :: VHDLId -> [Expr] -> SeqSm
+genExprProcCall pName args = ProcCall (NSimple pName)  $
+             map (\exp -> Nothing :=>: ADExpr exp) args
+
+
+-- | Generate a procedure call from the Function Name (constant procedure)
+genExprProcCall0 :: VHDLId -> SeqSm
+genExprProcCall0 fName = genExprProcCall fName []
+
+
+-- | Generate a procedure call from the Function Name and an expression argument
+genExprProcCall1 :: VHDLId -> Expr -> SeqSm
+genExprProcCall1 pName arg = genExprProcCall pName [arg]
+
+
+-- | Generate a procedure call from the Function Name and four expression 
+--   arguments
+genExprProcCall2 :: VHDLId -> Expr -> Expr -> SeqSm
+genExprProcCall2 pName arg1 arg2 = genExprProcCall pName [arg1,arg2]
+
+
+-- | Generate a procedure call from the Function Name and two expression 
+--   arguments
+genExprProcCall4 :: VHDLId -> Expr -> Expr -> Expr -> Expr -> SeqSm
+genExprProcCall4 pName arg1 arg2 arg3 arg4 = 
+ genExprProcCall pName [arg1,arg2,arg2,arg3,arg4]
+
 
 -- Generate an association of a formal and actual parameter
 genAssoc :: VHDLId -> VHDLId -> AssocElem
@@ -153,7 +183,8 @@ genUnconsVectorFuns elemTM vectorTM  =
    SubProgBody ltplusSpec    [SPVD ltplusVar]    [ltplusExpr, ltplusRet]     ,
    SubProgBody plusplusSpec  [SPVD plusplusVar]  [plusplusExpr, plusplusRet] ,
    SubProgBody singletonSpec [SPVD singletonVar] [singletonRet]              ,
-   SubProgBody showSpec      [SPSB doShowDef]    [showRet]                   ]
+   SubProgBody showSpec      [SPSB doShowDef]    [showRet]                   ,
+   SubProgBody defaultSpec   []                  [defaultExpr]               ]
  where ixPar = unsafeVHDLBasicId "ix"
        vecPar = unsafeVHDLBasicId "vec"
        vec1Par = unsafeVHDLBasicId "vec1"
@@ -532,17 +563,9 @@ genUnconsVectorFuns elemTM vectorTM  =
                                    genExprFCall1 doShowId (PrimName $ NSimple vecPar) :&:
                                    PrimLit "'>'" )
        
-
--- | Generate the default functions for a custom vector subtype
-genSubVectorFuns :: TypeMark -- ^ type of the vector elements
-                 -> TypeMark -- ^ type of the vector subtype
-                 -> [SubProgBody]
-genSubVectorFuns _ vectorTM  = [SubProgBody defaultSpec [] [defaultExpr]]
- where defaultSpec = Function defaultId [] vectorTM
+       defaultSpec = Function defaultId [] vectorTM
        defaultExpr = 
-          ReturnSm (Just $ Aggregate [ElemAssoc (Just Others) 
-                                                (PrimName defaultSN)])
-       
+          ReturnSm (Just $ genExprFCall0 emptyId)
     
                 
 -- | Generate the default functions for a custom tuple type
@@ -562,7 +585,11 @@ genTupleFuns elemTMs tupleTM =
        showExpr = ReturnSm (Just $
                       PrimLit "'('" :&: showMiddle :&: PrimLit "')'")
          where showMiddle = foldr1 (\e1 e2 -> e1 :&: PrimLit "','" :&: e2) $ 
-                  map (PrimName . NSelected.(NSimple tupPar:.:).tupVHDLSuffix) 
+                  map ((genExprFCall1 showId).
+                       PrimName . 
+                       NSelected.
+                       (NSimple tupPar:.:).
+                       tupVHDLSuffix) 
                       [1..tupSize]
        tupSize = length elemTMs
 

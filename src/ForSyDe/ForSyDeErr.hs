@@ -114,6 +114,10 @@ data ForSyDeErr =
   ReservedId String                          |
   -- | Unsupported process
   UnsupportedProc                            |
+  -- | Quartus Failed
+  QuartusFailed                              |
+  -- | Modelsim Failed
+  ModelsimFailed                             |
 
   -- | Other Errors
   Other String           
@@ -274,6 +278,8 @@ instance Show ForSyDeErr where
     "Untranslatable function: " ++ show err     
  show (UntranslatableVHDLExp exp err) = 
     "Untranslatable expression `" ++ pprint exp ++ "': " ++ show err     
+ show QuartusFailed = "Quartus failed"
+ show ModelsimFailed = "Modelsim failed"
  show (Other str) = str 
 
 -- | help function for the show instance

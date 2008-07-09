@@ -377,16 +377,21 @@ data IfaceVarDec = IfaceVarDec VHDLId TypeMark
  deriving Show
 
 -- | sequential_statement
--- Only If, case, return, for loops and assignment allowed
+-- Only If, case, return, for loops, assignment, @wait for@ procedure calls
+-- allowed.
 -- Only for loops are allowed (thus loop_statement doesn't exist) and cannot
 -- be provided labels.
 -- The target cannot be an aggregate.
+-- General wait statements are not allowed, only @wait for@
 -- It is incorrect to have an empty [CaseSmAlt]
 data SeqSm = IfSm  Expr [SeqSm] [ElseIf] (Maybe Else) |
              CaseSm Expr [CaseSmAlt]                  |
              ReturnSm (Maybe Expr)                    |
              ForSM VHDLId DiscreteRange [SeqSm]       |
-             VHDLName := Expr 
+             VHDLName := Expr                         |
+             WaitFor Expr                             |
+             SigAssign  VHDLName Wform                |
+             ProcCall VHDLName [AssocElem]
  deriving Show
 
 -- | helper type, they doesn't exist in the origianl grammar
@@ -420,7 +425,10 @@ data SigDec = SigDec VHDLId TypeMark (Maybe Expr)
 -- | concurrent_statement
 -- only block statements, component instantiations and signal assignments 
 -- are allowed
-data ConcSm = CSBSm BlockSm | CSSASm  ConSigAssignSm | CSISm CompInsSm  
+data ConcSm = CSBSm BlockSm | 
+              CSSASm  ConSigAssignSm | 
+              CSISm CompInsSm  |
+              CSPSm ProcSm
  deriving Show
 
 -- | block_statement
@@ -478,11 +486,14 @@ newtype When = When Expr
  deriving Show
 
 -- | waveform
--- wavefrom_element can just be  an expression
 -- although it is possible to leave [Expr] empty, that's obviously not
--- valid VHDL
--- FIXME, Check what is the meaning a various waveforms separated by commas
-data Wform = Wform [Expr] | Unaffected
+-- valid VHDL waveform
+data Wform = Wform [WformElem] | Unaffected
+ deriving Show
+
+-- | waveform_element
+--   Null is not accepted
+data WformElem = WformElem Expr (Maybe Expr)
  deriving Show
 
            
@@ -490,6 +501,13 @@ data Wform = Wform [Expr] | Unaffected
 -- No generics supported
 -- The port map aspect is mandatory
 data CompInsSm = CompInsSm Label InsUnit PMapAspect
+ deriving Show
+
+-- | process_statement
+--   The label is mandatory
+--   Only simple names are accepted in the sensitivity list
+--   No declarative part is allowed
+data ProcSm = ProcSm Label [SimpleName] [SeqSm]
  deriving Show
 
 -- | instantiated_unit

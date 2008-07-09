@@ -52,6 +52,15 @@ typesId = unsafeVHDLBasicId "types"
 workId :: VHDLId
 workId = unsafeVHDLBasicId "work"
 
+-- | std identifier
+stdId :: VHDLId
+stdId = unsafeVHDLBasicId "std"
+
+
+-- | textio identifier
+textioId :: VHDLId
+textioId = unsafeVHDLBasicId "textio"
+
 -- | range attribute identifier
 rangeId :: VHDLId
 rangeId = unsafeVHDLBasicId "range"
@@ -60,6 +69,10 @@ rangeId = unsafeVHDLBasicId "range"
 -- | range attribute identifier
 imageId :: VHDLId
 imageId = unsafeVHDLBasicId "image"
+
+-- | event attribute identifie
+eventId :: VHDLId
+eventId = unsafeVHDLBasicId "event"
 
 
 -- | default function identifier
@@ -208,6 +221,14 @@ copyId = unsafeVHDLBasicId "copy"
 showId :: VHDLId
 showId = unsafeVHDLBasicId "show"
 
+
+-- | write function idenfier (from std.textio)
+writeId :: VHDLId
+writeId = unsafeVHDLBasicId "write"
+
+-- | output file identifier (from std.textio)
+outputId :: VHDLId
+outputId = unsafeVHDLBasicId "output"
 
 --------
 -- Names

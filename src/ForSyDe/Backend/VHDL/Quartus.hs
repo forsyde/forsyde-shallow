@@ -13,6 +13,7 @@
 -----------------------------------------------------------------------------
 module ForSyDe.Backend.VHDL.Quartus (analyzeResultsQuartus) where
 
+import ForSyDe.ForSyDeErr
 import ForSyDe.Config (getDataDir)
 import ForSyDe.OSharing (readURef)
 import ForSyDe.System.SysDef (subSys,sid,unPrimSysDef)
@@ -24,19 +25,23 @@ import System.Directory
 import System.Process
 import System.FilePath
 import Control.Monad.State
+import System.Exit (ExitCode(..))
 
 -- | Analyze the results with Quartus
 analyzeResultsQuartus :: VHDLM ()
 analyzeResultsQuartus = do
  mPath <- liftIO $ findExecutable "quartus_sh"
  case mPath of
-  Nothing -> liftIO $ hPutStrLn stderr "Error: quartus_sh not found"
+  Nothing -> do liftIO $ hPutStrLn stderr "Error: quartus_sh not found"
+                throwFError QuartusFailed
   Just _ -> do contents <- gen_quartus_tcl
                liftIO $ writeFile "quartus.tcl" contents
                liftIO $ putStrLn "Running quartus_sh -t quartus.tcl"
-               liftIO $ waitForProcess =<< runCommand 
-                                             "quartus_sh -t quartus.tcl" 
-               return ()
+               code <- liftIO $ waitForProcess =<< runCommand 
+                                              "quartus_sh -t quartus.tcl" 
+               case code of
+                   ExitFailure _ -> throwFError QuartusFailed
+                   _ -> return ()
   
 -- | Generate the content of quartus.tcl
 --   Note that, even in windows, the tcl interpreter requires pathnames

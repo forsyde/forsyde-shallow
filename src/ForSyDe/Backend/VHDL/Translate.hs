@@ -220,9 +220,9 @@ transDelay2Block vPid inS (ProcValAST exp tr enums) outS = do
                Just formalOut :=>: ADName (NSimple outS)]
      sigAssign = CSSASm (NSimple formalOut :<==: 
                            (ConWforms [whenElseReset] inWform (Just whenRE)))
-     whenElseReset = WhenElse (Wform [initExp])
+     whenElseReset = WhenElse (Wform [WformElem initExp Nothing])
                                (PrimName (NSimple resetId) :=: PrimLit "'0'")
-     inWform = Wform [PrimName $ NSimple formalIn]
+     inWform = Wform [WformElem (PrimName $ NSimple formalIn) Nothing]
      whenRE = When (PrimFCall $ FCall (NSimple $ unsafeVHDLBasicId "rising_edge") 
                                       [Nothing :=>: ADName (NSimple clockId) ])
  return  (BlockSm vPid iface (PMapAspect assocs) [] [sigAssign],
@@ -346,9 +346,7 @@ doCustomTR2TM :: TypeRep -> VHDLM (Either TypeDec SubtypeDec)
 
 -- | FSVec?
 --   FSVecs are translated to subtypes of unconstrained vectors.
---   Apart from default function (which cannot be defined for unconstrained vectors, since
---   others is forbidden) 
---   all FSVec operations can be translated as operations for the
+--   All FSVec operations are translated as operations for the
 --   unconstrained type.
 doCustomTR2TM rep | isFSVec = do
  -- Translate the type of the elements contained in the vector
@@ -374,9 +372,6 @@ doCustomTR2TM rep | isFSVec = do
  -- Create the vector subtype identifier
  let subvectorId = unsafeVHDLBasicId ("fsvec_" ++ show size ++ "_" ++
                                      fromVHDLId valTM)
- -- Add the default functions for the vector subtype to the global results
-     funs = genSubVectorFuns valTM vectorId
- mapM_ addSubProgBody funs      
  -- Create the vector subtype declaration
  return $ Right $ 
      SubtypeDec subvectorId (SubtypeIn vectorId 

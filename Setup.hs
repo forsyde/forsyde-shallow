@@ -24,6 +24,9 @@ forsydePostCopy :: Args -> CopyFlags -> PackageDescription ->
 forsydePostCopy _ cf  = compile_forsyde_vhd (copyDest cf)
 
 
+-- NOTE: Most of this code is duplicated from ForSyDe.Backend.VHDL.Modelsim,
+--       however, it allows Setup.hs to be selfcontained
+
 -- Compile forsyde.vhd if possible, showing what's going on to the end user
 compile_forsyde_vhd :: CopyDest -> PackageDescription -> LocalBuildInfo 
                     -> IO ()
@@ -58,10 +61,9 @@ do_compile_forsyde_vhd :: FilePath -- ^ absolute directory  which
                                    --   forsyde.vhd was copied into 
                       -> IO Bool
 do_compile_forsyde_vhd dir = 
- (runWait "Executing: vlib forsyde" "vlib" ["forsyde"])            <&&> 
- (runWait "Executing: vmap forsyde forsyde" "vmap" ["forsyde","forsyde"])  <&&>
- (runWait "Executing: vcom -93 -work forsyde forsyde.vhd"
-          "vcom" ["-93", "-work","forsyde", "forsyde.vhd"])
+ (runWait "Executing: vlib modelsim" "vlib" ["modelsim"])            <&&> 
+ (runWait "Executing: vcom -93 -work modelsim forsyde.vhd"
+          "vcom" ["-93", "-work","modelsim", "forsyde.vhd"])
  where runWait :: String -> FilePath -> [String] -> IO Bool
        runWait msg proc args = do
            putStrLn msg 
