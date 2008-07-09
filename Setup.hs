@@ -62,8 +62,8 @@ do_compile_forsyde_vhd :: FilePath -- ^ absolute directory  which
                       -> IO Bool
 do_compile_forsyde_vhd dir = 
  (runWait "Executing: vlib modelsim" "vlib" ["modelsim"])            <&&> 
- (runWait "Executing: vcom -93 -work modelsim forsyde.vhd"
-          "vcom" ["-93", "-work","modelsim", "forsyde.vhd"])
+ (runWait "Executing: vcom -93 -quiet -nologo -work modelsim forsyde.vhd"
+         "vcom" ["-93", "-quiet", "-nologo", "-work","modelsim", "forsyde.vhd"])
  where runWait :: String -> FilePath -> [String] -> IO Bool
        runWait msg proc args = do
            putStrLn msg 

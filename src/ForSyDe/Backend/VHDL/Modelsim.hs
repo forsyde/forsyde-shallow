@@ -51,14 +51,23 @@ compileResultsModelsim = do
  -- compile the library of current model
  let modelsimLib = syslib </> "modelsim"
  run_vlib [modelsimLib]
- run_vcom [libFile, "-work", modelsimLib]
+ run_vcom ["-quiet", "-nologo", "-work", modelsimLib, libFile]
  -- map the directory of the library to its logical name
  run_vmap [syslib, modelsimLib]
  
  -- compile the work files
+ -- NOTE: Since vcom doesn't figure out
+ --       the compilation order (according to compoment dependencies),
+ --       we first compile the entities and then the architectures.
+ --       Another option would be keeping a dependency tree in SysDef
+ --       and execute vcom using a depth search (currently we keep
+ --       all the subsystems in a flatenned list) 
  let modelsimWork = "work" </> "modelsim"
  run_vlib [modelsimWork]
- run_vcom (workFiles ++ ["-work", modelsimWork])
+ run_vcom ("-93" : "-quiet" : "-nologo" : "-work" : modelsimWork : 
+           "-just" : "e" : workFiles)
+ run_vcom ("-93" : "-quiet" : "-nologo" : "-work" : modelsimWork : 
+           "-just" : "a" : workFiles)
  -- map the directory work library to its logical name
  run_vmap ["work", modelsimWork]
  
