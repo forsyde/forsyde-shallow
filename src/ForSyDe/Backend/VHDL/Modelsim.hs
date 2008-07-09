@@ -22,7 +22,7 @@ import ForSyDe.Config (getDataDir)
 import Data.List (intersperse)
 import Control.Monad (liftM, when)
 import Control.Monad.State (gets)
-import System.Directory (findExecutable)
+import System.Directory (findExecutable, setCurrentDirectory)
 import System.Process (runProcess, waitForProcess)
 import System.Exit (ExitCode(..))
 import System.FilePath ((</>))
@@ -45,19 +45,23 @@ compileResultsModelsim = do
  dataPath <- liftIO $ getDataDir
 
  -- map the directory to the logical name forsyde
- let modelsimForSyDe = dataPath </> "modelsim"
+ let modelsimForSyDe = dataPath </> "lib" </> "modelsim"
  run_vmap ["forsyde", modelsimForSyDe]
  
  -- compile the library of current model
  let modelsimLib = syslib </> "modelsim"
- run_vlib [modelsimLib]
+ liftIO $ setCurrentDirectory syslib
+ run_vlib ["modelsim"]
+ liftIO $ setCurrentDirectory ".."
  run_vcom [libFile, "-work", modelsimLib]
  -- map the directory of the library to its logical name
  run_vmap [syslib, modelsimLib]
  
  -- compile the work files
  let modelsimWork = "work" </> "modelsim"
- run_vlib [modelsimWork]
+ liftIO $ setCurrentDirectory "work"
+ run_vlib ["modelsim"]
+ liftIO $ setCurrentDirectory ".."
  run_vcom (workFiles ++ ["-work", modelsimWork])
  -- map the directory work library to its logical name
  run_vmap ["work", modelsimWork]
@@ -89,7 +93,7 @@ runModelsimCommand :: String -- ^ Command to execute
 runModelsimCommand command args = do
   success <- liftIO $ runWait msg "vmap" args
   when (not success) (throwFError ModelsimFailed)
- where msg = "Running: " ++ command ++ (concat $ intersperse " " args)
+ where msg = "Running: " ++ command ++ " " ++ (concat $ intersperse " " args)
 
 
 -- | Run a process, previously announcing a message and waiting for it

@@ -230,7 +230,7 @@ emptyGlobalTravResult = GlobalTravResult [] [] []
 data VHDLOps = VHDLOps {debugVHDL :: VHDLDebugLevel, 
                         recursivityVHDL :: VHDLRecursivity,
                         analyzeQuartus  :: Bool,
-                        compileModelSim :: Bool}
+                        compileModelsim :: Bool}
  deriving (Eq, Show)
 
 -- | Debug level
@@ -261,7 +261,7 @@ isAnalyzeQuartusSet = gets (analyzeQuartus.ops.global)
 
 -- | Check if we want to compile the results with modelsim
 isCompileModelsimSet :: VHDLM Bool
-isCompileModelsimSet = gets (compileModelSim.ops.global)
+isCompileModelsimSet = gets (compileModelsim.ops.global)
 
 -- | Default traversing options
 defaultVHDLOps :: VHDLOps

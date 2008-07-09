@@ -112,11 +112,12 @@ genVHDLTestBenchArch mCycles stimuli = do
      outputProc = genOutputProc (map unsafeVHDLExtId oIds)
  -- return the architecture
  return $ (ArchBody 
-             (unsafeVHDLBasicId "test") 
-             (NSimple $ unsafeVHDLBasicId (sysId ++ "_tb"))
-             (map BDISD (finalIDecs ++ outDecs))
-             ( (CSPSm clkProc) : (CSPSm clkProc) :(map CSSASm finalAssigns) ),
-           cycles)
+            (unsafeVHDLBasicId "test") 
+            (NSimple $ unsafeVHDLBasicId (sysId ++ "_tb"))
+            (map BDISD (finalIDecs ++ outDecs))
+            ( (CSISm ins) : (CSPSm clkProc) : (CSPSm outputProc) : 
+              (map CSSASm finalAssigns) ),
+            cycles)
 
 -- | generate the assignments for the input stimuli
 genStimuliAssigns :: Maybe Int -- ^ Maximum number of cycles
@@ -129,7 +130,7 @@ genStimuliAssigns mCycles stimuli signals = do
   let genWformElem time thExp  = 
          do vExp <- transExp2VHDL thExp
             return (WformElem vExp (Just $ PrimLit (show time ++ " ns")))
-  wformElems <- mapM (zipWithM  genWformElem [0,10..]) stimuli
+  wformElems <- mapM (zipWithM  genWformElem ([0,10..] :: [Int])) stimuli
   let (normWformElems, cycles) = normalize maxCycles wformElems
   return $ (zipWith 
                 (\s elems -> NSimple s :<==: ConWforms [] (Wform elems) Nothing)
