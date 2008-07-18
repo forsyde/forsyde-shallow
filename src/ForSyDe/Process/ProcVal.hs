@@ -42,5 +42,7 @@ mkProcVal :: (Lift a, ProcType a) => a -> ProcVal
 mkProcVal val = ProcVal (toDyn val) (mkProcValAST val) 
 
 mkProcValAST :: (Lift a, ProcType a) => a -> ProcValAST 
+-- FIMXE: the unsafePerformIO won't be needed once the Data a => Lift a
+--        instance is created
 mkProcValAST val = ProcValAST (unsafePerformIO.runQ.lift $ val) (typeOf val) 
                               (getEnums val)

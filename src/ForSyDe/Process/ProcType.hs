@@ -1,5 +1,4 @@
-{-# LANGUAGE ScopedTypeVariables, FlexibleInstances,
-             UndecidableInstances, OverlappingInstances #-}
+{-# LANGUAGE TemplateHaskell #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  ForSyDe.Process.ProcType
@@ -14,12 +13,18 @@
 -- and related types of 'ProcType', a class used to constrain the arguments
 -- taken by process constructors.
 ----------------------------------------------------------------------------- 
-module ForSyDe.Process.ProcType (EnumAlgTy(..), ProcType(..)) where
+module ForSyDe.Process.ProcType (
+ EnumAlgTy(..), 
+ ProcType(..), 
+ genTupInstances) where
 
+import Control.Monad (replicateM)
+import Data.List (intersperse)
 import Data.Generics
-import Data.Set
-import Data.Param.FSVec (FSVec)
-import Data.TypeLevel.Num.Sets (Nat)
+import Data.Set (Set, union)
+import Language.Haskell.TH
+import Language.Haskell.TH.Syntax (Lift(..))
+import Text.ParserCombinators.ReadP
 
 -- | Data type describing an algebraic enumerated type (i.e. an algrebraic 
 --   type whose data constructors have arity zero)
@@ -34,7 +39,7 @@ instance Ord EnumAlgTy where
 
 -- | Class used to constrain the arguments (values and 'ProcFun's) taken by
 --   process constructors
-class Data a => ProcType a where
+class (Data a, Lift a) => ProcType a where
  -- | Get the associated enumerated type-definitions of certain value, 
  --   taking nesting in account.  
  -- 
@@ -49,82 +54,141 @@ class Data a => ProcType a where
  --   FIXME: complete example
  -- @
  getEnums :: a -> Set EnumAlgTy
+ -- | Read a process type
+ readProcType :: ReadP a
+                
 
-instance Data a => ProcType a where
- getEnums _ = maybe empty singleton (getEnumAlgTy (undefined :: a))
+-- Function to automatically generate ProcType, Data, Lift and
+-- Typeable instances for tuples (with 2 or more elements) with
+-- Template Haskell. For example, in the case of 2 elements, the code
+-- generated would be:
+--
+-- @
+-- instance (ProcType o1, ProcType o2) => ProcType (o1, o2) where
+--  getEnums _ = getEnums (undefined :: a) `union` getEnums (undefined :: b) 
+--  readProcType = do
+--            skipSpaces >> char '('
+--            o1 <- readProcType
+--            skipSpaces >> char ','
+--            o2 <- readProcType
+--            skipSpaces >> char ')'
+--            return (o1,o2)
+--
+-- The next two are only necessary for tuples with more than 7 elements
+--
+-- instance (Typeable o1, Typeable o2) => Typeable (o1, o2) where
+--  typeOf _ = mkTyCon "," `mkTyConApp` 
+--               [typeOf (undefined :: o1), typeOf (undefined :: o2)]
+--
+-- instance (Data o1, Data o2) => Data (o1, o2) where
+--  gfoldl k z (o1, o2) = z (,) `k` o1 `k` o2
+--  gunfold k z _ = k (k (z (,) ))
+--  toConstr a = mkConstr (dataTypeOf a) "(,)" [] Prefix
+--  dataTypeOf a = mkDataType "Data.Tuple.(,)" [toConstr a]
+--
+-- FIXME: This won't be necessary once the Data a => Lift a instance is created
+--
+-- instance (Lift o1, Lift o2) => Lift (o1, o2) where
+--  lift (o1, o2) = tupE [lift o1, lift o2]
+-- @
+genTupInstances :: Int -- ^ number of outputs to generate
+             -> Q [Dec]
+genTupInstances n = do
+  -- Generate N o names
+  outNames <- replicateM n (newName "o")
+  let tupType = foldl accumApp (tupleT n) outNames
+      accumApp accumT vName = accumT `appT` varT vName 
+  if n <= 7 
+     then sequence [genProcTypeIns outNames tupType]
+     else sequence [genTypeableIns outNames tupType,
+                    genDataIns outNames tupType]
+                    -- genLiftIns outNames tupType,
+                    --genProcTypeIns outNames tupType]
 
-instance (ProcType a, ProcType b) => ProcType (a,b) where
- getEnums _ = getEnums (undefined :: a) `union` getEnums (undefined :: b)
+ where 
+  undef t = sigE [| undefined |] (varT t)
+  genProcTypeIns :: [Name] -> Q Type -> Q Dec
+  genProcTypeIns names tupType = do
+    let getEnumsExpr =  
+            foldr1 (\e1 e2 -> infixE (Just e1) 
+                                     (varE 'union)
+                                     (Just e2) )
+                   (map (\n -> varE  'getEnums `appE` undef n) names)     
+        getEnumsD = funD 'getEnums [clause [wildP]  (normalB getEnumsExpr) []] 
+        readProcTypeExpr = doE $ 
+            noBindS [| skipSpaces >> char '(' |] : 
+            (intersperse (noBindS [| skipSpaces >> char ',' |]) 
+                        (map (\n -> bindS (varP n) [| readProcType |]) names) ++
+             [noBindS [| skipSpaces >> char ')' |],
+              noBindS [| return $(tupE $ map varE names) |] ] )
+        readProcTypeD = funD 'readProcType 
+                             [clause []  (normalB readProcTypeExpr) []]
+        procTypeCxt = map (\vName -> conT ''ProcType `appT` varT vName) names ++
+                      map (\vName -> conT ''Data `appT` varT vName) names ++
+                      map (\vName -> conT ''Lift `appT` varT vName) names
+    instanceD (cxt procTypeCxt) 
+                     (conT ''ProcType `appT` tupType) 
+                     [getEnumsD, readProcTypeD]
+  genDataIns :: [Name] -> Q Type -> Q Dec
+  genDataIns names tupType = do
+   k <- newName "k"
+   c <- newName "c"
+   z <- newName "z"
+   a <- newName "a"
+   let tupCons = conE tupName
+       tupName = tupleDataName n
+       gfoldlExpr = foldl (\acum n -> infixE (Just acum)
+                                             (varE k)
+                                             (Just $ varE n))
+                           (varE z`appE` tupCons) 
+                           names                    
+       gfoldlD = funD 'gfoldl 
+                       [clause [varP k, varP z, tupP (map varP names)] 
+                               (normalB gfoldlExpr) []] 
+       gunfoldExpr = let nKs 0 = (varE z `appE` tupCons)
+                         nKs n = varE k `appE` (nKs (n-1))
+                     in nKs n
+       gunfoldD = funD 'gunfold 
+                      [clause [varP k, varP z, wildP] (normalB gunfoldExpr) []] 
+       toConstrExpr = [| mkConstr (dataTypeOf $(varE a))
+                                  $(litE $ stringL (nameBase tupName))
+                                  [] 
+                                  Prefix  |]
+       toConstrD = funD 'toConstr
+                        [clause [varP a] (normalB toConstrExpr) []]
+       dataTypeOfExpr = [| mkDataType $(litE $ stringL (show tupName)) 
+                                      [toConstr $(varE a)] |] 
+       dataTypeOfD = funD 'dataTypeOf
+                          [clause [varP a] (normalB dataTypeOfExpr) []]
+       dataCxt = map (\vName -> conT ''Data `appT` varT vName) names 
+   instanceD (cxt dataCxt) 
+             (conT ''Data `appT` tupType) 
+             [gfoldlD, gunfoldD, toConstrD, dataTypeOfD]
+  genTypeableIns :: [Name] -> Q Type -> Q Dec
+  genTypeableIns names tupType = do
+   -- generate n-1 commas to be consistent with the (faulty) instances
+   -- of tuples from 2 to 7 elements
+   let strRep = replicate (n-1) ','
+       typeOfExpr = [| mkTyCon 
+                        $(litE $ stringL strRep)
+                        `mkTyConApp`
+                        $(listE $ map (\n -> varE 'typeOf `appE` undef n) names)
+                     |]
+       typeOfD = funD 'typeOf
+                      [clause [wildP] (normalB typeOfExpr) []]
+       typeableCxt = map (\vName -> conT ''Typeable `appT` varT vName) names
+   instanceD (cxt typeableCxt) 
+             (conT ''Typeable `appT` tupType) 
+             [typeOfD]
+  genLiftIns :: [Name] -> Q Type -> Q Dec
+  genLiftIns names tupType = do
+   let liftExpr = 
+           varE 'tupE `appE` listE (map (\n -> varE 'lift `appE` varE n) names)
+       liftD = funD 'lift 
+                 [clause [tupP (map varP names)] (normalB liftExpr) []]
+       liftCxt = map (\vName -> conT ''Lift `appT` varT vName) names
+   instanceD (cxt liftCxt) 
+             (conT ''Lift `appT` tupType) 
+             [liftD]
 
-
-instance (ProcType a, ProcType b, ProcType c) => ProcType (a,b,c) where
- getEnums _ = getEnums (undefined :: a) `union` getEnums (undefined :: b)
-     `union`  getEnums (undefined :: c)   
-
-
-instance (ProcType a, ProcType b, ProcType c, ProcType d) 
-      => ProcType (a,b,c,d) where
- getEnums _ = getEnums (undefined :: a) `union` getEnums (undefined :: b)
-     `union`  getEnums (undefined :: c) `union` getEnums (undefined :: d)     
-
-
-instance (ProcType a, ProcType b, ProcType c, ProcType d, ProcType e) 
-      => ProcType (a,b,c,d,e) where
- getEnums _ = getEnums (undefined :: a) `union` getEnums (undefined :: b)
-     `union`  getEnums (undefined :: c) `union` getEnums (undefined :: d)     
-     `union`  getEnums (undefined :: e)     
-
-
-instance (ProcType a, ProcType b, ProcType c, ProcType d, ProcType e, 
-          ProcType f) 
-      => ProcType (a,b,c,d,e,f) where
- getEnums _ = getEnums (undefined :: a) `union` getEnums (undefined :: b)
-      `union` getEnums (undefined :: c) `union` getEnums (undefined :: d)     
-      `union` getEnums (undefined :: e) `union` getEnums (undefined :: f)      
-
-
-instance (ProcType a, ProcType b, ProcType c, ProcType d, ProcType e, 
-          ProcType f, ProcType g) 
-      => ProcType (a,b,c,d,e,f,g) where
- getEnums _ = getEnums (undefined :: a) `union` getEnums (undefined :: b)
-      `union` getEnums (undefined :: c) `union` getEnums (undefined :: d)     
-      `union` getEnums (undefined :: e) `union` getEnums (undefined :: f)      
-      `union` getEnums (undefined :: g)
-
--- FIXME: Shouldn't we support even larger tuples?
-
-instance (Typeable c, Nat c, ProcType a) => ProcType (FSVec c a) where
- getEnums _ = getEnums (undefined :: a)
-
--- FIXME: Even if this instance helps the implementation of
---        procFun2Dyn and contProcFun2Dyn it shouldn't be here since ..
---        It allows things as:
--- mapSY :: ProcFun ((Int->Int)->(Int->Int)) -> Signal (Int -> Int) ->
---          Signal(Int->Int)       
-instance (ProcType a, ProcType b) => ProcType (a -> b) where
- getEnums _ = getEnums (undefined :: a) `union` getEnums (undefined :: b)
-
--------------------------------------------------------------
--- Checking if a member of Data belongs to an enumerated type
--------------------------------------------------------------
-
--- | Phony type used to check if a data constructor is enumerate (has )
-newtype IsConsEnum a = IsConsEnum {unIsConsEnum :: Bool}
-
--- | Tell if a member of "Data" belongs to an enumerated type
-isConsEnum :: Data a => Constr -> IsConsEnum a
-isConsEnum = gunfold  (\_ -> IsConsEnum False) (\_ -> IsConsEnum True) 
-
--- | Tell if a member of "Data" belongs to an enumerated type
---   and return its description.
-getEnumAlgTy :: forall a . Data a => a -> Maybe EnumAlgTy
-getEnumAlgTy a = case dataTypeRep dt of
-  AlgRep cons -> do 
-   strs <- mapM (\c -> toMaybe (unIsConsEnum (isConsEnum c :: IsConsEnum a)) 
-                               (showConstr c)) cons 
-   return (EnumAlgTy dn strs)
-  _ -> Nothing
- where dt = dataTypeOf a
-       dn = dataTypeName dt
-       toMaybe bool c = if bool then Just c else Nothing
 

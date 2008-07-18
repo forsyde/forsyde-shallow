@@ -20,7 +20,8 @@ module ForSyDe.System.SysFun.Instances () where
 
 import Data.Dynamic
 import Control.Monad (liftM)
-import Language.Haskell.TH (runIO)
+import Language.Haskell.TH.Syntax (runIO, runQ, lift)
+import System.IO.Unsafe (unsafePerformIO)
 
 import ForSyDe.Config (maxTupleSize)
 import ForSyDe.System.SysFun (SysFun(..), SysFunToSimFun(..), funOutInstances)
@@ -29,12 +30,13 @@ import ForSyDe.Netlist
 -- http://hackage.haskell.org/trac/ghc/ticket/1012
 import ForSyDe.System.SysDef()
 import ForSyDe.Signal
+import ForSyDe.Process.ProcType (ProcType(..))
 
 -- This two instances are the ones in charge of providing the necessary 
 -- recursion step needed to support the variable number of arguments.
 -- In each step, the system function is provided with a new input signal port
 -- until the output signals are obtained.
-instance (Typeable a, SysFun f) => SysFun (Signal a -> f) where
+instance (ProcType a, SysFun f) => SysFun (Signal a -> f) where
  applySysFun f ids = (outSignals, currInType : nextInTypeReps, outTypeReps)
   where (outSignals, nextInTypeReps, outTypeReps) = 
           case ids of
@@ -43,10 +45,13 @@ instance (Typeable a, SysFun f) => SysFun (Signal a -> f) where
         currInType = typeOf (undefined :: Signal a)
  fromListSysFun f accum s = fromListSysFun f ((unSignal s):accum)
 
-instance (Typeable a, SysFunToSimFun sysFun simFun) => 
+instance (ProcType a, SysFunToSimFun sysFun simFun) => 
          SysFunToSimFun (Signal a -> sysFun) ([a] -> simFun) where
- fromListSimFun f accum s = fromListSimFun f ((map toDyn s):accum)
-
+ fromDynSimFun f accum s = fromDynSimFun f ((map toDyn s):accum)
+ fromTHStrSimFun f accum s = fromTHStrSimFun f ((map unsafeLift s):accum)
+   -- FIXME: This won't be needed once the Data a => Lift a instance
+   --        is created
+   where unsafeLift = unsafePerformIO.runQ.lift
 
 -- Generate instances for the system function outputs up to the maximum
 -- tuple size

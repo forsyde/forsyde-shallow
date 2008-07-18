@@ -25,13 +25,17 @@ import ForSyDe.Ids(PortId)
 import ForSyDe.Netlist (NlSignal)
 import ForSyDe.Signal(Signal(..))
 import ForSyDe.ForSyDeErr
+import ForSyDe.Process.ProcType (ProcType(..))
+
+import Language.Haskell.TH.TypeLib
 
 import Data.Dynamic
 import Control.Monad (when, liftM2)
 import Text.Regex.Posix ((=~))
+import qualified Language.Haskell.TH as TH (Exp)
 import Language.Haskell.TH
+import Text.ParserCombinators.ReadP (readP_to_S)
 
-import Language.Haskell.TH.TypeLib
 
 ---------------
 -- SysFun class
@@ -75,13 +79,19 @@ class SysFun sysFun =>
  --   into a standard simulation function.
  --   Note the length of input/output lists of the list version must match with 
  --   the argument number and return tuple size of the simulation function.
- fromListSimFun :: ([[Dynamic]] -> [[Dynamic]]) -- ^ dynamic-list simfun
+ fromDynSimFun :: ([[Dynamic]] -> [[Dynamic]]) -- ^ dynamic-list simfun
                 -> [[Dynamic]] -- ^ accumulated dynamic values
                                --   (must be initialized to [])
                 -> simFun
- 
-
-
+ -- | Transforms a TH/String version of a simulation funciton into a
+ --   standard simulation function.  
+ --   Again, the length of input/output lists of the list version must
+ --   match with the argument number and return tuple size of the
+ --   simulation function.
+ fromTHStrSimFun :: ([[TH.Exp]] -> [[String]]) -- ^ TH/String-list simfun
+                 -> [[TH.Exp]] -- ^ accumulated dynamic values
+                               --   (must be initialized to [])
+                 -> simFun
 -- Function to automatically generate instances for the system and
 -- simulate function outputs with Template Haskell. For example, in
 -- the case of 2 outputs, the code generated would be:
@@ -93,12 +103,14 @@ class SysFun sysFun =>
 --  fromListSysFun f accum = (Signal o1, Signal o2)
 --          where [o1, o2] = f (reverse accum) 
 --
--- instance (Typeable o1, Typeable o2) => 
+-- instance (PorcType o1, ProcType o2) => 
 --          SysFun2SimFun (Signal o1, Signal o2) ([o1], [o2]) where
---  fromListSimFun f accum = (map unsafeFromDyn o1, map unsafeFromDyn o2)
+--  fromDynSimFun f accum = (map unsafeFromDyn o1, map unsafeFromDyn o2)
 --          -- use pattern (o1:o2:_) and not not [o1,o2]
 --          -- because the second one doesn't when o1 and o2 are infinite lists
 --          where (o1:o2:_) = f (reverse accum) 
+--  fromTHStrSimFun f accum = (map parseProcType o1, map parseProcType o2)
+--          where [o1, o2] = f (reverse accum) 
 --
 -- @
 funOutInstances :: Int -- ^ number of outputs to generate
@@ -146,30 +158,47 @@ funOutInstances n = do
           funD 'fromListSysFun [clause [fPatFromSys, accumPatFromSys] 
                                        (normalB outEFromSys) 
                                        [whereDecFromSys]             ]   
- -- 3) Generate fromListSimFun reusing parts of fromListSysFun
+ -- 3) Generate fromDynSimFun reusing parts of fromListSysFun
  --    Generate the list pattern: o1:o2: .. on:_
-     listPatFromSim = foldr (\oName pat -> infixP (varP oName) '(:) pat) 
-                             wildP outNames
+     listPatFromDynSim = foldr (\oName pat -> infixP (varP oName) '(:) pat) 
+                               wildP outNames
  --    Generate the rhs of the where declaration
-     whereRHSFromSim = 
+     whereRHSFromDynSim = 
          [| $(varE fParFromSys) (reverse $(varE accumParFromSys)) |]
  --    Generate the where clause declaration
-     whereDecFromSim = valD listPatFromSim (normalB whereRHSFromSys) []
+     whereDecFromDynSim = valD listPatFromDynSim (normalB whereRHSFromSys) []
  --    Generate output expression: (Signal o1, Signal o2, ..., Signal on)
-     outEFromSim = tupE $ map 
+     outEFromDynSim = tupE $ map 
             (\oName -> varE 'map `appE` varE 'unsafeFromDyn `appE` varE oName)
             outNames
- --    Finally, the full declaration of fromListSimFun
-     fromListSimFunDec = 
-          funD 'fromListSimFun [clause [fPatFromSys, accumPatFromSys] 
-                                       (normalB outEFromSim) 
-                                       [whereDecFromSim]             ]   
- -- 3) Generate the SysFun instance
+ --    Finally, the full declaration of fromDynSimFun
+     fromDynSimFunDec = 
+          funD 'fromDynSimFun [clause [fPatFromSys, accumPatFromSys] 
+                                       (normalB outEFromDynSim) 
+                                       [whereDecFromDynSim]          ]   
+ -- 4) Generate fromTHStrSimFun reusing parts of fromListSysFun
+     listPatFromTHStrSim = listP $ map varP outNames
+ --    Generate the rhs of the where declaration
+     whereRHSFromStrSim = 
+         [| $(varE fParFromSys) (reverse $(varE accumParFromSys)) |]
+ --    Generate the where clause declaration
+     whereDecFromTHStrSim = valD listPatFromTHStrSim 
+                                 (normalB whereRHSFromSys) []
+ --    Generate output expression: (Signal o1, Signal o2, ..., Signal on)
+     outEFromTHStrSim = tupE $ map 
+            (\oName -> varE 'map `appE` varE 'parseProcType `appE` varE oName)
+            outNames
+ --    Finally, the full declaration of fromThStrSimFun
+     fromTHStrSimFunDec = 
+          funD 'fromTHStrSimFun [clause [fPatFromSys, accumPatFromSys] 
+                                       (normalB outEFromTHStrSim) 
+                                       [whereDecFromTHStrSim]          ]   
+ -- 5) Generate the SysFun instance
  --    We reuse the output signal names for the head type variables
  --    (Signal o1, Signal o2, ..., Signal on)
      signalTupT = if n == 1 then conT ''Signal `appT` varT (head outNames)
-                             else foldr accumApp (tupleT n) outNames 
-       where accumApp vName accumT =  
+                            else foldl accumApp (tupleT n) outNames 
+       where accumApp accumT vName =  
                        accumT `appT` (conT ''Signal `appT` varT vName)
  --    Create the Typeable context
      typeableCxt = map (\vName -> conT ''Typeable `appT` varT vName) outNames
@@ -177,14 +206,16 @@ funOutInstances n = do
      sysFunIns = instanceD (cxt typeableCxt) 
                            (conT ''SysFun `appT` signalTupT) 
                            [applySysFunDec, fromListSysFunDec]
- -- 4) Generate the SysFun2SimFun instance 
+ -- 6) Generate the SysFun2SimFun instance 
      listTupT = if n == 1 then listT `appT` varT (head outNames)
-                          else foldr accumApp (tupleT n) outNames 
-       where accumApp vName accumT =  
+                          else foldl accumApp (tupleT n) outNames 
+       where accumApp accumT vName  =  
                        accumT `appT` (listT `appT` varT vName)
-     simFunIns = instanceD (cxt typeableCxt) 
+     --    Create the ProcType context
+     procTypeCxt = map (\vName -> conT ''ProcType `appT` varT vName) outNames
+     simFunIns = instanceD (cxt procTypeCxt) 
                       (conT ''SysFunToSimFun `appT` signalTupT `appT` listTupT) 
-                      [fromListSimFunDec]
+                      [fromDynSimFunDec, fromTHStrSimFunDec]
  -- Finally, return the declarations
  liftM2 (,) sysFunIns simFunIns
 
@@ -245,3 +276,11 @@ unsafeFromDyn :: forall a . Typeable a => Dynamic -> a
 unsafeFromDyn dyn = fromDyn dyn err 
   where err = intError "unsafeFromDyn" (DynMisMatch dyn targetType) 
         targetType = typeOf (undefined :: a)
+
+-- | Parse a proctype value
+parseProcType :: forall a .ProcType a => String -> a
+parseProcType s = 
+    case (readP_to_S readProcType) s of 
+        [(a,_)] -> a
+        _ -> error ("parseProcType: error parsing element of type " ++
+                    show (typeOf (undefined :: a)) )       

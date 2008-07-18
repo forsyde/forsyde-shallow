@@ -36,7 +36,7 @@ import Data.Dynamic
 --   able simulate a System using a list-based representation 
 --   of its signals.
 simulate :: SysFunToSimFun sysFun simFun => SysDef sysFun -> simFun
-simulate sysDef = fromListSimFun (simulateDyn (unSysDef sysDef)) []
+simulate sysDef = fromDynSimFun (simulateDyn (unSysDef sysDef)) []
 
 -- FIXME: clean and document the following horrible code!
 

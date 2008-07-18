@@ -125,21 +125,22 @@ data TypedProcFunAST =
                       tpast   :: ProcFunAST}
 
 -- | transform a ProcFun into a Dynamic TypedProcFun
-procFun2Dyn :: ProcType a => ProcFun a -> TypedProcFun Dynamic
-procFun2Dyn (ProcFun v l a) = 
-  TypedProcFun (toDyn v) l (TypedProcFunAST (typeOf v) (getEnums v) a)
+procFun2Dyn :: Typeable a => Set EnumAlgTy -> ProcFun a -> TypedProcFun Dynamic
+procFun2Dyn s (ProcFun v l a) = 
+  TypedProcFun (toDyn v) l (TypedProcFunAST (typeOf v) s a)
 
 -- FIXME: probably not needed
 -- | tranform the arguments and return value of
 --   a ProcFun to dynamic
-contProcFun2Dyn :: (ProcType (container a),
-                    ProcType b,
+contProcFun2Dyn :: (Typeable1 container,
+                    Typeable b,
                     Functor container, 
                     Typeable a) =>
+                   Set EnumAlgTy ->
                    ProcFun (container a -> b) -> 
                    TypedProcFun (container Dynamic -> Dynamic)
-contProcFun2Dyn (ProcFun v l a) = 
-     TypedProcFun (fmapDyn v) l (TypedProcFunAST (typeOf v) (getEnums v) a)
+contProcFun2Dyn s (ProcFun v l a) = 
+     TypedProcFun (fmapDyn v) l (TypedProcFunAST (typeOf v) s a)
        where  fmapDyn f cont = toDyn (f (fmap (fromJust.fromDynamic) cont)) 
 
 

@@ -21,3 +21,4 @@ import ForSyDe.Process.ProcFun (ProcFun, newProcFun, defArgVal, defArgPF)
 
 import ForSyDe.Process.SynchProc 
 import ForSyDe.Process.ProcType (ProcType)
+import ForSyDe.Process.ProcType.Instances ()
