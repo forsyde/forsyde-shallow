@@ -2,6 +2,7 @@
 module Main (main) where
 
 import Control.Monad (liftM, when)
+import Data.List (intersperse)
 import Distribution.Simple
 import Distribution.Simple.Setup
 import Distribution.Simple.LocalBuildInfo
@@ -61,15 +62,37 @@ do_compile_forsyde_vhd :: FilePath -- ^ absolute directory  which
                                    --   forsyde.vhd was copied into 
                       -> IO Bool
 do_compile_forsyde_vhd dir = 
- (runWait "Executing: vlib modelsim" "vlib" ["modelsim"])            <&&> 
- (runWait "Executing: vcom -93 -quiet -nologo -work modelsim forsyde.vhd"
-         "vcom" ["-93", "-quiet", "-nologo", "-work","modelsim", "forsyde.vhd"])
+ (runModelsimCommand "vlib" [dir </> "modelsim"])            <&&> 
+ (runModelsimCommand
+         "vcom" ["-93", "-quiet", "-nologo", "-work", dir </> "modelsim", 
+                 dir </> "forsyde.vhd"])
  where runWait :: String -> FilePath -> [String] -> IO Bool
        runWait msg proc args = do
            putStrLn msg 
            h <- runProcess proc args (Just dir) Nothing Nothing Nothing Nothing
            code <- waitForProcess h
            return $ code == ExitSuccess 
+
+-- | run a ModelSim command
+runModelsimCommand :: String -- ^ Command to execute 
+                   -> [String] -- ^ Command arguments
+                   -> IO Bool
+runModelsimCommand command args = runWait msg command args
+ where msg = "Running: " ++ command ++ " " ++ (concat $ intersperse " " args)
+
+
+-- | Run a process, previously announcing a message and waiting for it
+--   to finnish its execution.
+runWait :: String -- ^ message to show
+        -> FilePath -- ^ command to execute 
+        -> [String] -- ^ command arguments
+        -> IO Bool -- ^ Did the execution end succesfully?
+runWait msg proc args = do
+           putStrLn msg 
+           h <- runProcess proc args Nothing Nothing Nothing Nothing Nothing
+           code <- waitForProcess h
+           return $ code == ExitSuccess 
+
 
 -- | short-circuit and for monads
 (<&&>) :: Monad m => m Bool -> m Bool -> m Bool

@@ -18,6 +18,7 @@
 module ForSyDe.System.SysFun 
  (SysFun(..),
   SysFunToSimFun(..), 
+  SysFunToIOSimFun(..),
   funOutInstances, 
   checkSysFType) where
 
@@ -30,7 +31,7 @@ import ForSyDe.Process.ProcType (ProcType(..))
 import Language.Haskell.TH.TypeLib
 
 import Data.Dynamic
-import Control.Monad (when, liftM2)
+import Control.Monad (when, liftM3)
 import Text.Regex.Posix ((=~))
 import qualified Language.Haskell.TH as TH (Exp)
 import Language.Haskell.TH
@@ -83,15 +84,27 @@ class SysFun sysFun =>
                 -> [[Dynamic]] -- ^ accumulated dynamic values
                                --   (must be initialized to [])
                 -> simFun
- -- | Transforms a TH/String version of a simulation funciton into a
+
+-------------------------
+-- SysFunToIOSimFun class
+-------------------------
+
+-- | Multiparameter class to transform a System Function into an IO 
+--   Simulation Function, able to externally simulate a System using a 
+--   list-based representation of its signals.
+class SysFun sysFun => 
+      SysFunToIOSimFun sysFun simFun | 
+      sysFun -> simFun, simFun -> sysFun where
+ -- | Transforms a TH/String version of a simulation function into a
  --   standard simulation function.  
  --   Again, the length of input/output lists of the list version must
  --   match with the argument number and return tuple size of the
  --   simulation function.
- fromTHStrSimFun :: ([[TH.Exp]] -> [[String]]) -- ^ TH/String-list simfun
+ fromTHStrSimFun :: ([[TH.Exp]] -> IO [[String]]) -- ^ TH/String-list simfun
                  -> [[TH.Exp]] -- ^ accumulated dynamic values
                                --   (must be initialized to [])
                  -> simFun
+
 -- Function to automatically generate instances for the system and
 -- simulate function outputs with Template Haskell. For example, in
 -- the case of 2 outputs, the code generated would be:
@@ -109,12 +122,17 @@ class SysFun sysFun =>
 --          -- use pattern (o1:o2:_) and not not [o1,o2]
 --          -- because the second one doesn't when o1 and o2 are infinite lists
 --          where (o1:o2:_) = f (reverse accum) 
---  fromTHStrSimFun f accum = (map parseProcType o1, map parseProcType o2)
---          where [o1, o2] = f (reverse accum) 
+--
+-- instance (PorcType o1, ProcType o2) => 
+--          SysFun2SimFun (Signal o1, Signal o2) (IO ([o1], [o2])) where
+--  fromTHStrSimFun f accum = do
+--         [o1, o2] <- f (reverse accum)
+--         return (map parseProcType o1, map parseProcType o2) 
+--
 --
 -- @
 funOutInstances :: Int -- ^ number of outputs to generate
-                -> Q (Dec, Dec)
+                -> Q (Dec, Dec, Dec)
 funOutInstances n = do
  -- Generate N output names
  outNames <- replicateM n (newName "o")
@@ -175,24 +193,23 @@ funOutInstances n = do
      fromDynSimFunDec = 
           funD 'fromDynSimFun [clause [fPatFromSys, accumPatFromSys] 
                                        (normalB outEFromDynSim) 
-                                       [whereDecFromDynSim]          ]   
+                                       [whereDecFromDynSim] ]   
  -- 4) Generate fromTHStrSimFun reusing parts of fromListSysFun
      listPatFromTHStrSim = listP $ map varP outNames
  --    Generate the rhs of the where declaration
-     whereRHSFromStrSim = 
-         [| $(varE fParFromSys) (reverse $(varE accumParFromSys)) |]
- --    Generate the where clause declaration
-     whereDecFromTHStrSim = valD listPatFromTHStrSim 
-                                 (normalB whereRHSFromSys) []
- --    Generate output expression: (Signal o1, Signal o2, ..., Signal on)
-     outEFromTHStrSim = tupE $ map 
+     doFromTHStrSim = doE $
+       [bindS listPatFromDynSim  [| $(varE fParFromSys) 
+                                    (reverse $(varE accumParFromSys)) |],
+        noBindS $ 
+           (varE 'return) `appE`
+           (tupE $ map 
             (\oName -> varE 'map `appE` varE 'parseProcType `appE` varE oName)
-            outNames
+            outNames) ]
  --    Finally, the full declaration of fromThStrSimFun
      fromTHStrSimFunDec = 
           funD 'fromTHStrSimFun [clause [fPatFromSys, accumPatFromSys] 
-                                       (normalB outEFromTHStrSim) 
-                                       [whereDecFromTHStrSim]          ]   
+                                       (normalB doFromTHStrSim) 
+                                       []          ]   
  -- 5) Generate the SysFun instance
  --    We reuse the output signal names for the head type variables
  --    (Signal o1, Signal o2, ..., Signal on)
@@ -214,10 +231,16 @@ funOutInstances n = do
      --    Create the ProcType context
      procTypeCxt = map (\vName -> conT ''ProcType `appT` varT vName) outNames
      simFunIns = instanceD (cxt procTypeCxt) 
-                      (conT ''SysFunToSimFun `appT` signalTupT `appT` listTupT) 
-                      [fromDynSimFunDec, fromTHStrSimFunDec]
+                    (conT ''SysFunToSimFun `appT` signalTupT `appT` listTupT) 
+                    [fromDynSimFunDec]
+ -- 7) Generate the SysFun2IOSimFun instance
+     ioSimFunIns = instanceD (cxt procTypeCxt)
+                (conT ''SysFunToIOSimFun `appT` 
+                      signalTupT `appT` 
+                      (conT ''IO `appT` listTupT))
+                [fromTHStrSimFunDec]
  -- Finally, return the declarations
- liftM2 (,) sysFunIns simFunIns
+ liftM3 (,,) sysFunIns simFunIns ioSimFunIns
 
 ---------------------------------------------------------------
 -- Checking the type of a System Function with Template Haskell

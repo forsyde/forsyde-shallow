@@ -10,9 +10,11 @@
 --
 -- Functions to process the VHDL compilation results with Modelsim.
 -----------------------------------------------------------------------------
-module ForSyDe.Backend.VHDL.Modelsim (compileResultsModelsim) where
+module ForSyDe.Backend.VHDL.Modelsim (compileResultsModelsim,
+                                      executeTestBenchModelsim) where
 
 import ForSyDe.Backend.VHDL.Traverse.VHDLM
+import ForSyDe.Backend.VHDL.TestBench
 
 import ForSyDe.System.SysDef
 import ForSyDe.OSharing
@@ -20,13 +22,48 @@ import ForSyDe.ForSyDeErr
 import ForSyDe.Config (getDataDir)
 
 import Data.List (intersperse)
+import System.Directory (setCurrentDirectory)
 import Control.Monad (liftM, when)
 import Control.Monad.State (gets)
-import System.Directory (findExecutable)
+import System.Directory (findExecutable, getTemporaryDirectory)
 import System.Process (runProcess, waitForProcess)
 import System.Exit (ExitCode(..))
+import System.IO 
 import System.FilePath ((</>))
+import qualified Language.Haskell.TH as TH (Exp)
 
+-- | Generate a testbench and execute it with Modelsim
+--   (Note: the initial and final CWD will be / )
+executeTestBenchModelsim :: Maybe Int -- ^ Number of cycles to simulate          
+                         -> [[TH.Exp]] -- ^ input stimuli, each signal value
+                                       --   is expressed as a template haskell
+                                       --   expression 
+                         -> VHDLM [[String]] -- ^ results, each signal value
+                                             --   is expressed as a string
+executeTestBenchModelsim mCycles stimuli= do
+  cycles <- writeVHDLTestBench mCycles stimuli
+  sysid <- gets (sid.globalSysDef.global)
+  -- change to sysid/vhdl/
+  liftIO $ setCurrentDirectory (sysid </> "vhdl")
+  -- compile the testbench with modelsim
+  run_vcom ["-93", "-quiet", "-nologo", "-work", "work", 
+            "test" </> (sysid ++ "_tb.vhd")]           
+  -- execute the testbench and capture the results
+  tmpdir <- liftIO getTemporaryDirectory 
+  (file, handle) <- liftIO $ openTempFile tmpdir "tb_out.txt"
+  -- we close the temporal file to avoid opening problems with vsim on windows
+  liftIO $ hClose handle 
+  run_vsim ["-c", "-std_output", file, "-quiet", 
+            "-do", "run " ++ show (cycles*10) ++ " ns; exit",
+            "work." ++ sysid ++ "_tb"]
+  handle2 <- liftIO $ openFile file ReadMode
+  flatOut <- liftIO $ hGetContents handle2
+  -- go back to the original directory
+  liftIO $ setCurrentDirectory (".." </> "..")
+  parseTestBenchOut flatOut
+
+-- | Compile the generated VHDL code with Modelsim
+--   (Note: the initial and final CWD will be /systemName/vhdl )
 compileResultsModelsim :: VHDLM ()
 compileResultsModelsim = do
  -- Check if modelsim is installed
@@ -51,7 +88,7 @@ compileResultsModelsim = do
  -- compile the library of current model
  let modelsimLib = syslib </> "modelsim"
  run_vlib [modelsimLib]
- run_vcom ["-quiet", "-nologo", "-work", modelsimLib, libFile]
+ run_vcom ["-93", "-quiet", "-nologo", "-work", modelsimLib, libFile]
  -- map the directory of the library to its logical name
  run_vmap [syslib, modelsimLib]
  
@@ -90,6 +127,10 @@ run_vcom :: [String] -- ^ arguments
          -> VHDLM ()
 run_vcom = runModelsimCommand "vcom"
 
+-- | Run vsim
+run_vsim :: [String] -- ^ arguments
+         -> VHDLM ()
+run_vsim = runModelsimCommand "vsim"
 
 -- | run a ModelSim command
 runModelsimCommand :: String -- ^ Command to execute 
@@ -118,7 +159,8 @@ runWait msg proc args = do
 isModelsimInstalled :: IO Bool
 isModelsimInstalled =  executablePresent "vlib" <&&> 
                        executablePresent "vmap" <&&> 
-                       executablePresent "vcom"
+                       executablePresent "vcom" <&&>
+                       executablePresent "vsim"
  where executablePresent = (liftM (maybe False (\_-> True))) .findExecutable
 
 -- | short-circuit and for monads

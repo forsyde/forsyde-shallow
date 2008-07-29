@@ -28,6 +28,7 @@ import Control.Monad.State
 import System.Exit (ExitCode(..))
 
 -- | Analyze the results with Quartus
+--   (Note: the initial and final CWD will be /systemName/vhdl )
 analyzeResultsQuartus :: VHDLM ()
 analyzeResultsQuartus = do
  mPath <- liftIO $ findExecutable "quartus_sh"

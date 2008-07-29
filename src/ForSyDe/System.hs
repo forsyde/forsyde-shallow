@@ -19,6 +19,6 @@ module ForSyDe.System
 where
 
 import ForSyDe.System.SysDef (SysDef, newSysDef, newSysDefTH, newSysDefTHName)
-import ForSyDe.System.SysFun (SysFun)
+import ForSyDe.System.SysFun (SysFun, SysFunToSimFun, SysFunToIOSimFun)
 import ForSyDe.System.SysFun.Instances ()
 import ForSyDe.System.Instantiate (instantiate)

@@ -36,6 +36,7 @@ import System.Directory
 import System.FilePath
 
 -- | Internal VHDL-Monad version of 'ForSyDe.Backend.writeVHDL'
+--   (Note: the initial and final CWD will be / )
 writeVHDLM :: VHDLM ()
 writeVHDLM = do
    -- create and change to systemName/vhdl/work
@@ -60,8 +61,8 @@ writeVHDLM = do
    liftIO $ setCurrentDirectory $ libDir
    -- write the global results
    writeGlobalVHDLM
-   -- go back to the vhdl directory
-   liftIO $ setCurrentDirectory $ ".."
+   -- change to systemName/vhdl
+   liftIO $ setCurrentDirectory ".."
    -- analyze with quartus if necessary
    analyze <- isAnalyzeQuartusSet
    when analyze analyzeResultsQuartus
@@ -69,7 +70,7 @@ writeVHDLM = do
    compile <- isCompileModelsimSet
    when compile compileResultsModelsim
    -- go back to the original directory
-   liftIO $ setCurrentDirectory $ ".."
+   liftIO $ setCurrentDirectory (".." </> "..")
    
 -- | Write the global traversing results (i.e. the library design file)
 --   accumulated  in the state of the monad

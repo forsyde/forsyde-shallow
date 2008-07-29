@@ -24,7 +24,11 @@ import Language.Haskell.TH.Syntax (runIO, runQ, lift)
 import System.IO.Unsafe (unsafePerformIO)
 
 import ForSyDe.Config (maxTupleSize)
-import ForSyDe.System.SysFun (SysFun(..), SysFunToSimFun(..), funOutInstances)
+import ForSyDe.System.SysFun (
+     SysFun(..), 
+     SysFunToSimFun(..), 
+     SysFunToIOSimFun(..), 
+     funOutInstances)
 import ForSyDe.Netlist
 -- This aparently unnecesary SysDef import is needed as a workaround for 
 -- http://hackage.haskell.org/trac/ghc/ticket/1012
@@ -32,7 +36,7 @@ import ForSyDe.System.SysDef()
 import ForSyDe.Signal
 import ForSyDe.Process.ProcType (ProcType(..))
 
--- This two instances are the ones in charge of providing the necessary 
+-- This three instances are the ones in charge of providing the necessary 
 -- recursion step needed to support the variable number of arguments.
 -- In each step, the system function is provided with a new input signal port
 -- until the output signals are obtained.
@@ -48,6 +52,9 @@ instance (ProcType a, SysFun f) => SysFun (Signal a -> f) where
 instance (ProcType a, SysFunToSimFun sysFun simFun) => 
          SysFunToSimFun (Signal a -> sysFun) ([a] -> simFun) where
  fromDynSimFun f accum s = fromDynSimFun f ((map toDyn s):accum)
+
+instance (ProcType a, SysFunToIOSimFun sysFun simFun) => 
+         SysFunToIOSimFun (Signal a -> sysFun) ([a] -> simFun) where
  fromTHStrSimFun f accum s = fromTHStrSimFun f ((map unsafeLift s):accum)
    -- FIXME: This won't be needed once the Data a => Lift a instance
    --        is created
@@ -56,10 +63,11 @@ instance (ProcType a, SysFunToSimFun sysFun simFun) =>
 -- Generate instances for the system function outputs up to the maximum
 -- tuple size
 $(let concatMapM f xs = liftM concat (mapM f xs) 
-      listFunOutInstances = liftM (\(a,b) -> [a,b]) . funOutInstances
+      listFunOutInstances = liftM (\(a,b,c) -> [a,b,c]) . funOutInstances
       msg = "Generating and compiling " ++ show maxTupleSize ++ 
             " output instances of " ++
-            show ''SysFun ++ " and " ++ show ''SysFunToSimFun ++ 
+            show ''SysFun ++ show ''SysFunToSimFun ++ 
+            " and " ++ show ''SysFunToIOSimFun ++ 
             ", this might take some time ... \n"
   in runIO (putStrLn $ msg) >>
      concatMapM listFunOutInstances [0..maxTupleSize]

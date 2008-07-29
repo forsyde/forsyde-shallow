@@ -3,6 +3,7 @@
 module ButtonEncoder where
 
 import ForSyDe
+import Language.Haskell.TH.Lift
 import Data.Generics (Data, Typeable)
 import Prelude hiding (Either(..))
 
@@ -15,7 +16,9 @@ import Prelude hiding (Either(..))
 
 
 data Direction = Up | Down | Left | Right | Unknown
- deriving (Data,Typeable)
+ deriving (Data,Typeable,Show)
+
+$(deriveLift1 ''Direction)
 
 type ButtonPress = (Bit, -- is left pressed 
                     Bit, -- is right pressed

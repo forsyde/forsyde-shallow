@@ -443,8 +443,8 @@ printError :: Show a => a -> IO ()
 printError = putStrLn.("Error: "++).show
 
 -- | Print a VHDL compilation error
-printVHDLError :: Show a => a -> IO ()
-printVHDLError = putStrLn.("VHDL Compilation Error: "++).show
+printVHDLError :: Show a => a -> IO b
+printVHDLError = error.("VHDL Compilation Error: "++).show
 
 -- | Print a GraphML compilation error
 printGraphMLError :: Show a => a -> IO ()
