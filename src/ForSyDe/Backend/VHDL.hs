@@ -69,7 +69,7 @@ writeAndModelsimVHDL = writeAndModelsimVHDLOps defaultVHDLOps
 
 
 -- | 'VHDLOps'-alternative of 'writeAndModelsimVHDL', note that
---   the compileModelSim will implicitly be set to True
+--   compileModelSim will implicitly be set to True
 writeAndModelsimVHDLOps :: SysFunToIOSimFun sysF simF => 
                            VHDLOps -> Maybe Int -> SysDef sysF -> simF 
 writeAndModelsimVHDLOps ops mCycles sysDef = fromTHStrSimFun simIO []

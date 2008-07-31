@@ -5,6 +5,8 @@ import Install
 
 import Control.Monad (liftM)
 import System.Environment (getArgs, getEnv)
+import System.Process (runCommand, waitForProcess)
+import System.Exit
 import System.FilePath (splitDirectories, normalise)
 
 
@@ -12,9 +14,21 @@ main :: IO ()
 main = do
  needed <- testNeeded
  if needed 
-   then testInstall
-   else putStrLn "There is no need to run the test suite."
+   then 
+     do testInstall
+        --  test the properties using the fresh installation
+        -- due to many problems with runghc, I decided to compile it first
+        putStrLn ("Compiling the unit testbench: " ++ compilePropertiesCmd)
+        h1 <- runCommand  compilePropertiesCmd
+        waitForProcess h1
+        h2 <- runCommand "./properties"
+        e <- waitForProcess h2
+        exitWith e
 
+   else putStrLn "There is no need to run the test suite."
+ where compilePropertiesCmd = 
+         "ghc --make -itests/properties -iexamples -package-conf testInstallation.conf " ++ 
+                 "tests/properties/Main.hs -o properties"
 
 -- Check if we need to do the tests, This will be true unless an
 -- automatic test is done from darcs, in which case we only need

@@ -13,7 +13,7 @@ import System.IO
 -- in a fresh local package database called "testInstallation.conf"
 -- Note that this test will only work with ghc because the creation
 -- of a new package database relies on ghc-pkg.
--- Also note current working directory must be the root of the project.
+-- Also note that the current working directory must be the root of the project.
 testInstall :: IO ()
 testInstall = do
   putStrLn "Configuring ForSyDe ..." 

@@ -128,11 +128,12 @@ genVHDLTestBenchArch mCycles stimuli = do
                          oIds
  -- Generate the signal assignments
  (stimuliAssigns, cycles) <- genStimuliAssigns mCycles stimuli iVHDLIds
- -- Add an assignment to turn off the reset signal after 10 ns
+ -- Add an assignment to turn off the reset signal after 3 ns
+ -- (everything lower than 5 ns should work)
  let finalAssigns = 
       (NSimple resetId :<==: 
         ConWforms [] 
-                  (Wform [WformElem (PrimLit "'1'") (Just $ PrimLit "10 ns")])
+                  (Wform [WformElem (PrimLit "'1'") (Just $ PrimLit "3 ns")])
                   Nothing) : stimuliAssigns
  -- Get the two processes (clock and output)
      clkProc = genClkProc

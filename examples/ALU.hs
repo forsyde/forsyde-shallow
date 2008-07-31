@@ -15,7 +15,7 @@
 -- We could improve the example even further, if we use enumeration types for the 
 -- multiplexer. So far I have not done it, but should only be a matter of time!
  
-module SimpleALU where
+module ALU where
 
 import ForSyDe
 import Data.Bits
