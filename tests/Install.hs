@@ -2,6 +2,8 @@ module Install (testInstall) where
 
 import Distribution.Simple.SetupWrapper
 import System.Process
+import System.Directory
+import System.FilePath
 import System.Exit
 import System.IO
 
@@ -16,8 +18,10 @@ import System.IO
 -- Also note that the current working directory must be the root of the project.
 testInstall :: IO ()
 testInstall = do
+  cwd <- getCurrentDirectory
   putStrLn "Configuring ForSyDe ..." 
-  setupCWD ["configure","--user","--prefix=testInstallation","-v0"]
+  setupCWD ["configure","--user","--prefix=" ++ cwd </> "testInstallation",
+            "-v0"]
   putStrLn "  done.\n"  
   putStrLn "Building ForSyDe ..." 
   setupCWD ["build","-v0"]
