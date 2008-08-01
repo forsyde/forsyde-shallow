@@ -5,6 +5,7 @@ import Install
 
 import Distribution.System
 import Control.Monad (liftM)
+import System.IO
 import System.Environment (getArgs, getEnv)
 import System.Process (runCommand, waitForProcess)
 import System.Exit
@@ -16,7 +17,8 @@ main = do
  needed <- testNeeded
  if needed 
    then 
-     do testInstall
+     do hSetBuffering stdout LineBuffering
+        testInstall
         --  test the properties using the fresh installation
         -- due to many problems with runghc, I decided to compile it first
         putStrLn ("Compiling the unit testbench: " ++ compilePropertiesCmd)

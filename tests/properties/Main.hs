@@ -2,11 +2,13 @@
 module Main (main) where
 import Test.HUnit
 import System.Exit
+import System.IO
 import VHDLBackend (vhdlBackendTest)
 
 
 main :: IO ()
 main = do
+    hSetBuffering stdout LineBuffering
     putStrLn "Running ForSyDe's unit test suite"
     runTestCount $ test ["VHDL Backend Test" ~: vhdlBackendTest]
   where runTestCount t = do (c, _) <- myRunTestText t 

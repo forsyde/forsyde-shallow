@@ -13,8 +13,15 @@ import System.Directory
 import System.FilePath
 
 main :: IO ()
-main = defaultMainWithHooks simpleUserHooks{postInst=forsydePostInst,
+main = defaultMainWithHooks simpleUserHooks{runTests=forsydeTests,
+                                            postInst=forsydePostInst,
                                             postCopy=forsydePostCopy}
+
+forsydeTests :: Args -> Bool -> PackageDescription -> LocalBuildInfo -> IO ()
+forsydeTests _ _ _ _ = do 
+  e <- runCommandMsg "runghc" 
+              ["-itests/properties", "-iexamples", "tests/properties/Main.hs"] 
+  when (not e) exitFailure
 
 forsydePostInst :: Args -> InstallFlags -> PackageDescription -> 
                    LocalBuildInfo -> IO () 
@@ -62,8 +69,8 @@ do_compile_forsyde_vhd :: FilePath -- ^ absolute directory  which
                                    --   forsyde.vhd was copied into 
                       -> IO Bool
 do_compile_forsyde_vhd dir = 
- (runModelsimCommand "vlib" [dir </> "modelsim"])            <&&> 
- (runModelsimCommand
+ (runCommandMsg "vlib" [dir </> "modelsim"])            <&&> 
+ (runCommandMsg
          "vcom" ["-93", "-quiet", "-nologo", "-work", dir </> "modelsim", 
                  dir </> "forsyde.vhd"])
  where runWait :: String -> FilePath -> [String] -> IO Bool
@@ -73,11 +80,11 @@ do_compile_forsyde_vhd dir =
            code <- waitForProcess h
            return $ code == ExitSuccess 
 
--- | run a ModelSim command
-runModelsimCommand :: String -- ^ Command to execute 
-                   -> [String] -- ^ Command arguments
-                   -> IO Bool
-runModelsimCommand command args = runWait msg command args
+-- | run a command showing what's being run
+runCommandMsg :: String -- ^ Command to execute 
+              -> [String] -- ^ Command arguments
+              -> IO Bool
+runCommandMsg command args = runWait msg command args
  where msg = "Running: " ++ command ++ " " ++ (concat $ intersperse " " args)
 
 
