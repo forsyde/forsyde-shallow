@@ -9,7 +9,8 @@ main :: IO ()
 main = do
     putStrLn "Running ForSyDe's unit test suite"
     runTestCount $ test ["VHDL Backend Test" ~: vhdlBackendTest]
-  where runTestCount t = do c <- runTestTT t 
+  where runTestCount t = do (c, _) <- myRunTestText t 
                             if errors c /= 0 || failures c /= 0 
                                then exitFailure 
                                else exitWith ExitSuccess
+        myRunTestText = runTestText (PutText (\str _ _ -> putStrLn str) ())

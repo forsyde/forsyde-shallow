@@ -3,6 +3,7 @@ module Main (main) where
 
 import Install
 
+import Distribution.System
 import Control.Monad (liftM)
 import System.Environment (getArgs, getEnv)
 import System.Process (runCommand, waitForProcess)
@@ -20,15 +21,24 @@ main = do
         -- due to many problems with runghc, I decided to compile it first
         putStrLn ("Compiling the unit testbench: " ++ compilePropertiesCmd)
         h1 <- runCommand  compilePropertiesCmd
-        waitForProcess h1
-        h2 <- runCommand "./properties"
-        e <- waitForProcess h2
-        exitWith e
+        e1 <- waitForProcess h1
+        case e1 of
+          ExitSuccess -> do h2 <- runCommand properties
+                            e2 <- waitForProcess h2
+                            exitWith e2
+          _ -> exitFailure
+
+--        h <- runCommand runPropertiesCmd
+--        e <- waitForProcess h
+--        exitWith e
 
    else putStrLn "There is no need to run the test suite."
  where compilePropertiesCmd = 
          "ghc --make -itests/properties -iexamples -package-conf testInstallation.conf " ++ 
                  "tests/properties/Main.hs -o properties"
+       properties = case os of
+                     Windows _ -> "properties.exe"
+                     _ -> "./properties"
 
 -- Check if we need to do the tests, This will be true unless an
 -- automatic test is done from darcs, in which case we only need
