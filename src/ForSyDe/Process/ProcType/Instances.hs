@@ -25,6 +25,7 @@ import ForSyDe.Process.ProcType
 import Data.TypeLevel.Num.Sets (Nat, toInt)
 import Data.Param.FSVec (FSVec, reallyUnsafeVector)
 
+import Data.Char (isAlphaNum)
 import Data.Generics
 import Data.Maybe (fromJust)
 import Control.Monad (liftM, liftM2)
@@ -68,7 +69,9 @@ instance (Lift a, Data a) => ProcType a where
                    then do skipSpaces 
                            string "()"
                            return (fromJust $ cast $ ()) 
-                   else readS_to_P (gread.('(':).(++ ")"))
+                   else do skipSpaces
+                           str <- munch1 isAlphaNum 
+                           readS_to_P (gread.('(':).((str ++ ")")++))
 
 
 instance (Typeable s, Nat s, Lift a, ProcType a) => ProcType (FSVec s a) where
