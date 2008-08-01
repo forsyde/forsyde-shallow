@@ -33,7 +33,7 @@ import Data.Typeable (TypeRep)
 -------------------------------------
 -- How does the VHDL Backend work? --
 -------------------------------------
-
+-- FIXME: This documentation is a bit outated
 -- All the types used in the the System Defintion are translated to VHDL
 -- put into Package, the into a Design File and written to disk.
 --
@@ -227,10 +227,11 @@ emptyGlobalTravResult = GlobalTravResult [] [] []
 ----------
 
 -- | VHDL Compilation options
-data VHDLOps = VHDLOps {debugVHDL :: VHDLDebugLevel, 
-                        recursivityVHDL :: VHDLRecursivity,
-                        analyzeQuartus  :: Bool,
-                        compileModelsim :: Bool}
+data VHDLOps = VHDLOps {debugVHDL :: VHDLDebugLevel, -- ^ Debug mode
+                        recursivityVHDL :: VHDLRecursivity, 
+                        analyzeQuartus  :: Bool, -- ^ Analyze the generated code with Quartus
+                        compileModelsim :: Bool -- ^ Compile the generated code with Modelsim
+                                        }
  deriving (Eq, Show)
 
 -- | Debug level
