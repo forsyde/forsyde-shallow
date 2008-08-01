@@ -310,8 +310,8 @@ genUnconsVectorFuns elemTM vectorTM  =
                               AttribName (NSimple vecPar) lengthId Nothing) :-:
                                 (PrimLit "2"))   ]))
                 Nothing       
-       -- return vec(1 to vec'length-1)
-       tailExpr = ReturnSm (Just $ vecSlice 
+       -- res := vec(1 to vec'length-1)
+       tailExpr = NSimple resId := (vecSlice 
                                (PrimLit "1") 
                                (PrimName (NAttribute $ 
                                   AttribName (NSimple vecPar) lengthId Nothing) 
@@ -534,9 +534,9 @@ genUnconsVectorFuns elemTM vectorTM  =
                                                stringTM
                 -- case vec'len is
                 --  when  0 => return "";
-                --  when  1 => return show(vec(0));
-                --  when others => return show(vec(0)) & ',' &
-                --                        doshow (vec (1 to vec'legnth -1));
+                --  when  1 => return head(vec);
+                --  when others => return show(head(vec)) & ',' &
+                --                        doshow (tail(vec));
                 -- end case;
                 doShowRet = 
                   CaseSm (PrimName (NAttribute $ 
@@ -545,19 +545,15 @@ genUnconsVectorFuns elemTM vectorTM  =
                              [ReturnSm (Just $ PrimLit "\"\"")],
                    CaseSmAlt [ChoiceE $ PrimLit "1"] 
                              [ReturnSm (Just $ 
-                              genExprFCall1 doShowId (PrimName $ NSimple vecPar))],
+                              genExprFCall1 showId 
+                                   (genExprFCall1 headId (PrimName $ NSimple vecPar)) )],
                    CaseSmAlt [Others] 
                              [ReturnSm (Just $ 
-                              genExprFCall1 showId (PrimName $ NIndexed $ IndexedName 
-                                                               (NSimple vecPar)
-                                                               [PrimLit "0"]) :&:
-                              PrimLit "','" :&:
-                              genExprFCall1 doShowId 
-                                    (vecSlice (PrimLit "1") 
-                                              (PrimName (NAttribute $ 
-                                                  AttribName (NSimple vecPar) lengthId Nothing) 
-                                                                 :-: PrimLit "1")))]]
-                              
+                               genExprFCall1 showId 
+                                 (genExprFCall1 headId (PrimName $ NSimple vecPar)) :&:
+                               PrimLit "','" :&:
+                               genExprFCall1 doShowId 
+                                 (genExprFCall1 tailId (PrimName $ NSimple vecPar)) ) ]]
        -- return '<' & doshow(vec) & '>';
        showRet =  ReturnSm (Just $ PrimLit "'<'" :&:
                                    genExprFCall1 doShowId (PrimName $ NSimple vecPar) :&:
