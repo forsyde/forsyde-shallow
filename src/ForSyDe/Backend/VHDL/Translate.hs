@@ -703,6 +703,12 @@ transExp2VHDL (VarE fName `AppE` arg) | isJust maybeUnaryOp =
      return $ (fromJust maybeUnaryOp) vHDLarg      
  where maybeUnaryOp = lookup fName validUnaryFuns
 
+-- A FSVec generated with Template Haskell 
+transExp2VHDL (VarE unsafeFSVecCoerce `AppE` _ `AppE` (ConE con `AppE` ListE exps)) 
+ | show unsafeFSVecCoerce == "Data.Param.FSVec.unsafeFSVecCoerce" &&
+   show con == "Data.Param.FSVec.FSVec" = do
+    vhdlExps <- mapM transExp2VHDL exps
+    return $ Aggregate (map (\e -> ElemAssoc Nothing e) vhdlExps)
 
 -- Unkown function
 transExp2VHDL exp@(VarE fName `AppE` _) = expErr exp $ UnkownIdentifier fName
