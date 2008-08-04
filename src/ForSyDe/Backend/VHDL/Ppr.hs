@@ -318,7 +318,7 @@ instance Ppr BlockSm where
 
 instance Ppr PMapAspect where
  ppr (PMapAspect assocs) = text "port map" $$ 
-  (nest identL $ parensNonEmpty (ppr_list vComma assocs))
+  (nest identL $ parens (ppr_list vComma assocs))
   where identL = length "port map "
          
 
@@ -347,7 +347,7 @@ instance Ppr When where
  ppr (When cond) = text "when" <+> ppr cond
 
 instance Ppr Wform where
- ppr (Wform elems) = ppr_list hComma elems
+ ppr (Wform elems) = ppr_list vComma elems
  ppr Unaffected    = text "unaffected"
 
 instance Ppr WformElem where
