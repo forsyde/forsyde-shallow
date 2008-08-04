@@ -8,7 +8,7 @@
 -- Stability   :  experimental
 -- Portability :  non-portable (Template Haskell)
 --
--- GraphML pretty printing module.
+-- GraphML pretty printing instances.
 --
 -----------------------------------------------------------------------------
 
@@ -20,6 +20,7 @@
 
 module ForSyDe.Backend.GraphML.Ppr where
 
+import ForSyDe.Backend.Ppr
 import ForSyDe.Ids
 import ForSyDe.Process.ProcVal
 import ForSyDe.Process.ProcFun
@@ -33,10 +34,6 @@ import ForSyDe.OSharing
 import Language.Haskell.TH (pprint, Dec(FunD), Exp)
 import Text.PrettyPrint.HughesPJ
 
-
--- | Pretty printing class
-class Ppr a where
- ppr :: a -> Doc
 
 -- | Number of spaces used for indentation
 nestVal :: Int
@@ -155,58 +152,3 @@ instance_parent  id =
  text "<data key=\"instance_parent\">" <+> text id <+> text "</data>"   
 
 
--------------------
--- Helper Functions
--------------------
-
--- FIMXE: some of this functions are not used and replicated from the VHDL backend
-
--- dot
-dot :: Doc
-dot = char '.'
-
--- One line vertical space
-vSpace :: Doc
-vSpace = text ""
-
--- Multi-line vertical space
-multiVSpace :: Int -> Doc
-multiVSpace  n = vcat (replicate n (text ""))  
-
--- Pretty print a list supplying the document joining function
-ppr_list :: Ppr a => (Doc -> Doc -> Doc) -> [a] -> Doc
-ppr_list _ []    = empty
-ppr_list join (a1:rest) = go a1 rest 
-  where go a1 []        = ppr a1
-        go a1 (a2:rest) = ppr a1 `join` go a2 rest
-
-
--- | Join two documents vertically leaving n vertical spaces between them
-vNSpaces :: Int -> Doc -> Doc -> Doc
-vNSpaces n doc1 doc2 = doc1 $+$ 
-                        foldr ($+$) empty (replicate n vSpace) $+$
-                       doc2
-
--- Join two documents vertically putting a semicolon in the middle
-vSemi :: Doc -> Doc -> Doc
-vSemi doc1 doc2 = doc1 <> semi $+$ doc2
-
-
--- Join two documents vertically putting a comma in the middle
-vComma :: Doc -> Doc -> Doc
-vComma doc1 doc2 = doc1 <> comma $+$ doc2
-
--- Join two documents horizontally putting a comma in the middle
-hComma :: Doc -> Doc -> Doc
-hComma doc1 doc2 = doc1 <> comma <+> doc2
-
--- | Only append if both of the documents are non-empty
-(<++>) :: Doc -> Doc -> Doc
-d1 <++> d2 
- | isEmpty d1 || isEmpty d2 = empty
- | otherwise = d1 <+> d2
-
--- | Enclose in parenthesis only if the document is non-empty
-parensNonEmpty :: Doc -> Doc
-parensNonEmpty doc | isEmpty doc = empty
-parensNonEmpty doc = parens doc

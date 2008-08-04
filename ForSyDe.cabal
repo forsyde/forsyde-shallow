@@ -64,6 +64,7 @@ Library
                    ForSyDe.Process.ProcVal, 
                    ForSyDe.Process.ProcType,
                    ForSyDe.Process.ProcType.Instances,
+                   ForSyDe.Backend.Ppr,
                    ForSyDe.Backend.VHDL.AST,
                    ForSyDe.Backend.VHDL.Ppr,
                    ForSyDe.Backend.VHDL.Constants,

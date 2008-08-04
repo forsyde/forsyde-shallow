@@ -9,7 +9,7 @@
 -- Stability   :  experimental
 -- Portability :  non-portable (Template Haskell)
 --
--- VHDL pretty printing module.
+-- VHDL pretty-printing instances.
 --
 -----------------------------------------------------------------------------
 
@@ -17,18 +17,14 @@
 -- FIXME:  we could avoid the LANGUAGE extensions by adding ppr_list to the Ppr 
 --         class (see Language.Haskell.TH.Ppr)
 
-module ForSyDe.Backend.VHDL.Ppr(Ppr(..)) where
+module ForSyDe.Backend.VHDL.Ppr () where
 
-import Text.PrettyPrint.HughesPJ hiding (Mode)
+import ForSyDe.Backend.Ppr
+
 import ForSyDe.Backend.VHDL.AST
 
--- | Pretty printing class
-class Ppr a where
- ppr :: a -> Doc
+import Text.PrettyPrint.HughesPJ hiding (Mode)
 
--- identity instantiation
-instance Ppr Doc where
- ppr = id
 
 -- | Number of spaces used for indentation
 nestVal :: Int
@@ -482,75 +478,3 @@ instance Ppr FCall where
  ppr (FCall name assocs) = 
    ppr name <> parensNonEmpty (commaSep assocs)
 
-
--------------------
--- Helper Functions
--------------------
-
--- dot
-dot :: Doc
-dot = char '.'
-
--- One line vertical space
-vSpace :: Doc
-vSpace = text ""
-
--- Multi-line vertical space
-multiVSpace :: Int -> Doc
-multiVSpace  n = vcat (replicate n (text ""))  
-
--- Pretty print a list supplying the document joining function
-ppr_list :: Ppr a => (Doc -> Doc -> Doc) -> [a] -> Doc
-ppr_list _ []    = empty
-ppr_list join (a1:rest) = go a1 rest 
-  where go a1 []        = ppr a1
-        go a1 (a2:rest) = ppr a1 `join` go a2 rest
-
-
--- | Join two documents vertically leaving n vertical spaces between them
-vNSpaces :: Int -> Doc -> Doc -> Doc
-vNSpaces n doc1 doc2 = doc1 $+$ 
-                        multiVSpace n $+$
-                       doc2
-
--- Join two documents vertically putting a semicolon in the middle
-vSemi :: Doc -> Doc -> Doc
-vSemi doc1 doc2 = doc1 <> semi $+$ doc2
-
-
--- Join two documents vertically putting a comma in the middle
-vComma :: Doc -> Doc -> Doc
-vComma doc1 doc2 = doc1 <> comma $+$ doc2
-
--- Join two documents horizontally putting a comma in the middle
-hComma :: Doc -> Doc -> Doc
-hComma doc1 doc2 = doc1 <> comma <+> doc2
-
-
--- | apply sep to a list of prettyprintable elements, 
---   previously interspersing commas
-commaSep :: Ppr a => [a] -> Doc
-commaSep = sep.(punctuate comma).(map ppr)
- 
-
--- | Only append if both of the documents are non-empty
-($++$) :: Doc -> Doc -> Doc
-d1 $++$ d2 
- | isEmpty d1 || isEmpty d2 = empty
- | otherwise = d1 $+$ d2
-
-
--- | Only append if both of the documents are non-empty
-(<++>) :: Doc -> Doc -> Doc
-d1 <++> d2 
- | isEmpty d1 || isEmpty d2 = empty
- | otherwise = d1 <+> d2
-
--- | Enclose in parenthesis only if the document is non-empty
-parensNonEmpty :: Doc -> Doc
-parensNonEmpty doc | isEmpty doc = empty
-parensNonEmpty doc = parens doc
-
--- | Enclose in parenthesis only if the predicate is True
-parensIf :: Bool -> Doc -> Doc
-parensIf p d = if p then parens d else d
