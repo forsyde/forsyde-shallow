@@ -118,7 +118,7 @@ genVHDLTestBenchArch mCycles stimuli = do
                    SigDec resetId std_logicTM (Just $ PrimLit "'0'")]
  -- Get the component instantiation and the signal declarations for the output
  -- signals
- (ins, outDecs) <- 
+ (mIns, outDecs) <- 
      transSysIns2CompIns l
                          (unsafeVHDLBasicId "totest") 
                          iVHDLIds 
@@ -143,8 +143,8 @@ genVHDLTestBenchArch mCycles stimuli = do
             (unsafeVHDLBasicId "test") 
             (NSimple $ unsafeVHDLBasicId (sysId ++ "_tb"))
             (map BDISD (finalIDecs ++ outDecs))
-            ( (CSISm ins) : (CSPSm clkProc) : (CSPSm outputProc) : 
-              (map CSSASm finalAssigns) ),
+            ( maybe [] (\s -> [CSISm s]) mIns ++ 
+             ( (CSPSm clkProc) : (CSPSm outputProc) : (map CSSASm finalAssigns) ) ),
             cycles)
 
 -- | generate the assignments for the input stimuli

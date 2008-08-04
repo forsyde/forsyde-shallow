@@ -34,6 +34,7 @@ import ForSyDe.OSharing
 import Control.Monad.State
 import System.Directory
 import System.FilePath
+import Data.Maybe (fromJust, isJust)
 
 -- | Internal VHDL-Monad version of 'ForSyDe.Backend.writeVHDL'
 --   (Note: the initial and final CWD will be / )
@@ -219,14 +220,14 @@ defineVHDL outs ins = do
           parentId = sid parentSysVal 
       -- Translate the instance to a component instantiation 
       -- and get the declaration of the output signals
-      (compIns, decs) <- transSysIns2CompIns parentLogic 
+      (mCompIns, decs) <- transSysIns2CompIns parentLogic 
                                              vPid 
                                              intIns 
                                              typedOuts 
                                              parentId 
                                              (map fst parentInIface) 
                                              (map fst parentOutIface)
-      addStm $ CSISm compIns
+      when (isJust mCompIns) (addStm $ CSISm $ fromJust mCompIns)
       -- Generate a signal declaration for each of the resulting signals
       mapM_ addSigDec decs
 

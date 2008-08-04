@@ -237,21 +237,24 @@ transSysIns2CompIns :: SysLogic -- ^ parent system logic
                     -> SysId -- ^ parent system identifier
                     -> [PortId] -- ^ parent input identifiers
                     -> [PortId] -- ^ parent output identifiers
-                    -> VHDLM (CompInsSm, [SigDec])
+                    -> VHDLM (Maybe CompInsSm, [SigDec])
 transSysIns2CompIns logic vPid ins typedOuts parentId parentInIds parentOutIds = do
-  -- Create the declarations for the signals
-  decs <- mapM (\(name,typ) -> transVHDLName2SigDec name typ Nothing) typedOuts
-  -- Create the portmap 
-  vParentId <- transSysId2VHDL parentId
-  vParentInIds <- liftEProne $ mapM mkVHDLExtId parentInIds
-  vParentOutIds <- liftEProne $ mapM mkVHDLExtId parentOutIds
-  let implicitAssocIds = if logic == Sequential then [resetId, clockId] else []
-      assocs =  genAssocElems 
-                  (implicitAssocIds ++ vParentInIds ++ vParentOutIds)
-                  (implicitAssocIds ++ ins          ++ map fst typedOuts)
-      entityName = NSelected (NSimple workId :.: SSimple vParentId)
-      instantiation = CompInsSm vPid (IUEntity entityName) (PMapAspect assocs)
-  return (instantiation, decs)
+ if length ins == 0 && length typedOuts == 0 
+  then return (Nothing, []) 
+  else do
+   -- Create the declarations for the signals
+   decs <- mapM (\(name,typ) -> transVHDLName2SigDec name typ Nothing) typedOuts
+   -- Create the portmap 
+   vParentId <- transSysId2VHDL parentId
+   vParentInIds <- liftEProne $ mapM mkVHDLExtId parentInIds
+   vParentOutIds <- liftEProne $ mapM mkVHDLExtId parentOutIds
+   let implicitAssocIds = if logic == Sequential then [resetId, clockId] else []
+       assocs =  genAssocElems 
+                   (implicitAssocIds ++ vParentInIds ++ vParentOutIds)
+                   (implicitAssocIds ++ ins          ++ map fst typedOuts)
+       entityName = NSelected (NSimple workId :.: SSimple vParentId)
+       instantiation = CompInsSm vPid (IUEntity entityName) (PMapAspect assocs)
+   return (Just instantiation, decs)
 
 
 -- | Translate a VHDL Signal to a VHDL Signal declaration
