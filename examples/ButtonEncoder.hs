@@ -16,7 +16,7 @@ import Prelude hiding (Either(..))
 
 
 data Direction = Up | Down | Left | Right | Unknown
- deriving (Data,Typeable,Show)
+ deriving (Data, Typeable, Show, Eq)
 
 $(deriveLift1 ''Direction)
 
@@ -34,6 +34,10 @@ buttonEncoder = mapSY "encoder" transFun
                                  if up == H then Up else
                                   if down == H then Down else Unknown |])
 
-buttonEncoderSysDef :: SysDef (Signal ButtonPress -> Signal Direction)
-buttonEncoderSysDef = $(newSysDefTHName 'buttonEncoder ["buttonPress"] ["direction"])
+buttonEncoderSys :: SysDef (Signal ButtonPress -> Signal Direction)
+buttonEncoderSys = $(newSysDefTHName 'buttonEncoder ["buttonPress"] ["direction"])
+
+
+simButtonEncoder :: [ButtonPress] -> [Direction]
+simButtonEncoder = simulate buttonEncoderSys
                                                     

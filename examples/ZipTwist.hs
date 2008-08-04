@@ -23,14 +23,14 @@ zipTwistFun i1 i2 i3 i4 i5 i6 =  (o1,o2,o3,o4,o5,o6)
        (o1,o2,o3) = unzip3SY "unzip13" zip13
        (o4,o5,o6) = unzip3SY "unzip46" zip46
 
-zipTwist :: SysDef (Signal Int32 -> Signal Int32 -> Signal Int32 
+zipTwistSys :: SysDef (Signal Int32 -> Signal Int32 -> Signal Int32 
             -> Signal Int32 -> Signal Int32 -> Signal Int32
             -> (Signal Int32, Signal Int32, Signal Int32,
                 Signal Int32, Signal Int32, Signal Int32))
-zipTwist = $(newSysDefTHName 'zipTwistFun 
+zipTwistSys = $(newSysDefTHName 'zipTwistFun 
                              ["in1","in2","in3","in4","in5","in6"]
                              ["out1","out2","out3","out4","out5","out6"])
 
-simulateZipTwist = simulate zipTwist
+simZipTwist = simulate zipTwistSys
 
-writeVHDLZipTwist = writeVHDL zipTwist
+writeVHDLZipTwist = writeVHDL zipTwistSys
