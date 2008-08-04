@@ -25,10 +25,9 @@ import ForSyDe.Process.ProcType
 import Data.TypeLevel.Num.Sets (Nat, toInt)
 import Data.Param.FSVec (FSVec, reallyUnsafeVector)
 
-import Data.Char (isAlphaNum)
+
 import Data.Generics
-import Data.Maybe (fromJust)
-import Control.Monad (liftM, liftM2)
+import Control.Monad (liftM, liftM2, mzero)
 import Text.ParserCombinators.ReadP
 import Data.Set (empty, singleton)
 import Language.Haskell.TH.Syntax (Lift(..), runIO)
@@ -65,13 +64,16 @@ instance (Lift a, Data a) => ProcType a where
  getEnums _ = maybe empty singleton (getEnumAlgTy (undefined :: a))
  -- We add parenthesis and try to use gread. 
  -- In addition, since gread is broken for unit (), we create or own parser
- readProcType = if typeOf (undefined :: a) == typeOf ()
-                   then do skipSpaces 
-                           string "()"
-                           return (fromJust $ cast $ ()) 
-                   else do skipSpaces
-                           str <- munch1 isAlphaNum 
-                           readS_to_P (gread.('(':).((str ++ ")")++))
+ readProcType = do skipSpaces
+                   -- get all the input while no separator is found
+                   str <- munch1 (\c -> not (elem c " ,()<>" )) 
+                   gReadUnaryCons str
+  where -- Generically read a unary constructor (possibly an integer, float etc .. )
+        gReadUnaryCons :: forall a . Data a => String -> ReadP a
+        gReadUnaryCons str = do 
+              cons <- maybe mzero return $ readConstr (dataTypeOf (undefined :: a)) str
+              fromConstrM (fail "readProcType: non-unary constructor found") cons
+
 
 
 instance (Typeable s, Nat s, Lift a, ProcType a) => ProcType (FSVec s a) where
