@@ -27,13 +27,36 @@ import ForSyDe.OSharing
 
 import Data.Traversable.GenericZipWith
 
+import System.Directory
+import System.FilePath
 import Control.Monad.State
 
 
-
--- | Traverse the netlist and write the local results (i.e. system graphs)
+-- | Internal GraphML-Monad version of 'ForSyDe.Backend.writeGraphML
 writeGraphMLM :: GraphMLM ()
 writeGraphMLM = do
+    -- create and change to systemName/graphml
+   rootDir <- gets (sid.globalSysDef.global)
+   let graphmlDir = rootDir </> "graphml"
+   liftIO $ createDirectoryIfMissing True graphmlDir
+   liftIO $ setCurrentDirectory graphmlDir
+   -- write the local results for the first-level entity
+   writeLocalGraphMLM
+   -- if we are in recursive mode, also write the local results
+   -- for the rest of the subsystems
+   rec <- isRecursiveSet
+   when rec $ do subs <- gets (subSys.globalSysDef.global)
+                 let writeSub s = 
+                        withLocalST (initLocalST ((readURef.unPrimSysDef) s))
+                                    writeLocalGraphMLM 
+                 mapM_ writeSub subs
+   -- go back to the original directory
+   liftIO $ setCurrentDirectory (".." </> "..")
+
+
+-- | Traverse the netlist and write the local results (i.e. system graphs)
+writeLocalGraphMLM :: GraphMLM ()
+writeLocalGraphMLM = do
   lSysDefVal <- gets (currSysDef.local)
   let lSysDefId =  sid lSysDefVal
   debugMsg $ "Compiling system definition `" ++ lSysDefId ++ "' ...\n"
@@ -98,28 +121,7 @@ defineGraphML outs ins = do
      node = ProcNode insFormal outPids
  mapM_ addEdge inEdges
  addNode node
- -- in case the node was an instance we compile the 
- -- system definition of its parent
- case ins of
-  Proc _ (SysIns p _) -> writeGraphMLInsParent (unPrimSysDef p)
-  _ -> return ()
 
 
 
 
-
--- | Compile the parent system of an instance
-writeGraphMLInsParent :: URef SysDefVal -> GraphMLM ()
-writeGraphMLInsParent parentSysRef = do
-      -- Only compile when the Recursive option was provided and
-      -- the parent system wasn't compiled before
-      rec <- isRecursiveSet
-      when rec $
-         do wasCompiled <- traversedSysDef parentSysRef
-            when (not wasCompiled) $ 
-               do let parentSysVal = readURef parentSysRef
-                  -- Mark the parent system as compiled
-                  addSysDef parentSysRef
-                  -- Compile the parent system
-                  withLocalST (initLocalST parentSysVal) writeGraphMLM
-    

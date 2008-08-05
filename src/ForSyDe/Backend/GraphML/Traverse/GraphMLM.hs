@@ -18,7 +18,6 @@ import ForSyDe.Backend.GraphML.AST
 
 import ForSyDe.Ids
 import ForSyDe.ForSyDeErr
-import ForSyDe.OSharing
 import ForSyDe.System.SysDef (SysDefVal(..))
 import ForSyDe.Netlist.Traverse (TravSEIO)
 
@@ -81,25 +80,21 @@ withLocalST l' action =  do
 data GlobalGraphMLST = GlobalGraphMLST
   {globalSysDef :: SysDefVal,
    ops          :: GraphMLOps,   -- Compilation options
-   globalRes    :: GlobalTravResult, -- Result accumulated during the 
-                                    -- whole compilation
-   compSysDefs  :: URefTableIO SysDefVal ()} -- Table containing the
-                                            -- System Definitions which
-                                            -- where already compiled
+   globalRes    :: GlobalTravResult} -- Result accumulated during the 
+                                     -- whole compilation
+    
 
 
 
 -- | Empty initial traversing state
-initGlobalGraphMLST :: SysDefVal -> IO GlobalGraphMLST
-initGlobalGraphMLST  sysDefVal = do
- t <- newURefTableIO
- return $ GlobalGraphMLST sysDefVal defaultGraphMLOps emptyGlobalTravResult t 
+initGlobalGraphMLST :: SysDefVal -> GlobalGraphMLST
+initGlobalGraphMLST  sysDefVal = 
+  GlobalGraphMLST sysDefVal defaultGraphMLOps emptyGlobalTravResult
 
 -- | Empty initial traversing state 
-initGraphMLTravST :: SysDefVal -> IO GraphMLTravST
-initGraphMLTravST sysDefVal = do 
- gst <- initGlobalGraphMLST sysDefVal
- return $ GraphMLTravST (initLocalST sysDefVal) gst
+initGraphMLTravST :: SysDefVal -> GraphMLTravST
+initGraphMLTravST sysDefVal = 
+  GraphMLTravST (initLocalST sysDefVal) (initGlobalGraphMLST sysDefVal)
 
 -------------
 -- TravResult
@@ -118,6 +113,7 @@ emptyLocalTravResult = LocalTravResult [] []
 
 
 -- | Global Results accumulated throughout the whole compilation
+--   (empty right now)
 type GlobalTravResult = ()
 
 
@@ -168,9 +164,9 @@ setGraphMLOps :: GraphMLOps -> GraphMLM ()
 setGraphMLOps options =  modify (\st -> st{global=(global st){ops=options}})
 
 
--------------------------------------
+----------------------------------------
 -- Useful functions in the GraphML Monad
--------------------------------------
+----------------------------------------
 
 -- | Add a signal declaration to the 'LocalTravResult' in the State
 addEdge :: GraphMLEdge -> GraphMLM ()
@@ -191,20 +187,6 @@ addNode node = modify addFun
                r  = localRes l
                nds = nodes r 
 
- 
--- | Add an element to the 'SysDef' table in the global state
-addSysDef :: URef SysDefVal -> GraphMLM ()
-addSysDef ref = do table <- gets (compSysDefs.global)
-                   liftIO $ addEntryIO table ref () 
-
-
--- | Check if a SysDef was previously traversed
-traversedSysDef :: URef SysDefVal -> GraphMLM Bool
-traversedSysDef ref =  do table <- gets (compSysDefs.global)
-                          mUnit <- liftIO $ queryIO table ref
-                          return $ maybe False (\() -> True) mUnit 
-
-  
 
 
 -- | Lift an 'EProne' value to the GraphML monad setting current error context

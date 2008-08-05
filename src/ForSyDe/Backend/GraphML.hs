@@ -38,7 +38,7 @@ writeGraphML = writeGraphMLOps defaultGraphMLOps
 writeGraphMLOps :: GraphMLOps -> SysDef a -> IO ()
 writeGraphMLOps ops sysDef = do
   -- initiate the compilation State
-  s <- initGraphMLTravST $ (readURef.unPrimSysDef.unSysDef) sysDef
+  let s = initGraphMLTravST $ (readURef.unPrimSysDef.unSysDef) sysDef
   -- Translate the code
   res <- runErrorT $ evalStateT  (setGraphMLOps ops >> writeGraphMLM) s
   -- Check if the  compilation went well and print an error in case it didn't
