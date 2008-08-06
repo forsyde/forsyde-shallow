@@ -1,3 +1,4 @@
+{-# LANGUAGE TypeSynonymInstances, MultiParamTypeClasses  #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  ForSyDe.Backend.GraphML.Ppr
@@ -11,13 +12,6 @@
 -- GraphML pretty printing instances.
 --
 -----------------------------------------------------------------------------
-
--- FIMXE: this module is ugly, need functions for printing tags to avoid
---        print < /> and ="" all the time
---        maybe reuse a XML pretty printer?
--- FIXME: it isn't ugly just because of that, the code should be refactored
---        and improved
-
 module ForSyDe.Backend.GraphML.Ppr where
 
 import ForSyDe.Backend.Ppr
@@ -31,101 +25,156 @@ import ForSyDe.System.SysDef
 import ForSyDe.OSharing
 
 
-import Language.Haskell.TH (pprint, Dec(FunD), Exp)
+import Language.Haskell.TH (pprint, Dec(FunD), Exp, nameBase)
 import Text.PrettyPrint.HughesPJ
 
+
+-- | The only accepted pretyprinting option
+type YFilesMarkup = Bool
 
 -- | Number of spaces used for indentation
 nestVal :: Int
 nestVal = 5
 
 
-instance Ppr GraphMLGraph where
- ppr (GraphMLGraph id nodes edges) =
+instance PprOps YFilesMarkup GraphMLGraph where
+ pprOps yFiles (GraphMLGraph id nodes edges) =
   text "<graph" <+> text ("id=\"" ++ id ++ "\"") <+> 
                      text "edgedefault=\"directed\" >" $+$
     nest nestVal (vSpace $+$    
-                  ppr_list (vNSpaces 1) nodes $+$
+                  pprOps_list yFiles (vNSpaces 1) nodes $+$
                   vSpace $+$
-                  ppr_list (vNSpaces 1) edges $+$
+                  pprOps_list yFiles (vNSpaces 1) edges $+$
                   vSpace) $+$
   text "</graph>" 
 
 
-instance Ppr GraphMLNode where
- ppr (ProcNode ins outs) =
+instance PprOps YFilesMarkup GraphMLNode where
+ pprOps yFiles node =
    text "<node" <+> text ("id=\"" ++ id ++ "\"") <> text ">" $+$   
    nest nestVal (
-       (case ins of
-           InPort  _ -> 
-             process_type "InPort"
-           Proc _ (Const pval) -> 
-             process_type "Const" $+$
-             value_arg  ((expVal.valAST) pval)
-           Proc _ (ZipWithNSY tpf _) -> 
-             process_type "ZipWithNSY" $+$
-             procfun_arg ((tpast.tast) tpf)
-           Proc _ (ZipWithxSY tpf _) -> 
-             process_type "ZipWithNSY" $+$
-             procfun_arg ((tpast.tast) tpf)
-           Proc _ (UnzipNSY _ _ _) -> 
-             process_type "UnzipNSY" 
-           Proc _ (UnzipxSY _ _ _ _) -> 
-             process_type "UnzipxSY"
-           Proc _ (DelaySY pval _) -> 
-             process_type "DelaySY" $+$
-             value_arg  ((expVal.valAST) pval)
-           Proc _ (SysIns psd _) -> 
-             process_type "SysIns" $+$
-             instance_parent ((sid.readURef.unPrimSysDef) psd) )  $+$
-       vcat (map port portIds)      
+     (case node of
+        ProcNode ins _ ->
+          case ins of
+            InPort  _ -> 
+              process_type "InPort" $+$
+              yFilesNodeTags (20, 20) "#DDDDDD" "ellipse" ("I `"++ id ++ "'") 
+            Proc _ (Const pval) -> 
+              let arg = (expVal.valAST) pval
+              in process_type "Const" $+$
+                 value_arg  arg $+$
+                 yFilesNodeTags (100, 100) "#FFFFFF" "ellipse" ("Const\n`" ++ id ++ "'\nval=" ++ pprint arg)
+            Proc _ (ZipWithNSY tpf i) -> 
+              let nins = length i
+                  typ = case nins of
+                           1 -> "MapSY"
+                           _ -> "ZipWith" ++ show nins ++ "SY"
+                  pfAST = (tpast.tast) tpf
+              in process_type "ZipWithNSY" $+$
+                 procfun_arg pfAST $+$
+                 yFilesNodeTags (100, 100) "#6F7DBC" "roundrectangle" (typ ++ "\n`" ++ id ++ "'\nfName=" ++ nameBase (name pfAST))
+            Proc _ (ZipWithxSY tpf _) -> 
+              process_type "ZipWithxSY" $+$
+              procfun_arg ((tpast.tast) tpf) $+$
+              yFilesNodeTags (100, 100) "#AFADFC" "rectangle" ("ZipWithxSY\n`" ++ id ++"'")
+            Proc _ (UnzipNSY t _ _) -> 
+              let typ = "Unzip" ++ show (length t) ++ "SY"
+              in process_type "UnzipNSY"  $+$
+                 yFilesNodeTags (100, 100) "#5993A3" "roundrectangle" (typ ++ "\n`" ++ id ++"'")
+            Proc _ (UnzipxSY _ _ _ _) -> 
+              process_type "UnzipxSY" $+$
+              yFilesNodeTags (100, 100) "#99D3E3" "rectangle" ("UnzipxSY\n`" ++ id ++"'")
+            Proc _ (DelaySY pval _) -> 
+              let arg = (expVal.valAST) pval
+              in process_type "DelaySY" $+$
+                 value_arg  arg $+$
+                 yFilesNodeTags (100, 100) "#FF934C" "diamond" ("DelaySY\n`" ++ id ++ "'\nval=" ++ pprint arg)
+            Proc _ (SysIns psd _) -> 
+              let parId = (sid.readURef.unPrimSysDef) psd
+              in process_type "SysIns" $+$
+                 instance_parent parId $+$
+                 yFilesNodeTags (100, 100) "#FF934C" "rectangle" ("SysIns\n`" ++ id ++ "'\nparent=" ++ parId)
+        OutNode _ _ -> 
+          process_type "OutPort"  $+$
+          yFilesNodeTags (20, 20) "#DDDDDD" "ellipse" ("O `"++ id ++ "'") 
+        ) $+$ vcat (map port portIds)      
        ) $+$
    text "</node>" 
-  where id = case ins of
-               InPort id -> id
-               Proc id _ -> id
-        portIds = arguments ins ++ outs
- -- FIXME: UGLY replication
- ppr (OutNode id portid) =        
-   text "<node" <+> text ("id=\"" ++ id ++ "\"") <> text ">" $+$
-   nest nestVal (port portid $+$
-                 process_type "OutPort") $+$
-   text "</node>" 
+  where 
+   (id, portIds) = 
+           case node of
+                ProcNode ins outs ->
+                   let pids = arguments ins ++ outs
+                   in case ins of
+                       InPort id -> (id, pids)
+                       Proc id _ -> (id, pids)
+                OutNode id portid -> (id,[portid])
+   yFilesNodeTags (xsize, ysize) color shape label =
+    if yFiles 
+     then 
+       text "<data key=\"d0\">" $+$
+         nest nestVal 
+          (text "<y:ShapeNode>" $+$
+           nest nestVal 
+            (text "<y:Geometry height=\"" <> float xsize <> text "\" width=\"" <> float ysize <> text "\" x=\"0.0\" y=\"0.0\"/>" $+$
+             text "<y:Fill color=\"" <> text color <> text "\" transparent=\"false\"/>" $+$
+             text "<y:NodeLabel alignment=\"center\" autoSizePolicy=\"content\" fontFamily=\"Dialog\" fontSize=\"12\" fontStyle=\"plain\" hasBackgroundColor=\"false\" hasLineColor=\"false\" modelName=\"internal\" modelPosition=\"c\" textColor=\"#000000\" visible=\"true\">" <> text label <> text "</y:NodeLabel>" $+$
+             text "<y:Shape type=\"" <> text shape <> text "\"/>"
+           ) $+$
+          text "</y:ShapeNode>" 
+         ) $+$
+       text "</data>"
+     else empty
 
-
-instance Ppr GraphMLEdge where
- ppr (GraphMLEdge origN origP destN destP) = 
+instance PprOps YFilesMarkup  GraphMLEdge where
+ pprOps yFiles (GraphMLEdge origN origP destN destP) = 
   text "<edge" <+> text ("source=\"" ++ origN ++ "\"") <+> 
                    text ("sourceport=\"" ++ origP ++ "\"") <+>
                    text ("target=\"" ++ destN ++ "\"") <+> 
                    text ("targetport=\"" ++ destP ++ "\"") <+> text "/>"
 
 
-
---FIMXE: the name of this funcion in not intuitive, it ptins the graphml tag as well
-
 -- | pretty print a Graph with XML headers and key definitions
-pprGraphWithHeaders :: GraphMLGraph -> Doc
-pprGraphWithHeaders graph = 
- text "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" $+$
- text "<!-- Automatically generated by ForSyDe -->" $+$
- text "<graphml xmlns=\"http://graphml.graphdrawing.org/xmlns\"" <+>  
- text "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"" <+>
- text "xsi:schemaLocation=\"http://graphml.graphdrawing.org/xmlns" <+> 
- text "http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd\">" $+$ 
- nest nestVal (
-    text "<key id=\"process_type\" attrb.name=\"process_type\" attrb.type=\"string\"/>" $+$
-    text "<key id=\"value_arg\" attrb.name=\"value_arg\" attrb.type=\"string\"/>" $+$
-    text "<key id=\"profun_arg\" attrb.name=\"procfun_arg\" attrb.type=\"string\"/>" $+$
-    text "<key id=\"instance_parent\" attrb.name=\"instance_parent\" attrb.type=\"string\"/>" $+$
-    ppr graph) $+$
- text "</graphml>"
+pprGraphWithHeaders :: YFilesMarkup -> GraphMLGraph -> Doc
+pprGraphWithHeaders yFiles graph = 
+  text "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" $+$
+  text "<!-- Automatically generated by ForSyDe -->" $+$
+  text "<graphml" <+> xmlns <+>  
+  text "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"" <+>
+  xmlns_y <+>
 
+  xsi_schemaLocation <>
+  char '>' $+$ 
+  nest nestVal (
+    text "<key id=\"process_type\" for=\"node\" attrb.name=\"process_type\" attrb.type=\"string\"/>" $+$
+    text "<key id=\"value_arg\" for=\"node\" attrb.name=\"value_arg\" attrb.type=\"string\"/>" $+$
+    text "<key id=\"profun_arg\" for=\"node\" attrb.name=\"procfun_arg\" attrb.type=\"string\"/>" $+$
+    text "<key id=\"instance_parent\" for=\"node\" attrb.name=\"instance_parent\" attrb.type=\"string\"/>" $+$
+    yFilesAttribs $+$
+    pprOps yFiles graph) $+$
+  text "</graphml>"
+ where
+  -- For some silly reason, yFiles uses a different GraphML target namesapce
+  -- different to the one used in grapdrawing.org's GraphML primer
+  xmlns = if yFiles 
+    then text "xmlns=\"http://graphml.graphdrawing.org/xmlns/graphml\""
+    else text "xmlns=\"http://graphml.graphdrawing.org/xmlns\""
+  xmlns_y = if not yFiles then empty else
+    text "xmlns:y=\"http://www.yworks.com/xml/graphml\""
+  xsi_schemaLocation = if yFiles 
+   then text "xsi:schemaLocation=\"http://graphml.graphdrawing.org/xmlns/graphml http://www.yworks.com/xml/schema/graphml/1.0/ygraphml.xsd\""
+   else   text "xsi:schemaLocation=\"http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd\"" 
+  yFilesAttribs = if not yFiles then empty else 
+   text "<key for=\"node\" id=\"d0\" yfiles.type=\"nodegraphics\"/>"  $+$
+   text "<key attr.name=\"description\" attr.type=\"string\" for=\"node\" id=\"d1\"/>" $+$
+   text "<key for=\"edge\" id=\"d2\" yfiles.type=\"edgegraphics\"/>" $+$
+   text "<key attr.name=\"description\" attr.type=\"string\" for=\"edge\" id=\"d3\"/>" $+$
+   text "<key for=\"graphml\" id=\"d4\" yfiles.type=\"resources\"/>"   
 
 -------------------------
 -- Tag printing functions
 -------------------------
-
+  
 port :: GraphMLPortId -> Doc
 port id = text "<port" <+> text ("name=\"" ++ id ++ "\"") <> text "/>"   
 

@@ -14,14 +14,14 @@
 module ForSyDe.Backend.GraphML.FileIO where
 
 import ForSyDe.Backend.GraphML.AST
-import ForSyDe.Backend.GraphML.Ppr(pprGraphWithHeaders)
+import ForSyDe.Backend.GraphML.Ppr(YFilesMarkup, pprGraphWithHeaders)
 
 import System.IO
 import Text.PrettyPrint.HughesPJ
 
 -- | Write a design file to a file in disk
-writeGraph :: GraphMLGraph -> FilePath -> IO ()
-writeGraph graph fp = do
+writeGraph :: YFilesMarkup -> GraphMLGraph -> FilePath -> IO ()
+writeGraph yFiles graph fp = do
  handle     <- openFile fp WriteMode
- hPutStr handle $ (render . pprGraphWithHeaders) graph
+ hPutStr handle $ (render . pprGraphWithHeaders yFiles) graph
  hClose handle

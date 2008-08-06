@@ -78,7 +78,8 @@ writeLocalGraphMLM = do
       finalGraph = GraphMLGraph lSysDefId (nodes ++ outNodes) 
                                           (edges ++ outEdges)  
   -- and write it to disk
-  liftIO $ writeGraph finalGraph (lSysDefId ++ ".graphml") 
+  yFiles <- genyFilesMarkup
+  liftIO $ writeGraph yFiles finalGraph (lSysDefId ++ ".graphml") 
 
 -- | Traverse the netlist of a System Definition, 
 --   returning the (implicit) final traversing state and a list

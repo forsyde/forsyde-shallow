@@ -128,7 +128,10 @@ emptyGlobalTravResult = ()
 
 -- | GraphML Compilation options
 data GraphMLOps = GraphMLOps 
-   {debugGraphML :: GraphMLDebugLevel, recursivityGraphML :: GraphMLRecursivity}
+   {debugGraphML :: GraphMLDebugLevel, 
+    recursivityGraphML :: GraphMLRecursivity,
+    yFilesMarkup :: Bool -- ^ Generate yFiles markup? 
+                        }
  deriving (Eq, Show)
 
 -- | Debug level
@@ -153,10 +156,14 @@ isRecursiveSet = do
   recOp <- gets (recursivityGraphML.ops.global)
   return $ recOp == GraphMLRecursive
 
+-- | Check if we want to generate yFiles markup
+genyFilesMarkup :: GraphMLM Bool
+genyFilesMarkup = gets (yFilesMarkup.ops.global)
+
 
 -- | Default traversing options
 defaultGraphMLOps :: GraphMLOps
-defaultGraphMLOps =  GraphMLOps GraphMLNormal GraphMLRecursive
+defaultGraphMLOps =  GraphMLOps GraphMLNormal GraphMLRecursive False
 
 
 -- | Set GraphML options inside the GraphML monad

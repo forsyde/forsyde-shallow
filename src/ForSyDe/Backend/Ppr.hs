@@ -1,3 +1,4 @@
+{-# LANGUAGE MultiParamTypeClasses, FunctionalDependencies #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  ForSyDe.Backend.VHDL.Ppr
@@ -23,6 +24,11 @@ class Ppr a where
 instance Ppr Doc where
  ppr = id
 
+-- | Pretty printing class with associated printing options
+class PprOps ops toPpr | toPpr -> ops where
+ -- NOTE: Would it be better to use a State Monad?
+ -- i.e. pprOps :: toPpr -> State ops Doc
+ pprOps :: ops -> toPpr -> Doc 
 
 
 -- dot
@@ -37,13 +43,20 @@ vSpace = text ""
 multiVSpace :: Int -> Doc
 multiVSpace  n = vcat (replicate n (text ""))  
 
--- Pretty print a list supplying the document joining function
+-- Pretty-print a list supplying the document joining function
 ppr_list :: Ppr a => (Doc -> Doc -> Doc) -> [a] -> Doc
 ppr_list _ []    = empty
 ppr_list join (a1:rest) = go a1 rest 
   where go a1 []        = ppr a1
         go a1 (a2:rest) = ppr a1 `join` go a2 rest
 
+-- Pretty-print a list supplying the document joining function
+-- (PprOps version)
+pprOps_list :: PprOps ops toPpr => ops -> (Doc -> Doc -> Doc) -> [toPpr] -> Doc
+pprOps_list _ _ [] = empty
+pprOps_list ops join (a1:rest) = go a1 rest
+ where go a1 [] = pprOps ops a1
+       go a1 (a2:rest) = pprOps ops a1 `join` go a2 rest
 
 -- | Join two documents vertically leaving n vertical spaces between them
 vNSpaces :: Int -> Doc -> Doc -> Doc
