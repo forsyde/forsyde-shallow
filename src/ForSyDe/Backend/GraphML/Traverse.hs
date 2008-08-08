@@ -67,18 +67,21 @@ writeLocalGraphMLM = do
   intOutsInfo <- traverseGraphML nl 
   LocalTravResult nodes edges <- gets (localRes.local)
   -- For each output signal, we need a node and an edge between its 
-  -- intermediate signal and the final output signal declared in system 
+  -- intermediate signal and the final output signal declared in the system 
   -- interface.
   let outIds = map fst (oIface lSysDefVal)
       outNodes = map (\id -> OutNode id (id ++ "_in")) outIds
       outEdges = 
-         zipWith (\(IntSignalInfo nId pId) id -> 
-                   GraphMLEdge nId pId id (id ++ "_in")) intOutsInfo outIds
+         zipWith (\(IntSignalInfo n pId) id -> 
+                   GraphMLEdge n pId (OutNode id (id ++ "_in")) (id ++ "_in")) 
+                 intOutsInfo 
+                 outIds
  -- Generate the final Graph 
       finalGraph = GraphMLGraph lSysDefId (nodes ++ outNodes) 
                                           (edges ++ outEdges)  
   -- and write it to disk
   yFiles <- genyFilesMarkup
+  return ()
   liftIO $ writeGraph yFiles finalGraph (lSysDefId ++ ".graphml") 
 
 -- | Traverse the netlist of a System Definition, 
@@ -93,9 +96,16 @@ newGraphML node = do
    let id = case node of
              InPort id  -> id 
              Proc pid _ -> pid
-     
-   return $ zipWith (\tag n -> (tag, IntSignalInfo id (id ++ "_out" ++ show n)))
-                    (outTags node) [(1::Int)..]
+       -- node inputs
+       insNode = zipWithTF (\_ n -> id ++ "_in" ++ show n) node [(1::Int)..]
+       -- node outputs tagged with the edge label
+       taggedOutsNode = zipWith (\t n -> (t, id ++ "_out" ++ show n)) 
+                                 (outTags node)
+                                 [(1::Int)..] 
+       -- graphml node
+       gMLNode = ProcNode insNode (map snd taggedOutsNode)
+   return $ map (\(t,out) -> (t, IntSignalInfo gMLNode out)) taggedOutsNode     
+
        
 
        
@@ -109,17 +119,18 @@ defineGraphML outs ins = do
            Proc pid _ -> pid
      -- Formal input signals of the proces
      formalInL = [id ++ "_in" ++ show n | n <- [(1::Int)..]]
-     -- Actual input signals of the process
-     actualInL = arguments ins
-     -- Generate the input edges of the node 
-     inEdges = zipWith (\(IntSignalInfo aNid aPid) fPid  ->
-                         GraphMLEdge aNid aPid id fPid ) actualInL formalInL
      -- Generate the graph node
      -- Formal output ports of the process
      outPids = map (\(_, IntSignalInfo _ pid) -> pid) outs
      -- Substitute actual inputs by formal inputs in "ins"
-     insFormal = zipWithTF (\_ i -> i) ins formalInL
+     insFormal = zipWithTF (\_ n -> n) ins formalInL
      node = ProcNode insFormal outPids
+     -- Generate the input edges of the node 
+     -- Actual input signals of the process
+     actualInL = arguments ins
+     inEdges = zipWith (\(IntSignalInfo aN aPid) fPid  ->
+                       GraphMLEdge aN aPid node fPid ) actualInL formalInL
+
  mapM_ addEdge inEdges
  addNode node
 

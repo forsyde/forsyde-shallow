@@ -242,6 +242,6 @@ withProcC pid action = do
 -- (see ForSyDe.Netlist.Traverse.traverseSIO).
 --   It contains the GraphML node identifier 
 --   and port identifier associated with the process output.
-
-data IntSignalInfo = IntSignalInfo GraphMLNodeId GraphMLPortId 
+data IntSignalInfo = IntSignalInfo GraphMLNode   -- Source Node 
+                                   GraphMLPortId -- Source Port Identifier
 

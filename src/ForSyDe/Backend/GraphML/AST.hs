@@ -30,12 +30,10 @@ data GraphMLGraph = GraphMLGraph
 
 -- | Edge
 data GraphMLEdge = GraphMLEdge 
-  GraphMLNodeId  -- Origin node
-  GraphMLPortId  -- Origin port
-  GraphMLNodeId  -- Destination node
-  GraphMLPortId  -- Destination port
-
- 
+  GraphMLNode    -- Origin node
+  GraphMLPortId  -- Origin port id
+  GraphMLNode    -- Target node
+  GraphMLPortId  -- Target port id
 
 -- | Node
 data GraphMLNode = 
