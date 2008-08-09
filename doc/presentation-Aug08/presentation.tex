@@ -1,0 +1,308 @@
+\documentclass{beamer}
+
+% This file is a solution template for:
+
+% - Talk at a conference/colloquium.
+% - Talk length is about 20min.
+% - Style is ornate.
+
+
+
+% Copyright 2004 by Till Tantau <tantau@users.sourceforge.net>.
+%
+% In principle, this file can be redistributed and/or modified under
+% the terms of the GNU Public License, version 2.
+%
+% However, this file is supposed to be a template to be modified
+% for your own needs. For this reason, if you use this file as a
+% template and not specifically distribute it as part of a another
+% package/program, I grant the extra permission to freely copy and
+% modify this file as you see fit and even to delete this copyright
+% notice. 
+
+
+\mode<presentation>
+{
+  \usetheme{Madrid}
+  % or ...
+
+  \setbeamercovered{transparent}
+  % or whatever (possibly just delete it)
+}
+
+
+\usepackage{listings}
+\usepackage[english]{babel}
+
+% or whatever
+
+\usepackage[latin1]{inputenc}
+% or whatever
+
+\usepackage{times}
+\usepackage[T1]{fontenc}
+% Or whatever. Note that the encoding and the font should match. If T1
+% does not look nice, try deleting the line with the fontenc.
+
+
+%signals, used in Ingo's figures
+\newcommand{\signal}[1]{$\overrightarrow{#1}$}
+
+\graphicspath{{../report/figures/}{figures/}}
+
+% grey for the listings
+
+
+% settings for the listings
+\lstset{language=Haskell,
+  linewidth=.9\linewidth,
+  stringstyle=\ttfamily,
+  basicstyle=\scriptsize\ttfamily,
+  frame=lines,
+  frameround=ffff,
+  backgroundcolor=\color[rgb]{.9,.9,1}}
+
+
+\title%[Short Paper Title]  (optional, use only with long paper titles)
+{ForSyDe's embedded compiler}
+
+\subtitle{Third development stage results.}
+
+\author[A.Acosta] % (optional, use only with lots of authors)
+{Alfonso Acosta\\
+\footnotesize \href{mailto:alfonso.acosta@gmail.com}{\nolinkurl{alfonso.acosta@gmail.com}}}
+
+% - Give the names in the same order as the appear in the paper.
+% - Use the \inst{?} command only if the authors have different
+%   affiliation.
+
+\institute[KTH] % (optional, but mostly needed)
+{ICT/ECS\\Royal Institute of Technology, Stockholm}
+% - Use the \inst command only if there are several affiliations.
+% - Keep it simple, no one is interested in your street address.
+
+\date%[CFP 2003] % (optional, should be abbreviation of conference name)
+{August 18th, 2008}
+% - Either use conference name or its abbreviation.
+% - Not really informative to the audience, more for people (including
+%   yourself) who are reading the slides online
+
+\subject{Compilers}
+% This is only inserted into the PDF information catalog. Can be left
+% out. 
+
+
+
+% If you have a file called "university-logo-filename.xxx", where xxx
+% is a graphic format that can be processed by latex or pdflatex,
+% resp., then you can add a logo as follows:
+
+\pgfdeclareimage[height=0.5cm]{university-logo}{kth_cmyk}
+\logo{\pgfuseimage{university-logo}}
+
+
+
+% Delete this, if you do not want the table of contents to pop up at
+% the beginning of each subsection:
+\AtBeginSubsection[]
+{
+  \begin{frame}<beamer>
+    \frametitle{Outline}
+    \tableofcontents[currentsection,currentsubsection]
+  \end{frame}
+}
+
+\AtBeginSection[]
+{
+  \begin{frame}<beamer>
+    \frametitle{Outline}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+
+
+% If you wish to uncover everything in a step-wise fashion, uncomment
+% the following command: 
+
+\beamerdefaultoverlayspecification{<+->}
+
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}
+  \frametitle{Outline}
+  \tableofcontents[pausesections]
+  % You might wish to add the option [pausesections]
+\end{frame}
+
+
+% Structuring a talk is a difficult task and the following structure
+% may not be suitable. Here are some rules that apply for this
+% solution: 
+
+% - Exactly two or three sections (other than the summary).
+% - At *most* three subsections per section.
+% - Talk about 30s to 2min per frame. So there should be between about
+%   15 and 30 frames, all told.
+
+% - A conference audience is likely to know very little of what you
+%   are going to talk about. So *simplify*!
+% - In a 20min talk, getting the main ideas across is hard
+%   enough. Leave out details, even if it means being less precise than
+%   you think necessary.
+% - If you omit details that are vital to the proof/implementation,
+%   just say so once. Everybody will be happy with that.
+
+\beamerdefaultoverlayspecification{}
+\section{General Goal Review}
+\begin{frame}
+  \frametitle{General Goal Review}
+  %\framesubtitle{Subtitles are optional.}
+  % - A title should summarize the slide in an understandable fashion
+  %   for anyone how does not follow everything on the slide itself.
+  \begin{itemize}
+  \item
+    During this first stage it was agreed to obtain a robust implementation attaining to this particular goals:
+    \begin{itemize}
+    \item<2-> Finish the implementation of components (previously named Blocks and Ports).  \visible<3->{\pgfimage[height=10pt]{figures/tick}}
+    \item<4-> Add a simulation backend with support for \textbf{any} signal type.\visible<5->{\pgfimage[height=10pt]{figures/tick}}
+    \item<6-> Support all the synchronous process constructors in ForSyDe.\visible<7->{\pgfimage[height=10pt]{figures/tick}}
+    \item<8-> Improve the error handling and reporting of the compiler.\visible<9->{\pgfimage[height=10pt]{figures/tick}}
+    \item<10-> Optionally. Document the code with haddock and cabalize the project.\visible<11->{\pgfimage[height=10pt]{figures/tick}}
+    \item<12-> Create a project webpage\visible<13->{\pgfimage[height=10pt]{figures/cross} Not until there's a release}
+    \item<14-> Improve the VHDL backend.\visible<15->{\pgfimage[height=10pt]{figures/cross} Still not advanced support}
+    \end{itemize}
+ \item<16-> Additional work done
+ 	\begin{itemize}
+	\item The project was rewritten from scratch (slightly based on the old code).
+		\begin{itemize}
+		\item<17-> New module hierarchy\visible<17->{\pgfimage[height=8pt]{figures/tick}}
+		\item<18-> More general identifiers.\visible<18->{\pgfimage[height=8pt]{figures/tick}}
+		\item<19-> 	Access to external scope of \texttt{ProcFun}s.\visible<19->{\pgfimage[height=8pt]{figures/tick}}
+		\item<20-> Redesigned component API.\visible<20->{\pgfimage[height=8pt]{figures/tick}}
+		\end{itemize}
+	\end{itemize}
+  \end{itemize}
+\end{frame}
+
+\section{Goal details}
+
+\beamerdefaultoverlayspecification{<+->}
+
+\subsection{Frontend}
+
+\begin{frame}[fragile]
+  \frametitle{Frontend}
+  %\framesubtitle{Components.}
+  % - A title should summarize the slide in an understandable fashion
+  %   for anyone how does not follow everything on the slide itself.
+  \begin{itemize}
+  \item lala
+  \end{itemize}
+  
+\end{frame}
+
+
+
+\subsection{Frontend}
+
+\begin{frame}[fragile]
+  \frametitle{Frontend}
+  %\framesubtitle{Components.}
+  % - A title should summarize the slide in an understandable fashion
+  %   for anyone how does not follow everything on the slide itself.
+  \begin{itemize}
+  \item lala
+  \end{itemize}
+  
+\end{frame}
+
+
+\subsection{GraphML backend}
+
+\begin{frame}[fragile]
+  \frametitle{GraphML backend}
+  %\framesubtitle{Components.}
+  % - A title should summarize the slide in an understandable fashion
+  %   for anyone how does not follow everything on the slide itself.
+  \begin{itemize}
+  \item lala
+  \end{itemize}
+  
+\end{frame}
+
+
+\subsection{VHDL backend}
+
+\begin{frame}[fragile]
+  \frametitle{VHDL backend}
+  %\framesubtitle{Components.}
+  % - A title should summarize the slide in an understandable fashion
+  %   for anyone how does not follow everything on the slide itself.
+  \begin{itemize}
+  \item lala
+  \end{itemize}
+  
+\end{frame}
+
+\subsection{Testing}
+
+\begin{frame}
+  \frametitle{Testing}
+  %\framesubtitle{Components.}
+  % - A title should summarize the slide in an understandable fashion
+  %   for anyone how does not follow everything on the slide itself.
+  \begin{itemize}
+  \item lala
+  \end{itemize}
+  
+\end{frame}
+
+\subsection{New, shallow-embedded MoCs}
+
+\begin{frame}
+  \frametitle{New, shallow-embedded MoCs}
+  %\framesubtitle{Components.}
+  % - A title should summarize the slide in an understandable fashion
+  %   for anyone how does not follow everything on the slide itself.
+  \begin{itemize}
+  \item lala
+  \end{itemize}
+  
+\end{frame}
+
+\subsection{Documentation}
+
+\begin{frame}
+  \frametitle{Documentation}
+  %\framesubtitle{Components.}
+  % - A title should summarize the slide in an understandable fashion
+  %   for anyone how does not follow everything on the slide itself.
+  \begin{itemize}
+  \item Web page and tutorial.
+  \end{itemize}
+  
+\end{frame}
+
+\section{Lessons Learned}
+
+\section{Specific topics to discuss}
+
+\section{What's next?}
+
+\begin{frame}
+  \frametitle{What's next?}
+  %\framesubtitle{Design flow using components.}
+  % - A title should summarize the slide in an understandable fashion
+ \begin{itemize}
+ \item What should be done now?
+ \end{itemize}
+\end{frame}
+
+\end{document}
+
+
