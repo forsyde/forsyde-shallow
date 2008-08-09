@@ -278,7 +278,7 @@ instance_parent  id =
 -- * The height depends on the node:
 --   * ConstSY has a constant height of 100 
 --   * DelaySY has a constant height of 100
---   * Nodes with three lines of text (ZipWithNSY) have a minimum of 55
+--   * Nodes with three lines of text (ZipWithNSY, SysIns) have a minimum of 55
 --   * Nodes with two lines of text (the rest) have a minimum height of 40
 --
 -- ** The final height of nodes with minimum height is
@@ -306,6 +306,7 @@ nodeDims node = case node of
            Const _ -> (100,100)  
            DelaySY _ _ -> (100,100)
            ZipWithNSY _ _ -> (100, height 55 maxio)
+           SysIns _ _ -> (100, height 55 maxio)
            _ -> (100, height 40 maxio)  
  where height :: Float -- ^ Minimum height 
               -> Int   -- ^ Max(input port number, output port number)
