@@ -35,6 +35,14 @@ import ForSyDe.Netlist
 import ForSyDe.System.SysDef()
 import ForSyDe.Process.ProcType (ProcType(..))
 
+
+--   IMPORTANT NOTE: even if all ProcType constraints in SysFun and
+--         SysFunToSimFun instances could be less restrictive
+--         (Typeable would do), it makes more sense, and who nows,
+--         maybe we end up requiring full ProcType functionality at
+--         some point.
+
+
 -- This three instances are the ones in charge of providing the necessary 
 -- recursion step needed to support the variable number of arguments.
 -- In each step, the system function is provided with a new input signal port

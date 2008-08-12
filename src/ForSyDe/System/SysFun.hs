@@ -109,20 +109,25 @@ class SysFun sysFun =>
 -- the case of 2 outputs, the code generated would be:
 --
 -- @
--- instance (Typeable o1, Typeable o2) => SysFun (Signal o1, Signal o2) where
+--   NOTE: even if all ProcType constraints could be less restrictive (Typeable
+--         would do), it makes more sense, and who nows, maybe we end up requiring
+--         full ProcType functionality at some point. 
+--
+--
+-- instance (ProcType o1, ProcType o2) => SysFun (Signal o1, Signal o2) where
 --  applyFun (o1, o2) _ = 
 --         ([unSignal o1, unSignal o2], [], [typeOf o1, typeOf o2]) 
 --  fromListSysFun f accum = (Signal o1, Signal o2)
 --          where [o1, o2] = f (reverse accum) 
 --
--- instance (PorcType o1, ProcType o2) => 
+-- instance (ProcType o1, ProcType o2) => 
 --          SysFun2SimFun (Signal o1, Signal o2) ([o1], [o2]) where
 --  fromDynSimFun f accum = (map unsafeFromDyn o1, map unsafeFromDyn o2)
 --          -- use pattern (o1:o2:_) and not not [o1,o2]
 --          -- because the second one doesn't when o1 and o2 are infinite lists
 --          where (o1:o2:_) = f (reverse accum) 
 --
--- instance (PorcType o1, ProcType o2) => 
+-- instance (ProcType o1, ProcType o2) => 
 --          SysFun2SimFun (Signal o1, Signal o2) (IO ([o1], [o2])) where
 --  fromTHStrSimFun f accum = do
 --         [o1, o2] <- f (reverse accum)
@@ -216,10 +221,11 @@ funOutInstances n = do
                             else foldl accumApp (tupleT n) outNames 
        where accumApp accumT vName =  
                        accumT `appT` (conT ''Signal `appT` varT vName)
- --    Create the Typeable context
-     typeableCxt = map (\vName -> conT ''Typeable `appT` varT vName) outNames
+ --    Create the ProcType context
+     procTypeCxt = map (\vName -> conT ''ProcType `appT` varT vName) outNames
+
  --    Finally return the instance declaration
-     sysFunIns = instanceD (cxt typeableCxt) 
+     sysFunIns = instanceD (cxt procTypeCxt) 
                            (conT ''SysFun `appT` signalTupT) 
                            [applySysFunDec, fromListSysFunDec]
  -- 6) Generate the SysFun2SimFun instance 
@@ -227,8 +233,6 @@ funOutInstances n = do
                           else foldl accumApp (tupleT n) outNames 
        where accumApp accumT vName  =  
                        accumT `appT` (listT `appT` varT vName)
-     --    Create the ProcType context
-     procTypeCxt = map (\vName -> conT ''ProcType `appT` varT vName) outNames
      simFunIns = instanceD (cxt procTypeCxt) 
                     (conT ''SysFunToSimFun `appT` signalTupT `appT` listTupT) 
                     [fromDynSimFunDec]
