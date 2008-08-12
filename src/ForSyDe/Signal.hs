@@ -9,9 +9,8 @@
 -- Portability :  portable
 --
 --  
--- Provides the fundamental data structure of ForSyDe models: Signal.
+-- Provides the fundamental data structure for deep-embedded ForSyDe models: 'Signal'.
 --
--- /This Module is based on Lava2000:/ <http://www.cs.chalmers.se/~koen/Lava/>
 -- 
 -----------------------------------------------------------------------------
 

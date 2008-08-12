@@ -11,8 +11,19 @@ Maintainer  :  forsyde@kth.se
 Stability   :  experimental
 Portability :  portable 
 
-The ForSyDe is a collection of libraries and modules.
-It consistes of three main libraries:
+
+Shallow-embedded implementation of ForSyDe (see
+'ForSyDe.Shallow.Signal'). 
+
+Unlike systems built using the deep-embedded Signal type of ForSyDe
+(see 'ForSyDe.Signal'), systems built with 'ForSyDe.Shallow.Signal'
+can make use of new and experimental features such as multiple,
+heterogeneous MoCs (Models of Computation) other than the Synchronous
+MoC (the only Model of Computation currently supported by deep-embdded
+ForSyDe). However, as an important tradeoff, 'ForSyDe.Shallow.Signal'
+is unaware of the resulting system structure, only allowing simulation (i.e. a VHDL or GraphML backend is impossible to implement).
+
+The shallow implementation of ForSyDe consists of three main libraries:
 
 * "CoreLib" contains the basic definitions and functions such as 
             events and signals.
@@ -23,8 +34,8 @@ It consistes of three main libraries:
                and convenient in practice. Their status is typically 
                experimental.
 
-And then there are a number of modules to be worked on and taskes to be 
-address:
+And then there are a number of modules to be worked on and tasks to be 
+addressed:
 
 * "ForSyDeToDo"
 
