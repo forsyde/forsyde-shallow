@@ -21,6 +21,7 @@ module ForSyDe.Process.ProcType.Instances where
 
 import ForSyDe.Config (maxTupleSize)
 import ForSyDe.Process.ProcType
+import ForSyDe.AbsentExt
 
 import Data.TypeLevel.Num.Sets (Nat, toInt)
 import Data.Param.FSVec (FSVec, reallyUnsafeVector)
@@ -76,7 +77,7 @@ instance (Lift a, Data a) => ProcType a where
 
 
 
-instance (Typeable s, Nat s, Lift a, ProcType a) => ProcType (FSVec s a) where
+instance (Typeable s, Nat s, ProcType a) => ProcType (FSVec s a) where
  getEnums _ = getEnums (undefined :: a)
  readProcType = do
           skipSpaces  
@@ -92,7 +93,17 @@ instance (Typeable s, Nat s, Lift a, ProcType a) => ProcType (FSVec s a) where
                else liftM2 (:) p (sequence (replicate (n-1) (sep >> p))) 
   
 
--- Tuple isntances
+instance ProcType a =>  ProcType (AbstExt a) where
+ getEnums _ = getEnums (undefined :: a)
+ readProcType = skipSpaces >> (absP <++ prstP)
+   where absP = do string "Abst" 
+                   return Abst
+         prstP = do string "Prst"
+                    skipSpaces
+                    v <- readProcType
+                    return $ Prst v
+
+-- Tuple instances
 $(let concatMapM f xs = liftM concat (mapM f xs) 
       msg = "Generating and compiling " ++ show (maxTupleSize -2) ++ 
             " tuple instances of " ++
