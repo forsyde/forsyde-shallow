@@ -164,61 +164,200 @@
   %\framesubtitle{Subtitles are optional.}
   % - A title should summarize the slide in an understandable fashion
   %   for anyone how does not follow everything on the slide itself.
+  Plan set after last meeting (April 25th)
   \begin{itemize}
-  \item
-    During this first stage it was agreed to obtain a robust implementation attaining to this particular goals:
+  \item<1-> July 1st.
     \begin{itemize}
-    \item<2-> Finish the implementation of components (previously named Blocks and Ports).  \visible<3->{\pgfimage[height=10pt]{figures/tick}}
-    \item<4-> Add a simulation backend with support for \textbf{any} signal type.\visible<5->{\pgfimage[height=10pt]{figures/tick}}
-    \item<6-> Support all the synchronous process constructors in ForSyDe.\visible<7->{\pgfimage[height=10pt]{figures/tick}}
-    \item<8-> Improve the error handling and reporting of the compiler.\visible<9->{\pgfimage[height=10pt]{figures/tick}}
-    \item<10-> Optionally. Document the code with haddock and cabalize the project.\visible<11->{\pgfimage[height=10pt]{figures/tick}}
-    \item<12-> Create a project webpage\visible<13->{\pgfimage[height=10pt]{figures/cross} Not until there's a release}
-    \item<14-> Improve the VHDL backend.\visible<15->{\pgfimage[height=10pt]{figures/cross} Still not advanced support}
+    \item Automatic Test Suite with code
+      coverage. \visible<2->{\pgfimage[height=10pt]{figures/tick}
+        \alert{\small No CC due to TH.}}
+    \item Stable VHDL Backend. \visible<2->{\pgfimage[height=10pt]{figures/tick}}
+    \item Improve GraphML backend. \visible<2->{\pgfimage[height=10pt]{figures/tick}}
+    \item Additional examples. \visible<2->{\pgfimage[height=10pt]{figures/tick}}
     \end{itemize}
- \item<16-> Additional work done
- 	\begin{itemize}
-	\item The project was rewritten from scratch (slightly based on the old code).
-		\begin{itemize}
-		\item<17-> New module hierarchy\visible<17->{\pgfimage[height=8pt]{figures/tick}}
-		\item<18-> More general identifiers.\visible<18->{\pgfimage[height=8pt]{figures/tick}}
-		\item<19-> 	Access to external scope of \texttt{ProcFun}s.\visible<19->{\pgfimage[height=8pt]{figures/tick}}
-		\item<20-> Redesigned component API.\visible<20->{\pgfimage[height=8pt]{figures/tick}}
-		\end{itemize}
-	\end{itemize}
+  \item<3-> August 18th to August 24th: 3rd meeting at KTH.
+    
+  \item<4-> September 1st: Public release
+    \begin{itemize}
+      \item Full tutorial. \visible<5->{\pgfimage[height=10pt]{figures/tick}}
+      \item Hacking Guide. \visible<5->{\pgfimage[height=10pt]{figures/tick}}
+      \item Even more code examples. \visible<5->{\pgfimage[height=10pt]{figures/cross}}
+      \item Implement Domain interfaces and other MoCs (Untimed,
+        optionally CT), either
+        .. \visible<5->{\pgfimage[height=10pt]{figures/tick} \alert{Option 2
+          (Swallow-embedded \texttt{Signal})}}
+        \begin{enumerate}
+        \item porting them to the new deep-embedded \texttt{Signal} respresentation
+        \item interfacing with the old swallow-embedded \texttt{Signal}.
+        \end{enumerate}
+    \end{itemize}
   \end{itemize}
 \end{frame}
 
-\section{Goal details}
+\section{Result details}
 
 \beamerdefaultoverlayspecification{<+->}
 
+
+
 \subsection{Frontend}
 
 \begin{frame}[fragile]
-  \frametitle{Frontend}
+  \frametitle{Reminder: Design Flow Using Components (I)}
   %\framesubtitle{Components.}
   % - A title should summarize the slide in an understandable fashion
   %   for anyone how does not follow everything on the slide itself.
   \begin{itemize}
-  \item lala
+  \item
+  Naive example of the design flow and API using components: Serial adder.
+  \visible<2->{\pgfimage[width=10cm]{figures/SeqAddFour}}
   \end{itemize}
   
+  
+  \vspace{-0.7cm}
+  \begin{overprint}
+   \onslide<3>
+   \begin{enumerate}[1)]
+   \item Create a process function which adds one to its input 
+    \begin{lstlisting}
+  addOnef :: ProcFun (Int -> Int)
+  addOnef = $(newProcFun [d| addOnef :: Int -> Int 
+                             addOnef n = n + 1 |]
+    \end{lstlisting}
+    \end{enumerate}
+   
+   \onslide<4>
+   \begin{enumerate}[2)]
+   \item Create a system function corresponding to the unit adder
+   \begin{lstlisting}
+  addOneProc :: Signal Int -> Signal Int
+  addOneProc = mapSY "addOne" addOnef
+   \end{lstlisting}
+   \end{enumerate}
+   
+   \onslide<5>
+   \begin{enumerate}[3)]
+   \item Subsystem definition associated to the unit adder
+   \begin{lstlisting}
+ addOneSysDef :: SysDef (Signal Int -> Signal Int)
+ addOneSysDef = $(newSysDef 'addOneProc ["in1"] ["out1"])
+   \end{lstlisting}
+   \end{enumerate}
+
+
+   \onslide<6>
+   \begin{enumerate}[4)]
+   \item Create the main system function
+   \begin{lstlisting}
+  addFour :: Signal Int -> Signal Int
+  addFour = $(instantiate "addOne3" 'addOneSysDef) .
+            $(instantiate "addOne2" 'addOneSysDef) .
+            $(instantiate "addOne1" 'addOneSysDef) .
+            $(instantiate "addOne0" 'addOneSysDef)
+   \end{lstlisting}
+   \end{enumerate}
+
+   \onslide<7>
+   \begin{enumerate}[5)]
+   \item Finally, build the main system definition
+   \begin{lstlisting}
+  addFourSys :: SysDef (Signal Int -> Signal Int)
+  addFourSys = $(newSysDef 'addFour ["in1"] ["out1"])
+   \end{lstlisting}
+   \end{enumerate}
+
+\end{overprint}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Reminder: Design Flow Using Components (II)}
+  %\framesubtitle{Design flow using components.}
+  % - A title should summarize the slide in an understandable fashion
+  %   for anyone how does not follow everything on the slide itself.
+\vspace{-0.2cm}
+\begin{center}
+\pgfimage[height=8cm]{figures/compflow}
+\end{center}
+
 \end{frame}
 
 
 
-\subsection{Frontend}
-
 \begin{frame}[fragile]
-  \frametitle{Frontend}
+  \frametitle{Frontend Changes: Keep TH to a minimum. (I)}
   %\framesubtitle{Components.}
   % - A title should summarize the slide in an understandable fashion
   %   for anyone how does not follow everything on the slide itself.
   \begin{itemize}
-  \item lala
+  \item<1-> The frontend functions \texttt{newSysDef},
+    \texttt{instantiate} and \texttt{simulate} don't depend on
+    Template Haskell anymore.
+
+\begin{lstlisting}
+newSysDef :: Name -> [PortId] -> [PortId] -> Q Exp
+ -- sysfun -> [PortId] -> [PortId] -> SysDef (sysfun)
+instantiate :: Name -> ProcId -> Q Exp -- SysDef a -> a
+simulate :: Name -> Q Exp -- SysDef a -> listbased a 
+\end{lstlisting}
+\begin{lstlisting}
+newSysDef :: (SysFun f) => f -> SysId -> 
+                           [PortId] -> [PortId] ->
+                           SysDef f
+instantiate :: (SysFun f) => ProcId -> SysDef f -> f
+simulate :: (SysFunToSimFun sysFun simFun) => 
+            SysDef sysFun -> simFun
+\end{lstlisting}
+
+\item<2->     
+  \begin{itemize}
+  \item Saves the user from the inconvenient TH syntax.
+  \item System patterns involving instantiate are now possible
+  \item Does not suffer the type-inference problems of TH.
+  \item Typing of frontend functions becomes more intuitive
+  \item \alert{drawback}: compile-time checks are lost (\texttt{newSysDefTH}).
   \end{itemize}
-  
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Frontend Changes: Keep TH to a minimum. (II)}
+  %\framesubtitle{Components.}
+  % - A title should summarize the slide in an understandable fashion
+  %   for anyone how does not follow everything on the slide itself.
+  \begin{itemize}
+  \item<1-> System functions have an unrestricted and variable number of
+    argument. Is it possible to describe with type classes
+    (\texttt{SysFun} and \texttt{SysFunToSimFun})?
+  \item Yes! The solution is inspired in a similar, previously solved
+    problem (implementing printf for Haskell).
+  \item Omitting 
+
+\begin{lstlisting}
+newSysDef :: Name -> [PortId] -> [PortId] -> Q Exp
+ -- sysfun -> [PortId] -> [PortId] -> SysDef (sysfun)
+instantiate :: Name -> ProcId -> Q Exp -- SysDef a -> a
+simulate :: Name -> Q Exp -- SysDef a -> listbased a 
+\end{lstlisting}
+\begin{lstlisting}
+newSysDef :: (SysFun f) => f -> SysId -> 
+                           [PortId] -> [PortId] ->
+                           SysDef f
+instantiate :: (SysFun f) => ProcId -> SysDef f -> f
+simulate :: (SysFunToSimFun sysFun simFun) => 
+            SysDef sysFun -> simFun
+\end{lstlisting}
+
+\item<2->     
+  \begin{itemize}
+  \item Saves the user from the inconvenient TH syntax.
+  \item System patterns involving instantiate are now possible
+  \item Does not suffer the type-inference problems of TH.
+  \item Typing of frontend functions becomes more intuitive
+  \item \alert{drawback}: compile-time checks are lost (\texttt{newSysDefTH}).
+  \end{itemize}
+\end{itemize}
 \end{frame}
 
 

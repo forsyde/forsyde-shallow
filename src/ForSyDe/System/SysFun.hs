@@ -23,8 +23,7 @@ module ForSyDe.System.SysFun
   checkSysFType) where
 
 import ForSyDe.Ids(PortId)
-import ForSyDe.Netlist (NlSignal)
-import ForSyDe.Signal(Signal(..))
+import ForSyDe.Netlist (NlSignal, Signal(..))
 import ForSyDe.ForSyDeErr
 import ForSyDe.Process.ProcType (ProcType(..))
 

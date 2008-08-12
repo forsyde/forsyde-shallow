@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveDataTypeable, GeneralizedNewtypeDeriving #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  ForSyDe.Signal
@@ -16,27 +15,16 @@
 -- 
 -----------------------------------------------------------------------------
 
-module ForSyDe.Signal  where
+
+-- This module is simply used to export Signal to the end user hiding its internal 
+-- representation
+module ForSyDe.Signal (Signal)  where
 
 
-import ForSyDe.Netlist
+import ForSyDe.Netlist (Signal)
 
 
-import Data.Typeable (Typeable)
 
--- | A signal can be seen as wire which carries values of certain type 
---   and which can be connected and processed by the two computational 
---   entities of a ForSyDe system: processes and block instances.
---
-
---   A Signal is internally represented as an edge of the graph representing
---   the system netlist.  
---   The phantom type parameter ensures type-consistency for the signal
---   processing functions.  
---   FIXME: we don't the end user to know about the internal rep of Signal
-
-newtype Signal a = Signal {unSignal :: NlSignal}
- deriving Typeable
            
 
 

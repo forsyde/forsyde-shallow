@@ -46,7 +46,6 @@ import ForSyDe.Process.ProcFun
 import ForSyDe.Process.ProcVal
 import ForSyDe.OSharing
 import ForSyDe.Netlist
-import ForSyDe.Signal
 import ForSyDe.AbsentExt
 
 import qualified Data.Param.FSVec as V

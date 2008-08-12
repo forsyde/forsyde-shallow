@@ -24,7 +24,6 @@ module ForSyDe.System.SysDef
    Iface) where
 
 import ForSyDe.Ids
-import ForSyDe.Signal
 import ForSyDe.Netlist 
 import ForSyDe.Netlist.Traverse
 import ForSyDe.OSharing

@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveDataTypeable, GeneralizedNewtypeDeriving #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  ForSyDe.Netlist
@@ -181,6 +182,25 @@ type NlSignal = NlTree
 -- | Get the tag of a signal
 nlSignalNlOut :: NlSignal -> NlNodeOut
 nlSignalNlOut (NlTree (NlEdge _ tag)) = tag
+
+---------
+-- Signal
+---------
+
+
+-- | A signal can be seen as wire which carries values of certain type 
+--   and which can be connected and processed by the two computational 
+--   entities of a ForSyDe system: processes and block instances.
+--
+
+--   A Signal is internally represented as an edge of the graph representing
+--   the system netlist.  
+--   The phantom type parameter ensures type-consistency for the signal
+--   processing functions.  
+
+newtype Signal a = Signal {unSignal :: NlSignal}
+ deriving Typeable
+
 
 -------------------
 -- Helper functions
