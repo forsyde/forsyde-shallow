@@ -187,7 +187,7 @@
         .. \visible<5->{\pgfimage[height=10pt]{figures/tick} \alert{Option 2
           (Swallow-embedded \texttt{Signal})}}
         \begin{enumerate}
-        \item porting them to the new deep-embedded \texttt{Signal} respresentation
+        \item porting them to the new deep-embedded \texttt{Signal} representation
         \item interfacing with the old swallow-embedded \texttt{Signal}.
         \end{enumerate}
     \end{itemize}
@@ -209,14 +209,14 @@
   %   for anyone how does not follow everything on the slide itself.
   \begin{itemize}
   \item
-  Naive example of the design flow and API using components: Serial adder.
-  \visible<2->{\pgfimage[width=10cm]{figures/SeqAddFour}}
+    Naive example of the design flow and API using components: Serial adder.
+  \pgfimage[width=10cm]{figures/SeqAddFour}
   \end{itemize}
   
   
   \vspace{-0.7cm}
   \begin{overprint}
-   \onslide<3>
+    \onslide<2>
    \begin{enumerate}[1)]
    \item Create a process function which adds one to its input 
     \begin{lstlisting}
@@ -226,7 +226,7 @@
     \end{lstlisting}
     \end{enumerate}
    
-   \onslide<4>
+   \onslide<3>
    \begin{enumerate}[2)]
    \item Create a system function corresponding to the unit adder
    \begin{lstlisting}
@@ -235,7 +235,7 @@
    \end{lstlisting}
    \end{enumerate}
    
-   \onslide<5>
+   \onslide<4>
    \begin{enumerate}[3)]
    \item Subsystem definition associated to the unit adder
    \begin{lstlisting}
@@ -245,7 +245,7 @@
    \end{enumerate}
 
 
-   \onslide<6>
+   \onslide<5>
    \begin{enumerate}[4)]
    \item Create the main system function
    \begin{lstlisting}
@@ -257,7 +257,7 @@
    \end{lstlisting}
    \end{enumerate}
 
-   \onslide<7>
+   \onslide<6>
    \begin{enumerate}[5)]
    \item Finally, build the main system definition
    \begin{lstlisting}
@@ -285,7 +285,7 @@
 
 
 \begin{frame}[fragile]
-  \frametitle{Frontend Changes: Keep TH to a minimum. (I)}
+  \frametitle{Frontend Changes: Keep TH to a minimum (I)}
   %\framesubtitle{Components.}
   % - A title should summarize the slide in an understandable fashion
   %   for anyone how does not follow everything on the slide itself.
@@ -314,52 +314,112 @@ simulate :: (SysFunToSimFun sysFun simFun) =>
   \item Saves the user from the inconvenient TH syntax.
   \item System patterns involving instantiate are now possible
   \item Does not suffer the type-inference problems of TH.
-  \item Typing of frontend functions becomes more intuitive
-  \item \alert{drawback}: compile-time checks are lost (\texttt{newSysDefTH}).
+  \item Typing of frontend functions becomes helpful and intuitive.
+  \item \alert{Drawback}: compile-time checks are lost (\texttt{newSysDefTH}).
   \end{itemize}
 \end{itemize}
 \end{frame}
 
 
 \begin{frame}[fragile]
-  \frametitle{Frontend Changes: Keep TH to a minimum. (II)}
+  \frametitle{Frontend Changes: Keep TH to a minimum (II)}
   %\framesubtitle{Components.}
   % - A title should summarize the slide in an understandable fashion
   %   for anyone how does not follow everything on the slide itself.
   \begin{itemize}
-  \item<1-> System functions have an unrestricted and variable number of
-    argument. Is it possible to describe with type classes
-    (\texttt{SysFun} and \texttt{SysFunToSimFun})?
-  \item Yes! The solution is inspired in a similar, previously solved
-    problem (implementing printf for Haskell).
-  \item Omitting 
-
+  \item<1-> System functions are variadic. 
+    \begin{itemize}
+    \item Is it possible to describe them with type classes
+      (\texttt{SysFun} and \texttt{SysFunToSimFun})?
+    \end{itemize}
+  \item<2-> Yes! Solution inspired in \texttt{Text.Printf}.
+  \item<3-> Sparing the class methods implementing the variadic ``magic''..
 \begin{lstlisting}
-newSysDef :: Name -> [PortId] -> [PortId] -> Q Exp
- -- sysfun -> [PortId] -> [PortId] -> SysDef (sysfun)
-instantiate :: Name -> ProcId -> Q Exp -- SysDef a -> a
-simulate :: Name -> Q Exp -- SysDef a -> listbased a 
+class SysFun f 
+instance SysFun ()
+instance ProcType o => SysFun (Signal o)
+instance (ProcType o1, ProcType o2) => SysFun (Signal o1, Signal o2)
+... -- up to GHC's maximum: 62 elements
+instance (ProcType i, SysFun f) => SysFun (Signal i -> f)
 \end{lstlisting}
 \begin{lstlisting}
-newSysDef :: (SysFun f) => f -> SysId -> 
-                           [PortId] -> [PortId] ->
-                           SysDef f
-instantiate :: (SysFun f) => ProcId -> SysDef f -> f
-simulate :: (SysFunToSimFun sysFun simFun) => 
-            SysDef sysFun -> simFun
+class SysFun sysFun => SysFunToSimFun sysFun simFun -- no methods
+ | sysFun -> simFun, simFun -> sysFun
+instance SysFunToSimFun () ()
+instance ProcType o => 
+         SysFunToSimFun (Signal o) ([o])
+... -- up to GHC's maximum: 62 elements
+instance (ProcType a, SysFunToSimFun sysFun simFun) =>
+         SysFunToSimFun (Signal a -> sysFun) ([a] -> simFun) 
 \end{lstlisting}
-
-\item<2->     
-  \begin{itemize}
-  \item Saves the user from the inconvenient TH syntax.
-  \item System patterns involving instantiate are now possible
-  \item Does not suffer the type-inference problems of TH.
-  \item Typing of frontend functions becomes more intuitive
-  \item \alert{drawback}: compile-time checks are lost (\texttt{newSysDefTH}).
-  \end{itemize}
 \end{itemize}
 \end{frame}
 
+\begin{frame}[fragile]
+  \frametitle{Frontend Changes:  ProcType (I)}
+  %\framesubtitle{Components.}
+  % - A title should summarize the slide in an understandable fashion
+  %   for anyone how does not follow everything on the slide itself.
+  \begin{itemize}
+  \item<1-> The \texttt{ProcType} typeclass denotes which values can be
+    carried by signals.
+  \item<2-> The restriction is guaranteed by construction, e.g.
+\begin{lstlisting}
+constSY :: (ProcType a) => ProcId -> a -> Signal a
+\end{lstlisting}    
+  \item<3-> Definition of \texttt{ProcType}
+\begin{lstlisting}
+class ({Typeable a,} Data a, Lift a) => ProcType a where
+\end{lstlisting}
+    \begin{itemize}
+      \item \texttt{Typeable}: Type information, used to support
+        dynamic typing. Needed for type mapping (VHDL backend)
+      \item \texttt{Data}: Structural information about a type. 
+        \alert{Support for enumerated types in translation-backends!}
+      \item \texttt{Lift}: Liftable values. Values of which a TH
+        Expression-AST can be obtained. Needed for the translation of
+        constant values passed to process constructors.
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Frontend Changes:  ProcType (II)}
+  %\framesubtitle{Components.}
+  % - A title should summarize the slide in an understandable fashion
+  %   for anyone how does not follow everything on the slide itself.
+  \begin{itemize}
+  \item<1-> \texttt{ProcType} instances omitting its methods
+\begin{lstlisting}
+instance (Data a, Lift a) => ProcType a
+instance (ProcType a, Nat s) => FSVec s a
+instance ProcType a => ProcType (AbstExt a)
+instance (ProcType i1, ProcType i2) => ProcType (i1, i2)
+... -- up to GHC's maximum: 62 elements
+instance ProcType a => ProcType (AbstExt a)
+\end{lstlisting}
+  \item<2-> Overlapped-instances are required to obtain the
+    type-definition of values nested in structures.
+  \item<3-> The \texttt{ProcType} instantiation hassle is almost negligible.
+    \begin{overprint}
+      \onslide<3>
+\begin{lstlisting}
+data MyColor = Red | Green | Blue
+ deriving (Data, Typeable)
+
+$(deriveLift1 ''MyColor)
+\end{lstlisting}
+      \onslide<4>
+\begin{lstlisting}
+data MyColor = Red | Green | Blue
+ deriving (Data, Typeable)
+
+-- new "Data a => Lift a" overlapping instance
+\end{lstlisting} 
+\end{overprint}     
+    
+  \end{itemize}
+\end{frame}
 
 \subsection{GraphML backend}
 
@@ -396,20 +456,25 @@ simulate :: (SysFunToSimFun sysFun simFun) =>
   % - A title should summarize the slide in an understandable fashion
   %   for anyone how does not follow everything on the slide itself.
   \begin{itemize}
-  \item lala
+  \item lala. Talk about Code coverage again.
   \end{itemize}
   
 \end{frame}
 
-\subsection{New, shallow-embedded MoCs}
+\subsection{Integration of shallow-embedded MoCs}
 
 \begin{frame}
-  \frametitle{New, shallow-embedded MoCs}
+  \frametitle{Integration of shallow-embedded MoCs}
   %\framesubtitle{Components.}
   % - A title should summarize the slide in an understandable fashion
   %   for anyone how does not follow everything on the slide itself.
   \begin{itemize}
   \item lala
+  \item \alert{Zillions of GHC Warnings} due to double exports.
+  \item Everyone should move to the new tree.
+    \begin{itemize}
+    \item Repository, Testing framework and Cabal packaging can be reused.
+    \end{itemize}
   \end{itemize}
   
 \end{frame}
@@ -427,7 +492,29 @@ simulate :: (SysFunToSimFun sysFun simFun) =>
   
 \end{frame}
 
-\section{Lessons Learned}
+\section{Finally: public release}
+
+\begin{frame}
+  \frametitle{Finally: public release}
+  %\framesubtitle{Design flow using components.}
+  % - A title should summarize the slide in an understandable fashion
+ \begin{itemize}
+ \item Version number: 0.1? 3.0?
+ \item Shallow-embedded version can be made fully public?
+ \item Should we make the Darcs repository public?
+   \begin{itemize}
+   \item It would require restrutcuring \texttt{doc/}.
+   \item More traditional approach? (only punctual public releases).
+   \end{itemize}
+ \item Release note
+   \begin{itemize}
+     \item Points to emphasize?
+     \item ForSyDe's teaser for the Haskell community: needs to be
+       carefuly reviewed.
+     \end{itemize}
+ \end{itemize}
+\end{frame}
+
 
 \section{Specific topics to discuss}
 
@@ -438,7 +525,18 @@ simulate :: (SysFunToSimFun sysFun simFun) =>
   %\framesubtitle{Design flow using components.}
   % - A title should summarize the slide in an understandable fashion
  \begin{itemize}
- \item What should be done now?
+ \item What should be done now? 
+ \item Get ready for the release.
+   \begin{itemize}
+     \item Release Note
+     \item Code packaging and upload to hackagedb.
+     \item Webpage update.
+     \item Cleanup of compilation warning.
+   \end{itemize}
+ \item Code cleanup (hopefully after some feedback).
+ \item Hacking guide.
+ \item Fix as many tracker issues as possible.
+ \item More Examples? More Tests?
  \end{itemize}
 \end{frame}
 
