@@ -14,6 +14,7 @@ import ButtonEncoder
 import ZipTwist
 import CarrySelectAdder     
 import Null
+import LFSR
 
 import Control.Monad (liftM, replicateM)
 import Data.List (transpose)
@@ -32,7 +33,8 @@ vhdlBackendTest = test [aluTest,
                         seqAddFourTest,
                         buttonEncoderTest,
                         zipTwistTest,
-                        nullTest]
+                        nullTest,
+                        lfsrTest]
 
 -- systematic test for the ALU
 aluTest :: Test
@@ -141,7 +143,12 @@ nullTest :: Test
 -- we don't test quartus here, because it complains about no logic
 nullTest = "nullTest" ~: simNull <~=?>  writeAndModelsimVHDL Nothing nullSysDef 
        
-
+lfsrTest :: Test
+lfsrTest = "lsfrTest" ~: outSim <~=?> outVHDL
+ where take400Tup4 (i1,i2,i3,i4) = (take 400 i1, take 400 i2, take 400 i3,
+                                    take 400 i4)
+       outSim = take400Tup4 simlfsr
+       outVHDL =  vhdlTest (Just 400) lfsrSys
 
 -------------------
 -- Helper functions
