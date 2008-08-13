@@ -196,10 +196,6 @@
 
 \section{Result details}
 
-\beamerdefaultoverlayspecification{<+->}
-
-
-
 \subsection{Frontend}
 
 \begin{frame}[fragile]
@@ -220,8 +216,8 @@
    \begin{enumerate}[1)]
    \item Create a process function which adds one to its input 
     \begin{lstlisting}
-  addOnef :: ProcFun (Int -> Int)
-  addOnef = $(newProcFun [d| addOnef :: Int -> Int 
+  addOnef :: ProcFun (Int32 -> Int32)
+  addOnef = $(newProcFun [d| addOnef :: Int32 -> Int32 
                              addOnef n = n + 1 |]
     \end{lstlisting}
     \end{enumerate}
@@ -230,7 +226,7 @@
    \begin{enumerate}[2)]
    \item Create a system function corresponding to the unit adder
    \begin{lstlisting}
-  addOneProc :: Signal Int -> Signal Int
+  addOneProc :: Signal Int32 -> Signal Int32
   addOneProc = mapSY "addOne" addOnef
    \end{lstlisting}
    \end{enumerate}
@@ -239,7 +235,7 @@
    \begin{enumerate}[3)]
    \item Subsystem definition associated to the unit adder
    \begin{lstlisting}
- addOneSysDef :: SysDef (Signal Int -> Signal Int)
+ addOneSysDef :: SysDef (Signal Int32 -> Signal Int32)
  addOneSysDef = $(newSysDef 'addOneProc ["in1"] ["out1"])
    \end{lstlisting}
    \end{enumerate}
@@ -249,7 +245,7 @@
    \begin{enumerate}[4)]
    \item Create the main system function
    \begin{lstlisting}
-  addFour :: Signal Int -> Signal Int
+  addFour :: Signal Int32 -> Signal Int32
   addFour = $(instantiate "addOne3" 'addOneSysDef) .
             $(instantiate "addOne2" 'addOneSysDef) .
             $(instantiate "addOne1" 'addOneSysDef) .
@@ -261,7 +257,7 @@
    \begin{enumerate}[5)]
    \item Finally, build the main system definition
    \begin{lstlisting}
-  addFourSys :: SysDef (Signal Int -> Signal Int)
+  addFourSys :: SysDef (Signal Int32 -> Signal Int32)
   addFourSys = $(newSysDef 'addFour ["in1"] ["out1"])
    \end{lstlisting}
    \end{enumerate}
@@ -423,13 +419,57 @@ data MyColor = Red | Green | Blue
 
 \subsection{GraphML backend}
 
-\begin{frame}[fragile]
-  \frametitle{GraphML backend}
+\beamerdefaultoverlayspecification{}
+\begin{frame}
+  \frametitle{GraphML backend (I)}
   %\framesubtitle{Components.}
   % - A title should summarize the slide in an understandable fashion
   %   for anyone how does not follow everything on the slide itself.
   \begin{itemize}
-  \item lala
+  \item Backend option to add yFiles-specific graphical markup
+    \begin{itemize}
+    \item Node colors, shape and size (base on source/target signals).
+    \item Edge arrows, and location (making sharing of source signals possible).
+    \end{itemize}
+
+    \begin{tabular}{c}
+      \includegraphics[height=2.5cm]{figures/counter}\\
+      \hline
+      \includegraphics[height=2.5cm]{figures/counter_yFiles}\\
+    \end{tabular}
+  \end{itemize}
+  
+\end{frame}
+
+\beamerdefaultoverlayspecification{<+->}
+\begin{frame}
+  \frametitle{GraphML backend (II)}
+  %\framesubtitle{Components.}
+  % - A title should summarize the slide in an understandable fashion
+  %   for anyone how does not follow everything on the slide itself.
+  \begin{itemize}
+  \item Neither GraphML nor yFiles-GraphML suit all our needs
+    \begin{itemize}
+    \item yFiles doesn't respect GraphML ports (source signal
+      sharing)
+      \begin{itemize}
+      \item solution: precalculate the location of
+        edge ends $+$ routing port constraints (cannot be saved).
+      \end{itemize}
+    \item yEd wipes out external \texttt{<data>} tags.
+      \begin{itemize}
+      \item Once a GraphML file is opened and saved by yEd, ForSyDe's metadata
+        (e.g. \texttt{ProcFun}s) is lost.
+      \end{itemize}
+    \item GraphML nor yFiles-GraphML support subgraph sharing
+      (components)
+      \begin{itemize}
+      \item solution: use external \texttt{<data>} tags indicating
+        parent systems in instance nodes.
+      \item yEd is unaware of that information $\rightarrow$
+        no hierarchical browsing.
+      \end{itemize}      
+    \end{itemize}
   \end{itemize}
   
 \end{frame}
@@ -443,22 +483,75 @@ data MyColor = Red | Green | Blue
   % - A title should summarize the slide in an understandable fashion
   %   for anyone how does not follow everything on the slide itself.
   \begin{itemize}
-  \item lala
+  \item<1-> Pattern matching support in \texttt{ProcFuns}s, e.g.
+\begin{lstlisting}
+fstPF = $(newProcFun [d| fstPF (a,_) = a |])
+\end{lstlisting}
+  \item<2-> User-defined enumerated types (Algebraic types with
+    zero-arity constructors) can now be mapped to VHDL.
+\begin{lstlisting}
+data Direction = Up | Down | Left | Right | Unknown
+ deriving (Data, Typeable, Show, Eq)
+buttonEncoder :: Signal (FSVec D4 Bit) -> Signal Direction
+\end{lstlisting}    
+    
+  \item<3-> Support for 3rd party EDA tools
+    \begin{itemize}
+      \item<3-> Quartus II. The resulting VHDL model can me
+        automatically analyzed (\texttt{analyzeQuartus} VHDL-Backend flag).
+        \begin{itemize}
+        \item<3-> The resulting project can be reused.
+        \end{itemize}
+      \item<4-> Modelsim. The VHDL model can be compiled and
+        simulated.
+        \begin{itemize}
+          \item<5-> Compilation (\texttt{compileModelsim} VHDL-backend flag).
+          \item<6-> Simulation, new function
+\begin{lstlisting}
+writeAndModelsimVHDL :: (SysFunToIOSimFun sysF simF) =>
+                        Maybe Int -> SysDef sysF -> simF
+\end{lstlisting}            
+          \end{itemize}
+        \item<7-> Especially useful for testing (dozens of bugs detected
+          and fixed)
+    \end{itemize}
   \end{itemize}
   
 \end{frame}
 
-\subsection{Testing}
+\subsection{Installation/Testing}
 
 \begin{frame}
-  \frametitle{Testing}
+  \frametitle{Installation/Testing}
   %\framesubtitle{Components.}
   % - A title should summarize the slide in an understandable fashion
   %   for anyone how does not follow everything on the slide itself.
   \begin{itemize}
-  \item lala. Talk about Code coverage again.
+  \item New test framework/suite based on HUnit.
+  \item Two ways to run it
+    \begin{enumerate}
+    \item Cabal: \texttt{./Setup.hs test}
+    \item Darcs repository, candidate patches are now automatically
+      verified before pushed.
+      \begin{enumerate}
+      \item Only patches affecting the source tree are verified.
+      \item The project is tested to compile and is installed inplace.
+      \item The test suite is run.
+      \end{enumerate}
+    \end{enumerate}
+  \item Unfortunately, due to ForSyDe's TH dependency, Code Coverage is not
+    yet working (fixed for GHC 6.10).
+  \item Test suite needs to be extended.
+    \begin{itemize}
+    \item Currently: verification of systems under
+      \texttt{examples/} (simulation vs VHDL simulation)
+    \item Future: erroneous tests, XML-Schema verification of
+      GraphML backend, regresion tests ...
+    \end{itemize}
+  \item Installation change: ForSyDe's VHDL is now precompiled with Modelsim at
+    installation-time.
   \end{itemize}
-  
+    
 \end{frame}
 
 \subsection{Integration of shallow-embedded MoCs}
@@ -469,11 +562,16 @@ data MyColor = Red | Green | Blue
   % - A title should summarize the slide in an understandable fashion
   %   for anyone how does not follow everything on the slide itself.
   \begin{itemize}
-  \item lala
-  \item \alert{Zillions of GHC Warnings} due to double exports.
+  \item Merged the shallow-embedded implementation of ForSyDe under
+    \texttt{ForSyDe.Shallow}.
+  \item Possible to include deep-embedded signals in swallow-embedded
+    systems using \texttt{simulate} (e.g. \texttt{DeepShallow.hs})
+  \item GHC Warning,s mainly due to double exports: we need to fix this.
   \item Everyone should move to the new tree.
     \begin{itemize}
-    \item Repository, Testing framework and Cabal packaging can be reused.
+    \item Repository, Testing framework and Cabal packaging can be
+      reused.
+    \item The change only affects import declarations of existing code.
     \end{itemize}
   \end{itemize}
   
@@ -487,7 +585,8 @@ data MyColor = Red | Green | Blue
   % - A title should summarize the slide in an understandable fashion
   %   for anyone how does not follow everything on the slide itself.
   \begin{itemize}
-  \item Web page and tutorial.
+  \item Updated webpage and new tutorial.
+  \item Next: Hacking guide.
   \end{itemize}
   
 \end{frame}
@@ -503,14 +602,14 @@ data MyColor = Red | Green | Blue
  \item Shallow-embedded version can be made fully public?
  \item Should we make the Darcs repository public?
    \begin{itemize}
-   \item It would require restrutcuring \texttt{doc/}.
+   \item It would require restructuring \texttt{doc/}.
    \item More traditional approach? (only punctual public releases).
    \end{itemize}
  \item Release note
    \begin{itemize}
      \item Points to emphasize?
      \item ForSyDe's teaser for the Haskell community: needs to be
-       carefuly reviewed.
+       carefully reviewed.
      \end{itemize}
  \end{itemize}
 \end{frame}
@@ -529,9 +628,9 @@ data MyColor = Red | Green | Blue
  \item Get ready for the release.
    \begin{itemize}
      \item Release Note
-     \item Code packaging and upload to hackagedb.
+     \item Code packaging and upload to HackageDB.
      \item Webpage update.
-     \item Cleanup of compilation warning.
+     \item Cleanup of compilation warnings.
    \end{itemize}
  \item Code cleanup (hopefully after some feedback).
  \item Hacking guide.
