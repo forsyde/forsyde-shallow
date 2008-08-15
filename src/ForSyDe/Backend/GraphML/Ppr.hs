@@ -149,7 +149,8 @@ instance PprOps YFilesMarkup  GraphMLEdge where
                  nest nestVal
                   (text "<y:Path sx=\"" <> float edgeOrigX <> text "\" sy=\"" <> float edgeOrigY <> text "\" tx=\"" <> float edgeTargetX <> text "\" ty=\""<> float edgeTargetY <> text "\"/>" $+$
                    text "<y:LineStyle color=\"#000000\" type=\"line\" width=\"1.0\"/>" $+$
-                   text "<y:Arrows source=\"none\" target=\"standard\"/>"
+                   text "<y:Arrows source=\"none\" target=\"standard\"/>" $+$
+		   text "<y:BendStyle smoothed=\"false\"/>"
                   ) $+$
                  text "</y:PolyLineEdge>") $+$
              text "</data>") $+$
@@ -214,10 +215,10 @@ pprGraphWithHeaders yFiles graph =
   xsi_schemaLocation <>
   char '>' $+$ 
   nest nestVal (
-    text "<key id=\"process_type\" for=\"node\" attrb.name=\"process_type\" attrb.type=\"string\"/>" $+$
-    text "<key id=\"value_arg\" for=\"node\" attrb.name=\"value_arg\" attrb.type=\"string\"/>" $+$
-    text "<key id=\"profun_arg\" for=\"node\" attrb.name=\"procfun_arg\" attrb.type=\"string\"/>" $+$
-    text "<key id=\"instance_parent\" for=\"node\" attrb.name=\"instance_parent\" attrb.type=\"string\"/>" $+$
+    text "<key id=\"process_type\" for=\"node\" attr.name=\"process_type\" attr.type=\"string\"/>" $+$
+    text "<key id=\"value_arg\" for=\"node\" attr.name=\"value_arg\" attr.type=\"string\"/>" $+$
+    text "<key id=\"profun_arg\" for=\"node\" attr.name=\"procfun_arg\" attr.type=\"string\"/>" $+$
+    text "<key id=\"instance_parent\" for=\"node\" attr.name=\"instance_parent\" attr.type=\"string\"/>" $+$
     yFilesAttribs $+$
     pprOps yFiles graph) $+$
   text "</graphml>"
@@ -236,8 +237,7 @@ pprGraphWithHeaders yFiles graph =
    text "<key for=\"node\" id=\"d0\" yfiles.type=\"nodegraphics\"/>"  $+$
    text "<key attr.name=\"description\" attr.type=\"string\" for=\"node\" id=\"d1\"/>" $+$
    text "<key for=\"edge\" id=\"d2\" yfiles.type=\"edgegraphics\"/>" $+$
-   text "<key attr.name=\"description\" attr.type=\"string\" for=\"edge\" id=\"d3\"/>" $+$
-   text "<key for=\"graphml\" id=\"d4\" yfiles.type=\"resources\"/>"   
+   text "<key attr.name=\"description\" attr.type=\"string\" for=\"edge\" id=\"d3\"/>" 
 
 -------------------------
 -- Tag printing functions
