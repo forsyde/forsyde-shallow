@@ -76,7 +76,19 @@ external EDA tools to generate custom hardware.</p>
 <h2>ForSyDe Implementation</h2>
 <p>ForSyDe is implemented as a EDSL (Embedded Domain Specific
 Language) on top of the <a href="http://www.haskell.org">Haskell</a>
-programming language.
+programming language.</p>
+
+<p>Its implementation relies on many Haskell-extensions, some of which are
+exclusive to <a href="http://www.haskell.org/ghc/">GHC</a> (<a
+href="http://www.haskell.org/th/">Template Haskell</a>, for
+instance).
+
+<p>ForSyDe has been tested to run successfully on Linux, OSX-Leopard-x86 and
+Windows when compiled under GHC version 6.8.2. Due to the massive number of instances
+automatically generated in ForSyDe, it is not recommended to use a
+higher version of GHC until this <a href="http://hackage.haskell.org/trac/ghc/ticket/2328">bug</a> is fixed.</p>
+
+</p>
 
 <h3>Current Features</h3>
 <p>Two different sets of features are offered depending on the
@@ -90,7 +102,7 @@ signal-model used to design the system:
       <li>Embedded compiler backends:
        <ul>
 	 <li>Simulation</li>
-	 <li>VHDL (with suport for <a href="http://www.model.com">Modelsim</a> and <a
+	 <li>VHDL (with support for <a href="http://www.model.com">Modelsim</a> and <a
 	 href="http://www.altera.com/products/software/quartus-ii/subscription-edition/qts-se-index.html">Quartus II</a>)</li>
 	 <li><a href="http://graphml.graphdrawing.org">GraphML</a> (with <a href="http://www.yworks.com">yFiles</a>
 	 graphical markup support.)</li>
@@ -98,19 +110,20 @@ signal-model used to design the system:
      </li>
      <li>Synchronous model of computation.</li>
      <li>Component-support.</li>
+     <li>Fixed-sized vectors.</li>
     </ul>  
   <li>Shallow-embedded (<a href="http://hackage.haskell.org/packages/archive/ForSyDe/3.0/doc/html/ForSyDe-Shallow-Signal.htm"><tt>ForSyDe.Shallow.Signal</tt></a>)
     <p> Shallow-embedded signals are modelled as streams of data
     isomorphic to lists. Systems built with them are unfortunately
     restricted to simulation, however, shallow-embedded signals
     provide a rapid-prototyping framework with which to experiment
-    with new Models of Computation.</p>
-    
+    with Models of Computation (MoCs).</p>
     <ul>
-     <li>Synchronous Computational Model.</li>
-     <li>Data Flow Computational Model.</li>
-     <li>Discrete Event Computational Model.</li>
-     <li>Domain Interfaces allow building systems which use various models of computation.</li>
+     <li>Synchronous MoC.</li>
+     <li>Untimed MoC.</li>
+     <li>Continuous Time MoC.</li>
+     <li>Domain Interfaces allow connecting various subsystems with different timing
+     (domains) regardless of their MoC.</li>
    </ul>
   </li>
   
@@ -145,7 +158,7 @@ signal-model used to design the system:
   <li> <h4>ForSyDe Standard Library (Version 2.0,
   November 2001)&nbsp;</h4>
    <ul>
-     <li> <a href="ForSyDeStdLib/2.0/ForSyDeStdLib.tar.gz">Haskell Files</a>
+     <li>Haskell cabal package: <a href="ForSyDeStdLib/2.0/ForSyDeStdLib.tar.gz">Haskell Files</a>
      <h4></h4>
      </li>
      <li> Documentation (<a
