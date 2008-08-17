@@ -51,7 +51,8 @@ testNeeded = do
   mDARCS_FILES <- catch (liftM Just $ getEnv "DARCS_FILES")
                         (\_ -> return Nothing)
   case mDARCS_FILES of
-    Nothing -> return True
+    Nothing -> do putStrLn "DARCS_FILES wasn't set by darcs: forcing test."
+                  return True
     Just multiLine -> (return.checkAffected) multiLine
   where checkAffected str = any affected (lines str) 
         affected file = let nfile = normalise file in
