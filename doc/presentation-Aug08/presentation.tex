@@ -82,7 +82,7 @@
 % - Keep it simple, no one is interested in your street address.
 
 \date%[CFP 2003] % (optional, should be abbreviation of conference name)
-{August 18th, 2008}
+{August 19th, 2008}
 % - Either use conference name or its abbreviation.
 % - Not really informative to the audience, more for people (including
 %   yourself) who are reading the slides online
@@ -180,7 +180,7 @@
   \item<4-> September 1st: Public release
     \begin{itemize}
       \item Full tutorial. \visible<5->{\pgfimage[height=10pt]{figures/tick}}
-      \item Hacking Guide. \visible<5->{\pgfimage[height=10pt]{figures/tick}}
+      \item Hacking Guide. \visible<5->{\pgfimage[height=10pt]{figures/cross}}
       \item Even more code examples. \visible<5->{\pgfimage[height=10pt]{figures/cross}}
       \item Implement Domain interfaces and other MoCs (Untimed,
         optionally CT), either
@@ -585,7 +585,18 @@ writeAndModelsimVHDL :: (SysFunToIOSimFun sysF simF) =>
   % - A title should summarize the slide in an understandable fashion
   %   for anyone how does not follow everything on the slide itself.
   \begin{itemize}
-  \item Updated webpage and new tutorial.
+  \item Tutorial
+    \begin{itemize}
+      \item Docbook format
+    \end{itemize}
+  \item Web page
+  \begin{itemize}
+    \item Add it to the repository.
+    \item The \texttt{imit.kth.se} domain is outdated
+    \item Use the new address
+      \url{http://www.ict.kth.se/org/ict/ecs/sam/projects/forsyde/www/}
+      and redirect \url{http://www.imit.kth.se/info/FOFU/ForSyDe/}
+  \end{itemize}
   \item Next: Hacking guide.
   \end{itemize}
   
@@ -599,6 +610,13 @@ writeAndModelsimVHDL :: (SysFunToIOSimFun sysF simF) =>
   % - A title should summarize the slide in an understandable fashion
  \begin{itemize}
  \item Version number: 0.1? 3.0?
+ \item Contact email?
+   \begin{itemize}
+   \item Ideal solution: mailing list.
+   \item Problem: \texttt{ecs\_forsyde\_development@ict.kth.se} is not
+     publicly accesible outside KTH.
+   \end{itemize}
+
  \item Shallow-embedded version can be made fully public?
  \item Should we make the Darcs repository public?
    \begin{itemize}
@@ -614,8 +632,6 @@ writeAndModelsimVHDL :: (SysFunToIOSimFun sysF simF) =>
  \end{itemize}
 \end{frame}
 
-
-\section{Specific topics to discuss}
 
 \section{What's next?}
 
