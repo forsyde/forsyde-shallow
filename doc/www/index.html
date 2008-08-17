@@ -1,0 +1,243 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>ForSyDe</title>
+  <meta http-equiv="content-type"
+ content="text/html; charset=ISO-8859-1">
+</head>
+<body>
+<h1>ForSyDe&nbsp;</h1>
+<hr size="2" width="100%">
+<h2>Overview<br>
+</h2>
+Advances in microelectronics allow the integration of more and more
+functionality on a single chip. Emerging system-on-a-chip architectures
+include a large amount of heterogeneous components and are of
+increasing complexity. Applications using these architectures require
+many low-level details in order to yield an efficient implementation.
+On the other hand constant time-to-market pressure on electronic
+systems demands a short design process that allows to model a system at
+a high abstraction level, not taking low-level implementation details
+into account. Clearly there is a significant abstraction gap between an
+ideal model for specification and another one for implementation. This
+abstraction gap has to be addressed by methodologies for electronic
+system design.<br>
+<br>
+The ForSyDe (Formal System Design) methodology has been developed with
+the objective to move system design to a higher level of abstraction
+and
+to bridge the abstraction gap by transformational design refinement.
+ForSyDe
+is based on carefully selected formal foundations. The initial <i>specification
+model</i> uses a <i>synchronous model of computation</i>, which
+separates
+communication from computation and has an abstract notion of time.
+ForSyDe
+uses the concept of process <i>constructors</i> to implement the
+synchronous
+model, to allow for design transformation and the mapping of a refined
+model
+onto the target architecture. The specification model is refined into a
+detailed <i>implementation mode</i>l<i> </i>by the stepwise
+application
+of well-defined <i>design transformation rules</i>. These rules are
+either
+semantic preserving or they inflict a design decision modifying the
+semantics.
+These design decisions are used to introduce the low-level
+implementation
+details that are needed&nbsp; for an efficient implementation. The
+implementation
+model is mapped onto the components of the target architecture. At
+present
+ForSyDe models can be mapped onto VHDL or C/C++ in order to allow
+commercial
+&nbsp;tools to generate custom hardware or sequential software.<br>
+<h2>ForSyDe People</h2>
+<a href="http://www.imit.kth.se/%7Eingo">Ingo Sander</a>, <a
+ href="http://www.imit.kth.se/%7Eaxel">Axel Jantsch</a>, <a
+ href="http://web.it.kth.se/%7Ezhonghai/">Zhonghai Lu</a>, <a
+ href="http://web.it.kth.se/%7Etarvo/">Tarvo Raudvere</a>, <a
+ href="http://web.it.kth.se/%7Ejunz/">Jun Zhu</a><br>
+<h2>ForSyDe Libraries</h2>
+<font color="#000000">The ForSyDe Standard Library defines data types,
+process constructors and functions for the <a href="index.html">ForSyDe</a>
+methodology. So far the following computational models are supported by
+ForSyDe:</font>
+<ul>
+  <li> <font color="#000000">Synchronous Computational Model</font></li>
+  <li> <font color="#000000">Data Flow Computational Model</font></li>
+  <li> <font color="#000000">Discrete Event Computational Model</font></li>
+</ul>
+<font color="#000000">The ForSyDe Standard Library is&nbsp; implemented
+in <a href="http://www.haskell.org">Haskell</a>.</font>
+<p><font color="#000000">The library is under still under development.
+However, we have now frozen version 2.0, which is available on this
+webpage. <br>
+</font></p>
+<h3><font color="#000000"> </font><font color="#000000">Download</font></h3>
+<ul>
+  <li>
+    <h4><font color="#000000">ForSyDe Standard Library (Version 2.0,
+November 2001)</font>&nbsp;</h4>
+  </li>
+</ul>
+<ul>
+  <ul>
+    <li> <font color="#000000"><a
+ href="ForSyDeStdLib/2.0/ForSyDeStdLib.tar.gz">Haskell Files</a></font>
+      <h4></h4>
+    </li>
+  </ul>
+  <ul>
+    <li> <font color="#000000">Documentation (<a
+ href="ForSyDeStdLib/2.0/DocumentationForSyDeLibrary.pdf">pdf</a>)</font></li>
+  </ul>
+  <li>
+    <h4><font color="#000000">ForSyDe Standard Library (Version 2.3,
+April 2003)</font></h4>
+  </li>
+</ul>
+<blockquote>This version is an up-dated version of 2.0 but does only
+cover the synchronous library and domain interfaces.<br>
+</blockquote>
+<ul>
+  <ul>
+    <li> <font color="#000000"><a
+ href="ForSyDeStdLib/2.3/ForSyDeStdLib-2.3.zip">Haskell
+Files</a></font></li>
+    <li><font color="#000000">Documentation (<a
+ href="ForSyDeStdLib/2.3/ForSyDeStdLib.pdf">pdf</a></font>)&nbsp; </li>
+  </ul>
+</ul>
+<h2>Publications on ForSyDe</h2>
+<ol>
+  <li>Axel Jantsch and Ingo Sander. Models of computation in the design
+process. In Bashir M Al-Hashimi, editor, <i>SoC: Next Generation
+Electronics</i>. IEE, 2005. Invited contribution; to appear.<br>
+    <a href="http://www.imit.kth.se/%7Eaxel/papers/2005/IEE-Book.pdf">PDF</a></li>
+  <li>Tarvo Raudvere, Ashish Kumar Singh, Ingo Sander, and Axel
+Jantsch. System level verification of digital signal processing
+applications based on the polynomial abstraction technique. In <i>International
+Conference on Computer Aided Design (ICCAD 2005)</i>, San Jose,
+California, USA, November 2005.</li>
+  <li>Zhonghai Lu, Ingo Sander, and Axel Jantsch. Refinement of a
+perfectly synchronous communication model onto Nostrum NoC best-effort
+communication. In <i>Proceedings of the Forum on Specification and
+Design Languages (FDL'05)</i>, Lausanne, Switzerland, September 2005.</li>
+  <li>Deepak Abraham Mathaikutty, Hiren Patel, Sandeep K. Shukla, and
+Axel
+Jantsch, "UMoC++: Modeling Environment for Heterogeneous Systems based
+on Generic MoCs", <span style="font-style: italic;">Proceedings of the
+Forum on Design Languages</span>,
+September 2005.</li>
+  <li>Axel Jantsch and Ingo Sander. Models of computation and languages
+for embedded system design. <i>IEE Proceedings on Computers and
+Digital Techniques</i>, 152(2):114-129, March 2005. Special issue on
+Embedded Microelectronic Systems; Invited paper.<br>
+    <a
+ href="http://www.imit.kth.se/%7Eaxel/papers/2005/IEE-Proceedings.pdf">PDF</a></li>
+  <li>Axel Jantsch, "Models of Embedded Computation", <span
+ style="font-style: italic;">Embedded Systems
+Handbook</span>, edited by Richard Zurawski, CRC Press, Invited
+contribution,
+2005.</li>
+  <li>Tarvo Raudvere, Ashish Kumar Singh, Ingo Sander, and Axel
+Jantsch.
+Polynomial abstraction for verification of sequentially implemented
+combinational circuits. In <i>Design, Automation and Test in Europe
+Conference (DATE 2004)</i>, Paris, France, February 2004.<br>
+    <a
+ href="http://www.ele.kth.se/%7Etarvo/PAPERS/PUBLISHED/DATE_2004.pdf">PDF</a></li>
+  <li>Ingo Sander and Axel Jantsch. System modeling and
+transformational
+design refinement in ForSyDe. <i>IEEE Transactions on Computer-Aided
+Design of Integrated Circuits and Systems</i>, 23(1):17-32, January
+2004.<br>
+    <a
+ href="http://www.imit.kth.se/%7Eingo/Papers/TCAD2004_SystemModeling.pdf">PDF</a></li>
+  <li>Tarvo Raudvere, Ingo Sander, Ashish Kumar Singh, and Axel
+Jantsch.
+Verification of design decisions in ForSyDe. In <i>CODES+ISSS</i>,
+Newport Beach, California, USA, October 2003.<br>
+    <a
+ href="http://www.ele.kth.se/%7Etarvo/PAPERS/PUBLISHED/CODES+ISSS_2003.pdf">PDF</a></li>
+  <li>Ingo Sander, Axel Jantsch, and Zhonghai Lu. Development and
+application
+of design transformations in ForSyDe. <i>IEE Proceedings - Computers
+&amp; Digital Techniques</i>, 5:313-320, September 2003.<br>
+    <a
+ href="http://www.imit.kth.se/%7Eingo/Papers/CDT2004_Development.pdf">PDF</a></li>
+  <li>Axel Jantsch, <span style="font-style: italic;">Modeling
+Embedded Systems and SoCs - Concurrency and Time
+in Models of Computation</span>, Morgan Kaufmann Publishers, Systems on
+Silicon, June 2003.</li>
+  <li>Ingo Sander, Axel Jantsch, and Zhonghai Lu. Development and
+application
+of design transformations in ForSyDe. In <i>Design, Automation and
+Test in Europe Conference (DATE 2003)</i>, Munich, Germany, March 2003.<br>
+    <a href="http://www.imit.kth.se/%7Eingo/Papers/DATE2003.pdf">PDF</a></li>
+  <li>Ingo Sander. <i>System Modeling and Design Refinement in
+ForSyDe</i>.
+PhD thesis, Royal Institute of Technology, Stockholm, Sweden, 2003.<br>
+    <a
+ href="http://www.imit.kth.se/%7Eingo/Papers/Thesis_Sander_2003.pdf">PDF</a></li>
+  <li>Zhonghai Lu, Ingo Sander, and Axel Jantsch. A case study of
+hardware
+and software synthesis in ForSyDe. In <i>Proceedings of the 15th
+International Symposium on System Synthesis</i>, Kyoto, Japan, October
+2002.<br>
+    <a href="http://www.imit.kth.se/%7Eingo/Papers/ISSS2002.pdf">PDF</a></li>
+  <li>Ingo Sander and Axel Jantsch. Transformation based
+communication and
+clock domain refinement for system design. In <i>Proceedings of the
+39th Design Automation Conference (DAC 2002)</i>, New Orleans, USA,
+June 2002.<br>
+    <a href="http://www.imit.kth.se/%7Eingo/Papers/DAC2002.pdf">PDF</a></li>
+  <li>Ingo Sander. The ForSyDe methodology. In <i>Swedish
+System-on-Chip
+Conference</i>, March 2002.<br>
+    <a href="http://www.imit.kth.se/%7Eingo/Papers/SSoCC_2002.pdf">PDF</a></li>
+  <li>Tarvo Raudvere, Ingo Sander, Ashish Kumar Singh, Dilian
+Gurov, and Axel
+Jantsch. The ForSyDe semantics. In <i>Swedish System-on-Chip Conference</i>,
+Falkenberg, Sweden, March 2002.<br>
+    <a
+ href="http://www.ele.kth.se/%7Etarvo/PAPERS/PUBLISHED/SSoCC_2002.pdf">PDF</a></li>
+  <li>Axel Jantsch, Ingo Sander, and Wenbiao Wu. The usage of
+stochastic
+processes in embedded system specifications. In <i>Proceedings of the
+Ninth International Symposium on Hardware/Software Codesign</i>, April
+2001.<br>
+    <a
+ href="http://www.imit.kth.se/%7Eingo/Papers/CODES2001_Nondeterminism.pdf">PDF</a></li>
+  <li>W. Wu, I. Sander, and A. Jantsch. Transformational system
+design based
+on a formal computational model and skeletons. In <i>Proc. of Forum on
+Design Languages 2000 (FDL' 2000)</i>, pages 321-328, T&uuml;bingen,
+Germany, September 2000.<br>
+    <a href="http://www.imit.kth.se/%7Eingo/Papers/FIE2001.pdf">PDF</a></li>
+  <li>Ingo Sander and Axel Jantsch. System synthesis utilizing a
+layered
+functional model. In <i>Proceedings Seventh International Workshop on
+Hardware/Software Codesign</i>, pages 136-140, Rome, Italy, May 1999.
+ACM Press.<br>
+    <a
+ href="http://www.imit.kth.se/%7Eingo/Papers/CODES1999_SystemSynthesisLayeredFunctionalModel.pdf">PDF</a></li>
+  <li>Ingo Sander and Axel Jantsch. System synthesis based on a
+formal
+computational model and skeletons. In <i>Proceedings IEEE Workshop on
+VLSI'99</i>, pages 32-39, Orlando, Florida, April 1999. IEEE Computer
+Society.<br>
+    <a
+ href="http://www.imit.kth.se/%7Eingo/Papers/WVLSI1999_SystemSynthesis.pdf">PDF</a></li>
+  <li>Ingo Sander and Axel Jantsch. Formal system design based on
+the
+synchrony hypothesis. In <i>Proceedings of the 12th international
+conference on VLSI Design</i>, pages 318-323, Goa, India, January 1999.
+IEEE Computer Society.<br>
+    <a
+ href="http://www.imit.kth.se/%7Eingo/Papers/VLSI1999_FormalSystemDesign.pdf">PDF</a></li>
+</ol>
+</body>
+</html>
