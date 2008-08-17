@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<article xml:id="ForSyDe-tutorial" xmlns="http://docbook.org/ns/docbook" version="5.0">
+<info>
+  <title>ForSyDe tutorial</title>
+  <author>
+    <personname>
+      <firstname>Alfonso</firstname><surname>Acosta</surname>
+    </personname>
+    <affiliation>
+      <orgname>Royal Institute of Technology (KTH)</orgname>
+      <orgdiv>System, Architecture and Methodology (SAM) group</orgdiv>
+    </affiliation>
+    <email>alfonsoa@kth.se</email>
+  </author>  
+  <authorinitials>aag</authorinitials>
+  <pubdate>2008-08-15</pubdate>
+  <revhistory>
+     <revision>
+        <revnumber>0.1</revnumber>
+        <date>2008-08-15</date>
+        <revremark>First version.</revremark>
+     </revision>
+  </revhistory>
+</info> 
+
+<!--              -->
+<!-- Introduction -->
+<!--              -->
+<section xml:id="intro">
+<title>Introduction</title>
+<para>blah blah</para>
+</section>
+
+<!--                    -->
+<!-- Installing ForSyDe -->
+<!--                    -->
+<section xml:id="install">
+<title>Installing ForSyDe</title>
+<para>blah blah</para>
+</section>
+
+<!--                         -->
+<!-- Introduction to ForSyDe -->
+<!--                         -->
+<section xml:id="introForSYDe">
+<title>Introduction to ForSyDe</title>
+<para>blah blah</para>
+
+</section>
+
+<!--                                           -->
+<!-- Deep-embedded vs Shallow-embedded Signals -->
+<!--                                           -->
+<section xml:id="DEvsSE">
+<title>Deep-embedded vs Shallow-embedded signals</title>
+<para>blah blah</para>
+</section>
+
+<!--                       -->
+<!-- Deep-embedded signals -->
+<!--                       -->
+<section xml:id="DE">
+  <title>Using deep-embedded Signals</title>
+
+  <!--                                 -->
+  <!-- A simple combinational system   -->
+  <!--                                 -->
+  <section xml:id="combinational">
+    <title>A simple combinational System</title>
+    <para>blah blah</para>
+  </section>
+
+  <!--                              -->
+  <!-- A simple sequential system   -->
+  <!--                              -->
+  <section xml:id="sequential">
+    <title>A simple sequential System</title>
+    <para>blah blah</para>
+<screen>
+<prompt>$</prompt> ghci
+Prelude> lala  
+</screen>
+<programlisting language="haskell">
+id :: a -> a
+</programlisting>
+  </section>
+
+  <!--                   -->
+  <!-- Using Components  -->
+  <!--                   -->
+  <section xml:id="components">
+    <title>Using components</title>
+    <para>blah blah</para>
+    <para>In <xref linkend="cwf"/> we can see</para>
+    <figure xml:id="cwf">
+      <title>Component workflow</title>
+      <mediaobject>
+	<alt>Component workflow diagram.</alt>
+	<imageobject>
+	  <imagedata align="center" valign="middle" width="6in" fileref="figures/compflow.svg" format="SVG" />
+	</imageobject>
+    </mediaobject>
+    </figure>
+  </section>
+  
+  <!--                -->
+  <!-- VHDL Backend   -->
+  <!--                -->
+  <section xml:id="VHDL">
+    <title>VHDL Backend</title>
+    <para>blah blah</para>
+  </section>
+  
+
+  <!--                   -->
+  <!-- GraphML Backend   -->
+  <!--                   -->
+  <section xml:id="GraphML">
+    <title>GraphML Backend</title>
+    <para>blah blah</para>
+  </section>
+  
+</section> <!-- Deep-embedded signals -->
+
+<!--                          -->
+<!-- Shallow-embedded signals -->
+<!--                          -->
+<section xml:id="SE">
+  <title>Shallow-embedded signals</title>
+  <para>blah blah</para>
+</section>
+
+
+<!--        -->
+<!-- FSVec  -->
+<!--        -->
+<appendix xml:id="FSVec">
+  <title><literal>FSVec</literal>s: Vectors parameterized in size</title>
+  <para>lala</para>
+</appendix>
+
+</article>
