@@ -1,0 +1,97 @@
+/* Taken from http://www.haskell.org/cabal/ */
+
+.unimportant {
+    font-family: Georgia, serif;
+    font-weight: bold;
+    color: #afdbff;
+}
+
+
+body {
+  font-family: sans-serif;
+  line-height: 1.4em;
+  margin: 1em 4em;
+}
+
+ul, p {
+  margin-left: 1em;
+}
+
+pre {
+  margin-left: 1.5em;
+  padding: 0.5em 1em;
+  background: #eee;
+  border: 1px solid #ccc;
+}
+
+.floatcenter {
+    display: block;
+    margin-left: auto;
+    margin-right: auto
+}
+
+#important {
+  color: red;
+  font-size: larger;
+}
+
+.highlight {
+  background: #feb;
+  padding: 0.2em;
+}
+
+
+.subtitle {
+  text-align: center
+}
+
+
+
+h2, h3, h4 {
+  font-family: Georgia, serif;
+  font-weight: bold;
+  color: #3f6bcf;
+}
+
+
+h1 { 
+    font-size: 3em;
+    font-family: Georgia, serif;
+    font-weight: bold;
+    color: #0a36aa;
+    text-align: center;
+    margin-bottom: 0px;
+    padding-bottom: 10px;
+    margin-top: 10px;
+    padding-top: 20px;
+
+}
+
+h2 {
+    font-size: 2 em;
+    margin-left: -10px;
+    padding-top: 15px;
+    margin-bottom: 15px;
+}
+
+h3 {
+    font-size: 1.6 em;
+    padding-left: 10px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+a {
+  text-decoration: none;
+  font-weight: bold;
+  color: #44b;
+}
+
+a:hover {
+  text-decoration: underline;
+  color: #66e;
+}
+
+a:visited {
+  color: #779;
+}

@@ -1,41 +1,50 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 <head>
-  <title>ForSyDe</title>
-  <meta http-equiv="content-type"
- content="text/html; charset=ISO-8859-1">
+ <title>ForSyDe</title>
+ <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+ <link href='style.css' type='text/css' rel='stylesheet'>
 </head>
 <body>
-<h1>ForSyDe&nbsp;</h1>
+<h1>ForSyDe</h1>
+<div class="subtitle"><h2>For<span class="unimportant">mal</span> Sy<span class="unimportant">stem</span> De<span class="unimportant">sign</span></div>
+<img  class="floatcenter" src="zipTwistFun.png" width="300" height="79" alt="System graph" style="margin-bottom: 1em">  
 <hr size="2" width="100%">
+<h2>Quick links</h2>
+<ul>
+  <li><a href="#downloads">Downloads</a>
+  <li><a href="#documentation">Documentation</a> 
+  <li><a href="#contact">Contact, Bugs and Contributions</a>
+</ul>
+
 <h2>Overview<br>
 </h2>
-Advances in microelectronics allow the integration of more and more
+<p>Advances in microelectronics allow the integration of more and more
 functionality on a single chip. Emerging system-on-a-chip architectures
 include a large amount of heterogeneous components and are of
 increasing complexity. Applications using these architectures require
 many low-level details in order to yield an efficient implementation.
-On the other hand constant time-to-market pressure on electronic
+On the other hand, constant time-to-market pressure on electronic
 systems demands a short design process that allows to model a system at
 a high abstraction level, not taking low-level implementation details
 into account. Clearly there is a significant abstraction gap between an
 ideal model for specification and another one for implementation. This
 abstraction gap has to be addressed by methodologies for electronic
-system design.<br>
-<br>
-The ForSyDe (Formal System Design) methodology has been developed with
+system design.</p>
+
+<p>The ForSyDe (Formal System Design) methodology has been developed with
 the objective to move system design to a higher level of abstraction
 and
 to bridge the abstraction gap by transformational design refinement.
 ForSyDe
 is based on carefully selected formal foundations. The initial <i>specification
-model</i> uses a <i>synchronous model of computation</i>, which
-separates
-communication from computation and has an abstract notion of time.
+model</i> uses different <i>Models of Computation</i>, that
+separate
+communication from computation and have an abstract notion of time.
 ForSyDe
 uses the concept of process <i>constructors</i> to implement the
-synchronous
-model, to allow for design transformation and the mapping of a refined
+system
+models, to apply design transformations and, finally, to map the resulting refined
 model
 onto the target architecture. The specification model is refined into a
 detailed <i>implementation mode</i>l<i> </i>by the stepwise
@@ -49,68 +58,121 @@ implementation
 details that are needed&nbsp; for an efficient implementation. The
 implementation
 model is mapped onto the components of the target architecture. At
-present
-ForSyDe models can be mapped onto VHDL or C/C++ in order to allow
-commercial
-&nbsp;tools to generate custom hardware or sequential software.<br>
-<h2>ForSyDe People</h2>
+present ForSyDe synchronous models can be mapped onto VHDL, allowing
+external EDA tools to generate custom hardware.</p>
+<br>
+<h2><a name="people">ForSyDe People</a></h2>
 <a href="http://www.imit.kth.se/%7Eingo">Ingo Sander</a>, <a
  href="http://www.imit.kth.se/%7Eaxel">Axel Jantsch</a>, <a
  href="http://web.it.kth.se/%7Ezhonghai/">Zhonghai Lu</a>, <a
  href="http://web.it.kth.se/%7Etarvo/">Tarvo Raudvere</a>, <a
- href="http://web.it.kth.se/%7Ejunz/">Jun Zhu</a><br>
-<h2>ForSyDe Libraries</h2>
-<font color="#000000">The ForSyDe Standard Library defines data types,
-process constructors and functions for the <a href="index.html">ForSyDe</a>
-methodology. So far the following computational models are supported by
-ForSyDe:</font>
+ href="http://web.it.kth.se/%7Ejunz/">Jun Zhu</a>, <a
+ href="mailto:alfonso.acosta@gmail.com">Alfonso Acosta</a>
+<br>
+<h2>ForSyDe Implementation</h2>
+<p>ForSyDe is implemented as a EDSL (Embedded Domain Specific
+Language) on top of the <a href="http://www.haskell.org">Haskell</a>
+programming language.
+
+<h3>Current Features</h3>
+<p>Two different sets of features are offered depending on the
+signal-model used to design the system:
 <ul>
-  <li> <font color="#000000">Synchronous Computational Model</font></li>
-  <li> <font color="#000000">Data Flow Computational Model</font></li>
-  <li> <font color="#000000">Discrete Event Computational Model</font></li>
-</ul>
-<font color="#000000">The ForSyDe Standard Library is&nbsp; implemented
-in <a href="http://www.haskell.org">Haskell</a>.</font>
-<p><font color="#000000">The library is under still under development.
-However, we have now frozen version 2.0, which is available on this
-webpage. <br>
-</font></p>
-<h3><font color="#000000"> </font><font color="#000000">Download</font></h3>
-<ul>
-  <li>
-    <h4><font color="#000000">ForSyDe Standard Library (Version 2.0,
-November 2001)</font>&nbsp;</h4>
+  <li> Deep-embedded (<a href="http://hackage.haskell.org/packages/archive/ForSyDe/3.0/doc/html/ForSyDe-Signal.html"><tt>ForSyDe.Signal</tt></a>)
+   <p> Deep-embedded signals, based on the same concepts as <a href="http://www.cs.chalmers.se/~koen/Lava/">Lava</a>,  are aware of
+       the system structure. Based on that structural information ForSyDe's embedded
+       compiler, can perform different analysis and transformations.
+    <ul>
+      <li>Embedded compiler backends:
+       <ul>
+	 <li>Simulation</li>
+	 <li>VHDL (with suport for <a href="http://www.model.com">Modelsim</a> and <a
+	 href="http://www.altera.com/products/software/quartus-ii/subscription-edition/qts-se-index.html">Quartus II</a>)</li>
+	 <li><a href="http://graphml.graphdrawing.org">GraphML</a> (with <a href="http://www.yworks.com">yFiles</a>
+	 graphical markup support.)</li>
+       </ul>
+     </li>
+     <li>Synchronous model of computation.</li>
+     <li>Component-support.</li>
+    </ul>  
+  <li>Shallow-embedded (<a href="http://hackage.haskell.org/packages/archive/ForSyDe/3.0/doc/html/ForSyDe-Shallow-Signal.htm"><tt>ForSyDe.Shallow.Signal</tt></a>)
+    <p> Shallow-embedded signals are modelled as streams of data
+    isomorphic to lists. Systems built with them are unfortunately
+    restricted to simulation, however, shallow-embedded signals
+    provide a rapid-prototyping framework with which to experiment
+    with new Models of Computation.</p>
+    
+    <ul>
+     <li>Synchronous Computational Model.</li>
+     <li>Data Flow Computational Model.</li>
+     <li>Discrete Event Computational Model.</li>
+     <li>Domain Interfaces allow building systems which use various models of computation.</li>
+   </ul>
   </li>
+  
 </ul>
+
+
+<h3><a name="downloads">Downloads</a></h3>
+
 <ul>
+  <li> <h4>ForSyDe package (Version 3.0, September 2008)</h4>
   <ul>
-    <li> <font color="#000000"><a
- href="ForSyDeStdLib/2.0/ForSyDeStdLib.tar.gz">Haskell Files</a></font>
-      <h4></h4>
-    </li>
+    <li> <a
+    href="http://hackage.haskell.org/packages/archive/ForSyDe/3.0/ForSyDe-3.0.tar.gz">ForSyDe-3.0.tar.gz</a></li>
+    <li><a
+  href="http://hackage.haskell.org/cgi-bin/hackage-scripts/package/ForSyDe">HackageDB
+  page</a></li>
+    <li><a href="http://hackage.haskell.org/packages/archive/parameterized-data/0.1.2/doc/html/Data-Param.html">Haddock Documentation</a></li>
   </ul>
-  <ul>
-    <li> <font color="#000000">Documentation (<a
- href="ForSyDeStdLib/2.0/DocumentationForSyDeLibrary.pdf">pdf</a>)</font></li>
-  </ul>
-  <li>
-    <h4><font color="#000000">ForSyDe Standard Library (Version 2.3,
-April 2003)</font></h4>
   </li>
-</ul>
-<blockquote>This version is an up-dated version of 2.0 but does only
-cover the synchronous library and domain interfaces.<br>
-</blockquote>
-<ul>
+  <li> <h4>ForSyDe Standard Library (Version 2.3, April 2003)</h4>
+  <blockquote>This version is an updated version of 2.0 but it only
+   covers the synchronous library and domain interfaces.<br>
+  </blockquote>
   <ul>
-    <li> <font color="#000000"><a
- href="ForSyDeStdLib/2.3/ForSyDeStdLib-2.3.zip">Haskell
-Files</a></font></li>
-    <li><font color="#000000">Documentation (<a
- href="ForSyDeStdLib/2.3/ForSyDeStdLib.pdf">pdf</a></font>)&nbsp; </li>
+    <li> <a
+    href="ForSyDeStdLib/2.3/ForSyDeStdLib-2.3.zip">Haskell
+    Files</a></li>
+    <li>Documentation (<a
+    href="ForSyDeStdLib/2.3/ForSyDeStdLib.pdf">PDF</a>)&nbsp; </li>
   </ul>
+  </li>
+  <li> <h4>ForSyDe Standard Library (Version 2.0,
+  November 2001)&nbsp;</h4>
+   <ul>
+     <li> <a href="ForSyDeStdLib/2.0/ForSyDeStdLib.tar.gz">Haskell Files</a>
+     <h4></h4>
+     </li>
+     <li> Documentation (<a
+     href="ForSyDeStdLib/2.0/DocumentationForSyDeLibrary.pdf">PDF</a>)</li>
+   </ul>
+ </li>
 </ul>
-<h2>Publications on ForSyDe</h2>
+
+
+<h3>Darcs repository</h3>
+<p><tt>darcs get --partial <a href="http://www.ict.kth.se/org/ict/ecs/sam/projects/forsyde/www/darcs">http://www.ict.kth.se/org/ict/ecs/sam/projects/forsyde/www/darcs/</a></tt></p>
+
+
+<h2><a name="documentation">Documentation</a></h2>
+<h3>ForSyDe Tutorial</h3>
+<ul>
+  <li><a href="lala.html">HTML</a></li>
+  <li><a href="">HTML multiple pages</a></li>
+  <li><a href="">PDF</a></li>
+</ul>
+
+
+<h3><a name="hacking">Hacking Guide</a></h3>
+<ul>
+  <li><a href="lala.html">HTML</a></li>
+  <li><a href="">HTML multiple pages</a></li>
+  <li><a href="">PDF</a></li>
+</ul>
+
+
+<h3>Publications on ForSyDe</h3>
 <ol>
   <li>Axel Jantsch and Ingo Sander. Models of computation in the design
 process. In Bashir M Al-Hashimi, editor, <i>SoC: Next Generation
@@ -241,3 +303,21 @@ IEEE Computer Society.<br>
 </ol>
 </body>
 </html>
+
+
+<h2><a name="contact">Contact, Bugs and Contributions</a></h2>
+<p>If you have any comments, suggestions or patches please subscribe
+to our <a href="http://mailman.it.kth.se/mailman/listinfo/ecs_forsyde_development">development mailing list</a> or contact a member of
+<a href="#people">the ForSyDe team</a> directly.</p>
+
+<p>If you have found a bug, please check our <a
+ href="http://code.google.com/p/forsyde-comp/issues/list">issue
+tracker</a> for duplicates before reporting it and feel free to create a new issue
+yourself.</p>
+
+<p>Patches are always welcome, you can get the lastest development verion of
+ForSyDe from <a
+ href="http://www.ict.kth.se/org/ict/ecs/sam/projects/forsyde/www/darcs">our
+darcs repository</a>.</p>
+
+<p>If you plan to modify ForSyDe's code, it is recommended to read the <a href="#hacking">Hacking Guide</a> first.</p>
