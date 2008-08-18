@@ -1,20 +1,39 @@
 -- FIXME: add a license and CR holder for th-lift and lava
+-- FIXME: Fix copyright header on all src files (date and owner, SAM group, KTH/ICT/ECS)
+-- FIXME: Add header to files which don't have it
 name:           ForSyDe
-version:        0.1
+version:        3.0
 cabal-version:  >= 1.2
 build-type:     Custom
 license:        BSD3
 license-file:   LICENSE
-copyright:      Copyright (c) 2003-2007 The ForSyDe Team
+copyright:      Copyright (c) 2003-2008 SAM group, KTH/ICT/ECS
 maintainer:     ecs_forsyde_development@ict.kth.se
-homepage:       http://www.imit.kth.se/info/FOFU/ForSyDe/
+homepage:       http://www.ict.kth.se/org/ict/ecs/sam/projects/forsyde/www/
 stability:      alpha
--- package-url: not set yet
 synopsis:       
- DSEL library implementing the ForSyDe system design methodology.
-category:       DSEL
-tested-with:    GHC==6.8.1
+ ForSyDe's Haskell-embedded Domain Specific Language.
+description: 
+ The ForSyDe (Formal System Design) methodology has been developed with the objective to move system design to a higher level of abstraction and to bridge the abstraction gap by transformational design refinement. 
+ 
+ This library provides ForSyDe's implementation as a Haskell-embedded Domain Specific Language (DSL). For more information, please see ForSyDe's website: <http://www.ict.kth.se/org/ict/ecs/sam/projects/forsyde/www/>.
+category:       Language
+tested-with:    GHC==6.8.1, GHC==6.8.2
 data-files:     lib/forsyde.vhd
+extra-source-files: LICENSE,
+                    examples/ALU.hs,
+                    examples/ALU_Shallow.hs,
+                    examples/ButtonEncoder.hs,
+                    examples/CarrySelectAdder.hs,
+                    examples/Counter.hs,
+                    examples/DeepShallow.hs,
+                    examples/LFSR.hs,
+                    examples/Multiplexer.hs,
+                    examples/Multiplexer_FSVector.hs,
+                    examples/Null.hs,
+                    examples/ParAddFour.hs,
+                    examples/SeqAddFour.hs,
+                    examples/ZipTwist.hs
 
 Library
   build-depends:   type-level,
@@ -108,6 +127,7 @@ Library
                    ForSyDe.Backend.GraphML.FileIO,
                    ForSyDe.Backend.GraphML.Traverse,
                    ForSyDe.Backend.GraphML.Traverse.GraphMLM
+                     
 
 
 -- FIXME: remove all the -fno-warn*
