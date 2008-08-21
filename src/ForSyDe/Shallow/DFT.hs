@@ -8,7 +8,7 @@ import ForSyDe.Shallow.Vector
 import Data.Complex
 
 -- | The function 'dft' performs a standard Discrete Fourier Transformation
-dft :: Integer -> Vector (Complex Double) -> Vector (Complex Double)
+dft :: Int -> Vector (Complex Double) -> Vector (Complex Double)
 dft bigN x | bigN == (lengthV x) = mapV (bigX_k bigN x) (nVector x)
 	   | otherwise   = error "DFT: Vector has not the right size!"   
    where
@@ -17,16 +17,16 @@ dft bigN x | bigN == (lengthV x) = mapV (bigX_k bigN x) (nVector x)
      bigW' k' bigN'     = mapV (** k') (mapV cis (fullcircle bigN'))
      sumV            = foldlV (+) (0:+ 0)
 
-fullcircle :: Integer -> Vector Double 
-fullcircle n = fullcircle1 0 (fromInteger n) n
+fullcircle :: Int -> Vector Double 
+fullcircle n = fullcircle1 0 (fromIntegral n) n
 	  where
 	     fullcircle1 l m n' 
 		| l == m    = NullV
-		| otherwise = -2*pi*l/(fromInteger n') 
+		| otherwise = -2*pi*l/(fromIntegral n') 
 			      :> fullcircle1 (l+1) m n' 
 
 -- | The function 'fft' implements a fast Fourier transform (FFT) algorithm, for computing the DFT, when the size N is a power of 2.
-fft :: Integer -> Vector (Complex Double) -> Vector (Complex Double)
+fft :: Int -> Vector (Complex Double) -> Vector (Complex Double)
 fft bigN xv | bigN == (lengthV xv) = mapV (bigX xv) (kVector bigN)
 	     | otherwise = error "FFT: Vector has not the right size!"
 
@@ -34,16 +34,16 @@ kVector :: (Num b, Num a) => a -> Vector b
 kVector bigN = iterateV bigN (+1) 0 
 
 
-bigX :: Vector (Complex Double) -> Integer -> Complex Double
+bigX :: Vector (Complex Double) -> Int -> Complex Double
 bigX (x0:>x1:>NullV) k | even k = x0 + x1 * bigW 2 0
 		       | odd k  = x0 - x1 * bigW 2 0
-bigX xv k = bigF_even k + bigF_odd k * bigW bigN (fromInteger k)
+bigX xv k = bigF_even k + bigF_odd k * bigW bigN (fromIntegral k)
      where bigF_even k' = bigX (evens xv) k'
 	   bigF_odd k' = bigX (odds xv) k'
 	   bigN = lengthV xv
 
-bigW :: Integer -> Integer -> Complex Double
-bigW bigN k = cis (-2 * pi * (fromInteger k) / (fromInteger bigN))
+bigW :: Int -> Int -> Complex Double
+bigW bigN k = cis (-2 * pi * (fromIntegral k) / (fromIntegral bigN))
 
 evens :: Vector a -> Vector a
 evens NullV       = NullV

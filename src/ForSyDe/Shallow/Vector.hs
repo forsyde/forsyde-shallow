@@ -1,6 +1,3 @@
-{--# OPTIONS_GHC -w #--}
--- FIXME: remove warnings
-
 -- | The module 'Vector' defines the data type 'Vector' and the corresponding functions. It is a development of the module 'Vector' defined by Reekie.  Though the vector is modeled as a list, it should be viewed as an array, i.e. a vector has a fixed size. Unfortunately, it is not possible to have the size of the vector as a parameter of the vector data type, due to restrictions in Haskells type system. Still most operations are defined for vectors with the same size.
 module ForSyDe.Shallow.Vector ( 
               Vector (..), vector, fromVector, unitV, nullV, lengthV,
@@ -36,7 +33,7 @@ unitV    :: a -> Vector a
 nullV    :: Vector a -> Bool
 
 -- | The function 'lengthV' returns the number of elements in a value. 
-lengthV  :: Num a => Vector b -> a
+lengthV  :: Vector a -> Int
 
 -- | The function 'atV' returns the n-th element in a vector, starting from zero.
 atV      :: Num a => Vector b -> a -> b
@@ -65,11 +62,11 @@ dropV :: (Num a, Ord a) => a -> Vector b -> Vector b
 
 
 -- | The function 'selectV' selects elements in the vector. The first argument gives the initial element, starting from zero, the second argument gives the stepsize between elements and the last argument gives the number of elements. 
-selectV :: (Num a, Ord a) => a -> a -> a -> Vector b -> Vector b
+selectV :: Int -> Int -> Int -> Vector a -> Vector a
 
 
 -- | The function 'groupV' groups a vector into a vector of vectors of size n.
-groupV :: (Num a, Ord a) => a -> Vector b -> Vector (Vector b)
+groupV :: Int -> Vector a -> Vector (Vector a)
 
 -- | The operator '(<:)' adds an element at the end of a vector.
 (<:)  :: Vector a -> a -> Vector a
@@ -376,8 +373,7 @@ meshrV f a (x:>xs)  = (y:>ys, a'')
                           (ys, a') = meshrV f a xs
 -}
 
-v1 :: Vector Integer
-v1 = 1:> 2 :> 3 :> NullV
+
 
 
 

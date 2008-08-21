@@ -40,7 +40,7 @@ module ForSyDe.Shallow.FilterLib (
 
 import ForSyDe.Shallow.MoCLib
 import ForSyDe.Shallow.CTLib
-
+import ForSyDe.Shallow.CoreLib
 import ForSyDe.Shallow.PolyArith
 
 -- |The FIR filter. Let '[x_n]' denote the input signal, '[y_n]' denote the ouput

@@ -1,6 +1,3 @@
-{--# OPTIONS_GHC -w #--}
--- FIXME: remove warnings
-
 {-|
 
 Module      :  ForSyDe
@@ -11,7 +8,7 @@ Maintainer  :  forsyde@kth.se
 Stability   :  experimental
 Portability :  portable 
 
-The ForSyDeCoreLib is the base for all MoC libraries and is a container that includes the following libraries: 
+The CoreLib is the base for all MoC libraries and is a container that includes the following libraries: 
 
 * "Signal"
 

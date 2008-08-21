@@ -3,8 +3,7 @@ module ForSyDe.Shallow.DomainInterfaces(downDI, upDI, par2serxDI, ser2parxDI,
 			par2ser2DI, par2ser3DI, par2ser4DI, 
 			ser2par2DI, ser2par3DI, ser2par4DI) where
 
-import ForSyDe.Shallow.Signal
-import ForSyDe.Shallow.Vector
+import ForSyDe.Shallow.CoreLib
 import ForSyDe.Shallow.SynchronousLib
 
 

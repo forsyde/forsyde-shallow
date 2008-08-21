@@ -1,6 +1,6 @@
 -- | The synchronuous library 'SynchronousLib' defines process constructors and processes for the synchronous computational model. A process constructor is a higher order function which together with combinational function(s) and values as arguments constructs a process.
 module ForSyDe.Shallow.SynchronousLib(
-			module ForSyDe.Shallow.CoreLib,
+--			module ForSyDe.Shallow.CoreLib,
 			-- * Combinational process constructors
 			-- | Combinational process constructors are used for processes that do not have a state.
 			mapSY, zipWithSY, zipWith3SY, 
@@ -336,12 +336,3 @@ fstSY = mapSY fst
 sndSY        :: Signal (a,b) -> Signal b
 sndSY = mapSY snd
 
------------------------------------------------------------------------------
--- Tests:
-s1 = signal [1..5] :: Signal Int
-
-testDelaySY = delaySY 0 s1
-testScanlSY = scanlSY (+) 0 s1  
-testScanldSY = scanldSY (+) 0 s1
--- FIXME: remove warnings
-{--# OPTIONS_GHC -w #--}

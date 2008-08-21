@@ -32,6 +32,7 @@ The output of the shiftregister, a signal of vectors, is transformed with the pr
 module ForSyDe.Shallow.FIR (fir) where
 
 import ForSyDe.Shallow.SynchronousLib
+import ForSyDe.Shallow.CoreLib
 
 -- | All kinds of FIR-filters can now be modeled by means of 'fir'. The only argument needed is the list of coefficients, which is given as a vector of any size. To illustrate this, an 8-th order band pass filter is modeled as follows. 
 --

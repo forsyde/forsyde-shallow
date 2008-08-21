@@ -9,6 +9,7 @@ module ForSyDe.Shallow.SynchronousProcessLib(
 			     ) where
 
 import ForSyDe.Shallow.SynchronousLib
+import ForSyDe.Shallow.CoreLib
 import ForSyDe.Shallow.Queue
 import ForSyDe.Shallow.Memory
 
@@ -29,7 +30,7 @@ mergeSY			:: Signal (AbstExt a) -> Signal (AbstExt a)
 counterSY		:: (Enum a, Ord a) => a -> a -> Signal a
 
 -- | The function 'groupSY' groups values into a vector of size n, which takes n cycles. While the grouping takes place the output from this process consists of absent values.
-groupSY :: Integer -> Signal a -> Signal (AbstExt (Vector a))
+groupSY :: Int -> Signal a -> Signal (AbstExt (Vector a))
 
 fifoDelaySY xs		=  mooreSY fifoState fifoOutput (queue []) xs
 

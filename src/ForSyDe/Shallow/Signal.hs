@@ -1,6 +1,3 @@
-{--# OPTIONS_GHC -w #--}
--- FIXME: remove warnings
-
 -- | The module 'Signal' defines the data type 'Signal' and functions operating on this data type.
 
 module ForSyDe.Shallow.Signal( Signal (NullS, (:-)), (-:), (+-+), (!-), 
@@ -55,7 +52,7 @@ dropS		   :: Int -> Signal a -> Signal a
 selectS		   :: Int -> Int -> Signal a -> Signal a
 
 -- | The function 'lengthS' returns the length of a 'finite' signal.
-lengthS		   :: Num a => Signal b -> a
+lengthS		   :: Signal b -> Int
 
 -- | The function 'infiniteS' creates an infinite signal. The first argument 'f' is a function that is applied on the current value. The second argument 'x' gives the first value of the signal.
 --

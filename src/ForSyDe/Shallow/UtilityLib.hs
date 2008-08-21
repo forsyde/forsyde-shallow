@@ -32,7 +32,6 @@ module ForSyDe.Shallow.UtilityLib(
 		    , module ForSyDe.Shallow.Gaussian
 		    , module ForSyDe.Shallow.PolyArith
 		    , module ForSyDe.Shallow.StochasticLib
-		    , module ForSyDe.Shallow.MoCLib
 		    ) where
 
 import ForSyDe.Shallow.BitVector
@@ -40,5 +39,5 @@ import ForSyDe.Shallow.FilterLib
 import ForSyDe.Shallow.Gaussian
 import ForSyDe.Shallow.PolyArith
 import ForSyDe.Shallow.StochasticLib
-import ForSyDe.Shallow.MoCLib
+
 
