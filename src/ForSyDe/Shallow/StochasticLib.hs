@@ -184,19 +184,19 @@ sigmaGe f seed (r1,r2) = sigma2 (checkSum f (fromIntegral r1)
             sumf :: (Float -> Float) -> Float -> Float -> Float
             sumf g x y = x + (g y)
 
-pdist :: Float -> Float
-pdist d = 1/(2**d)
+--pdist :: Float -> Float
+--pdist d = 1/(2**d)
 
-pdistsum 1 = pdist 1
-pdistsum d = (pdist d) + (pdistsum (d-1))
+--pdistsum 1 = pdist 1
+--pdistsum d = (pdist d) + (pdistsum (d-1))
 
 -- The function pdistnorm can be used as a function in sigmaGe for an
 -- exponantial distribution of values in the range [0, dmax]:
-pdistnorm :: Float -> Float -> Float
-pdistnorm dmax d = 1/((pdistsum dmax) * (2**d))
+--pdistnorm :: Float -> Float -> Float
+--pdistnorm dmax d = 1/((pdistsum dmax) * (2**d))
 
-pdnormsum dmax 1 = pdistnorm dmax 1
-pdnormsum dmax d = (pdistnorm dmax d) + (pdnormsum dmax (d-1))
+--pdnormsum dmax 1 = pdistnorm dmax 1
+--pdnormsum dmax d = (pdistnorm dmax d) + (pdnormsum dmax (d-1))
 
 
 -----------------------------------------------------------------------------
