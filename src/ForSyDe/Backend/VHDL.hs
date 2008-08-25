@@ -17,6 +17,9 @@ module ForSyDe.Backend.VHDL
   writeAndModelsimVHDL,
   writeAndModelsimVHDLOps, 
   VHDLOps(..),
+  QuartusOps(..),
+  QuartusAction(..),
+  checkSynthesisQuartus,
   VHDLDebugLevel(..),
   VHDLRecursivity(..),
   defaultVHDLOps) where

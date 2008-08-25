@@ -229,7 +229,7 @@ emptyGlobalTravResult = GlobalTravResult [] [] []
 -- | VHDL Compilation options
 data VHDLOps = VHDLOps {debugVHDL :: VHDLDebugLevel, -- ^ Debug mode
                         recursivityVHDL :: VHDLRecursivity, 
-                        analyzeQuartus  :: Bool, -- ^ Analyze the generated code with Quartus
+                        execQuartus  :: Maybe QuartusOps, -- ^ Analyze the generated code with Quartus
                         compileModelsim :: Bool -- ^ Compile the generated code with Modelsim
                                         }
  deriving (Eq, Show)
@@ -250,15 +250,46 @@ debugMsg str = do
 data VHDLRecursivity = VHDLRecursive | VHDLNonRecursive
  deriving (Eq, Show)
 
+-------------
+-- QuartusOps
+-------------
+
+-- Quartus options
+
+-- | Options passed to Quartus II by the VHDL Backend. Most of them are optional
+--   and Quartus will use a default value.
+--
+--   It contains 
+--   * what action to perform
+--   * Minimum acceptable clock frequency (fMax) expressed in MHz
+--   * FPGA family and specific device model.
+--   * pin assignments, in the form (VHDL Pin, FPGA Pin). Note
+--     that Quartus will automatically split composite VHDL ports 
+---    (arrays and records) in various pins with different logical names. 
+data QuartusOps = 
+     QuartusOps {action :: QuartusAction,
+                 fMax   :: Maybe Int,
+                 fpgaFamiliyDevice :: Maybe (String, Maybe String),
+                 pinAssigs :: [(String,String)] }
+ deriving (Eq, Show)
+
+-- | Action to perform by Quartus
+data QuartusAction = AnalysisAndElaboration  -- ^ Analysis and eleboration flow
+                   | AnalysisAndSynthesis -- ^ Call map executable 
+                   | FullCompilation -- ^ Compile flow
+ deriving (Eq, Show)
+
+-- | Options to check if the model is synthesizable, all options except
+--   the action to take are set to default. 
+checkSynthesisQuartus :: QuartusOps
+checkSynthesisQuartus = QuartusOps AnalysisAndSynthesis Nothing Nothing [] 
+
+
 -- | Check if we are in recursive mode
 isRecursiveSet :: VHDLM Bool
 isRecursiveSet = do 
   recOp <- gets (recursivityVHDL.ops.global)
   return $ recOp == VHDLRecursive
-
--- | Check if we want to analyze the results with quartus
-isAnalyzeQuartusSet :: VHDLM Bool
-isAnalyzeQuartusSet = gets (analyzeQuartus.ops.global)
 
 -- | Check if we want to compile the results with modelsim
 isCompileModelsimSet :: VHDLM Bool
@@ -266,7 +297,7 @@ isCompileModelsimSet = gets (compileModelsim.ops.global)
 
 -- | Default traversing options
 defaultVHDLOps :: VHDLOps
-defaultVHDLOps =  VHDLOps VHDLNormal VHDLRecursive False False
+defaultVHDLOps =  VHDLOps VHDLNormal VHDLRecursive Nothing False
 
 
 -- | Set VHDL options inside the VHDL monad

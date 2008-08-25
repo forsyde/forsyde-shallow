@@ -20,7 +20,7 @@ import ForSyDe.Backend.VHDL.Translate
 import ForSyDe.Backend.VHDL.Generate
 import ForSyDe.Backend.VHDL.FileIO
 import ForSyDe.Backend.VHDL.AST
-import ForSyDe.Backend.VHDL.Quartus
+import ForSyDe.Backend.VHDL.Quartus (callQuartus)
 import ForSyDe.Backend.VHDL.Modelsim
 
 import ForSyDe.ForSyDeErr
@@ -64,9 +64,8 @@ writeVHDLM = do
    writeGlobalVHDLM
    -- change to systemName/vhdl
    liftIO $ setCurrentDirectory ".."
-   -- analyze with quartus if necessary
-   analyze <- isAnalyzeQuartusSet
-   when analyze analyzeResultsQuartus
+   -- call quartus if necessary
+   callQuartus
    -- analyze with modelsim if necessary
    compile <- isCompileModelsimSet
    when compile compileResultsModelsim

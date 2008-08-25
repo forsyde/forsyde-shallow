@@ -161,7 +161,7 @@ vhdlTest = writeAndModelsimVHDLOps testVHDLOps
 
 -- testing VHDL options
 testVHDLOps :: VHDLOps
-testVHDLOps = defaultVHDLOps{analyzeQuartus=True}
+testVHDLOps = defaultVHDLOps{execQuartus=Just checkSynthesisQuartus}
 
 -- Compare an IO test with a pure expected result
 (<~=?>) :: (Eq a, Show a) => a -> IO a -> Test  
