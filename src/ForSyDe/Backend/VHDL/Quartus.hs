@@ -90,15 +90,15 @@ gen_quartus_tcl (QuartusOps act mFMax mFamDev assigs) = do
                            "execute_module -tool map"
                         FullCompilation ->
                            "execute_flow -compile"
-       fmax max = ["set_global_assignment -name FMAX_REQUIRENMENT \"" ++ 
-                    show max ++ "\" MHz"]
+       fmax max = ["set_global_assignment -name FMAX_REQUIREMENT \"" ++ 
+                    show max ++ " MHz\""]
        famDev (fam, mDev) = 
          ["set_global_assignment -name FAMILY " ++ show fam] ++
          case mDev of
            Nothing -> []
            Just dev -> ["set_global_assignment -name DEVICE " ++ show dev]
        mkAssig (vhdlPin, fpgaPin) = "set_location_assignment " ++ 
-                                      fpgaPin  ++ "-to " ++ vhdlPin
+                                      fpgaPin  ++ " -to " ++ vhdlPin
        packages = ["load_package project", "load_package flow"]
        includeVHDLFile :: FilePath      -- ^ system name
                        -> Maybe String  -- ^ what library to include the 
