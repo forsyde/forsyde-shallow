@@ -91,4 +91,3 @@ counterSY m n = sourceSY f m
 	| otherwise = succ x
 
 
-

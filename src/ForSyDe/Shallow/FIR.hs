@@ -44,11 +44,13 @@ fir :: Fractional a => Vector a -> Signal a -> Signal a
 fir h = innerProd h . sipo k 0.0
     where k = lengthV h
 
+sipo :: Int -> b -> Signal b -> Vector (Signal b)
 sipo n s0 = unzipxSY . scanldSY shiftrV initState
     where initState = copyV n s0
 
-innerProd h = zipWithxSY (ipV h)
+innerProd :: (Num a) => Vector a -> Vector (Signal a) -> Signal a
+innerProd coeffs = zipWithxSY (ipV coeffs)
    where ipV NullV   NullV   = 0
 	 ipV (h:>hv) (x:>xv) = h*x + ipV hv xv
-
+	 ipV _       _       = error "Vectors of different size"
 
