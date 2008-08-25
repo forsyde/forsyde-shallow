@@ -45,13 +45,13 @@ vhdlMux = writeVHDLOps defaultVHDLOps{execQuartus=Just quartusOps} muxSysDef
  where quartusOps = QuartusOps FullCompilation
                                (Just 50)
                                (Just ("CycloneII", Just "EP2C35F672C6"))
-                               [("sel.tup1","PIN1"),
-                                ("sel.tup2","PIN2"),
-                                ("data.tup1","PIN3"),
-                                ("data.tup2","PIN4"),
-                                ("data.tup3","PIN5"),
-                                ("data.tup4","PIN6"),
-                                ("out1","PIN7")]
+                               [("sel.tup_1","PIN_AF14"),
+                                ("sel.tup_2","PIN_AD13"),
+                                ("data.tup_1","PIN_N25"),
+                                ("data.tup_2","PIN_N26"),
+                                ("data.tup_3","PIN_P25"),
+                                ("data.tup_4","PIN_AE14"),
+                                ("out1","PIN_AE23")]
 
 
 
