@@ -34,7 +34,24 @@ muxSysDef = $(newSysDefTHName 'selectProc ["sel", "data"] ["out1"])
 simMux :: [(Bit, Bit)] -> [(Bit, Bit, Bit, Bit)] -> [Bit]
 simMux = simulate muxSysDef
 
+
 selIn = [(L,L),(L,H),(H,L)]
 dataIn = [(L,L,L,H), (L,L,L,H), (L,H,L,L)]
+
+
+-- translate to VHDL, write output and run in QUartus
+vhdlMux :: IO ()
+vhdlMux = writeVHDLOps defaultVHDLOps{execQuartus=Just quartusOps} muxSysDef
+ where quartusOps = QuartusOps FullCompilation
+                               (Just 50)
+                               (Just ("CycloneII", Just "EP2C35F672C6"))
+                               [("sel.tup1","PIN1"),
+                                ("sel.tup2","PIN2"),
+                                ("data.tup1","PIN3"),
+                                ("data.tup2","PIN4"),
+                                ("data.tup3","PIN5"),
+                                ("data.tup4","PIN6"),
+                                ("out1","PIN7")]
+
 
 
