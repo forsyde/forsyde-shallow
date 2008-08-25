@@ -23,7 +23,19 @@
 </pre>
 
 <pre>
-@COMMENT{{Command line: bib2bib -ob ForSyDe-axel.bib -c 'key : "ForSyDe"' /home/axel/text/papers/lit.bib}}
+@COMMENT{{Command line: bib2bib -q -ob /home/axel/public_html/ForSyDe-axel.bib -c 'key : "ForSyDe" 
+            and not $key = "lu:2007b"  
+            and not $key = "lu:2002a"  
+            and not $key = "lu:2006d"  
+            and not $key = "sander:2003c"  
+            and not $key = "sander:2004a"  
+            and not $key = "sander:2003a"  
+            and not $key = "sander:2003b"  
+            and not $key = "zhang:2002a"  
+            and not $key = "tian:2002a"  
+            and not $key = "ciuro:2001a"  
+            and not $key = "sicking:2005a"  
+            and not $key = "raudvere:2005a"' -oc /dev/null /home/axel/text/papers/lit.bib}}
 </pre>
 
 <a name="jantsch:2008b"></a><pre>
@@ -38,63 +50,34 @@
 }
 </pre>
 
-<a name="lu:2007b"></a><pre>
-@INPROCEEDINGS{<a href="publications.html#lu:2007b">lu:2007b</a>,
-  author = {Zhonghai Lu and Jonas Sicking and Ingo Sander and Axel
-                  Jantsch},
-  title = {Using Synchronizers for Refining Synchronous
-                  Communication onto Hardware/Software Architectures },
-  key = {ForSyDe},
-  booktitle = {Proceedings of the 18th IEEE/IFIP International Workshop
-                  on Rapid System Prototyping},
-  year = 2007,
-  address = {Porto Alegre, Brasil},
-  month = {May},
-  url = {<a href="http://web.it.kth.se/~axel/papers/2007/RSP-ZhonghaiLu.pdf">http://web.it.kth.se/~axel/papers/2007/RSP-ZhonghaiLu.pdf</a>}
-}
-</pre>
-
-<a name="lu:2006d"></a><pre>
-@INPROCEEDINGS{<a href="publications.html#lu:2006d">lu:2006d</a>,
-  author = {Zhonghai Lu and Ingo Sander and Axel Jantsch},
-  title = {Towards Performance-oriented Pattern-based Refinement of
-                  Synchronous Models onto {NoC} Communication },
-  key = {Nostrum,ForSyDe},
-  booktitle = {9th Euromicro Conference on Digital System Design (DSD
-                  2006)},
-  year = 2006,
-  month = {August},
-  url = {<a href="http://www.imit.kth.se/~axel/papers/2006/DSD-Euromicro-zhonghai.pdf">http://www.imit.kth.se/~axel/papers/2006/DSD-Euromicro-zhonghai.pdf</a>}
-}
-</pre>
-
-<a name="raudvere:2005a"></a><pre>
-@INPROCEEDINGS{<a href="publications.html#raudvere:2005a">raudvere:2005a</a>,
-  author = {Tarvo Raudvere and Ashish K. Singh and Ingo Sander and
+<a name="mathaikutty>2007b"></a><pre>
+@ARTICLE{<a href="publications.html#mathaikutty>2007b">mathaikutty>2007b</a>,
+  author = {Deepak Mathaikutty and Hiren Patel and Sandeep Shukla and
                   Axel Jantsch},
-  title = {System Level Verification of Digital Signal Processing
-                  Applications Based on the Polynomial Abstraction
-                  Technique },
+  title = {{EWD}: A Metamodeling Driven Customizable Multi-MoC
+                  System Modeling Framework},
+  journal = {ACM Transactions on Design Automation of Embedded Systems},
   key = {ForSyDe},
-  booktitle = {Proceedings of the Internatipnal Conference on Computer
-                  Aided Design (ICCAD)},
-  year = 2005,
-  month = {November}
+  year = 2007,
+  volume = 12,
+  number = 3,
+  month = {August},
+  url = {<a href="http://web.it.kth.se/~axel/papers/2007/ACMTODAES-MathaikuttyEWD.pdf">http://web.it.kth.se/~axel/papers/2007/ACMTODAES-MathaikuttyEWD.pdf</a>}
 }
 </pre>
 
-<a name="sicking:2005a"></a><pre>
-@MASTERSTHESIS{<a href="publications.html#sicking:2005a">sicking:2005a</a>,
-  author = {Jonas Sicking},
-  title = {Implementation of asynchronous communication for
-                  {ForSyDe} in hardware and software},
-  school = {School for Information and Communication Technology,
-                  Royal Institute of Technology},
-  year = 2005,
+<a name="mathaikutty:2008a"></a><pre>
+@ARTICLE{<a href="publications.html#mathaikutty:2008a">mathaikutty:2008a</a>,
+  author = {Deepak Mathaikutty and Hiren Patel and Sandeep Shukla and
+                  Axel Jantsch},
+  title = {{SML-Sys}: A Functional Framework for Multiple Models of
+                  Computation for Heterogeneous System Design},
   key = {ForSyDe},
-  address = {Stockholm, Sweden},
-  month = {December},
-  url = {<a href="http://www.imit.kth.se/~axel/papers/2005/MSc-jonas-sicking.pdf">http://www.imit.kth.se/~axel/papers/2005/MSc-jonas-sicking.pdf</a>}
+  journal = {Design Automation for Embedded Systems},
+  publisher = {Springer},
+  year = 2008,
+  url = {<a href="http://dx.doi.org/10.1007/s10617-008-9012-4">http://dx.doi.org/10.1007/s10617-008-9012-4</a>},
+  url = {<a href="http://www.imit.kth.se/~axel/papers/2008/DAES-Mathaikutty-SMLSys.pdf">http://www.imit.kth.se/~axel/papers/2008/DAES-Mathaikutty-SMLSys.pdf</a>}
 }
 </pre>
 
@@ -111,6 +94,19 @@
   editor = {Alain Vachoux},
   chapter = 7,
   url = {<a href="http://www.imit.kth.se/~axel/papers/2006/FDL-Book-UMoC++Mathaikutty.pdf">http://www.imit.kth.se/~axel/papers/2006/FDL-Book-UMoC++Mathaikutty.pdf</a>}
+}
+</pre>
+
+<a name="mathaikutty:2005a"></a><pre>
+@INPROCEEDINGS{<a href="publications.html#mathaikutty:2005a">mathaikutty:2005a</a>,
+  author = {Deepak Abraham Mathaikutty and Hiren Patel and Sandeep
+                  K. Shukla and Axel Jantsch },
+  title = {{UMoC++}: Modeling Environment for Heterogeneous Systems
+                  based on Generic {MoCs}},
+  key = {ForSyDe},
+  booktitle = {Proceedings of the Forum on Design Languages },
+  year = 2005,
+  month = {September}
 }
 </pre>
 
