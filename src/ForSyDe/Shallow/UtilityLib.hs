@@ -36,7 +36,8 @@ module ForSyDe.Shallow.UtilityLib(
                       module ForSyDe.Shallow.DFT,            
                       module ForSyDe.Shallow.Memory,
                       module ForSyDe.Shallow.Queue
-	              --module ForSyDe.Shallow.BitVector,
+                      --module ForSyDe.Shallow.Combinators    
+	              --module ForSyDe.Shallow.BitVector
                       --module ForSyDe.Shallow.FilterLib,
 		      --module ForSyDe.Shallow.Gaussian,
 		      --module ForSyDe.Shallow.PolyArith,
@@ -46,6 +47,7 @@ module ForSyDe.Shallow.UtilityLib(
 import ForSyDe.Shallow.DFT          
 import ForSyDe.Shallow.Memory
 import ForSyDe.Shallow.Queue
+--import ForSyDe.Shallow.Combinators
 --import ForSyDe.Shallow.BitVector
 --import ForSyDe.Shallow.FilterLib
 --import ForSyDe.Shallow.Gaussian

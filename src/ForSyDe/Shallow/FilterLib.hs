@@ -39,7 +39,7 @@ module ForSyDe.Shallow.FilterLib (
     where 
 
 import ForSyDe.Shallow.MoCLib
-import ForSyDe.Shallow.CTLib
+--import ForSyDe.Shallow.CTLib
 import ForSyDe.Shallow.CoreLib
 import ForSyDe.Shallow.PolyArith
 

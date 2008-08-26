@@ -27,12 +27,15 @@ The ForSyDeMoCLib is a container including all MoC libraries and their domain in
 -- #ignore-exports
 
 module ForSyDe.Shallow.MoCLib(  
-	              module ForSyDe.Shallow.SynchronousLib
-                    , module ForSyDe.Shallow.CTLib
-		    , module ForSyDe.Shallow.UntimedLib
+	              module ForSyDe.Shallow.SynchronousLib,
+                      module ForSyDe.Shallow.SynchronousProcessLib,    
+                      module ForSyDe.Shallow.CTLib,
+		      module ForSyDe.Shallow.UntimedLib,
+                      module ForSyDe.Shallow.DomainInterfaces
 		    ) where
 
 import ForSyDe.Shallow.SynchronousLib
 import ForSyDe.Shallow.CTLib
 import ForSyDe.Shallow.UntimedLib
-
+import ForSyDe.Shallow.DomainInterfaces
+import ForSyDe.Shallow.SynchronousProcessLib

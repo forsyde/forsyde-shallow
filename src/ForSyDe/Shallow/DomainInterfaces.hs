@@ -45,15 +45,15 @@ ser2parxDI :: (Num a, Ord a) => a -> Signal (AbstExt b)
 -- Implementation
 
 downDI n xs     = down1 n 1 xs 
-  where down1 n m NullS   = NullS
+  where down1 _ _ NullS   = NullS
 	down1 1 1 (x:-xs) = x :- down1 1 1 xs
 	down1 n 1 (x:-xs) = x :- down1 n 2 xs
-	down1 n m (x:-xs) = if m == n then
+	down1 n m (_:-xs) = if m == n then
 			       down1 n 1 xs
 			    else
 			       down1 n (m+1) xs 
 
-upDI n NullS   = NullS
+upDI _ NullS   = NullS
 upDI n (x:-xs) = (Prst x) :- ((copyS (n-1) Abst) +-+ upDI n xs)
 
 par2ser2DI xs ys  = par2ser2DI' (zipSY xs ys)
@@ -85,18 +85,18 @@ ser2parxDI n = unzipxSY . delaySY (copyV n Abst)
 			. filterAbstDI . group n
 
 group2SY NullS = NullS
-group2SY (x:-NullS) = NullS
+group2SY (_:-NullS) = NullS
 group2SY (x:-y:-xys) = (x, y) :- group2SY xys
 
 group3SY NullS = NullS
-group3SY (x:-NullS) = NullS
-group3SY (x:-y:-NullS) = NullS
-group3SY (x:-y:-z:-xyzs) = (x, y, x) :- group3SY xyzs
+group3SY (_:-NullS) = NullS
+group3SY (_:-_:-NullS) = NullS
+group3SY (x:-y:-z:-xyzs) = (x, y, z) :- group3SY xyzs
 
 group4SY NullS = NullS
-group4SY (w:-NullS) = NullS
-group4SY (w:-x:-NullS) = NullS
-group4SY (w:-x:-y:-NullS) = NullS
+group4SY (_:-NullS) = NullS
+group4SY (_:-_:-NullS) = NullS
+group4SY (_:-_:-_:-NullS) = NullS
 group4SY (w:-x:-y:-z:-wxyzs) = (w, x, y, z) :- group4SY wxyzs 
 
 
@@ -108,8 +108,7 @@ filterAbstDI ((Prst x):-xs) = x :- filterAbstDI xs
 group n xs = mapSY (output n) (scanlSY (addElement n)  (NullV, 0) xs)
 	       where addElement m (vs, n) x | n < m  = (vs <: x, n+1)
       				            | n == m = (unitV x, 1)
+                                            | otherwise = error "Vector of wrong size"
  		     output m (vs, n) | m == n = Prst vs
-				      | m /= n = Abst
+				      | otherwise = Abst
 
--- FIXME: remove warnings
-{--# OPTIONS_GHC -w #--}

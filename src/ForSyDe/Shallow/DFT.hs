@@ -10,7 +10,7 @@ import Data.Complex
 -- | The function 'dft' performs a standard Discrete Fourier Transformation
 dft :: Int -> Vector (Complex Double) -> Vector (Complex Double)
 dft bigN x | bigN == (lengthV x) = mapV (bigX_k bigN x) (nVector x)
-	   | otherwise   = error "DFT: Vector has not the right size!"   
+	   | otherwise = error "DFT: Vector has not the right size!"   
    where
      nVector x'       = iterateV (lengthV x') (+1) 0
      bigX_k bigN' x' k = sumV (zipWithV (*) x' (bigW' k bigN'))
@@ -28,7 +28,7 @@ fullcircle n = fullcircle1 0 (fromIntegral n) n
 -- | The function 'fft' implements a fast Fourier transform (FFT) algorithm, for computing the DFT, when the size N is a power of 2.
 fft :: Int -> Vector (Complex Double) -> Vector (Complex Double)
 fft bigN xv | bigN == (lengthV xv) = mapV (bigX xv) (kVector bigN)
-	     | otherwise = error "FFT: Vector has not the right size!"
+	    | otherwise = error "FFT: Vector has not the right size!"
 
 kVector :: (Num b, Num a) => a -> Vector b      
 kVector bigN = iterateV bigN (+1) 0 

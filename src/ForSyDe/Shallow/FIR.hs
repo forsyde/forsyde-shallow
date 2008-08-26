@@ -29,28 +29,27 @@ The output of the shiftregister, a signal of vectors, is transformed with the pr
 \begin{code}
 -}
 -- | The module implements a FIR-filter for the synchronous computational model.
-module ForSyDe.Shallow.FIR (fir) where
+module ForSyDe.Shallow.FIR (firSY) where
 
 import ForSyDe.Shallow.SynchronousLib
 import ForSyDe.Shallow.CoreLib
 
--- | All kinds of FIR-filters can now be modeled by means of 'fir'. The only argument needed is the list of coefficients, which is given as a vector of any size. To illustrate this, an 8-th order band pass filter is modeled as follows. 
+-- | The function firSY implements a FIR-filter for the synchronous computational model. All kinds of FIR-filters can now be modeled by means of 'firSY'. The only argument needed is the list of coefficients, which is given as a vector of any size. To illustrate this, an 8-th order band pass filter is modeled as follows. 
 --
--- > bp = fir (vector [0.06318761339784, 0.08131651217682, 0.09562326700432, 
+-- > bp = firSY (vector [0.06318761339784, 0.08131651217682, 0.09562326700432, 
 -- >                   0.10478344432968, 0.10793629404886, 0.10478344432968, 
 -- >                   0.09562326700432, 0.08131651217682, 0.06318761339784 ])
 -- 
-fir :: Fractional a => Vector a -> Signal a -> Signal a
-fir h = innerProd h . sipo k 0.0
+firSY :: Fractional a => Vector a -> Signal a -> Signal a
+firSY h = innerProdSY h . sipoSY k 0.0
     where k = lengthV h
 
-sipo :: Int -> b -> Signal b -> Vector (Signal b)
-sipo n s0 = unzipxSY . scanldSY shiftrV initState
+sipoSY :: Int -> b -> Signal b -> Vector (Signal b) 
+sipoSY n s0 = unzipxSY . scanldSY shiftrV initState
     where initState = copyV n s0
 
-innerProd :: (Num a) => Vector a -> Vector (Signal a) -> Signal a
-innerProd coeffs = zipWithxSY (ipV coeffs)
+innerProdSY :: (Num a) => Vector a -> Vector (Signal a) -> Signal a
+innerProdSY coeffs = zipWithxSY (ipV coeffs)
    where ipV NullV   NullV   = 0
 	 ipV (h:>hv) (x:>xv) = h*x + ipV hv xv
-	 ipV _       _       = error "Vectors of different size"
-
+         ipV _       _       = error "Vector of different length"

@@ -3,7 +3,6 @@
 
 -- | The synchronous process library 'SynchronousProcessLib' defines processes for the synchronous computational model. It is based on the synchronous library 'SynchronousLib'.
 module ForSyDe.Shallow.SynchronousProcessLib(
-			       module ForSyDe.Shallow.SynchronousLib, 
 			       fifoDelaySY, finiteFifoDelaySY,
 			       memorySY, mergeSY, groupSY, counterSY
 			     ) where
@@ -75,15 +74,15 @@ mergeSY xs ys		=  moore2SY mergeState mergeOutput [] xs ys
 	 mergeOutput []	    = Abst
          mergeOutput (u:_) = Prst u	
 
-groupSY k = mooreSY f g s0 
+groupSY k = mealySY f g s0 
   where
     s0 = NullV
     f v x | (lengthV v) == 0 = unitV x
 	  | (lengthV v) == k = unitV x 
 	  | otherwise        = v <: x
-    g v   | (lengthV v) == 0 = Prst NullV
-    g v   | (lengthV v) == k = Prst v
-    g _   | otherwise        = Abst
+    g v x | (lengthV v) == 0   = Abst
+    g v x | (lengthV v) == k-1 = Prst (v<:x)
+    g _ _ | otherwise          = Abst
       
 counterSY m n = sourceSY f m
   where 
