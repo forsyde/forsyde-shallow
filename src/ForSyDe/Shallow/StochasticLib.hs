@@ -56,7 +56,7 @@ selMapSY seed f0 f1 xs = selmap1 f0 f1 (sigmaUn seed (0,1)) xs
               selmap1 _  _  _       NullS = NullS
               selmap1 f0 f1 (s:-ss) (x:-xs) 
                  = (select1 s f0 f1 x) :- (selmap1 f0 f1 ss xs)
-
+              selmap1 _  _  NullS _ = error "selMapSY: empty seed signal."
 
 -- | The skeleton 'selScanlSY' is a stochastic variant of 'scanlSY'.
 selScanlSY :: Int           -- ^The seed
@@ -73,15 +73,21 @@ selScanlSY seed f0 f1 mem xs      = selscan1 f0 f1 mem (sigmaUn seed (0,1)) xs
                 selscan1 f0 f1 mem (s:-ss) (x:-xs)
                          = newmem :- (selscan1 f0 f1 newmem ss xs)
                          where newmem = (select2 s f0 f1 mem x) 
+                selscan1 _  _  _   NullS _ 
+                    = error "selScanlSY: empty seed signal"
 
 select1		  :: Int -> (a -> b) -> (a->b) -> a -> b
 select1 0 f0 _  x =  f0 x
 select1 1 _  f1 x =  f1 x
+select1 s _  _  _ =  error ("select1: seed value neither 0 nor 1: " 
+                            ++ (show s))
 
 select2		    :: Int -> (a -> b -> c) -> (a->b->c) 
 		       -> a -> b -> c
 select2 0 f0 _  x y =  f0 x y
 select2 1 _  f1 x y =  f1 x y
+select2 s _  _  _ _ =  error ("select2: seed value neither 0 nor 1: " 
+                              ++ (show s))
 
 -- | 'selMooreSY' is the stochastic variant of mooreSY. Both the 
 --   next-state and the output function is randomly selected based on a 
@@ -201,53 +207,55 @@ sigmaGe f seed (r1,r2) = sigma2 (checkSum f (fromIntegral r1)
 
 -----------------------------------------------------------------------------
 -- Test section:
+--
+-- These tests are commented to avoid warnings about not-used functions.
+-- But the test functions work and are useful.
+-- testAll = "test selMapSY: " ++ testSelMap 
+--           ++ ", test selMooreSY: " ++ testSelMoore
+--           ++ ", test selMealySY: " ++ testSelMealy
 
-testAll = "test selMapSY: " ++ testSelMap 
-          ++ ", test selMooreSY: " ++ testSelMoore
-          ++ ", test selMealySY: " ++ testSelMealy
+-- testSelMap = show so ++ " -> " ++ (cmpSig so (signal [0,3,4,5,4,5,8,9,8,11]))
+--     where f0 x = x + 1
+--           f1 x = x - 1
+--           so = takeS 10 (selMapSY 876876 f0 f1 (signal [1,2..]))
 
-testSelMap = show so ++ " -> " ++ (cmpSig so (signal [0,3,4,5,4,5,8,9,8,11]))
-    where f0 x = x + 1
-          f1 x = x - 1
-          so = takeS 10 (selMapSY 876876 f0 f1 (signal [1,2..]))
+-- testSelMoore = show so ++ " -> " 
+--                ++ (cmpSig so (signal [10,2,3,-40,-5,0,7,-80,0,-100]))
+--     where so = takeS 10 (selMooreSY 7667567 123234 g0 g1 f0 f1 w0 
+--                                         (signal [1,2..]))
+--           g0 (0,y) x | even x         = (0,x)
+--                      | otherwise      = (1,x)
+--           g0 (1,y) x | x `mod` 3 == 0 = (0,x)
+--                      | otherwise      = (1,x)
+--           g1 (0,y) x | even x         = (1,x)
+--                      | otherwise      = (0, x)
+--           g1 (1,y) x | x `mod` 3 == 0 = (0,0)
+--                      | otherwise      = (1,x)
+--           f0 (0,y) = y
+--           f0 (1,y) = -1 * y
+--           f1 (0,y) = 10 * y
+--           f1 (1,y) = -10 * y
+--           w0 = (0,0)
 
-testSelMoore = show so ++ " -> " 
-               ++ (cmpSig so (signal [10,2,3,-40,-5,0,7,-80,0,-100]))
-    where so = takeS 10 (selMooreSY 7667567 123234 g0 g1 f0 f1 w0 
-                                        (signal [1,2..]))
-          g0 (0,y) x | even x         = (0,x)
-                     | otherwise      = (1,x)
-          g0 (1,y) x | x `mod` 3 == 0 = (0,x)
-                     | otherwise      = (1,x)
-          g1 (0,y) x | even x         = (1,x)
-                     | otherwise      = (0, x)
-          g1 (1,y) x | x `mod` 3 == 0 = (0,0)
-                     | otherwise      = (1,x)
-          f0 (0,y) = y
-          f0 (1,y) = -1 * y
-          f1 (0,y) = 10 * y
-          f1 (1,y) = -10 * y
-          w0 = (0,0)
-
-testSelMealy = show so ++ " -> " 
-               ++ (cmpSig so (signal [10,2,3,-40,-5,0,7,-80,0,-100]))
-    where so = takeS 10 (selMealySY 7667567 123234 g0 g1 f0 f1 w0 
-                                        (signal [1,2..]))
-          g0 (0,y) x | even x         = (0,x)
-                     | otherwise      = (1,x)
-          g0 (1,y) x | x `mod` 3 == 0 = (0,x)
-                     | otherwise      = (1,x)
-          g1 (0,y) x | even x         = (1,x)
-                     | otherwise      = (0, x)
-          g1 (1,y) x | x `mod` 3 == 0 = (0,0)
-                     | otherwise      = (1,x)
-          f0 (0,y) x = y
-          f0 (1,y) x = -1 * y
-          f1 (0,y) x = 10 * y
-          f1 (1,y) x = -10 * y
-          w0 = (0,0)
-
-
-cmpSig :: Eq a => Signal a -> Signal a -> String
-cmpSig s1 s2 | s1 == s2 = "OK"
-             | otherwise = "Not OK"
+-- testSelMealy = show so ++ " -> " 
+--                ++ (cmpSig so (signal [10,2,3,-40,-5,0,7,-80,0,-100]))
+--     where so = takeS 10 (selMealySY 7667567 123234 g0 g1 f0 f1 w0 
+--                                         (signal [1,2..]))
+--           g0 (0,y) x | even x         = (0,x)
+--                      | otherwise      = (1,x)
+--           g0 (1,y) x | x `mod` 3 == 0 = (0,x)
+--                      | otherwise      = (1,x)
+--           g1 (0,y) x | even x         = (1,x)
+--                      | otherwise      = (0, x)
+--           g1 (1,y) x | x `mod` 3 == 0 = (0,0)
+--                      | otherwise      = (1,x)
+--           f0 (0,y) x = y
+--           f0 (1,y) x = -1 * y
+--           f1 (0,y) x = 10 * y
+--           f1 (1,y) x = -10 * y
+--           w0 = (0,0)
+--
+--
+-- cmpSig :: Eq a => Signal a -> Signal a -> String
+-- cmpSig s1 s2 | s1 == s2 = "OK"
+--              | otherwise = "Not OK"
