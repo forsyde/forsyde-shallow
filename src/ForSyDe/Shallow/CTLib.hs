@@ -70,6 +70,7 @@ import Data.Ratio
 import Numeric()
 
 -- The revision number of this file:
+revision :: String
 revision=filter (\ c -> (not (c=='$'))) "$Revision: 1.7 $, $Date: 2007/07/11 08:38:34 $"
 
 -- |The type of a sub-signal of a continuous signal. It consisits of the 
@@ -84,8 +85,8 @@ data (Num a) =>
 instance (Num a) => Show (SubsigCT a) where
     show ss = show (sampleSubsig timeStep ss)
 
-unit :: String -- all time numbers are in terms of this unit.
-unit = "sec" 
+--unit :: String -- all time numbers are in terms of this unit.
+--unit = "sec" 
 
 -- | This constant gives the default time step for sampling and plotting.
 -- Its value is 10ns.
@@ -227,13 +228,13 @@ scaleCT k = applyF1 f'
 -- scaleCT' has the same functionality as scaleCT but operates with a
 -- given signal partitioning rather than on the 
 -- SubsigCT elements.
-scaleCT' :: (Num a) =>
-            Rational -- The sampling period
-         -> a        -- The scaling factor
-         -> Signal (SubsigCT a) -> Signal (SubsigCT a)
-scaleCT' step k = combCT step f
-    where f g = f'
-	      where f' x = k * (g x)
+--scaleCT' :: (Num a) =>
+--            Rational -- The sampling period
+--         -> a        -- The scaling factor
+--         -> Signal (SubsigCT a) -> Signal (SubsigCT a)
+--scaleCT' step k = combCT step f
+--    where f g = f'
+--	      where f' x = k * (g x)
 
 -- |'addCT' adds two input signals together.
 addCT :: (Num a) =>
@@ -245,14 +246,16 @@ addCT s1 s2 = applyF2 f s1' s2'
           f g1 g2 = f'
               where f' x = (g1 x) + (g2 x)
 	      
-addCT' :: (Num a) =>
-          Rational          -- The sampling period
-       -> Signal (SubsigCT a) -- The first input signal
-       -> Signal (SubsigCT a) -- The second input signal
-       -> Signal (SubsigCT a) -- The output signal
-addCT' step = combCT2 step f
-    where f g1 g2 = f'
-	      where f' x = (g1 x) + (g2 x)
+-- addCT' has the same functionality as addCT but operates with a
+-- given signal partitioning rather than on the SubsigCT elements.
+-- addCT' :: (Num a) =>
+--           Rational          -- The sampling period
+--        -> Signal (SubsigCT a) -- The first input signal
+--        -> Signal (SubsigCT a) -- The second input signal
+--        -> Signal (SubsigCT a) -- The output signal
+-- addCT' step = combCT2 step f
+--     where f g1 g2 = f'
+-- 	      where f' x = (g1 x) + (g2 x)
 	      
 -- |'multCT' multiplies two input signals together.
 multCT :: (Num a) =>
@@ -264,14 +267,16 @@ multCT s1 s2 = applyF2 f s1' s2'
           f g1 g2 = f'
               where f' x = (g1 x) * (g2 x)
 
-multCT' :: (Num a) =>
-           Rational          -- The sampling period
-        -> Signal (SubsigCT a) -- The first input signal
-        -> Signal (SubsigCT a) -- The second input signal
-        -> Signal (SubsigCT a) -- The output signal
-multCT' step = combCT2 step f
-    where f g1 g2 = f'
-              where f' x = (g1 x) * (g2 x)
+-- multCT' has the same functionality as multCT but operates with a
+-- given signal partitioning rather than on the SubsigCT elements.
+-- multCT' :: (Num a) =>
+--            Rational          -- The sampling period
+--         -> Signal (SubsigCT a) -- The first input signal
+--         -> Signal (SubsigCT a) -- The second input signal
+--         -> Signal (SubsigCT a) -- The output signal
+-- multCT' step = combCT2 step f
+--     where f g1 g2 = f'
+--               where f' x = (g1 x) * (g2 x)
 
 -- |'absCT' takes the absolute value of a signal.
 absCT :: (Num a,Ord a) =>
@@ -468,7 +473,7 @@ cutEq s1 s2 = unzipCT (cutEq' s1 s2)
                              ++ ", dur2="++ (show dur2)++";")
 	where dur1 = durationSS ss1
 	      dur2 = durationSS ss2
-    unzipCT :: (Num a, Num a) =>
+    unzipCT :: Num a =>
                Signal ((SubsigCT a), (SubsigCT b)) 
 	    -> (Signal (SubsigCT a), Signal (SubsigCT b))
     unzipCT NullS = (NullS, NullS)
@@ -668,8 +673,6 @@ plotCT' step sigs = plotSig (expandSig 1 sigs)
                              | otherwise      = c   : (replChar replSet s)
       dumpSig :: (Num a) => [(Rational,a)] -> String
       dumpSig points = concatMap f points
---        where f (x,y) = show x ++ "    " 
---                        ++ show y ++ "\n"
         where f (x,y) = show (fromRational x) ++ "    " 
                         ++ show (y) ++ "\n"
 
@@ -695,6 +698,7 @@ plotCT' step sigs = plotSig (expandSig 1 sigs)
                 f1 ((datfilename,label):[]) 
                     = "\"" ++ datfilename 
                        ++ "\" with linespoints title \""++label++"\"\n"
+                f1 [] = ""
                 plotFileName = "fig/ct-moc-graph-" ++ (f2 ns)
                 f2 :: [(String,String)] -> String -- f2 generates part of the 
                                                   -- filename for the eps and 
@@ -716,7 +720,7 @@ plotCT' step sigs = plotSig (expandSig 1 sigs)
       -- So we go around the problem here by trying different file names until
       -- we succeed or until the maximum number of attempts have been performed.
       tryNTimes :: Int -> (String -> IO ()) -> IO String
-      tryNTimes n a | n <= 0 = error "not succedded"
+      tryNTimes n a | n <= 0 = error "tryNTimes: not succedded"
                     | n > 0 = 
                         do catch (action fname a) (handler a)
           where handler :: (String -> IO()) -> IOError -> IO String
@@ -725,6 +729,7 @@ plotCT' step sigs = plotSig (expandSig 1 sigs)
                 action :: String -> (String -> IO ()) -> IO String
                 action fname a = do (a fname)
                                     return fname
+      tryNTimes _ _ = error "tryNTimes: Unexpected pattern."
 
 ----------------------------------------------------------------------------
 {- |
@@ -784,9 +789,10 @@ vcdGen step sigs =
       mkVCDFileName :: String
       mkVCDFileName = ("./fig/ct-moc.vcd")
 
-mkDir dir = do dirExists <- doesDirectoryExist "./fig"
+mkDir :: String -> IO()
+mkDir dir = do dirExists <- doesDirectoryExist dir
                if (not dirExists) 
-                  then (createDirectory "./fig") 
+                  then (createDirectory dir) 
                   else return ()
 
 -- prepSigValues rearranges the [(label,[(time,value)])] lists such 
@@ -877,6 +883,8 @@ timeunit timescale | timescale == 1 % 1    = "s"
                    | timescale == 1 % 1000000000 = "ns"
                    | timescale == 1 % 1000000000000 = "ps"
                    | timescale == 1 % 1000000000000000 = "fs"
+                   | otherwise = error ("timeunit: unexpected timescale: "
+                                        ++ (show timescale))
 
 findTimescale :: [(Int,String,[(Rational,a)])] -> Rational
 findTimescale sigs 
@@ -891,6 +899,8 @@ findTimescale sigs
 -------------------------------------------------------------------------
 -----------------------------------------------------------
 -- Testing the CT signals and process constructors:
+
+{--
 main = testAll
 testAll = 
     do 
@@ -958,7 +968,7 @@ testFeedback = plotCT' 0.0001 ss
 
 toneA = sineWave (440.0) (0, 0.02)
 toneE = sineWave 520.0 (0, 0.02)
-
+-}
 
 {- Some performance tests on my laptop under cygwin:
 
