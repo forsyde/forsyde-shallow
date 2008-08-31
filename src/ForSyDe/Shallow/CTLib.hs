@@ -1,6 +1,3 @@
-{--# OPTIONS_GHC -w #--}
--- FIXME: remove warnings
-
 {- |
 This is the ForSyDe library for continuous time MoC (CT-MoC).
 Revision: $Revision: 1.7 $
@@ -673,7 +670,7 @@ plotCT' step sigs = plotSig (expandSig 1 sigs)
                              | otherwise      = c   : (replChar replSet s)
       dumpSig :: (Num a) => [(Rational,a)] -> String
       dumpSig points = concatMap f points
-        where f (x,y) = show (fromRational x) ++ "    " 
+        where f (x,y) = show ((fromRational x) :: Float) ++ "    " 
                         ++ show (y) ++ "\n"
 
       mkPlotScript :: [(String  -- the file name of the dat file
@@ -894,7 +891,8 @@ findTimescale sigs
         f scale [] = scale
         f scale (x:xs) | r == 0    = f scale xs
                        | otherwise = f (scale/1000) xs
-                       where (_,r) = properFraction (abs (x / scale))
+                       where (_,r) = (properFraction (abs (x / scale))) 
+                                      :: (Int,Rational)
 
 -------------------------------------------------------------------------
 -----------------------------------------------------------
