@@ -11,7 +11,6 @@ module ForSyDe.Shallow.Gaussian (
     )
 where
 
-import ForSyDe.Shallow.SynchronousLib
 import ForSyDe.Shallow.UntimedLib
 import ForSyDe.Shallow.Signal
 
@@ -26,6 +25,7 @@ pGaussianNoise mean variance = mapU 2 gaussianXY . pUnitNormXY
   where
     gaussianXY [x, y] = [mean + sqrt(variance) * x,
                          mean + sqrt(variance) * y]
+    gaussianXY _      = error "gaussianXY: unexpected pattern."
 
 -- |To get a uniform random variable in the range [0, 1]
 uniform :: (Fractional a, RandomGen g, Random a) => 
@@ -40,7 +40,7 @@ pUnitNormXY = mapU 3 unitNormXY . signal . svGenerator . mkStdGen
   where
     unitNormXY [s, v1, v2] = [sqrt(-2 * log(s) / s) * v1,
                               sqrt(-2 * log(s) / s) * v2]
-
+    unitNormXY _ = error "pUnitNormXY: Unexpected pattern."
 
 
 -- |To generate the s, v1, v2 value
