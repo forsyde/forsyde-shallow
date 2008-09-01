@@ -1,6 +1,3 @@
-{--# OPTIONS_GHC -w #--}
--- FIXME: remove warnings
-
 {-|
 
 Module      :  ForSyDe
@@ -13,27 +10,27 @@ Portability :  portable
 
 The ForSyDeMoCLib is a container including all MoC libraries and their domain interfaces. It consists of the following libraries:
 
-* The library for the synchroonous MoC: "SynchronousLib"
+* The library for the synchronous MoC: "SynchronousLib". In this version the synchronous library is divided into three libraries: SynchronousLib, SynchronousProcessLib and StochasticLib.
  
 * The library for the untimed MoC: "UntimedLib"
  
 * The library for the continuous time MoC: "CTLib"
 
-* The library for the discrete event MoC:
-
-* The library for the domain interfaces:
+* The library for the domain interfaces: "Domain Interfaces"
 -}
 
 -- #ignore-exports
 
 module ForSyDe.Shallow.MoCLib(  
 	              module ForSyDe.Shallow.SynchronousLib,
-                      module ForSyDe.Shallow.SynchronousProcessLib,    
+                      module ForSyDe.Shallow.SynchronousProcessLib,
+                      module ForSyDe.Shallow.StochasticLib,
                       module ForSyDe.Shallow.CTLib,
 		      module ForSyDe.Shallow.UntimedLib,
                       module ForSyDe.Shallow.DomainInterfaces
 		    ) where
 
+import ForSyDe.Shallow.StochasticLib
 import ForSyDe.Shallow.SynchronousLib
 import ForSyDe.Shallow.CTLib
 import ForSyDe.Shallow.UntimedLib
