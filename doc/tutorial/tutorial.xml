@@ -1,142 +1,185 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<article xml:id="ForSyDe-tutorial" xmlns="http://docbook.org/ns/docbook" version="5.0">
-<info>
-  <title>ForSyDe tutorial</title>
-  <author>
-    <personname>
-      <firstname>Alfonso</firstname><surname>Acosta</surname>
-    </personname>
-    <affiliation>
-      <orgname>Royal Institute of Technology (KTH)</orgname>
-      <orgdiv>System, Architecture and Methodology (SAM) group</orgdiv>
-    </affiliation>
-    <email>alfonsoa@kth.se</email>
-  </author>  
-  <authorinitials>aag</authorinitials>
-  <pubdate>2008-08-15</pubdate>
-  <revhistory>
-     <revision>
-        <revnumber>0.1</revnumber>
-        <date>2008-08-15</date>
-        <revremark>First version.</revremark>
-     </revision>
-  </revhistory>
-</info> 
-
-<!--              -->
-<!-- Introduction -->
-<!--              -->
-<section xml:id="intro">
-<title>Introduction</title>
-<para>blah blah</para>
-</section>
-
-<!--                    -->
-<!-- Installing ForSyDe -->
-<!--                    -->
-<section xml:id="install">
-<title>Installing ForSyDe</title>
-<para>blah blah</para>
-</section>
-
-<!--                         -->
-<!-- Introduction to ForSyDe -->
-<!--                         -->
-<section xml:id="introForSYDe">
-<title>Introduction to ForSyDe</title>
-<para>blah blah</para>
-
-</section>
-
-<!--                                           -->
-<!-- Deep-embedded vs Shallow-embedded Signals -->
-<!--                                           -->
-<section xml:id="DEvsSE">
-<title>Deep-embedded vs Shallow-embedded signals</title>
-<para>blah blah</para>
-</section>
-
-<!--                       -->
-<!-- Deep-embedded signals -->
-<!--                       -->
-<section xml:id="DE">
-  <title>Using deep-embedded Signals</title>
-
-  <!--                                 -->
-  <!-- A simple combinational system   -->
-  <!--                                 -->
-  <section xml:id="combinational">
-    <title>A simple combinational System</title>
-    <para>blah blah</para>
-  </section>
-
-  <!--                              -->
-  <!-- A simple sequential system   -->
-  <!--                              -->
-  <section xml:id="sequential">
-    <title>A simple sequential System</title>
-    <para>blah blah</para>
-<screen>
-<prompt>$</prompt> ghci
-Prelude> lala  
-</screen>
-<programlisting language="haskell">
-id :: a -> a
-</programlisting>
-  </section>
-
-  <!--                   -->
-  <!-- Using Components  -->
-  <!--                   -->
-  <section xml:id="components">
-    <title>Using components</title>
-    <para>blah blah</para>
-    <para>In <xref linkend="cwf"/> we can see</para>
-    <figure xml:id="cwf">
-      <title>Component workflow</title>
-      <mediaobject>
-	<alt>Component workflow diagram.</alt>
-	<imageobject>
-	  <imagedata align="center" valign="middle" width="6in" fileref="figures/compflow.svg" format="SVG" />
-	</imageobject>
-    </mediaobject>
-    </figure>
+<article xml:id="ForSyDe-tutorial" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0">
+  <info>
+    <title>ForSyDe tutorial</title>
+    <author>
+      <personname>
+	<firstname>Alfonso</firstname><surname>Acosta</surname>
+      </personname>
+      <affiliation>
+	<org>
+	  <orgname>Royal Institute of Technology (KTH)</orgname>
+	  <orgdiv>System, Architecture and Methodology (SAM) group</orgdiv>
+	  <address><city>Stockholm</city>, <country>Sweden</country></address>
+	</org>
+      </affiliation>
+      <email>alfonsoa@kth.se</email>
+    </author>  
+    <authorinitials>aag</authorinitials>
+    <pubdate>2008-08-15</pubdate>
+    <revhistory>
+      <revision>
+	<revnumber>0.1</revnumber>
+	<date>2008-08-15</date>
+	<revremark>First version.</revremark>
+      </revision>
+    </revhistory>
+  </info> 
+  
+  <!--              -->
+  <!-- Introduction -->
+  <!--              -->
+  <section xml:id="intro">
+    <title>Disclaimer and Prerequisites</title>
+    <para>This document has been devised as a practical hands-on
+    introduction to the use of ForSyDe's implementation. Thus, it is
+    intentionally informal and non-exhaustive. If you are interested
+    in ForSyDe's theoretical foundations please refer to the <link
+    xlink:href="http://www.ict.kth.se/org/ict/ecs/sam/projects/forsyde/www/index.html#documentation">Documentation section</link> in of our <link
+    xlink:href="http://www.ict.kth.se/org/ict/ecs/sam/projects/forsyde/www/">website</link>.     <remark>Suggest specific literature and add it to the bibliography</remark>
+    </para>
+    
+    <para>In order to take full advantage of this tutorial, it is essential
+    to have a good background in the <link xlink:href="http://www.haskell.org">Haskell</link>
+    programming language and some of its extensions (<link xlink:href="http://www.haskell.org/th">Template Haskell</link>, <link xlink:href="" > <remark>Missing link</remark> Multiparameter Type Classes</link>, <remark>missing link</remark>Overlapping and ). <remark>Suggest specific literature and add it to the bibliography; Mark Jones tutorial</remark> 
+  </para>
+  
   </section>
   
-  <!--                -->
-  <!-- VHDL Backend   -->
-  <!--                -->
-  <section xml:id="VHDL">
-    <title>VHDL Backend</title>
+  <!--                    -->
+  <!-- Installing ForSyDe -->
+  <!--                    -->
+  <section xml:id="install">
+    <title>Installing ForSyDe</title>
+    <para>ForSyDe is implemented as a Haskell-embedded Domain Specific
+    Language (DSL). As intimidating as the previous phrase might
+    sound, from a practical point of view it only means that, to all
+    effects, ForSyDe is simply a Haskell library.
+    </para>
+    
+    <para>
+      As it was already stated in <xref linkend="intro"/>, ForSyDe
+      relies on many Haskell extensions, some of which are exclusive
+      to GHC. For that reason, a recent version of GHC is required to
+      build ForSyDe<footnote><para>ForSyDe has been tested to run
+      successfully on Linux, OSX-Leopard-x86 and Windows when compiled
+      under GHC version 6.8.2. Due to the massive number of instances
+      automatically generated in ForSyDe, it is not recommended to use
+      a higher version of GHC until <link
+      xlink:href="http://hackage.haskell.org/trac/ghc/ticket/2328">bug
+      #2328</link> is fixed.</para></footnote>.
+    </para>
+    
+    <para>ForSyDe's library is available on Haskell's <link
+    xlink:href="http://hackage.haskell.org">HackageDB</link>, a
+    popular repository of Haskell <link
+    xlink:href="http://www.haskell.org/cabal">Cabal</link> packages.
+    If ForSyDe is the first Cabal package you install or your memory
+    needs to be refreshed in this matter, you should read <link
+    xlink:href="http://haskell.org/haskellwiki/Cabal/How_to_install_a_Cabal_package">"How to install a Cabal package"</link>.
+    
+    
+    </para>
+  </section>
+  
+  <!--                         -->
+  <!-- Introduction to ForSyDe -->
+  <!--                         -->
+  <section xml:id="introForSYDe">
+    <title>Introduction to ForSyDe</title>
+    <para>blah blah</para>
+    
+  </section>
+  
+  <!--                                           -->
+  <!-- Deep-embedded vs Shallow-embedded Signals -->
+  <!--                                           -->
+  <section xml:id="DEvsSE">
+    <title>Deep-embedded vs Shallow-embedded signals</title>
     <para>blah blah</para>
   </section>
   
-
-  <!--                   -->
-  <!-- GraphML Backend   -->
-  <!--                   -->
-  <section xml:id="GraphML">
-    <title>GraphML Backend</title>
+  <!--                       -->
+  <!-- Deep-embedded signals -->
+  <!--                       -->
+  <section xml:id="DE">
+    <title>Using deep-embedded Signals</title>
+    
+    <!--                                 -->
+    <!-- A simple combinational system   -->
+    <!--                                 -->
+    <section xml:id="combinational">
+      <title>A simple combinational System</title>
+      <para>blah blah</para>
+    </section>
+    
+    <!--                              -->
+    <!-- A simple sequential system   -->
+    <!--                              -->
+    <section xml:id="sequential">
+      <title>A simple sequential System</title>
+      <para>blah blah</para>
+      <screen>
+	<prompt>$</prompt> ghci
+	Prelude> lala  
+      </screen>
+      <programlisting language="haskell">
+	id :: a -> a
+      </programlisting>
+    </section>
+    
+    <!--                   -->
+    <!-- Using Components  -->
+    <!--                   -->
+    <section xml:id="components">
+      <title>Using components</title>
+      <para>blah blah</para>
+      <para>In <xref linkend="cwf"/> we can see</para>
+      <figure xml:id="cwf">
+	<title>Component workflow</title>
+	<mediaobject>
+	  <alt>Component workflow diagram.</alt>
+	  <imageobject>
+	    <imagedata align="center" valign="middle" width="6in" fileref="figures/compflow.svg" format="SVG" />
+	  </imageobject>
+	</mediaobject>
+      </figure>
+    </section>
+    
+    <!--                -->
+    <!-- VHDL Backend   -->
+    <!--                -->
+    <section xml:id="VHDL">
+      <title>VHDL Backend</title>
+      <para>blah blah</para>
+    </section>
+    
+    
+    <!--                   -->
+    <!-- GraphML Backend   -->
+    <!--                   -->
+    <section xml:id="GraphML">
+      <title>GraphML Backend</title>
+      <para>blah blah</para>
+    </section>
+    
+  </section> <!-- Deep-embedded signals -->
+  
+  <!--                          -->
+  <!-- Shallow-embedded signals -->
+  <!--                          -->
+  <section xml:id="SE">
+    <title>Shallow-embedded signals</title>
     <para>blah blah</para>
   </section>
   
-</section> <!-- Deep-embedded signals -->
-
-<!--                          -->
-<!-- Shallow-embedded signals -->
-<!--                          -->
-<section xml:id="SE">
-  <title>Shallow-embedded signals</title>
-  <para>blah blah</para>
-</section>
-
-
-<!--        -->
-<!-- FSVec  -->
-<!--        -->
-<appendix xml:id="FSVec">
-  <title><literal>FSVec</literal>s: Vectors parameterized in size</title>
-  <para>lala</para>
-</appendix>
-
+  
+  <!--        -->
+  <!-- FSVec  -->
+  <!--        -->
+  <appendix xml:id="FSVec">
+    <title><literal>FSVec</literal>s: Vectors parameterized in size</title>
+    <para>lala</para>
+  </appendix>
+  
 </article>
