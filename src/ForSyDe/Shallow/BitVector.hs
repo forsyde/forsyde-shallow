@@ -1,7 +1,3 @@
-{--# OPTIONS_GHC -w #--}
--- FIXME: remove warnings
-
-
 {- |
 It defines the bit vector operations from\/to integer.
 -}
@@ -45,7 +41,8 @@ intToBitVector _    _ | otherwise =
           error "intToBitvector : Number out of range!" 
 
 -- |Helper function of 'intToBitVector'.
---intToBitVector' :: forall t a a1.(Num a, Ord a1, Num a1, Integral t) => t -> a1 -> Vector a
+intToBitVector' :: (Num a, Ord a1, Num a1, Integral t) => 
+                   t -> a1 -> Vector a
 intToBitVector' 0    _ = NullV
 intToBitVector' bits n = if (n >= 2^(bits-1)) then
 			     1 :> intToBitVector' (bits-1) (n - 2^(bits-1))
@@ -58,55 +55,58 @@ bitVectorToInt (1:>xv) | isBitVector xv
                = bitVectorToInt' xv (lengthV xv) - 2^(lengthV xv) 
 bitVectorToInt (0:>xv) | isBitVector xv 
                = bitVectorToInt' xv (lengthV xv)
-bitVectorToInt xv | not $ isBitVector xv 
-               = error "bitVectorToInt: Vector is not a BitVector!"
+bitVectorToInt _ = error "bitVectorToInt: Vector is not a BitVector!"
 
 
 -- |Helper function of 'bitVectorToInt'.
---bitVectorToInt' :: forall t a.(Integral a, Num t) => Vector t -> a -> t
+bitVectorToInt' :: (Integral a, Num t) => Vector t -> a -> t
 bitVectorToInt' NullV   _   = 0
 bitVectorToInt' (x:>xv) bit = x * 2^(bit-1) + bitVectorToInt' xv (bit-1)
 
 data Parity = Even | Odd deriving (Show, Eq)
 
 -- |To add even parity bit on the bit-vector in the tail.
+addEvenParityBit :: Num a => Vector a -> Vector a
 addEvenParityBit = addParityBit Even
 -- |To add odd parity bit on the bit-vector in the tail.
+addOddParityBit :: Num a => Vector a -> Vector a
 addOddParityBit  = addParityBit Odd
 
-addParityBit Even v | isBitVector v
-        = if evenNumber v then
-	     v <+> unitV 0
-          else
-	     v <+> unitV 1
-addParityBit Odd  v | isBitVector v
-        = if evenNumber v then
-	     v <+> unitV 1
-          else
-	     v <+> unitV 0
-addParityBit _    v | not $ isBitVector v
-	= error "addParity: Vector is not a BitVector"  
+addParityBit :: Num a => Parity -> Vector a -> Vector a
+addParityBit p v 
+  | isBitVector v = case p of
+                     Even -> resZero even
+                     Odd -> resZero (not even)
+  | otherwise =  error "addParity: Vector is not a BitVector"  
+ where even = evenNumber v 
+       resZero b = v <+> unitV (if b then 0 else 1)
+
 
 -- |To remove the parity bit in the tail.
-removeParityBit v | isBitVector v 
-        = takeV (lengthV v - 1) v
-removeParityBit _ | otherwise 
-        = error "removeParityBit: Vector is not a BitVector "
+removeParityBit :: Num t => Vector t -> Vector t
+removeParityBit v 
+ | isBitVector v = takeV (lengthV v - 1) v
+ | otherwise = error "removeParityBit: Vector is not a BitVector "
 
 -- |To check the even parity of the bit-vector.
+isEvenParity :: Num t => Vector t -> Bool
 isEvenParity = isParityCorrect Even
 
 -- |To check the odd parity of the bit-vector.
+isOddParity :: Num t => Vector t -> Bool
 isOddParity = isParityCorrect Odd
 
+isParityCorrect :: Num t => Parity -> Vector t -> Bool 
 isParityCorrect Even xv = evenNumber xv
 isParityCorrect Odd xv  = not $ evenNumber xv 
 
+evenNumber :: Num t => Vector t -> Bool
 evenNumber NullV   = True
 evenNumber (0:>xv) = xor False (evenNumber xv)
 evenNumber (1:>xv) = xor True (evenNumber xv)
 evenNumber (_:>_) = error "evenNumber: Vector is not a BitVector "
                      
+xor :: Bool -> Bool -> Bool
 xor True  False = True
 xor False True  = True
 xor _     _     = False 

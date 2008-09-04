@@ -80,7 +80,7 @@ groupSY k = mealySY f g s0
     f v x | (lengthV v) == 0 = unitV x
 	  | (lengthV v) == k = unitV x 
 	  | otherwise        = v <: x
-    g v x | (lengthV v) == 0   = Abst
+    g v _ | (lengthV v) == 0   = Abst
     g v x | (lengthV v) == k-1 = Prst (v<:x)
     g _ _ | otherwise          = Abst
       

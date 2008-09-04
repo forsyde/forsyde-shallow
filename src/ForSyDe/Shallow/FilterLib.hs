@@ -1,6 +1,3 @@
-{--# OPTIONS_GHC -w #--}
--- FIXME: remove warnings
-
 {- |
 This is the filter library for ForSyDe heterogeneous MoCs - CT-MoC, SR-MoC,
  and Untimed-MoC.
@@ -42,6 +39,8 @@ import ForSyDe.Shallow.MoCLib
 --import ForSyDe.Shallow.CTLib
 import ForSyDe.Shallow.CoreLib
 import ForSyDe.Shallow.PolyArith
+import Data.List (zipWith5)
+import Control.Monad.Instances () -- Monad instance for (-> r)
 
 -- |The FIR filter. Let '[x_n]' denote the input signal, '[y_n]' denote the ouput
 -- signal, and '[h_n]' the impulse response of the filter. Suppose the length of
@@ -151,6 +150,8 @@ sLinearFilter filterMode step bs as inS =  outS
                       where (bs',as') = h2ARMACoef $ s2zCoef step bs as
 
 -- |Digital filter using Runge Kutta 4 solver.
+rk4FilterDigital :: Fractional a => 
+                    Rational -> [a] -> [a] -> Signal a -> Signal a
 rk4FilterDigital step as bs inSDigital = outSDigital
   where
     -- Below are the skeletons of the RK-4 solver, with
@@ -179,10 +180,15 @@ rk4FilterDigital step as bs inSDigital = outSDigital
     step' = fromRational step
 
 -- The length of the function list is 'n-1' for nth order filter
+ffn' :: (Num t, Num t1) => t -> [[t1] -> t1]
 ffn' n = ffn 0 n
+
 -- Construct the functions for the diagonal '1'
+ffn :: (Num t1, Num t) => Int -> t -> [[t1] -> t1]
 ffn _ 1 = []
 ffn m n = ff1 m : ffn (m+1) (n-1) 
+
+ff1 :: Num t => Int -> [t] -> t
 ff1 m = iprod ([0,0] ++ (repeatN m 0) ++ [1] ++ (repeat 0) )
 
 -- |RK-4 to solve the 1st-order ODEs, with input signal.
@@ -201,17 +207,6 @@ rks4InSY x0 ys0 fFs hs us = scanl3SY stateF ys0 xs hs us
     -- Order -1 of the ODEs
     orderODE' = length ys0 - 1
 
--- |RK-4 to solve the 1st-order ODEs.
-rks4SY :: Double     -- ^The initial time
-      -> [Double]               -- ^The initial values
-      -> [([Double] -> Double)] -- ^List of the funcitons of the ODEs.
-      ->  Signal  Double  -- ^Input signal of steps
-      ->  Signal [Double] -- ^Next state signal
-rks4SY x0 ys0 fFs hs = scanl2SY stateF ys0 xs hs
-  where
-    stateF ysn xn h = rks4 h xn fFs ysn 
-    xs = scanldSY (+) x0 hs
-
 -- |One step RK-4 for the 1st-order ordinary differential equations (ODEs).
 rks4 ::  (Num a, Fractional a) =>
          a    -- ^The step
@@ -229,33 +224,8 @@ rks4 h x0 fFs ys0 = ys1
     ys1 = zipWith5 (\y0 k1 k2 k3 k4 -> y0 + k1/6 + k2/3 + k3/3 + k4/6)
                     ys0 ks1 ks2 ks3 ks4
 
--- |RK-4 to solve the single 1st-order input differential equation.
-rk4SY ::  Double    -- ^The initial time
-      ->  Double    -- ^The initial value
-      -> (Double -> Double -> Double) -- ^The function
-      ->  Signal Double -- ^Input signal of steps
-      ->  Signal Double -- ^Output signal
-rk4SY x0 y0 fF hs = scanl2SY stateF y0 xs hs
-  where
-    stateF yn xn h = rk4 h xn fF yn 
-    xs = scanldSY (+) x0 hs
-
--- |One step RK-4 for the single input differential equation.
-rk4 ::  Double    -- ^The step
-    ->  Double    -- ^Initial value of time
-    -> (Double -> Double -> Double) -- ^The funciton
-    ->  Double    -- ^The value at the current state
-    ->  Double    -- ^The value at the next state
-rk4 h x0 fF y0 = y1
-  where
-    h_2 = h/2.0
-    k1 = h * fF x0 y0
-    k2 = h * fF (x0+h_2) (y0+k1/2.0)
-    k3 = h * fF (x0+h_2) (y0+k2/2.0)
-    k4 = h * fF (x0+h) (y0+k3)
-    y1 = y0 + k1/6 + k2/3 + k3/3 + k4/6
-
 -- |The general linear filter in Z-domain.
+zLinearFilter :: Fractional a => [a] -> [a] -> Signal a -> Signal a
 zLinearFilter bs as = armaFilterTrim bs' as'
   where
     bs' = map ((\x y-> y/x ) (head as)) bs
@@ -318,32 +288,19 @@ h2ARMACoef (bs,as) = (scalePolyCoef a0_1 bs,
     a0_1 = 1.0/ head as
 
 -- Helper functions
-applyF = zipWith apply
-  where
-    apply f x = f x
-
-applyFt t = zipWith apply
-  where
-    apply f x = (f t) x
 
 map' :: a -> [a->b] -> [b]
-map' a [] = []
-map' a (f:fs) = f a : map' a fs
+map' = flip $ sequence 
 
-zipWith5 :: (a -> b -> c -> d -> e -> f)
-         -> [a] ->  [b] ->  [c] -> [d]	-> [e] ->  [f]
-zipWith5 _ [] _  _  _  _  = []
-zipWith5 _ _  [] _  _  _  = []
-zipWith5 _ _  _  [] _  _  = []
-zipWith5 _ _  _  _  [] _  = []
-zipWith5 _ _  _  _  _  [] = []
-zipWith5 f (v:vs) (w:ws) (x:xs) (y:ys) (z:zs) 
-				      = f v w x y z 
-				        : (zipWith5 f vs ws xs ys zs)
 
 -- |Computes the inner product.
+iprod :: Num b => [b] -> [b] -> b
 iprod xs ys = sum [x*y | (x, y) <- zip xs ys]
+
 -- |Repeat an element for a given times.
+repeatN :: Int -> a -> [a]
 repeatN n = take n . repeat
+
 -- |Maintain a fixed length of list like Fifo, except the outputs are ignored.
+fixedList :: [a] -> a -> [a]
 fixedList xs y = take (length xs) $ y:xs

@@ -20,7 +20,6 @@ module ForSyDe.Shallow.SynchronousLib(
         	     ) where
 
 import ForSyDe.Shallow.CoreLib
-import ForSyDe.Shallow.UtilityLib
 
 ----------------------------------------
 --                                    --
