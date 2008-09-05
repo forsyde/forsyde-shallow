@@ -23,7 +23,7 @@
 
 <h2>Overview<br>
 </h2>
-<p>Advances in microelectronics allow the integration of more and more
+<!---<p>Advances in microelectronics allow the integration of more and more
 functionality on a single chip. Emerging system-on-a-chip architectures
 include a large amount of heterogeneous components and are of
 increasing complexity. Applications using these architectures require
@@ -34,23 +34,20 @@ a high abstraction level, not taking low-level implementation details
 into account. Clearly there is a significant abstraction gap between an
 ideal model for specification and another one for implementation. This
 abstraction gap has to be addressed by methodologies for electronic
-system design.</p>
+system design.</p>-->
 
 <p>The ForSyDe (Formal System Design) methodology has been developed with
 the objective to move system design to a higher level of abstraction
-and
-to bridge the abstraction gap by transformational design refinement.
-ForSyDe
-is based on carefully selected formal foundations. The initial <i>specification
-model</i> uses different <i>Models of Computation</i>, that
-separate
-communication from computation and have an abstract notion of time.
-ForSyDe
-uses the concept of process <i>constructors</i> to implement the
-system
-models, to apply design transformations and, finally, to map the resulting refined
-model
-onto the target architecture. The specification model is refined into a
+and to bridge the abstraction gap by transformational design refinement.
+ForSyDe is based on carefully selected formal foundations. The initial <i>specification model</i> is heterogeneous using different <i>models of computation</i>. It is based on the concept of <i>process constructors</i>, which separate communication from computation. The abstract specification model is then refined by design transformations into a detailed <i>implementation model</i>, which is then translated into a final implementation.
+
+<p>At present there are the following main research directions in ForSyDe:
+<ul>
+  <li><b>System modeling with heterogeneous models of computation.</b> We have developed libraries for different computational models allowing the simulation of heterogeneous systems using Haskell. The libraries stretch from continuous time to synchronous time models. Using the shallow-embedded part of the ForSyDe library we are able to simulate electronic systems with analog and digital parts.</li>
+  <li><b>Development of a transformational design refinement methodology.</b> We have outlined a methodology for transformational design refinement. The system is described formally as abstract specification model using process constructors. Then the system is refined into a more detailed implementation by both semantic preserving and non-semantic preserving design transformations. Finally the implementation model is translated into a representation in an implementation language. So far we mainly used the synchronous model for the research on the transformational design refinement methodology. As part of this work we have created a deep-embedded implementation of ForSyDe. With this implementation it is possible to generate a graphical description and synthesizable VHDL code for the synchronous model of computation. It is possible to simulate the synchronous model of the deep-embedded implementation of ForSyDe together with the other models of computation of the shallow-embedded implementation.</li>
+</ul>
+<!--<p>
+ The specification model is refined into a
 detailed <i>implementation mode</i>l<i> </i>by the stepwise
 application
 of well-defined <i>design transformation rules</i>. These rules are
@@ -64,7 +61,7 @@ implementation
 model is mapped onto the components of the target architecture. At
 present ForSyDe synchronous models can be mapped onto VHDL, allowing
 external EDA tools to generate custom hardware.</p>
-<br>
+<br>-->
 <h2 id="people">ForSyDe People</h2>
 <a href="http://www.imit.kth.se/%7Eingo">Ingo Sander</a>, <a
  href="http://www.imit.kth.se/%7Eaxel">Axel Jantsch</a>, <a
@@ -190,40 +187,50 @@ signal-model used to design the system:
 
 
 <h3>Publications on ForSyDe</h3>
-<p>Here is a list with the most remarkable ForSyDe publications
+<p>Here is a list with the most important ForSyDe publications
 together with a short description of each of them. You can also acess the <a
 href="publications.html">full list of ForSyDe publications</a>.</p>
+
+
+
 <ol>
   <li>Axel Jantsch and Ingo Sander. Models of computation and languages
 for embedded system design. <i>IEE Proceedings on Computers and
 Digital Techniques</i>, 152(2):114-129, March 2005. Special issue on
 Embedded Microelectronic Systems; Invited paper.<br>
     <a
- href="http://www.imit.kth.se/%7Eaxel/papers/2005/IEE-Proceedings.pdf">PDF</a></li>
-  <li>Axel Jantsch, "Models of Embedded Computation", <span
- style="font-style: italic;">Embedded Systems
-Handbook</span>, edited by Richard Zurawski, CRC Press, Invited
-contribution,
-2005.</li>
-  
+ href="http://www.imit.kth.se/%7Eaxel/papers/2005/IEE-Proceedings.pdf">PDF</a>
+<br>
+The paper discusses different models of computation and languages used for the design of heterogeneous embedded system design. The paper is not based on ForSyDe, but provides a more general discussion about the strength and weaknesses of different models of computations.  
+</li>  
   <li>Ingo Sander and Axel Jantsch. System modeling and
 transformational
 design refinement in ForSyDe. <i>IEEE Transactions on Computer-Aided
 Design of Integrated Circuits and Systems</i>, 23(1):17-32, January
 2004.<br>
     <a
- href="http://www.imit.kth.se/%7Eingo/Papers/TCAD2004_SystemModeling.pdf">PDF</a></li>
+ href="http://www.imit.kth.se/%7Eingo/Papers/TCAD2004_SystemModeling.pdf">PDF</a>
+<br>
+The article is based on the PhD thesis of Ingo Sander (see below) and focuses on modeling and transformation inside the ForSyDe methodology. 
+</li>
+
   
   <li>Axel Jantsch, <span style="font-style: italic;">Modeling
 Embedded Systems and SoCs - Concurrency and Time
 in Models of Computation</span>, Morgan Kaufmann Publishers, Systems on
-Silicon, June 2003.</li>
+Silicon, June 2003.
+<br>
+The book discusses models of computation in general, but presents also the formal representation for several models of computation used in the ForSyDe methodolgy.
+</li>
   
   <li>Ingo Sander. <i>System Modeling and Design Refinement in
 ForSyDe</i>.
 PhD thesis, Royal Institute of Technology, Stockholm, Sweden, 2003.<br>
     <a
- href="http://www.imit.kth.se/%7Eingo/Papers/Thesis_Sander_2003.pdf">PDF</a></li>
+ href="http://www.imit.kth.se/%7Eingo/Papers/Thesis_Sander_2003.pdf">PDF</a>
+<br>
+The PhD thesis is the most detailed reference on the ideas behind the ForSyDe design methodology. It discusses the modeling approach using the synchronous model of computation, design transformations and the translation of implementation models to VHDL.
+</li>
 
   <li>Ingo Sander and Axel Jantsch. System synthesis based on a
     formal
@@ -231,7 +238,10 @@ PhD thesis, Royal Institute of Technology, Stockholm, Sweden, 2003.<br>
 VLSI'99</i>, pages 32-39, Orlando, Florida, April 1999. IEEE Computer
 Society.<br>
     <a
- href="http://www.imit.kth.se/%7Eingo/Papers/WVLSI1999_SystemSynthesis.pdf">PDF</a></li>
+ href="http://www.imit.kth.se/%7Eingo/Papers/WVLSI1999_SystemSynthesis.pdf">PDF</a>
+<br>
+This early paper gives the ideas for the synthesis of a synchronous ForSyDe model to the hardware description language VHDL.
+</li>
 </ol>
 
 
