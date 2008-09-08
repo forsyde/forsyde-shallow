@@ -17,12 +17,22 @@ ul, p {
   margin-left: 1em;
 }
 
-td, pre, .ref {
+td, pre {
   margin-left: 1.5em;
   padding: 0.5em 1em;
   background: #eee;
   border: 1px solid #ccc;
 }
+
+.ref {
+  margin-left: 1.5em;
+  padding: 0.5em 1em;
+  background: #eee;
+  border: 1px solid #ccc;
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+
 
 th {
   margin-left: 1.5em;

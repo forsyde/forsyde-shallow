@@ -43,14 +43,15 @@ bridge the abstraction gap by transformational design refinement.</p>
 <p>
 ForSyDe is based on carefully selected formal foundations.
 First, the designer must supply a initial <i>specification model</i>,
-which
+which</p>
 <ul>
 <li>Can mix different <i>Models of Computation</i> (MoCs)
   i.e. Synchronous MoC,
   Untimed MoC ...</li>
 <li>Is modelled by a network of <i>processes</i> interconnected by <i>signals</i>. Each process is
   created by a <i>process constructor</i>, allowing to separate communication and computation.</li>
-</ul></p>
+</ul>
+
 <p>
 Then, the abstract specification model is refined by different design transformations into
 a detailed <i>implementation model</i>, which is finally translated into a
@@ -118,9 +119,11 @@ instance).
 <p>ForSyDe has been tested to run successfully on Linux, OSX-Leopard-x86 and
 Windows when compiled under GHC version 6.8.2. Due to the massive number of instances
 automatically generated in ForSyDe, it is not recommended to use a
-higher version of GHC until this <a href="http://hackage.haskell.org/trac/ghc/ticket/2328">bug</a> is fixed.</p>
-
+higher version of GHC until this <a
+href="http://hackage.haskell.org/trac/ghc/ticket/2328">bug</a> is
+fixed.
 </p>
+
 
 <h3>Current Features</h3>
 <p>Two different sets of features are offered depending on the
@@ -230,8 +233,6 @@ href="publications.html">full list of ForSyDe publications</a>.</p>
 
 <div class="ref">
 [<a name="San2003a">San03</a>]
-</td>
-<td>
 Ingo Sander.
  <em>System Modeling and Design Refinement in ForSyDe</em>.
  PhD thesis, Royal Institute of Technology, Stockholm, Sweden, April
@@ -248,8 +249,6 @@ Ingo Sander.
 
 <div class="ref">
 [<a name="SanJan2004a">SJ04</a>]
-</td>
-<td>
 Ingo Sander and Axel Jantsch.
  System modeling and transformational design refinement in ForSyDe.
  <em>IEEE Transactions on Computer-Aided Design of Integrated
@@ -278,7 +277,8 @@ Ingo Sander and Axel Jantsch.
     Special issue on Embedded Microelectronic Systems; Invited paper.
     [&nbsp;<a href="publications_bib.html#jantsch:2005b">bib</a>&nbsp;| 
     <a href="http://www.imit.kth.se/~axel/papers/2005/IEE-Proceedings.pdf">.pdf</a>&nbsp;]
-</li>  
+    </div>
+  </li>  
 
   
   <li>This book discusses models of computation in general, but it
@@ -305,14 +305,15 @@ synchronous ForSyDe model to the hardware description language VHDL.
 
 <div class="ref">
 [<a name="SanJan1999b">SJ99b</a>]
-</td>
-<td>
+
 Ingo Sander and Axel Jantsch.
  System synthesis based on a formal computational model and skeletons.
  In <em>Proceedings IEEE Workshop on VLSI'99</em>, pages 32-39,
   Orlando, Florida, USA, April 1999. IEEE Computer Society.
 [&nbsp;<a href="publications_bib.html#SanJan1999b">bib</a>&nbsp;| 
-<a href="http://web.it.kth.se/~ingo/Papers/WVLSI1999_SystemSynthesis.pdf">.pdf</a>&nbsp;]
+<a
+ href="http://web.it.kth.se/~ingo/Papers/WVLSI1999_SystemSynthesis.pdf">.pdf</a>&nbsp;]
+</div>
 </li>
 </ul>
 
@@ -348,10 +349,11 @@ href="#downloads">ForSyDe's distribution</a>.
   deep-embedded API</td>
 <td><a href="files/ALU.hs">ALU.hs</a></td>
 <td><a href="files/aluProc/graphml">Browse</a> or <a href="files/ALU-graphml.tgz">Download</a></td>
-<td><a href="figures/alu-graphml.png"><img src="figures/alu-graphml-thumb.png"></a></td>
+<td><a href="figures/alu-graphml.png"><img alt="ALU GraphML diagram" src="figures/alu-graphml-thumb.png"></a></td>
 <td><a href="files/aluProc/vhdl">Browse</a> or <a href="files/ALU-vhdl.tgz">Download</a></td>
-<td><a href="figures/alu-rtl.png"><img src="figures/alu-rtl-thumb.png"></a></td>
+<td><a href="figures/alu-rtl.png"><img alt="ALU RTL Diagram" src="figures/alu-rtl-thumb.png"></a></td>
 </tr>
+<tr>
 <td>Equalizer</td>
 <td>Digital Equalizer created with ForSyDe's shallow-embedded API</td>
 <td><a href="files/Equalizer">Browse</a> or <a href="files/Equalizer.tgz">Download</a></td>
@@ -367,7 +369,7 @@ href="#downloads">ForSyDe's distribution</a>.
 
 <h2 id="contact">Contact, Bugs and Contributions</h2>
 <p>If you have any comments, suggestions or patches please subscribe
-to our <a href="http://mailman.it.kth.se/mailman/listinfo/ecs_forsyde_development">development mailing list</a> or contact a member of
+to our <a href="http://mailman.it.kth.se/mailman/listinfo/forsyde-dev">development mailing list</a> or contact a member of
 <a href="#people">the ForSyDe team</a> directly.</p>
 
 <p>If you have found a code or documentation bug, please check our <a
