@@ -1,6 +1,3 @@
-{--# OPTIONS_GHC -w #--}
--- FIXME: remove warnings
-
 {- |
 This is the polynomial arithematic library. The arithematic operations include 
 addition, multiplication, division and power. However, the computation time is 
@@ -30,39 +27,39 @@ mulPoly _ (Poly []) = Poly []
 -- Here is the O(n^2) version of polynomial multiplication
 mulPoly (Poly xs) (Poly ys) = Poly $ foldr (\y zs ->
   let (v:vs) = scalePolyCoef y xs in v :addPolyCoef vs zs) [] ys
-mulPoly (PolyPair (Poly a, Poly b)) (PolyPair (Poly c, Poly d)) =
-  PolyPair (mulPoly (Poly a) (Poly c),mulPoly (Poly b) (Poly d))
-mulPoly (PolyPair (Poly a, Poly b)) (Poly c) =
-  PolyPair (mulPoly (Poly a) (Poly c),Poly b)
-mulPoly (Poly c) (PolyPair (Poly a, Poly b)) =
-  mulPoly (PolyPair (Poly a, Poly b)) (Poly c)
+mulPoly (PolyPair (a, b)) (PolyPair (c, d)) =
+  PolyPair (mulPoly a c, mulPoly b d)
+mulPoly (PolyPair (a, b)) (Poly c) =
+  PolyPair (mulPoly a (Poly c), b)
+mulPoly (Poly c) (PolyPair (a, b)) =
+  mulPoly (PolyPair (a, b)) (Poly c)
 
 -- |Division operation of polynomials.
 divPoly :: Num a => Poly a -> Poly a -> Poly a
 divPoly (Poly a) (Poly b) = PolyPair (Poly a,Poly b)
-divPoly (PolyPair (Poly a, Poly b)) (PolyPair (Poly c, Poly d)) =
-  mulPoly (PolyPair (Poly a, Poly b)) (PolyPair (Poly d, Poly c))
-divPoly (PolyPair (Poly a, Poly b)) (Poly c) =
-  PolyPair (Poly a, mulPoly (Poly b) (Poly c))
-divPoly (Poly c) (PolyPair (Poly a, Poly b)) =
-  PolyPair (mulPoly (Poly b) (Poly c), Poly a)
+divPoly (PolyPair (a, b)) (PolyPair (c, d)) =
+  mulPoly (PolyPair (a, b)) (PolyPair (d, c))
+divPoly (PolyPair (a, b)) (Poly c) =
+  PolyPair (a, mulPoly b (Poly c))
+divPoly (Poly c) (PolyPair (a, b)) =
+  PolyPair (mulPoly b (Poly c), a)
 
 -- |Addition operations of polynomials.
 addPoly :: Num a => Poly a -> Poly a -> Poly a
 addPoly (Poly a) (Poly b) = Poly $ addPolyCoef a b
-addPoly (PolyPair (Poly a, Poly b)) (PolyPair (Poly c, Poly d)) =
+addPoly (PolyPair (a, b)) (PolyPair (c, d)) =
     if b==d then  -- simplifyPolyPair $
-          PolyPair (addPoly (Poly a) (Poly c), Poly d)
+          PolyPair (addPoly a c, d)
     else  -- simplifyPolyPair $
           PolyPair (dividedPoly, divisorPoly)
   where
-    divisorPoly = if b ==d then Poly b else mulPoly (Poly b) (Poly d)
-    dividedPoly = if b == d then addPoly (Poly a) (Poly c)
-                  else addPoly (mulPoly (Poly a) (Poly d)) (mulPoly (Poly b) (Poly c))
-addPoly (Poly a) (PolyPair (Poly c, Poly d) ) =
-    addPoly (PolyPair (multiPolyHelper, Poly d)) (PolyPair (Poly c, Poly d) )
+    divisorPoly = if b ==d then b else mulPoly b d
+    dividedPoly = if b == d then addPoly a c
+                  else addPoly (mulPoly a d) (mulPoly b c)
+addPoly (Poly a) (PolyPair (c, d) ) =
+    addPoly (PolyPair (multiPolyHelper, d)) (PolyPair (c,d) )
   where
-    multiPolyHelper = mulPoly (Poly a) (Poly d)
+    multiPolyHelper = mulPoly (Poly a) d
 addPoly  abPoly@(PolyPair _) cPoly@(Poly _) = addPoly cPoly abPoly
  
 -- |Power operation of polynomials.
@@ -70,7 +67,7 @@ powerPoly :: Num a => Poly a -> Int -> Poly a
 powerPoly p n = powerX' (Poly [1]) p n
   where
     powerX' :: Num a => Poly a -> Poly a -> Int -> Poly a
-    powerX' p' p 0 = p'
+    powerX' p' _ 0 = p'
     powerX' p' p n = powerX' (mulPoly p' p) p (n-1)
 
 -- |Some helper functions below.
@@ -79,6 +76,7 @@ powerPoly p n = powerX' (Poly [1]) p n
 getCoef :: Num a => Poly a -> ([a],[a])
 getCoef (Poly xs) = (xs,[1])
 getCoef (PolyPair (Poly xs,Poly ys)) = (xs,ys)
+getCoef _ = error "getCoef: Nested fractions found"
 
 scalePoly :: (Num a) => a -> Poly a -> Poly a
 scalePoly s p = mulPoly (Poly [s]) p
@@ -93,7 +91,7 @@ scalePolyCoef s p = map (s*) p
 
 -- |Extended version of 'zipWith', which will add zeros to the shorter list.
 zipWithExt :: (a,b) -> (a -> b -> c) -> [a] -> [b] -> [c]
-zipWithExt (x0,y0) f [] [] = []
+zipWithExt _ _ [] [] = []
 zipWithExt (x0,y0) f (x:xs) [] = f x y0 : (zipWithExt (x0,y0) f xs [])
 zipWithExt (x0,y0) f [] (y:ys)  = f x0 y : (zipWithExt (x0,y0) f [] ys)
 zipWithExt (x0,y0) f (x:xs) (y:ys)  = f x y : (zipWithExt (x0,y0) f xs ys)
