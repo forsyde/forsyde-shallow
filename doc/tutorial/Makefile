@@ -6,7 +6,8 @@ COMMON_XSL_OPS=section.autolabel 1
 .PHONY: validate html txt html-chunks
 
 validate: 
-	xmllint --valid --noout --nonet --relaxng ../docbook.rng  $(FNAME).xml
+	msv ../docbook.rng $(FNAME).xml
+#xmllint --valid --noout --nonet --relaxng ../docbook.rng  $(FNAME).xml
 
 $(FNAME).html html: $(FNAME).xml
 	xsltproc --stringparam $(COMMON_XSL_OPS) --stringparam html.stylesheet fptools.css --output $(FNAME).html $(DOCBOOK_XSL_DIR)/html/docbook.xsl $(FNAME).xml
