@@ -12,12 +12,12 @@ addOnef = $(newProcFun [d|addOnef :: Int32 -> Int32
 
 -- System function (simply a process in this case) which uses addOnef
 plus1Proc :: Signal Int32 -> Signal Int32
-plus1Proc = mapSY "addOne" addOnef
+plus1Proc = mapSY "plus1Proc" addOnef
 
 
 -- System definition associated to the system function
 plus1SysDef :: SysDef (Signal Int32 -> Signal Int32)
-plus1SysDef = newSysDef plus1Proc "addOne" ["inSignal"] ["outSignal"]
+plus1SysDef = newSysDef plus1Proc "plus1" ["inSignal"] ["outSignal"]
 
 combLoopSysDef :: SysDef (Signal Int32)
 combLoopSysDef = newSysDef s "combLoop" [] ["out"] 

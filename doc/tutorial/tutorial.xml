@@ -649,13 +649,17 @@ addOnef = $(newProcFun [d|addOnef :: Int32 -> Int32
 	</para>
 	
 	<para>
-	  Instead of creating a specific DSL to
-	  express computations in the deep-embedded model, ForSyDe uses
-	  TH to allow using plain Haskell. In principle,
-	  <code>ProcFun</code>s can make use of any Haskell feature
-	  supported by TH. However, such features might not be supported
-	  or make sense for certain backends (e.g. lists and thus, list
-	  comprehensions, are difficult to support in VHDL).
+	  Instead of creating a specific DSL to express computations
+	  in the deep-embedded model, ForSyDe uses TH to allow using
+	  plain Haskell. In principle, <code>ProcFun</code>s can make
+	  use of any Haskell feature supported by TH. However, such
+	  features might not be supported or make sense for certain
+	  backends (e.g. lists and thus, list comprehensions, are
+	  difficult to support in VHDL). Thus, in this tutorial we will
+	  create systems which are compatible with every backend. For example,
+	  writing <code>addOnef = (+1)</code> instead of <code>addOnef n = n +1</code>
+	  is more compact, however the VHDL backend does not currently support
+	  sections nor points-free notation.
 	</para>
 	
 	<para>
@@ -675,12 +679,12 @@ addOnef = $(newProcFun [d|addOnef :: Int32 -> Int32
 	<programlisting language="haskell">
 -- System function (simply a process in this case) which uses addOnef
 plus1Proc :: Signal Int32 -> Signal Int32
-plus1Proc = mapSY "addOne" addOnef
+plus1Proc = mapSY "plus1Proc" addOnef
 
 
 -- System definition associated to the system function
 plus1SysDef :: SysDef (Signal Int32 -> Signal Int32)
-plus1SysDef = newSysDef plus1Proc "addOne" ["inSignal"] ["outSignal"]
+plus1SysDef = newSysDef plus1Proc "plus1" ["inSignal"] ["outSignal"]
 	</programlisting>
       
 	
@@ -969,7 +973,10 @@ encoderFun = $(newProcFun
 	  is important to note that the system does not take
 	  simultaneous key-strokes in account, choosing the direction
 	  with higher precedence (i.e. situated in the outermost if
-	  expression).
+	  expression). Also, using pattern matching with multiple
+	  function clauses instead of netsted <code>if</code>
+	  expressions would had been more clear. However, the VHDL
+	  backend currently only supports one clause.
 	</para>
 	
 	<para>
@@ -1406,7 +1413,7 @@ addFourSysDef = newSysDef addFourProc "addFour" ["in1"] ["out1"]
       <title>VHDL Backend</title>
       <para>
 	ForSyDe's embedded compiler is able to translate system definitions to VHDL. That is
-	done through the <code>wirteVHDL</code>* functions.
+	done through the <code>writeVHDL</code>* functions.
       </para>
 
       <programlisting language="haskell">
@@ -1416,7 +1423,8 @@ writeVHDLOps :: VHDLOps -> SysDef a -> IO ()
       
       
       <para>
-	For example, this is how we would generate the VHDL definition of <emphasis>AddFour</emphasis>.
+	For example, this is how we would generate the VHDL definition
+	of <emphasis>AddFour</emphasis> and write it to disk.
       </para>
       
       
@@ -1435,25 +1443,601 @@ addFour/vhdl/addFour_lib:
 addFour_lib.vhd
 
 addFour/vhdl/work:
-addFour.vhd addOne.vhd
-
+addFour.vhd plus1.vhd
       </screen>
 
       <para>
-	TO BE FINISHED!
+	Here is a diagram of the filetree generated for <code>addFour</code>.
+      </para>
+      
+
+      <figure xml:id="VHDLTree">
+	<title>VHDL filetree of <code>addFour</code></title>
+	<mediaobject>
+	  <alt>File tree diagram.</alt>
+	  <imageobject>
+	    <imagedata align="center" valign="middle" width="3.5in" fileref="figures/VHDLTree.svg" format="SVG" />
+	  </imageobject>
+	</mediaobject>
+      </figure>
+
+      <para>
+	<code>writeVHDL</code> generates a VHDL filetree pending from current
+	working directory. Assuming <code>$SYSNAME</code> is the
+	system's name (<code>addFour</code> in this particular case):
+      </para>      
+
+      <itemizedlist>
+	<listitem>
+	  <para>
+	    The main VHDL entity and architeture is written in <code>$SYSNAME/vhdl/work/$SYSNAME.vhdl</code>.
+	  </para>
+	</listitem>
+	
+	<listitem>
+	  <para>
+	    The VHDL translation of other systems included through component instatiation is also written under
+	    <code>$SYSNAME/vhdl/work/</code>. In  the case of the <code>addFour</code> system, the compiler also
+	    generates the file <code>plus1.vhd</code>.
+	  </para>
+	</listitem>
+	
+	<listitem>
+	  <para>
+	    A global VHDL library, <code>forsyde_lib.vhd</code>, is
+	    bundled with ForSyDe's distribution and contains the
+	    translation of basic monomorphic Haskell types to VHDL. It
+	    is installed under the <code>data</code> directory of
+	    ForSyDe's Cabal package, whose location is
+	    system-dependent.
+	  </para>
+	</listitem>
+	
+	<listitem>
+	  <para>
+	    Since VHDL lacks support for <emphasis>parametric
+	    polymorphism</emphasis>, the translation of polymorphic
+	    types and functions is done on a per-system basis
+	    (i.e. each different possible monotype of a polymorphic
+	    Haskell type triggers a different translation). Thus, the
+	    result of that translation is put in
+	    <code>$SYSNAME/vhdl/lib/$SYSNAME_lib.vhd</code> and not
+	    <code>forsyde_lib.vhd</code>.
+	  </para>
+	</listitem>
+      </itemizedlist>	  
+
+      <para>
+	It is important to remember that, even if ForSyDe signals are polymorphic and
+	<code>ProcFun</code>s can include any Haskell function definition, 
+	some backends might be limited. In the case of the VHDL backend:
+      </para>
+      
+      <itemizedlist>
+	<listitem>
+	  <para>
+	    Accepted <code>Signal</code> types. <code>Signal a</code> is a valid
+	    signal for the VHDL backend if <code>a</code> belongs to:
+	  </para>
+	  <orderedlist>
+	    <listitem>
+	      <para>
+		Primitive types: <code>Data.Int</code>{<code>8</code>, <code>16</code>, <code>32</code>}, <code>Bool</code>,
+		<code>ForSyDe.Bit</code>.
+	      </para>
+	    </listitem>
+	    <listitem>
+	      <para>
+		Custom types: enumerated<footnote><para>Again,
+		consider an enumertaed type to be an algebraic type
+		whose data constructors all have arity
+		zero.</para></footnote> types.
+	      </para>
+	    </listitem>
+	    <listitem>
+	      <para>
+		The following containers, which can hold any primitive
+		or cuestom type and can be unrestrictively nested:
+		<code>Data.Param.FSVec</code>, tuples of unlimited
+		size<footnote><para>In practice, the upper limit is
+		Haskell-compiler dependent. In the case of GHC,
+		current limit is 62.</para></footnote>,
+	      </para>
+	    </listitem>
+	  </orderedlist>
+	    
+	</listitem>
+	<listitem>
+	  <para>
+	    Although this will hopefully change in the future, the
+	    declarations contained by <code>ProcFun</code>s must
+	    be fairly simple. For instance:
+	  </para>
+	  <orderedlist>
+	    <listitem>
+	      <para>
+		Points-free notation is not admited.
+	      </para>
+	    </listitem>
+	    <listitem>
+	      <para>
+		They can only contain a clause, multiple clauses are not accepted.
+	      </para>
+	    </listitem>
+	  </orderedlist>
+	</listitem>
+      </itemizedlist>
+      
+      <para>
+	Getting back to the function interface of the VHDL backend, it
+	is possible to provide certain compilation options, namely to
+	integrate Altera's <emphasis>Quartus II</emphasis> and
+	<emphasis>Modelsim</emphasis> in our workflow. For that
+	purpuse we will use <code>writeVHDLOps</code>.
+      </para>
+      
+      <para>
+	For example, we can generate a <code>Quartus II</code> project
+	and compile the generated VHDL code setting certain configuration
+	options such as the pin-mapping and the FGPA model to be used.
+      </para>
+      
+
+
+      <programlisting language="haskell">
+compileQuartus :: IO ()
+compileQuartus = writeVHDLOps vhdlOps addFourSysDef
+ where vhdlOps = defaultVHDLOps{execQuartus=Just quartusOps}
+       quartusOps = QuartusOps{action=FullCompilation,
+                               fMax=Just 50, -- in MHz
+                               fpgaFamiliyDevice=Just ("CycloneII",
+                                                       Just "EP2C35F672C6"),
+                               -- Three sample pin assignments
+                               pinAssigs=[("in1[0]", "PIN_W1"),
+                                          ("in1[1]", "PIN_W2"),
+                                          ("in1[2]", "PIN_W3")]}
+      </programlisting>
+
+      <para>
+	The code above generates the VHDL code for the
+	<code>addFour</code> system, subsequently creating a Quartus
+	project and running a full compilation of the project. We set
+	a minimum acceptable clock frequency of 50 MHz, the FPGA
+	family (<code>CycloneII</code>), specific device
+	(<code>EP2C35F672C6</code>) and some pin assignments, which,
+	for briefness' sake are not sufficient.
+      </para>
+      
+
+      <para>
+	It is important to note that, when needed, Quartus will
+	split input and output port identifiers into several logical
+	names corresponding to individual bits (e.g in1[0]).  Thus, it
+	might be necessary to open Quartus in order to find out what
+	logical names to use in pin assignments.
+      </para>
+      
+      <para>
+	In addition to <emphasis>Quartus II</emphasis>, the VHDL
+	backend is able to interface with
+	<emphasis>ModelSim</emphasis>.  For example, the following
+	function shows how can we automatically compile the generated
+	VHDL code with ModelSim.
       </para>
       
       
+      <programlisting language="haskell">
+compileModelSim :: IO ()
+compileModelSim = writeVHDLOps vhdlOps addFourSysDef
+ where vhdlOps = defaultVHDLOps{compileModelsim=True}
+      </programlisting>
+
+      <para>
+	It is also possible to run test benches in ModelSim.
+      </para>
+
+      <programlisting language="haskell">
+writeAndModelsimVHDL :: (SysFunToIOSimFun sysF simF) =>
+                        Maybe Int -> SysDef sysF -> simF
+writeAndModelsimVHDLOps :: (SysFunToIOSimFun sysF simF) =>
+                           VHDLOps -> Maybe Int -> SysDef sysF -> simF
+      </programlisting>
+      
+      Here are two examples:
+      
+      <screen>
+$ ghci AddFour.hs
+*AddFour> let vhdlSim = writeAndModelsimVHDL Nothing addFourSysDef 
+*AddFour> :t vhdlSim
+vhdlSim :: [Int32] -> IO [Int32]
+*AddFour> vhdlSim [1..10]
+[4,5,6,7,8,9,10,11,12,13,14]
+      </screen>
+      
+      <para>
+      In the example above, we simulate <code>addFour</code> wihtout supplying a limit in the number of cycles to
+      simulate. <code>writeAndModelsimVHDL</code> is strict, so, without a limit it will only work
+      with finite input stimuli.
+      </para>
+
+      <screen>
+$ ghci Counter.hs
+*Counter> writeAndModelsimVHDL (Just 20) counterSysDef
+[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20] 
+      </screen>
+      
+      <para>
+	In this case the system does not have any inputs and thus the simulation implicitly results in infinite
+	output stimuli. Thus, it is necessary to set a limit in the number of cycles to simulate.
+      </para>
+      
+      <para>
+	In a general way, the <code>writeAndModelsimVHDL</code>* functions, generate a
+	simulation function which will
+      </para>
+
+	<orderedlist>
+	  <listitem>
+	    <para>
+	      Generate a VHDL model (implicitly using the
+	      <code>writeVHDL</code>* functions).
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      Compile the resulting model with ModelSim. 
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      Marshal the provided input stimuli from Haskell to VHDL
+	      and generate a testbench in
+	      <code>$SYSNAME/vhdl/test/$SYSNAME_tb.vhd</code>.
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      Simulate the testbench with ModelSim and unmarshal the
+	      results back to Haskell.
+	    </para>
+	  </listitem>
+	</orderedlist>
+	
+	<para>
+	  <code>writeAndModelsimVHDL</code>* give equivalent results to <code>simulate</code>, with a few caveats.
+	</para>
+	
+	<itemizedlist>
+	  <listitem>
+	    <para>
+	      <code>writeAndModelsimVHDL</code>*, unlike
+	      <code>simulate</code>, are strict, and thus do not
+	      support infinite stimuli. For that reason, it is
+	      possible to set the numer of cycles to simulate
+	      (<code>Maybe Int</code> parameter).
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      <code>writeAndModelsimVHDL</code>* , provide <code>IO</code> simulation functions
+	      whereas <code>simulate</code> is pure.
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      <code>writeAndModelsimVHDL</code>*  suffer all the limitations of the VHDL backend whereas
+	      <code>simulate</code> can cope with any system.
+	    </para>
+	  </listitem>
+	</itemizedlist>
+	
     </section>
     
     
     <!--                   -->
-    <!-- GraphML Backend   -->
+    <!-- GraphML Backend -->
     <!--                   -->
     <section xml:id="GraphML">
       <title>GraphML Backend</title>
-      <para>blah blah</para>
+      <para>
+	It is possible to use ForSyDe's GraphML backend in order to 
+      </para>
+      <orderedlist>
+	<listitem>
+	  <para>
+	    generate an XML-based intermediate representation of
+	    a system for further processing.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    obtain system diagrams.
+	  </para>
+	</listitem>
+      </orderedlist>
+      
+      <para>
+	ForSyDe provides the following functions, similar to the ones of the VHDL backend. 
+      </para>
+
+      <programlisting language="haskell">
+writeGraphML :: SysDef a -> IO ()
+writeGraphMLOps :: GraphMLOps -> SysDef a -> IO ()
+      </programlisting>
+      
+      <para>
+	For example, here is how we would generate the GraphML translation of <code>addFour</code>
+      </para>
+
+      <screen>
+$ ghci AddFour.hs
+*AddFour> writeGraphML addFourSysDef 
+*AddFour> :q
+Leaving GHCi.
+$ ls -R addFour
+graphml
+
+addFour/graphml:
+addFour.graphml plus1.graphml
+      </screen>
+      
+      <para>
+	As we can see, <code>.graphml</code> is generated for each
+	system involved. In this case, one for the main system
+	(<code>addFour.graphml</code>) and another one for <code>plus1</code>
+	which was instantiated by <code>addFour</code>.
+      </para>
+
+      <para>
+	In order to embed ForSyDe metainformation, the GraphML backend
+	makes use of the following <link
+	xlink:href="http://graphml.graphdrawing.org/primer/graphml-primer.html#Attributes">GraphML-Attributes</link>:
+      </para>
+      
+      <screen>
+&lt;key id="process_type" for="node" attr.name="process_type" attr.type="string"/&gt;
+&lt;key id="value_arg" for="node" attr.name="value_arg" attr.type="string"/&gt;
+&lt;key id="procfun_arg" for="node" attr.name="procfun_arg" attr.type="string"/&gt;
+&lt;key id="instance_parent" for="node" attr.name="instance_parent" attr.type="string"/&gt;
+      </screen>
+
+      <para>
+	The keys above are used to tag nodes in different ways.
+      </para>
+
+      <itemizedlist>
+	<listitem>
+	  <para>
+	    <emphasis role="strong"><code>process_type</code></emphasis> indicates what process constructor was used
+	    to create a process node or if the node is an input or output port. 
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <emphasis role="strong"><code>value_arg</code></emphasis> contains a value passed to a process
+	    constructor.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <emphasis role="strong"><code>procfun_arg</code></emphasis> contains a value passed to a process
+	    constructor.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <emphasis role="strong"><code>instance_parent</code></emphasis> is specific to component nodes
+	    and indicates the name of the parent system from which the component was instanciated.
+	  </para>
+	</listitem>
+      </itemizedlist>
+	
+      <section>
+	<title>Obtaining diagrams of ForSyDe</title>
+	
+	<para>
+	  The GraphML defintion does not provide a way to specify the
+	  graphical representation of graphs (e.g. edge and node
+	  shapes, colours, textual tags ...)
+	</para>
+	
+	<para>
+	  For that reason, <link
+	  xlink:href="http://www.yworks.com"><emphasis>yWorks</emphasis></link>, a company
+	  offering graph visualization products, created yFiles-GraphML, an extension to the GraphML
+	  schema which adds graphical information. 
+	</para>
+	
+	<para>
+	  yWorks also distributes <link
+	  xlink:href="http://www.yworks.com/en/products_yed_about.html"><emphasis>yEd</emphasis></link>,
+	  a free (as en beer) multiplatform graph editor with
+	  impressive automatic layout features.
+	</para>
+
+	<para>
+	  Here is an example on how to generate and edit
+	  yFiles-GraphML diagrams from ForSyDe systems. For this
+	  purpose, we will use our <emphasis>counter</emphasis> system.
+	</para>
+	
+	<screen>
+$ ghci Counter.hs
+*Counter> writeGraphMLOps defaultGraphMLOps{yFilesMarkup=True} counterSysDef 
+*Counter> :q
+$ ls -R counter
+graphml
+
+counter/graphml:
+counter.graphml              sourceSY_counterProc.graphml
+	</screen>
+	
+	
+	
+	<para>
+	  <code>sourceSY_counterProc.graphml</code> contains the <emphasis>sourceSY</emphasis> process
+	  used in the counter. Let's view its representation with yEd.
+	</para>
+	
+	<para>
+	  This is the unorganized representation we get right after opening <code>sourceSY_counterProc.graphml</code>
+	  with yEd.
+	</para>
+      
+	<figure xml:id="sourceSY_counterProc1">
+	  <title>Initial yEd representation</title>
+	  <mediaobject>
+	    <alt>yEd diagram.</alt>
+	    <imageobject>
+	      <imagedata align="center" valign="middle" width="2.5in" fileref="figures/sourceSY_counterProc1.svg" format="SVG" />
+	    </imageobject>
+	  </mediaobject>
+	</figure>
+	
+	<para>
+	  All nodes are overlapped because the GraphML-yFiles backend
+	  does not perform any kind of node placement nor edge
+	  routing. yEd, however, does a very good job in this regard.
+	</para>
+	
+	<para>
+	  Before running a layout algorithm it is convenient to set
+	  port constraints on the graph nodes. This is a workaround to
+	  make yEd respect the represenation of shared signals
+	  (signals coming from the same process output). The GraphML
+	  format (and GraphML-yFiles) allows edge sharing through the
+	  use of <link
+	  xlink:href=""><emphasis>ports</emphasis></link>, however,
+	  yEd does not currently respect them. Our current solution is
+	  to set a location for the edge ends in the GraphML backend
+	  and lock that location through yEd port constraints.
+	</para>
+	
+	<para>
+	  In order to set the port constraints we will go to
+	  <emphasis>Tools -> Constraints -> Port
+	  Constraints</emphasis>.
+	</para>
+	
+	<para>
+	  The port constraints menu will initially look like this.
+	</para>
+	
+	
+	<figure xml:id="portConstraints1">
+	  <title>Port constraints default options</title>
+	  <mediaobject>
+	    <alt>Port constraints menu</alt>
+	    <imageobject>
+	      <imagedata align="center" valign="middle" width="4in" fileref="figures/portConstraints1.png" format="PNG" />
+	    </imageobject>
+	  </mediaobject>
+	</figure>
+
+	<para>
+	  These are the options we need to set in order to fix all
+	  ports. Remember to click on OK after setting them.
+	</para>
+	
+	<figure xml:id="portConstraints2">
+	  <title>Desired port constraint options</title>
+	  <mediaobject>
+	    <alt>Port constraints menu</alt>
+	    <imageobject>
+	      <imagedata align="center" valign="middle" width="4in" fileref="figures/portConstraints2.png" format="PNG" />
+	    </imageobject>
+	  </mediaobject>
+	</figure>
+	
+	<para>
+	  It is important to note that due to a bug in yFiles format
+	  it is not possible to save port constraints in <code>.graphml</code> files. Thus,
+	  we will need to reset the port constraints every time a file is reopened.
+	</para>
+
+	<para>
+	  Now we are ready to run an automatic layout algortihm. The
+	  generated GraphML-yFiles graph is prepared to be displayed
+	  from left to right. The hierarchical layout
+	  (<emphasis>Layout -> Hiearachical -> Classic</emphasis>)
+	  seems to give the best results for system diagrams. It is
+	  important to set the Orientation to <emphasis>Left to
+	  Right</emphasis> and allow <emphasis>Backloop Routing</emphasis>.
+	</para>
+
+	
+	<figure xml:id="layout">
+	  <title>hierarchical layout</title>
+	  <mediaobject>
+	    <alt>Hierarchical layout menu</alt>
+	    <imageobject>
+	      <imagedata align="center" valign="middle" width="4in" fileref="figures/layout.png" format="PNG" />
+	    </imageobject>
+	  </mediaobject>
+	</figure>
+	
+	After clicking on <emphasis>OK</emphasis>, the system diagram should look like this:
+
+	<figure xml:id="sourceSY_counterProc2">
+	  <title>Final yEd representation</title>
+	  <mediaobject>
+	    <alt>yEd diagram.</alt>
+	    <imageobject>
+	      <imagedata align="center" valign="middle" width="5in" fileref="figures/sourceSY_counterProc2.svg" format="SVG" />
+	    </imageobject>
+	  </mediaobject>
+	</figure>
+	
+
+	
+      </section>
+      <section>
+	<title>GraphML limitations</title>
+	<para>
+	  Unfortunately, GraphML nor yFiles-GraphML + yEd suit all ForSyDe needs: 
+	</para>
+	
+	<itemizedlist>
+	  <listitem>
+	    <para>
+	      yFiles doesn’t respect GraphML ports (source signal
+	      sharing). We provide a workaround based on precalculate
+	      the location of edge ends plus yEd routing port constraints
+	      (which unfortunately cannot be saved).
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      yEd wipes out external <code>&lt;data&gt;</code> tags (external GraphML attributes).
+	    </para>
+	  </listitem>
+	  
+	  <listitem>
+	    <para>
+	      yEd wipes out external <code>&lt;data&gt;</code> tags
+	      (external GraphML attributes) when saving a graph. That
+	      includes ForSyDe's metainformation, which will be lost
+	      after editing the graph with yEd.
+	    </para>
+	  </listitem>
+	  
+	  <listitem>
+	    <para>
+	      GraphML nor yFiles-GraphML explicitly support subgraphs
+	      but not subgraph sharing (components). Our solution is
+	      to use external &lt;data&gt; tags indicating parent
+	      systems in instance nodes. However, yEd is obviously
+	      unaware of that trick, not being able to offer
+	      hiearachical browsing.
+	    </para>
+	  </listitem>
+	</itemizedlist>
+	
+      </section>
+      
+      
     </section>
+    
     
   </section> <!-- Deep-embedded signals -->
   
@@ -1462,7 +2046,11 @@ addFour.vhd addOne.vhd
   <!--                          -->
   <section xml:id="SE">
     <title>Shallow-embedded signals</title>
-    <para>blah blah</para>
+    <para>
+      As it was previously mentioned, ForSyDe offers a flavour of
+      signals called shallow-embedded signals, modelled as
+      streams of data.
+    </para>
   </section>
   
   
