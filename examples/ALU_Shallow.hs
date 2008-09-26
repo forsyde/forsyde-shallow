@@ -13,13 +13,13 @@
  
 module ALU_Shallow where
 
-import SynchronousLib
+import ForSyDe.Shallow
 import ForSyDe.Bit
 import Data.Bits
 import Data.Param.FSVec
 import Data.TypeLevel.Num.Reps
 import Data.TypeLevel.Num.Aliases
---import CarrySelectAdder
+
 
 
 ----- AND - 4 Bit
@@ -167,3 +167,19 @@ d = signal [reallyUnsafeVector [L,L,L,L],
 
 x0 = signal [L,L,L,L]
 x1 = signal [H,H,H,H]
+
+-- Helper functions
+zipWith5SY :: (a -> b -> c -> d -> e -> f) 
+           -> Signal a
+           -> Signal b
+           -> Signal c
+           -> Signal d
+           -> Signal e
+           -> Signal f
+zipWith5SY _ NullS _ _ _ _ = NullS
+zipWith5SY _ _ NullS _ _ _ = NullS
+zipWith5SY _ _ _ NullS _ _ = NullS
+zipWith5SY _ _ _ _ NullS _ = NullS
+zipWith5SY _ _ _ _ _ NullS = NullS
+zipWith5SY f (a :- as) (b :- bs) (c :- cs)  (d :- ds) (e:-es) = 
+ f a b c d e :- zipWith5SY f as bs cs ds es
