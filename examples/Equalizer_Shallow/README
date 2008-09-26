@@ -1,0 +1,6 @@
+This directory contains the Equalizer example, used in Sander's PhD Thesis,
+and modelled using shallow-embedded signals.
+
+[San03] Ingo Sander. System Modeling and Design Refinement in ForSyDe. 
+        PhD thesis, Royal Institute of Technology, Stockholm, Sweden,
+        April 2003. [http://web.it.kth.se/~ingo/Papers/Thesis_Sander_2003.pdf]
