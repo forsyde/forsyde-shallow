@@ -16,8 +16,13 @@
       <email>alfonsoa@kth.se</email>
     </author>  
     <authorinitials>aag</authorinitials>
-    <pubdate>2008-08-15</pubdate>
+    <pubdate>2008-09-20</pubdate>
     <revhistory>
+      <revision>
+	<revnumber>0.2</revnumber>
+	<date>2008-09-20</date>
+	<revremark>Complete draft.</revremark>
+      </revision>
       <revision>
 	<revnumber>0.1</revnumber>
 	<date>2008-08-15</date>
@@ -321,7 +326,7 @@
 	<emphasis>delaySY<subscript>k</subscript></emphasis> are
 	considered primitive process constructors, since they cannot
 	be defined in terms of simpler ones. Primitive constructors
-	can be combined, forming derived procesrocess
+	can be combined, forming derived process
 	constructors. For instance, <emphasis>sourceSY</emphasis> is
 	the result of combining
 	<emphasis>delaySY<subscript>1</subscript></emphasis> (normally
@@ -763,7 +768,7 @@ simPlus1 :: [Int32] -> [Int32]
 	</screen>
 	
 	<para>
-	  It is important to remark that ForSyDe doesn't support
+	  It is important to remark that ForSyDe does not support
 	  systems containing <emphasis>combinational loops</emphasis>.
 	  If such a loop is found, an error will be reported.
 	</para>
@@ -974,7 +979,7 @@ encoderFun = $(newProcFun
 	  simultaneous key-strokes in account, choosing the direction
 	  with higher precedence (i.e. situated in the outermost if
 	  expression). Also, using pattern matching with multiple
-	  function clauses instead of netsted <code>if</code>
+	  function clauses instead of nested <code>if</code>
 	  expressions would had been more clear. However, the VHDL
 	  backend currently only supports one clause.
 	</para>
@@ -1082,13 +1087,14 @@ counterProc = sourceSY "counterProc" addOnef 1
 	</section>
 
 	<section>
-	<title>Full adder</title>
+	<title>Serial full adder</title>
 	
 	<para>
-	  A two-bit full adder is a, still simple, but more elaborated
-	  example of a sequential system. Our system will receive
-	  pairs of bits which will be added together, taking the
-	  resulting carry of last cycle in account.
+	  A serial full adder which adds two streams of bits is a,
+	  still simple, but more elaborated example of a sequential
+	  system. Our system will receive pairs of bits which will be
+	  added together, taking the resulting carry of last cycle in
+	  account.
 	</para>
 	
 	<para>
@@ -1470,13 +1476,13 @@ addFour.vhd plus1.vhd
       <itemizedlist>
 	<listitem>
 	  <para>
-	    The main VHDL entity and architeture is written in <code>$SYSNAME/vhdl/work/$SYSNAME.vhdl</code>.
+	    The main VHDL entity and architecture is written in <code>$SYSNAME/vhdl/work/$SYSNAME.vhdl</code>.
 	  </para>
 	</listitem>
 	
 	<listitem>
 	  <para>
-	    The VHDL translation of other systems included through component instatiation is also written under
+	    The VHDL translation of other systems included through component instantiation is also written under
 	    <code>$SYSNAME/vhdl/work/</code>. In  the case of the <code>addFour</code> system, the compiler also
 	    generates the file <code>plus1.vhd</code>.
 	  </para>
@@ -1529,7 +1535,7 @@ addFour.vhd plus1.vhd
 	    <listitem>
 	      <para>
 		Custom types: enumerated<footnote><para>Again,
-		consider an enumertaed type to be an algebraic type
+		consider an enumerated type to be an algebraic type
 		whose data constructors all have arity
 		zero.</para></footnote> types.
 	      </para>
@@ -1537,7 +1543,7 @@ addFour.vhd plus1.vhd
 	    <listitem>
 	      <para>
 		The following containers, which can hold any primitive
-		or cuestom type and can be unrestrictively nested:
+		or custom type and can be unrestrictively nested:
 		<code>Data.Param.FSVec</code>, tuples of unlimited
 		size<footnote><para>In practice, the upper limit is
 		Haskell-compiler dependent. In the case of GHC,
@@ -1556,7 +1562,7 @@ addFour.vhd plus1.vhd
 	  <orderedlist>
 	    <listitem>
 	      <para>
-		Points-free notation is not admited.
+		Points-free notation is not admitted.
 	      </para>
 	    </listitem>
 	    <listitem>
@@ -1573,7 +1579,7 @@ addFour.vhd plus1.vhd
 	is possible to provide certain compilation options, namely to
 	integrate Altera's <emphasis>Quartus II</emphasis> and
 	<emphasis>Modelsim</emphasis> in our workflow. For that
-	purpuse we will use <code>writeVHDLOps</code>.
+	purpose we will use <code>writeVHDLOps</code>.
       </para>
       
       <para>
@@ -1655,7 +1661,7 @@ vhdlSim :: [Int32] -> IO [Int32]
       </screen>
       
       <para>
-      In the example above, we simulate <code>addFour</code> wihtout supplying a limit in the number of cycles to
+      In the example above, we simulate <code>addFour</code> without supplying a limit in the number of cycles to
       simulate. <code>writeAndModelsimVHDL</code> is strict, so, without a limit it will only work
       with finite input stimuli.
       </para>
@@ -1713,7 +1719,7 @@ $ ghci Counter.hs
 	      <code>writeAndModelsimVHDL</code>*, unlike
 	      <code>simulate</code>, are strict, and thus do not
 	      support infinite stimuli. For that reason, it is
-	      possible to set the numer of cycles to simulate
+	      possible to set the number of cycles to simulate
 	      (<code>Maybe Int</code> parameter).
 	    </para>
 	  </listitem>
@@ -1836,7 +1842,7 @@ addFour.graphml plus1.graphml
 	<title>Obtaining diagrams of ForSyDe</title>
 	
 	<para>
-	  The GraphML defintion does not provide a way to specify the
+	  The GraphML definition does not provide a way to specify the
 	  graphical representation of graphs (e.g. edge and node
 	  shapes, colours, textual tags ...)
 	</para>
@@ -1903,7 +1909,7 @@ counter.graphml              sourceSY_counterProc.graphml
 	<para>
 	  Before running a layout algorithm it is convenient to set
 	  port constraints on the graph nodes. This is a workaround to
-	  make yEd respect the represenation of shared signals
+	  make yEd respect the representation of shared signals
 	  (signals coming from the same process output). The GraphML
 	  format (and GraphML-yFiles) allows edge sharing through the
 	  use of <link
@@ -1956,10 +1962,10 @@ counter.graphml              sourceSY_counterProc.graphml
 	</para>
 
 	<para>
-	  Now we are ready to run an automatic layout algortihm. The
+	  Now we are ready to run an automatic layout algorithm. The
 	  generated GraphML-yFiles graph is prepared to be displayed
 	  from left to right. The hierarchical layout
-	  (<emphasis>Layout -> Hiearachical -> Classic</emphasis>)
+	  (<emphasis>Layout -> Hierarchical -> Classic</emphasis>)
 	  seems to give the best results for system diagrams. It is
 	  important to set the Orientation to <emphasis>Left to
 	  Right</emphasis> and allow <emphasis>Backloop Routing</emphasis>.
@@ -2028,7 +2034,7 @@ counter.graphml              sourceSY_counterProc.graphml
 	      to use external &lt;data&gt; tags indicating parent
 	      systems in instance nodes. However, yEd is obviously
 	      unaware of that trick, not being able to offer
-	      hiearachical browsing.
+	      hierarchical browsing.
 	    </para>
 	  </listitem>
 	</itemizedlist>
@@ -2049,8 +2055,115 @@ counter.graphml              sourceSY_counterProc.graphml
     <para>
       As it was previously mentioned, ForSyDe offers a flavour of
       signals called shallow-embedded signals, modelled as
-      streams of data.
+      streams of data:
     </para>
+
+ 	
+    <programlisting language="haskell">
+data Signal a = NullS | a :- Signal a
+    </programlisting>
+
+    <para>
+      This representation offers some advantages:
+    </para>
+    
+    <itemizedlist>
+      <listitem>
+	<para>
+	  Rapid prototyping of systems.
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  It is easy to include new MoCs.
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  It supports all the MoCs covered by ForSyDe (Synchronous, Untimed and Continuous). 
+	</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>
+      Shallow-embedded signals also present some disadvantages:
+    </para>
+    
+    <itemizedlist>
+      <listitem>
+	<para>
+	  Systems built with them can only be
+	  simulated. Shallow-embedded signals don't contain any
+	  structural information. Thus, the models resulting from them
+	  cannot be analyzed or compiled to other target languages.
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  No support for components. However, they are not really needed, components are not
+	  useful for simulation and reusability can be achieved by function refactoring.
+	</para>
+      </listitem>
+    </itemizedlist>
+    
+    <para>
+      Here is the implementation of <emphasis>plus1</emphasis> using shallow-embedded signals. 
+    </para>
+    
+    	
+    <programlisting language="haskell">
+module Plus1Shallow where
+
+import ForSyDe.Shallow
+
+import Data.Int(Int32)
+
+plus1 :: Signal Int32 -> Signal Int32
+plus1 = mapSY (+1)
+    </programlisting>
+	  
+    <para>
+      The system can be simulated directly simply by calling <emphasis>plus1</emphasis>.
+    </para>
+
+    <screen>
+$ ghci Plus1Shallow.hs
+*Plus1Shallow> :t signal
+signal :: [a] -> Signal a
+*Plus1Shallow> plus1 (signal [1..10])
+{2,3,4,5,6,7,8,9,10,11}
+    </screen>
+    
+    <para>
+      We can also integrate Deep-embedded models into shallow-embedded
+      ones by using <code>simulate</code>, <code>signal</code> and
+      <code>fromSignal</code> (the inverse of <code>signal</code>).
+      In the example below, we use the deep-embedded
+      <code>addFour</code> system and the shallow-embedded
+      <code>plus1</code> to build <emphasis>plus5</emphasis>
+    </para>
+    
+    <programlisting language="haskell">
+module Plus5 where
+
+import Plus1Shallow
+import AddFour
+
+import ForSyDe (simulate)
+import ForSyDe.Shallow
+
+import Data.Int (Int32)
+
+plus5 :: Signal Int32 -> Signal Int32
+plus5 = plus1 . signal . simulate addFourSysDef . fromSignal
+    </programlisting>
+    
+    <screen>
+$ ghci Plus5.hs      
+*Plus5> plus5 (signal [1..10])
+{6,7,8,9,10,11,12,13,14,15}
+    </screen>
+
   </section>
   
   

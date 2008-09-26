@@ -3,7 +3,7 @@ FNAME=tutorial
 DOCBOOK_XSL_DIR=/opt/local/share/xsl/docbook-xsl
 COMMON_XSL_OPS=section.autolabel 1
 
-.PHONY: validate html txt html-chunks
+.PHONY: validate html txt html-chunks clean
 
 validate: 
 	msv ../docbook.rng $(FNAME).xml
@@ -21,3 +21,6 @@ $(FNAME).pdf pdf:  $(FNAME).xml
 
 $(FNAME).txt txt:  $(FNAME).xml
 	fop -param $(COMMON_XSL_OPS) -xml $(FNAME).xml -xsl $(DOCBOOK_XSL_DIR)/fo/docbook.xsl -txt $(FNAME).txt
+
+clean:
+	rm -f *.html tutorial.pdf
