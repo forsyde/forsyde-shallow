@@ -2,7 +2,7 @@
 	  <span class="orgname">Royal Institute of Technology (KTH)</span>
 	  <span class="orgdiv">System, Architecture and Methodology (SAM) group</span>
 	  <div class="address"><p><span class="city">Stockholm</span>, <span class="country">Sweden</span></p></div>
-	</span></div><code class="email">&lt;<a class="email" href="mailto:alfonsoa@kth.se">alfonsoa@kth.se</a>&gt;</code></div></div><div><p class="pubdate">2008-08-15</p></div><div><div class="revhistory"><table border="1" width="100%" summary="Revision history"><tr><th align="left" valign="top" colspan="2"><b>Revision History</b></th></tr><tr><td align="left">Revision 0.1</td><td align="left">2008-08-15</td></tr><tr><td align="left" colspan="2">First version.</td></tr></table></div></div></div><hr></div><div class="toc"><p><b>Table of Contents</b></p><dl><dt><span class="section"><a href="#intro">1. Disclaimer and Prerequisites</a></span></dt><dt><span class="section"><a href="#install">2. Installing ForSyDe</a></span></dt><dt><span class="section"><a href="#introForSYDe">3. Introduction to ForSyDe</a></span></dt><dd><dl><dt><span class="section"><a href="#id1250443">3.1. Signals</a></span></dt><dt><span class="section"><a href="#id1250494">3.2. Processes</a></span></dt><dt><span class="section"><a href="#id1250634">3.3. Process Constructors</a></span></dt><dt><span class="section"><a href="#id1250638">3.4. Models of Computation and Domain Interfaces</a></span></dt></dl></dd><dt><span class="section"><a href="#DEvsSE">4. Deep-embedded vs Shallow-embedded signals</a></span></dt><dt><span class="section"><a href="#DE">5. Using deep-embedded Signals</a></span></dt><dd><dl><dt><span class="section"><a href="#combinational">5.1. Combinational Systems</a></span></dt><dt><span class="section"><a href="#sequential">5.2. Sequential Systems</a></span></dt><dt><span class="section"><a href="#components">5.3. Using components</a></span></dt><dt><span class="section"><a href="#VHDL">5.4. VHDL Backend</a></span></dt><dt><span class="section"><a href="#GraphML">5.5. GraphML Backend</a></span></dt></dl></dd><dt><span class="section"><a href="#SE">6. Shallow-embedded signals</a></span></dt><dt><span class="appendix"><a href="#FSVec">A. <code class="literal">FSVec</code>s: Vectors parameterized in size</a></span></dt><dd><dl><dt><span class="section"><a href="#id1252905">1. Goal</a></span></dt><dt><span class="section"><a href="#id1252975">2. How?</a></span></dt><dt><span class="section"><a href="#id1253011">3. Type-level decimal numerals</a></span></dt><dt><span class="section"><a href="#id1253017">4. Fixed Sized Vectors themselves</a></span></dt><dt><span class="section"><a href="#id1253320">5. <code class="code">FSVec</code> issues</a></span></dt></dl></dd></dl></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="intro"></a>1. Disclaimer and Prerequisites</h2></div></div></div><p>
+	</span></div><code class="email">&lt;<a class="email" href="mailto:alfonsoa@kth.se">alfonsoa@kth.se</a>&gt;</code></div></div><div><p class="pubdate">2008-09-20</p></div><div><div class="revhistory"><table border="1" width="100%" summary="Revision history"><tr><th align="left" valign="top" colspan="2"><b>Revision History</b></th></tr><tr><td align="left">Revision 0.2</td><td align="left">2008-09-20</td></tr><tr><td align="left" colspan="2">Complete draft.</td></tr><tr><td align="left">Revision 0.1</td><td align="left">2008-08-15</td></tr><tr><td align="left" colspan="2">First version.</td></tr></table></div></div></div><hr></div><div class="toc"><p><b>Table of Contents</b></p><dl><dt><span class="section"><a href="#intro">1. Disclaimer and Prerequisites</a></span></dt><dt><span class="section"><a href="#install">2. Installing ForSyDe</a></span></dt><dt><span class="section"><a href="#introForSYDe">3. Introduction to ForSyDe</a></span></dt><dd><dl><dt><span class="section"><a href="#id1251674">3.1. Signals</a></span></dt><dt><span class="section"><a href="#id1251725">3.2. Processes</a></span></dt><dt><span class="section"><a href="#id1251865">3.3. Process Constructors</a></span></dt><dt><span class="section"><a href="#id1251869">3.4. Models of Computation and Domain Interfaces</a></span></dt></dl></dd><dt><span class="section"><a href="#DEvsSE">4. Deep-embedded vs Shallow-embedded signals</a></span></dt><dt><span class="section"><a href="#DE">5. Using deep-embedded Signals</a></span></dt><dd><dl><dt><span class="section"><a href="#combinational">5.1. Combinational Systems</a></span></dt><dt><span class="section"><a href="#sequential">5.2. Sequential Systems</a></span></dt><dt><span class="section"><a href="#components">5.3. Using components</a></span></dt><dt><span class="section"><a href="#VHDL">5.4. VHDL Backend</a></span></dt><dt><span class="section"><a href="#GraphML">5.5. GraphML Backend</a></span></dt></dl></dd><dt><span class="section"><a href="#SE">6. Shallow-embedded signals</a></span></dt><dt><span class="appendix"><a href="#FSVec">A. <code class="literal">FSVec</code>s: Vectors parameterized in size</a></span></dt><dd><dl><dt><span class="section"><a href="#id1255405">1. Goal</a></span></dt><dt><span class="section"><a href="#id1255479">2. How?</a></span></dt><dt><span class="section"><a href="#id1255515">3. Type-level decimal numerals</a></span></dt><dt><span class="section"><a href="#id1255521">4. Fixed Sized Vectors themselves</a></span></dt><dt><span class="section"><a href="#id1255824">5. <code class="code">FSVec</code> issues</a></span></dt></dl></dd></dl></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="intro"></a>1. Disclaimer and Prerequisites</h2></div></div></div><p>
       This document has been devised as a practical hands-on
       introduction to the use of ForSyDe's implementation. Thus, it is
       intentionally informal and non-exhaustive. If you are interested
@@ -24,7 +24,7 @@
       As it was already stated in <a class="xref" href="#intro" title="1. Disclaimer and Prerequisites">Section 1, &#8220;Disclaimer and Prerequisites&#8221;</a>, ForSyDe
       relies on many Haskell extensions, some of which are exclusive
       to GHC. For that reason, a recent version of GHC is required to
-      build ForSyDe<sup>[<a name="id1250300" href="#ftn.id1250300" class="footnote">1</a>]</sup>.
+      build ForSyDe<sup>[<a name="id1251532" href="#ftn.id1251532" class="footnote">1</a>]</sup>.
     </p><p>
       ForSyDe's library is available on Haskell's <a class="ulink" href="http://hackage.haskell.org" target="_top">HackageDB</a>, a
       popular repository of Haskell <a class="ulink" href="http://www.haskell.org/cabal" target="_top">Cabal</a> packages.
@@ -54,13 +54,13 @@
     </p><p>
       In order to understand how systems are modelled, it is important to
       get familiar with the concepts outlined above.
-    </p><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="id1250443"></a>3.1. Signals</h3></div></div></div><p>
+    </p><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="id1251674"></a>3.1. Signals</h3></div></div></div><p>
 	Signals can be intuitively defined as
 	streams of information which flow through the different
 	processes forming a system.
       </p><p>
 	For example, this is a signal containing the first 10 positive numbers
-      </p><div class="example"><a name="id1250462"></a><p class="title"><b>Example 1. Signal containing the first 10 positive numbers</b></p><div class="example-contents">&lt;1,2,3,4,5,6,7,8,9,10&gt;</div></div><br class="example-break"><p>
+      </p><div class="example"><a name="id1251693"></a><p class="title"><b>Example 1. Signal containing the first 10 positive numbers</b></p><div class="example-contents">&lt;1,2,3,4,5,6,7,8,9,10&gt;</div></div><br class="example-break"><p>
 	More formally, a signal is a sequence of events where each
 	event has a tag and a value. In ForSyDe, the tag of an event is
 	implicitly given by the event's position on the list. Furthermore, signals are
@@ -69,7 +69,7 @@
       </p><p>In the example signal above, is formed by integer values which are identical to the signal tags.</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3>The interpretation of tags, as we will see, is determined
       by the <span class="emphasis"><em>Model of Computation</em></span> used, e.g. an identical tag of two events
       in different signals does not necessarily imply that these
-      events happen at the same time. </div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="id1250494"></a>3.2. Processes</h3></div></div></div><p>
+      events happen at the same time. </div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="id1251725"></a>3.2. Processes</h3></div></div></div><p>
 	Processes are pure functions on signals, i.e. for a given set of input signals a process always gets the same
 	set of output signals.
       </p><div class="figure"><a name="processfun"></a><p class="title"><b>Figure 1. Processes viewed as functions</b></p><div class="figure-contents"><div class="mediaobject" align="center"><table border="0" summary="manufactured viewport for HTML img" cellspacing="0" cellpadding="0" width="360"><tr><td align="center" valign="middle"><object data="figures/processfun.svg" type="image/svg+xml" width="360" align="middle"></object></td></tr></table></div></div></div><br class="figure-break"><p>
@@ -83,10 +83,10 @@
       </p><p>
 	One of the simplest examples one can think of, is a process which merely adds one to every value in its
 	only input signal: <span class="emphasis"><em>plus1</em></span>.	
-      </p><div class="example"><a name="id1250601"></a><p class="title"><b>Example 2. The <span class="emphasis"><em>plus1</em></span> process</b></p><div class="example-contents">
+      </p><div class="example"><a name="id1251832"></a><p class="title"><b>Example 2. The <span class="emphasis"><em>plus1</em></span> process</b></p><div class="example-contents">
 	plus1(&lt;v<sub>1</sub>, v<sub>2</sub>, v<sub>3</sub>, ...&gt;) =
 	&lt;v<sub>1</sub>+1, v<sub>2</sub>+1, v<sub>3</sub>+1, ...&gt;)
-      </div></div><br class="example-break"></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="id1250634"></a>3.3. Process Constructors</h3></div></div></div><p>
+      </div></div><br class="example-break"></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="id1251865"></a>3.3. Process Constructors</h3></div></div></div><p>
 	In ForSyDe, all processes, even <span class="emphasis"><em>plus1</em></span>, must be created from 
 	<span class="emphasis"><em>process constructors</em></span>. A process constructor takes zero or more
 	functions and/or values which determine the initial state and behaviour of the process to be created.  
@@ -99,7 +99,7 @@
 	For instance, <span class="emphasis"><em>mapSY</em></span>, (where the suffix
 	<span class="emphasis"><em>SY</em></span> stands for
 	<span class="emphasis"><em>SY</em></span>ncrhonous) is a
-	combinational<sup>[<a name="id1250717" href="#ftn.id1250717" class="footnote">2</a>]</sup> process constructor.
+	combinational<sup>[<a name="id1251948" href="#ftn.id1251948" class="footnote">2</a>]</sup> process constructor.
 	<span class="emphasis"><em>mapSY</em></span> takes a function
 	<span class="emphasis"><em>f</em></span> and creates a process with one input
 	and output signal, resulting from the application of
@@ -131,7 +131,7 @@
 	<span class="emphasis"><em>delaySY<sub>k</sub></em></span> are
 	considered primitive process constructors, since they cannot
 	be defined in terms of simpler ones. Primitive constructors
-	can be combined, forming derived procesrocess
+	can be combined, forming derived process
 	constructors. For instance, <span class="emphasis"><em>sourceSY</em></span> is
 	the result of combining
 	<span class="emphasis"><em>delaySY<sub>1</sub></em></span> (normally
@@ -148,7 +148,7 @@
       </p><p>
 	ForSyDe supplies many other process constructors (e.g. <code class="code">zipWithSY</code>, <code class="code">mealySY</code> ...). However, a thoroughly description
 	is out of the scope of this tutorial. 
-      </p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="id1250638"></a>3.4. Models of Computation and Domain Interfaces</h3></div></div></div><p>
+      </p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="id1251869"></a>3.4. Models of Computation and Domain Interfaces</h3></div></div></div><p>
 	A <span class="emphasis"><em>Model of Computation</em></span> (MoC), also known
 	as <span class="emphasis"><em>Computational Model</em></span> establishes a set of
 	constraints on the possible processes and signals contained by
@@ -190,7 +190,7 @@
 	    The <span class="strong"><strong>Continuous MoC</strong></span>
 	    models continuous signals representing them as
 	    continuous one-variable, piecewise functions.
-	  </p><div class="figure"><a name="id1251114"></a><p class="title"><b>Figure 7. Continuous signal</b></p><div class="figure-contents">
+	  </p><div class="figure"><a name="id1252345"></a><p class="title"><b>Figure 7. Continuous signal</b></p><div class="figure-contents">
 	    &lt; (sin(x),[-10,0)), (-sin(x),[0,10)) &gt;
 	    <div class="mediaobject" align="center"><table border="0" summary="manufactured viewport for HTML img" cellspacing="0" cellpadding="0" width="360"><tr><td align="center" valign="middle"><object data="figures/piecewise_sin.svg" type="image/svg+xml" width="360" align="middle"></object></td></tr></table></div></div></div><br class="figure-break"></li></ul></div><p>
 	ForSyDe specifies a set of process constructors for each MoC. A
@@ -199,7 +199,7 @@
       </p><p>
 	Nevertheless, it is possible to build heterogeneous systems,
 	i.e. systems which mix different MoCs. For that purpose,
-	ForSyDe provides special<sup>[<a name="id1251169" href="#ftn.id1251169" class="footnote">3</a>]</sup> processes in
+	ForSyDe provides special<sup>[<a name="id1252400" href="#ftn.id1252400" class="footnote">3</a>]</sup> processes in
 	charge of connecting two subsystems which belong to different
 	MoCs or which have different timing specifications (e.g. two
 	Synchronous subsystems with a different clock period).
@@ -225,7 +225,7 @@ data Signal a = NullS | a :- Signal a
 	  are used in a similar way to shallow-embedded signals but
 	  are modelled as an abstract data type which, transparently
 	  to the end user, keeps track of the system
-	  structure<sup>[<a name="id1251259" href="#ftn.id1251259" class="footnote">4</a>]</sup>. Based on that structural
+	  structure<sup>[<a name="id1252490" href="#ftn.id1252490" class="footnote">4</a>]</sup>. Based on that structural
 	  information, ForSyDe's embedded compiler can perform
 	  different analysis and transformations such as simulating
 	  the system or translating it to other target languages
@@ -305,13 +305,17 @@ addOnef = $(newProcFun [d|addOnef :: Int32 -&gt; Int32
 	  by <code class="code">mapSY</code>. It simply takes an <code class="code">Int32</code> value
 	  and adds 1 to it.
 	</p><p>
-	  Instead of creating a specific DSL to
-	  express computations in the deep-embedded model, ForSyDe uses
-	  TH to allow using plain Haskell. In principle,
-	  <code class="code">ProcFun</code>s can make use of any Haskell feature
-	  supported by TH. However, such features might not be supported
-	  or make sense for certain backends (e.g. lists and thus, list
-	  comprehensions, are difficult to support in VHDL).
+	  Instead of creating a specific DSL to express computations
+	  in the deep-embedded model, ForSyDe uses TH to allow using
+	  plain Haskell. In principle, <code class="code">ProcFun</code>s can make
+	  use of any Haskell feature supported by TH. However, such
+	  features might not be supported or make sense for certain
+	  backends (e.g. lists and thus, list comprehensions, are
+	  difficult to support in VHDL). Thus, in this tutorial we will
+	  create systems which are compatible with every backend. For example,
+	  writing <code class="code">addOnef = (+1)</code> instead of <code class="code">addOnef n = n +1</code>
+	  is more compact, however the VHDL backend does not currently support
+	  sections nor points-free notation.
 	</p><p>
 	  In order to use ForSyDe it is not vital to understand what is
 	  really happening, but, for those curious about it, here is how
@@ -325,12 +329,12 @@ addOnef = $(newProcFun [d|addOnef :: Int32 -&gt; Int32
 	</p><pre class="programlisting">
 -- System function (simply a process in this case) which uses addOnef
 plus1Proc :: Signal Int32 -&gt; Signal Int32
-plus1Proc = mapSY "addOne" addOnef
+plus1Proc = mapSY "plus1Proc" addOnef
 
 
 -- System definition associated to the system function
 plus1SysDef :: SysDef (Signal Int32 -&gt; Signal Int32)
-plus1SysDef = newSysDef plus1Proc "addOne" ["inSignal"] ["outSignal"]
+plus1SysDef = newSysDef plus1Proc "plus1" ["inSignal"] ["outSignal"]
 	</pre><p>
 	  First, we use <code class="code">mapSY</code> to create process. Then we create the final definition
 	  of the <span class="emphasis"><em>plus1</em></span> system with <code class="code">newSysDef</code>. Here is its type signature.
@@ -370,7 +374,7 @@ simPlus1 :: [Int32] -&gt; [Int32]
 <code class="prompt">*Plus1&gt;</code> take 10 $ simPlus1 [1,1..] 
 [2,2,2,2,2,2,2,2,2,2]
 	</pre><p>
-	  It is important to remark that ForSyDe doesn't support
+	  It is important to remark that ForSyDe does not support
 	  systems containing <span class="emphasis"><em>combinational loops</em></span>.
 	  If such a loop is found, an error will be reported.
 	</p><p>
@@ -387,7 +391,7 @@ combLoopSysDef = newSysDef s "combLoop" [] ["out"]
 	</p><pre class="screen">
 *Plus1&gt; simulate combLoopSysDef 
 *** Exception: detected combinational loop
-	</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="id1251817"></a>5.1.2. Keypad encoder</h4></div></div></div><p>
+	</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="id1253059"></a>5.1.2. Keypad encoder</h4></div></div></div><p>
 	  Here is a slightly more complex example. We have a keypad with
 	  4 arrow buttons connected to our synchronous system. The
 	  key-presses are sent in the form of a 4-bit vector. Each bit
@@ -442,7 +446,7 @@ $(deriveLift1 ''Direction)
 		the <code class="code">Prelude</code>.
 	      </p></li><li><p>
 		We are defining a custom enumerated
-		datatype<sup>[<a name="id1251976" href="#ftn.id1251976" class="footnote">5</a>]</sup> (<code class="code">Direction</code>)
+		datatype<sup>[<a name="id1253218" href="#ftn.id1253218" class="footnote">5</a>]</sup> (<code class="code">Direction</code>)
 		whose values will be carried by system signals. All
 		the values used in a system, and
 		<code class="code">Direction</code> in particular, must be
@@ -477,7 +481,7 @@ instance (ProcType a, ProcType b) =&gt;  ProcType (a,b)
 		<code class="code">DeriveDataTypeable</code> language
 		pragma). Additionally, ForSyDe provides a Template
 		Haskell module
-		<code class="code">Language.Haskell.TH.Lift</code><sup>[<a name="id1252061" href="#ftn.id1252061" class="footnote">6</a>]</sup> to automatically generate
+		<code class="code">Language.Haskell.TH.Lift</code><sup>[<a name="id1253303" href="#ftn.id1253303" class="footnote">6</a>]</sup> to automatically generate
 		instances of <code class="code">Lift</code>. In this case, since we
 		needed to instantiate a single datatype, we used
 		<code class="code">deriveLift1</code>.
@@ -509,7 +513,10 @@ encoderFun = $(newProcFun
 	  is important to note that the system does not take
 	  simultaneous key-strokes in account, choosing the direction
 	  with higher precedence (i.e. situated in the outermost if
-	  expression).
+	  expression). Also, using pattern matching with multiple
+	  function clauses instead of nested <code class="code">if</code>
+	  expressions would had been more clear. However, the VHDL
+	  backend currently only supports one clause.
 	</p><p>
 	  Here is the remaining the code needed to build the rest of the system.
 	</p><pre class="programlisting">
@@ -570,11 +577,12 @@ simulate counterSysDef :: [Int32]
 	  </p><pre class="programlisting">
 counterProc :: Signal Int32
 counterProc = sourceSY "counterProc" addOnef 1
-	  </pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="id1252328"></a>5.2.2. Full adder</h4></div></div></div><p>
-	  A two-bit full adder is a, still simple, but more elaborated
-	  example of a sequential system. Our system will receive
-	  pairs of bits which will be added together, taking the
-	  resulting carry of last cycle in account.
+	  </pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="id1253577"></a>5.2.2. Serial full adder</h4></div></div></div><p>
+	  A serial full adder which adds two streams of bits is a,
+	  still simple, but more elaborated example of a sequential
+	  system. Our system will receive pairs of bits which will be
+	  added together, taking the resulting carry of last cycle in
+	  account.
 	</p><p>
 	  We are going to implement it as a Mealy FSM (Finite State Machine) following the diagram below.
 	</p><div class="figure"><a name="fullAdderfig"></a><p class="title"><b>Figure 9. Full Adder: Mealy Machine</b></p><div class="figure-contents"><div class="mediaobject" align="center"><table border="0" summary="manufactured viewport for HTML img" cellspacing="0" cellpadding="0" width="315"><tr><td align="center" valign="middle"><object data="figures/fullAdderMealy.svg" type="image/svg+xml" width="315" align="middle"></object></td></tr></table></div></div></div><br class="figure-break"><p>
@@ -744,12 +752,13 @@ addFourSysDef = newSysDef addFourProc "addFour" ["in1"] ["out1"]
 	      </li></ul></div><p>
 	  </p></li></ol></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="VHDL"></a>5.4. VHDL Backend</h3></div></div></div><p>
 	ForSyDe's embedded compiler is able to translate system definitions to VHDL. That is
-	done through the <code class="code">wirteVHDL</code>* functions.
+	done through the <code class="code">writeVHDL</code>* functions.
       </p><pre class="programlisting">
 writeVHDL :: SysDef a -&gt; IO ()
 writeVHDLOps :: VHDLOps -&gt; SysDef a -&gt; IO ()
       </pre><p>
-	For example, this is how we would generate the VHDL definition of <span class="emphasis"><em>AddFour</em></span>.
+	For example, this is how we would generate the VHDL definition
+	of <span class="emphasis"><em>AddFour</em></span> and write it to disk.
       </p><pre class="screen">
 $ ghci AddFour.hs
 *AddFour&gt; writeVHDL addFourSysDef 
@@ -765,11 +774,374 @@ addFour/vhdl/addFour_lib:
 addFour_lib.vhd
 
 addFour/vhdl/work:
-addFour.vhd addOne.vhd
-
+addFour.vhd plus1.vhd
       </pre><p>
-	TO BE FINISHED!
-      </p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="GraphML"></a>5.5. GraphML Backend</h3></div></div></div><p>blah blah</p></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="SE"></a>6. Shallow-embedded signals</h2></div></div></div><p>blah blah</p></div><div class="appendix" lang="en"><h2 class="title" style="clear: both"><a name="FSVec"></a>A. <code class="literal">FSVec</code>s: Vectors parameterized in size</h2><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="id1252905"></a>1. Goal</h3></div></div></div><p>
+	Here is a diagram of the filetree generated for <code class="code">addFour</code>.
+      </p><div class="figure"><a name="VHDLTree"></a><p class="title"><b>Figure 12. VHDL filetree of <code class="code">addFour</code></b></p><div class="figure-contents"><div class="mediaobject" align="center"><table border="0" summary="manufactured viewport for HTML img" cellspacing="0" cellpadding="0" width="315"><tr><td align="center" valign="middle"><object data="figures/VHDLTree.svg" type="image/svg+xml" width="315" align="middle"></object></td></tr></table></div></div></div><br class="figure-break"><p>
+	<code class="code">writeVHDL</code> generates a VHDL filetree pending from current
+	working directory. Assuming <code class="code">$SYSNAME</code> is the
+	system's name (<code class="code">addFour</code> in this particular case):
+      </p><div class="itemizedlist"><ul type="disc"><li><p>
+	    The main VHDL entity and architecture is written in <code class="code">$SYSNAME/vhdl/work/$SYSNAME.vhdl</code>.
+	  </p></li><li><p>
+	    The VHDL translation of other systems included through component instantiation is also written under
+	    <code class="code">$SYSNAME/vhdl/work/</code>. In  the case of the <code class="code">addFour</code> system, the compiler also
+	    generates the file <code class="code">plus1.vhd</code>.
+	  </p></li><li><p>
+	    A global VHDL library, <code class="code">forsyde_lib.vhd</code>, is
+	    bundled with ForSyDe's distribution and contains the
+	    translation of basic monomorphic Haskell types to VHDL. It
+	    is installed under the <code class="code">data</code> directory of
+	    ForSyDe's Cabal package, whose location is
+	    system-dependent.
+	  </p></li><li><p>
+	    Since VHDL lacks support for <span class="emphasis"><em>parametric
+	    polymorphism</em></span>, the translation of polymorphic
+	    types and functions is done on a per-system basis
+	    (i.e. each different possible monotype of a polymorphic
+	    Haskell type triggers a different translation). Thus, the
+	    result of that translation is put in
+	    <code class="code">$SYSNAME/vhdl/lib/$SYSNAME_lib.vhd</code> and not
+	    <code class="code">forsyde_lib.vhd</code>.
+	  </p></li></ul></div><p>
+	It is important to remember that, even if ForSyDe signals are polymorphic and
+	<code class="code">ProcFun</code>s can include any Haskell function definition, 
+	some backends might be limited. In the case of the VHDL backend:
+      </p><div class="itemizedlist"><ul type="disc"><li><p>
+	    Accepted <code class="code">Signal</code> types. <code class="code">Signal a</code> is a valid
+	    signal for the VHDL backend if <code class="code">a</code> belongs to:
+	  </p><div class="orderedlist"><ol type="1"><li><p>
+		Primitive types: <code class="code">Data.Int</code>{<code class="code">8</code>, <code class="code">16</code>, <code class="code">32</code>}, <code class="code">Bool</code>,
+		<code class="code">ForSyDe.Bit</code>.
+	      </p></li><li><p>
+		Custom types: enumerated<sup>[<a name="id1254305" href="#ftn.id1254305" class="footnote">7</a>]</sup> types.
+	      </p></li><li><p>
+		The following containers, which can hold any primitive
+		or custom type and can be unrestrictively nested:
+		<code class="code">Data.Param.FSVec</code>, tuples of unlimited
+		size<sup>[<a name="id1254325" href="#ftn.id1254325" class="footnote">8</a>]</sup>,
+	      </p></li></ol></div></li><li><p>
+	    Although this will hopefully change in the future, the
+	    declarations contained by <code class="code">ProcFun</code>s must
+	    be fairly simple. For instance:
+	  </p><div class="orderedlist"><ol type="1"><li><p>
+		Points-free notation is not admitted.
+	      </p></li><li><p>
+		They can only contain a clause, multiple clauses are not accepted.
+	      </p></li></ol></div></li></ul></div><p>
+	Getting back to the function interface of the VHDL backend, it
+	is possible to provide certain compilation options, namely to
+	integrate Altera's <span class="emphasis"><em>Quartus II</em></span> and
+	<span class="emphasis"><em>Modelsim</em></span> in our workflow. For that
+	purpose we will use <code class="code">writeVHDLOps</code>.
+      </p><p>
+	For example, we can generate a <code class="code">Quartus II</code> project
+	and compile the generated VHDL code setting certain configuration
+	options such as the pin-mapping and the FGPA model to be used.
+      </p><pre class="programlisting">
+compileQuartus :: IO ()
+compileQuartus = writeVHDLOps vhdlOps addFourSysDef
+ where vhdlOps = defaultVHDLOps{execQuartus=Just quartusOps}
+       quartusOps = QuartusOps{action=FullCompilation,
+                               fMax=Just 50, -- in MHz
+                               fpgaFamiliyDevice=Just ("CycloneII",
+                                                       Just "EP2C35F672C6"),
+                               -- Three sample pin assignments
+                               pinAssigs=[("in1[0]", "PIN_W1"),
+                                          ("in1[1]", "PIN_W2"),
+                                          ("in1[2]", "PIN_W3")]}
+      </pre><p>
+	The code above generates the VHDL code for the
+	<code class="code">addFour</code> system, subsequently creating a Quartus
+	project and running a full compilation of the project. We set
+	a minimum acceptable clock frequency of 50 MHz, the FPGA
+	family (<code class="code">CycloneII</code>), specific device
+	(<code class="code">EP2C35F672C6</code>) and some pin assignments, which,
+	for briefness' sake are not sufficient.
+      </p><p>
+	It is important to note that, when needed, Quartus will
+	split input and output port identifiers into several logical
+	names corresponding to individual bits (e.g in1[0]).  Thus, it
+	might be necessary to open Quartus in order to find out what
+	logical names to use in pin assignments.
+      </p><p>
+	In addition to <span class="emphasis"><em>Quartus II</em></span>, the VHDL
+	backend is able to interface with
+	<span class="emphasis"><em>ModelSim</em></span>.  For example, the following
+	function shows how can we automatically compile the generated
+	VHDL code with ModelSim.
+      </p><pre class="programlisting">
+compileModelSim :: IO ()
+compileModelSim = writeVHDLOps vhdlOps addFourSysDef
+ where vhdlOps = defaultVHDLOps{compileModelsim=True}
+      </pre><p>
+	It is also possible to run test benches in ModelSim.
+      </p><pre class="programlisting">
+writeAndModelsimVHDL :: (SysFunToIOSimFun sysF simF) =&gt;
+                        Maybe Int -&gt; SysDef sysF -&gt; simF
+writeAndModelsimVHDLOps :: (SysFunToIOSimFun sysF simF) =&gt;
+                           VHDLOps -&gt; Maybe Int -&gt; SysDef sysF -&gt; simF
+      </pre>
+      
+      Here are two examples:
+      
+      <pre class="screen">
+$ ghci AddFour.hs
+*AddFour&gt; let vhdlSim = writeAndModelsimVHDL Nothing addFourSysDef 
+*AddFour&gt; :t vhdlSim
+vhdlSim :: [Int32] -&gt; IO [Int32]
+*AddFour&gt; vhdlSim [1..10]
+[4,5,6,7,8,9,10,11,12,13,14]
+      </pre><p>
+      In the example above, we simulate <code class="code">addFour</code> without supplying a limit in the number of cycles to
+      simulate. <code class="code">writeAndModelsimVHDL</code> is strict, so, without a limit it will only work
+      with finite input stimuli.
+      </p><pre class="screen">
+$ ghci Counter.hs
+*Counter&gt; writeAndModelsimVHDL (Just 20) counterSysDef
+[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20] 
+      </pre><p>
+	In this case the system does not have any inputs and thus the simulation implicitly results in infinite
+	output stimuli. Thus, it is necessary to set a limit in the number of cycles to simulate.
+      </p><p>
+	In a general way, the <code class="code">writeAndModelsimVHDL</code>* functions, generate a
+	simulation function which will
+      </p><div class="orderedlist"><ol type="1"><li><p>
+	      Generate a VHDL model (implicitly using the
+	      <code class="code">writeVHDL</code>* functions).
+	    </p></li><li><p>
+	      Compile the resulting model with ModelSim. 
+	    </p></li><li><p>
+	      Marshal the provided input stimuli from Haskell to VHDL
+	      and generate a testbench in
+	      <code class="code">$SYSNAME/vhdl/test/$SYSNAME_tb.vhd</code>.
+	    </p></li><li><p>
+	      Simulate the testbench with ModelSim and unmarshal the
+	      results back to Haskell.
+	    </p></li></ol></div><p>
+	  <code class="code">writeAndModelsimVHDL</code>* give equivalent results to <code class="code">simulate</code>, with a few caveats.
+	</p><div class="itemizedlist"><ul type="disc"><li><p>
+	      <code class="code">writeAndModelsimVHDL</code>*, unlike
+	      <code class="code">simulate</code>, are strict, and thus do not
+	      support infinite stimuli. For that reason, it is
+	      possible to set the number of cycles to simulate
+	      (<code class="code">Maybe Int</code> parameter).
+	    </p></li><li><p>
+	      <code class="code">writeAndModelsimVHDL</code>* , provide <code class="code">IO</code> simulation functions
+	      whereas <code class="code">simulate</code> is pure.
+	    </p></li><li><p>
+	      <code class="code">writeAndModelsimVHDL</code>*  suffer all the limitations of the VHDL backend whereas
+	      <code class="code">simulate</code> can cope with any system.
+	    </p></li></ul></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="GraphML"></a>5.5. GraphML Backend</h3></div></div></div><p>
+	It is possible to use ForSyDe's GraphML backend in order to 
+      </p><div class="orderedlist"><ol type="1"><li><p>
+	    generate an XML-based intermediate representation of
+	    a system for further processing.
+	  </p></li><li><p>
+	    obtain system diagrams.
+	  </p></li></ol></div><p>
+	ForSyDe provides the following functions, similar to the ones of the VHDL backend. 
+      </p><pre class="programlisting">
+writeGraphML :: SysDef a -&gt; IO ()
+writeGraphMLOps :: GraphMLOps -&gt; SysDef a -&gt; IO ()
+      </pre><p>
+	For example, here is how we would generate the GraphML translation of <code class="code">addFour</code>
+      </p><pre class="screen">
+$ ghci AddFour.hs
+*AddFour&gt; writeGraphML addFourSysDef 
+*AddFour&gt; :q
+Leaving GHCi.
+$ ls -R addFour
+graphml
+
+addFour/graphml:
+addFour.graphml plus1.graphml
+      </pre><p>
+	As we can see, <code class="code">.graphml</code> is generated for each
+	system involved. In this case, one for the main system
+	(<code class="code">addFour.graphml</code>) and another one for <code class="code">plus1</code>
+	which was instantiated by <code class="code">addFour</code>.
+      </p><p>
+	In order to embed ForSyDe metainformation, the GraphML backend
+	makes use of the following <a class="ulink" href="http://graphml.graphdrawing.org/primer/graphml-primer.html#Attributes" target="_top">GraphML-Attributes</a>:
+      </p><pre class="screen">
+&lt;key id="process_type" for="node" attr.name="process_type" attr.type="string"/&gt;
+&lt;key id="value_arg" for="node" attr.name="value_arg" attr.type="string"/&gt;
+&lt;key id="procfun_arg" for="node" attr.name="procfun_arg" attr.type="string"/&gt;
+&lt;key id="instance_parent" for="node" attr.name="instance_parent" attr.type="string"/&gt;
+      </pre><p>
+	The keys above are used to tag nodes in different ways.
+      </p><div class="itemizedlist"><ul type="disc"><li><p>
+	    <span class="strong"><strong><code class="code">process_type</code></strong></span> indicates what process constructor was used
+	    to create a process node or if the node is an input or output port. 
+	  </p></li><li><p>
+	    <span class="strong"><strong><code class="code">value_arg</code></strong></span> contains a value passed to a process
+	    constructor.
+	  </p></li><li><p>
+	    <span class="strong"><strong><code class="code">procfun_arg</code></strong></span> contains a value passed to a process
+	    constructor.
+	  </p></li><li><p>
+	    <span class="strong"><strong><code class="code">instance_parent</code></strong></span> is specific to component nodes
+	    and indicates the name of the parent system from which the component was instanciated.
+	  </p></li></ul></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="id1254805"></a>5.5.1. Obtaining diagrams of ForSyDe</h4></div></div></div><p>
+	  The GraphML definition does not provide a way to specify the
+	  graphical representation of graphs (e.g. edge and node
+	  shapes, colours, textual tags ...)
+	</p><p>
+	  For that reason, <a class="ulink" href="http://www.yworks.com" target="_top"><span class="emphasis"><em>yWorks</em></span></a>, a company
+	  offering graph visualization products, created yFiles-GraphML, an extension to the GraphML
+	  schema which adds graphical information. 
+	</p><p>
+	  yWorks also distributes <a class="ulink" href="http://www.yworks.com/en/products_yed_about.html" target="_top"><span class="emphasis"><em>yEd</em></span></a>,
+	  a free (as en beer) multiplatform graph editor with
+	  impressive automatic layout features.
+	</p><p>
+	  Here is an example on how to generate and edit
+	  yFiles-GraphML diagrams from ForSyDe systems. For this
+	  purpose, we will use our <span class="emphasis"><em>counter</em></span> system.
+	</p><pre class="screen">
+$ ghci Counter.hs
+*Counter&gt; writeGraphMLOps defaultGraphMLOps{yFilesMarkup=True} counterSysDef 
+*Counter&gt; :q
+$ ls -R counter
+graphml
+
+counter/graphml:
+counter.graphml              sourceSY_counterProc.graphml
+	</pre><p>
+	  <code class="code">sourceSY_counterProc.graphml</code> contains the <span class="emphasis"><em>sourceSY</em></span> process
+	  used in the counter. Let's view its representation with yEd.
+	</p><p>
+	  This is the unorganized representation we get right after opening <code class="code">sourceSY_counterProc.graphml</code>
+	  with yEd.
+	</p><div class="figure"><a name="sourceSY_counterProc1"></a><p class="title"><b>Figure 13. Initial yEd representation</b></p><div class="figure-contents"><div class="mediaobject" align="center"><table border="0" summary="manufactured viewport for HTML img" cellspacing="0" cellpadding="0" width="225"><tr><td align="center" valign="middle"><object data="figures/sourceSY_counterProc1.svg" type="image/svg+xml" width="225" align="middle"></object></td></tr></table></div></div></div><br class="figure-break"><p>
+	  All nodes are overlapped because the GraphML-yFiles backend
+	  does not perform any kind of node placement nor edge
+	  routing. yEd, however, does a very good job in this regard.
+	</p><p>
+	  Before running a layout algorithm it is convenient to set
+	  port constraints on the graph nodes. This is a workaround to
+	  make yEd respect the representation of shared signals
+	  (signals coming from the same process output). The GraphML
+	  format (and GraphML-yFiles) allows edge sharing through the
+	  use of <a class="link" href=""><span class="emphasis"><em>ports</em></span></a>, however,
+	  yEd does not currently respect them. Our current solution is
+	  to set a location for the edge ends in the GraphML backend
+	  and lock that location through yEd port constraints.
+	</p><p>
+	  In order to set the port constraints we will go to
+	  <span class="emphasis"><em>Tools -&gt; Constraints -&gt; Port
+	  Constraints</em></span>.
+	</p><p>
+	  The port constraints menu will initially look like this.
+	</p><div class="figure"><a name="portConstraints1"></a><p class="title"><b>Figure 14. Port constraints default options</b></p><div class="figure-contents"><div class="mediaobject" align="center"><table border="0" summary="manufactured viewport for HTML img" cellspacing="0" cellpadding="0" width="360"><tr><td align="center" valign="middle"><img src="figures/portConstraints1.png" align="middle" width="360" alt="Port constraints default options"></td></tr></table></div></div></div><br class="figure-break"><p>
+	  These are the options we need to set in order to fix all
+	  ports. Remember to click on OK after setting them.
+	</p><div class="figure"><a name="portConstraints2"></a><p class="title"><b>Figure 15. Desired port constraint options</b></p><div class="figure-contents"><div class="mediaobject" align="center"><table border="0" summary="manufactured viewport for HTML img" cellspacing="0" cellpadding="0" width="360"><tr><td align="center" valign="middle"><img src="figures/portConstraints2.png" align="middle" width="360" alt="Desired port constraint options"></td></tr></table></div></div></div><br class="figure-break"><p>
+	  It is important to note that due to a bug in yFiles format
+	  it is not possible to save port constraints in <code class="code">.graphml</code> files. Thus,
+	  we will need to reset the port constraints every time a file is reopened.
+	</p><p>
+	  Now we are ready to run an automatic layout algorithm. The
+	  generated GraphML-yFiles graph is prepared to be displayed
+	  from left to right. The hierarchical layout
+	  (<span class="emphasis"><em>Layout -&gt; Hierarchical -&gt; Classic</em></span>)
+	  seems to give the best results for system diagrams. It is
+	  important to set the Orientation to <span class="emphasis"><em>Left to
+	  Right</em></span> and allow <span class="emphasis"><em>Backloop Routing</em></span>.
+	</p><div class="figure"><a name="layout"></a><p class="title"><b>Figure 16. hierarchical layout</b></p><div class="figure-contents"><div class="mediaobject" align="center"><table border="0" summary="manufactured viewport for HTML img" cellspacing="0" cellpadding="0" width="360"><tr><td align="center" valign="middle"><img src="figures/layout.png" align="middle" width="360" alt="hierarchical layout"></td></tr></table></div></div></div><br class="figure-break">
+	
+	After clicking on <span class="emphasis"><em>OK</em></span>, the system diagram should look like this:
+
+	<div class="figure"><a name="sourceSY_counterProc2"></a><p class="title"><b>Figure 17. Final yEd representation</b></p><div class="figure-contents"><div class="mediaobject" align="center"><table border="0" summary="manufactured viewport for HTML img" cellspacing="0" cellpadding="0" width="450"><tr><td align="center" valign="middle"><object data="figures/sourceSY_counterProc2.svg" type="image/svg+xml" width="450" align="middle"></object></td></tr></table></div></div></div><br class="figure-break"></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="id1255141"></a>5.5.2. GraphML limitations</h4></div></div></div><p>
+	  Unfortunately, GraphML nor yFiles-GraphML + yEd suit all ForSyDe needs: 
+	</p><div class="itemizedlist"><ul type="disc"><li><p>
+	      yFiles doesn&#8217;t respect GraphML ports (source signal
+	      sharing). We provide a workaround based on precalculate
+	      the location of edge ends plus yEd routing port constraints
+	      (which unfortunately cannot be saved).
+	    </p></li><li><p>
+	      yEd wipes out external <code class="code">&lt;data&gt;</code> tags (external GraphML attributes).
+	    </p></li><li><p>
+	      yEd wipes out external <code class="code">&lt;data&gt;</code> tags
+	      (external GraphML attributes) when saving a graph. That
+	      includes ForSyDe's metainformation, which will be lost
+	      after editing the graph with yEd.
+	    </p></li><li><p>
+	      GraphML nor yFiles-GraphML explicitly support subgraphs
+	      but not subgraph sharing (components). Our solution is
+	      to use external &lt;data&gt; tags indicating parent
+	      systems in instance nodes. However, yEd is obviously
+	      unaware of that trick, not being able to offer
+	      hierarchical browsing.
+	    </p></li></ul></div></div></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="SE"></a>6. Shallow-embedded signals</h2></div></div></div><p>
+      As it was previously mentioned, ForSyDe offers a flavour of
+      signals called shallow-embedded signals, modelled as
+      streams of data:
+    </p><pre class="programlisting">
+data Signal a = NullS | a :- Signal a
+    </pre><p>
+      This representation offers some advantages:
+    </p><div class="itemizedlist"><ul type="disc"><li><p>
+	  Rapid prototyping of systems.
+	</p></li><li><p>
+	  It is easy to include new MoCs.
+	</p></li><li><p>
+	  It supports all the MoCs covered by ForSyDe (Synchronous, Untimed and Continuous). 
+	</p></li></ul></div><p>
+      Shallow-embedded signals also present some disadvantages:
+    </p><div class="itemizedlist"><ul type="disc"><li><p>
+	  Systems built with them can only be
+	  simulated. Shallow-embedded signals don't contain any
+	  structural information. Thus, the models resulting from them
+	  cannot be analyzed or compiled to other target languages.
+	</p></li><li><p>
+	  No support for components. However, they are not really needed, components are not
+	  useful for simulation and reusability can be achieved by function refactoring.
+	</p></li></ul></div><p>
+      Here is the implementation of <span class="emphasis"><em>plus1</em></span> using shallow-embedded signals. 
+    </p><pre class="programlisting">
+module Plus1Shallow where
+
+import ForSyDe.Shallow
+
+import Data.Int(Int32)
+
+plus1 :: Signal Int32 -&gt; Signal Int32
+plus1 = mapSY (+1)
+    </pre><p>
+      The system can be simulated directly simply by calling <span class="emphasis"><em>plus1</em></span>.
+    </p><pre class="screen">
+$ ghci Plus1Shallow.hs
+*Plus1Shallow&gt; :t signal
+signal :: [a] -&gt; Signal a
+*Plus1Shallow&gt; plus1 (signal [1..10])
+{2,3,4,5,6,7,8,9,10,11}
+    </pre><p>
+      We can also integrate Deep-embedded models into shallow-embedded
+      ones by using <code class="code">simulate</code>, <code class="code">signal</code> and
+      <code class="code">fromSignal</code> (the inverse of <code class="code">signal</code>).
+      In the example below, we use the deep-embedded
+      <code class="code">addFour</code> system and the shallow-embedded
+      <code class="code">plus1</code> to build <span class="emphasis"><em>plus5</em></span>
+    </p><pre class="programlisting">
+module Plus5 where
+
+import Plus1Shallow
+import AddFour
+
+import ForSyDe (simulate)
+import ForSyDe.Shallow
+
+import Data.Int (Int32)
+
+plus5 :: Signal Int32 -&gt; Signal Int32
+plus5 = plus1 . signal . simulate addFourSysDef . fromSignal
+    </pre><pre class="screen">
+$ ghci Plus5.hs      
+*Plus5&gt; plus5 (signal [1..10])
+{6,7,8,9,10,11,12,13,14,15}
+    </pre></div><div class="appendix" lang="en"><h2 class="title" style="clear: both"><a name="FSVec"></a>A. <code class="literal">FSVec</code>s: Vectors parameterized in size</h2><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="id1255405"></a>1. Goal</h3></div></div></div><p>
       We would like to numerically parameterize vectors using their
       length in order to implement fixed-sized vectors
       (<code class="code">FSVec</code>).  Ideally, we would like to be able to
@@ -794,7 +1166,7 @@ head :: FSVec  (s &gt; 0) a -&gt; FSVec (s - 1) a -- Not Haskell
 	parameterized-vector is in practice a dependent type) nor type-level
 	lambdas directly. Yet, it is still possible to implement our <code class="code">FSVec</code>
 	type using Haskell plus a few GHC extensions.
-      </p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="id1252975"></a>2. How?</h3></div></div></div><p>
+      </p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="id1255479"></a>2. How?</h3></div></div></div><p>
 	Before diving into the details, let me spoil the final result:
       </p><pre class="programlisting">
 v :: FSVec D23 Int
@@ -813,7 +1185,7 @@ head :: Pos s =&gt; FSVec s a -&gt; a
       </p><p>
 	The trick is to emulate the parameters using type-level decimal
 	numerals. But, what is that?
-      </p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="id1253011"></a>3. Type-level decimal numerals</h3></div></div></div><p>
+      </p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="id1255515"></a>3. Type-level decimal numerals</h3></div></div></div><p>
 	We already mentioned that the trick is to use types to represent the size of
 	the vector. So, we want a type parameter to represent a number, but, How?
       </p><pre class="programlisting">
@@ -946,7 +1318,7 @@ Prelude Data.TypeLevel&gt; check d2
 	 </p><pre class="screen">
 Prelude Data.TypeLevel&gt; check d4
 4
-	 </pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="id1253017"></a>4. Fixed Sized Vectors themselves</h3></div></div></div><p>
+	 </pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="id1255521"></a>4. Fixed Sized Vectors themselves</h3></div></div></div><p>
 	  Getting back to fixed-sized vectors themselves, FSVec offers
 	  a <a class="ulink" href="http://hackage.haskell.org/packages/archive/parameterized-data/0.1.2/doc/html/Data-Param-FSVec.html" target="_top">reasonably
 	  rich vector API</a> based on type-level numerals.
@@ -998,7 +1370,7 @@ Prelude Data.TypeLevel Data.Param.FSVec&gt; Data.Param.FSVec.head empty
 	  Again, attempting to  the head of an empty vector triggers a compile-time error.
 	</p><p>
 	  Even if FSVec offers many nice features, it also has a few problems.
-	</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="id1253320"></a>5. <code class="code">FSVec</code> issues</h3></div></div></div><div class="orderedlist"><ol type="1"><li><p>
+	</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="id1255824"></a>5. <code class="code">FSVec</code> issues</h3></div></div></div><div class="orderedlist"><ol type="1"><li><p>
 	      Some functions such as <code class="code">filter</code> cannot be
 	      implemented. One can think about something along the
 	      lines of:
@@ -1011,7 +1383,7 @@ filter :: (a -&gt; Bool) -&gt; FSVec s a -&gt; FSVec s2 a
 	      Since <code class="code">FSVec</code> is an abstract data type,
 	      pattern matching is lost, but that is the general case
 	      in vector implementations
-	      <sup>[<a name="id1253496" href="#ftn.id1253496" class="footnote">7</a>]</sup>.
+	      <sup>[<a name="id1256000" href="#ftn.id1256000" class="footnote">9</a>]</sup>.
 	    </p></li><li><p>
 	      It is difficult to build a vector from a list. Again, the first thing one would
 	      think of would be
@@ -1084,26 +1456,31 @@ Prelude&gt; :m +Data.Param
 Prelude Data.Param&gt; $(vectorTH [1 :: Int,2,3,4])
 Prelude Data.Param&gt; :t $(vectorTH [1 :: Int,2,3,4])
 $(vectorTH [1 :: Int,2,3,4]) :: (Num t) =&gt; FSVec Data.TypeLevel.Num.Reps.D4 t
-		</pre></li></ol></div></li></ol></div></div></div><div class="footnotes"><br><hr width="100" align="left"><div class="footnote"><p><sup>[<a name="ftn.id1250300" href="#id1250300" class="para">1</a>] </sup>ForSyDe has been tested to run
+		</pre></li></ol></div></li></ol></div></div></div><div class="footnotes"><br><hr width="100" align="left"><div class="footnote"><p><sup>[<a name="ftn.id1251532" href="#id1251532" class="para">1</a>] </sup>ForSyDe has been tested to run
       successfully on Linux, OSX-Leopard-x86 and Windows when compiled
       under GHC version 6.8.2. Due to the massive number of instances
       automatically generated in ForSyDe, it is not recommended to use
       a higher version of GHC until <a class="ulink" href="http://hackage.haskell.org/trac/ghc/ticket/2328" target="_top">bug
-      #2328</a> is fixed.</p></div><div class="footnote"><p><sup>[<a name="ftn.id1250717" href="#id1250717" class="para">2</a>] </sup>The term combinational comes from
+      #2328</a> is fixed.</p></div><div class="footnote"><p><sup>[<a name="ftn.id1251948" href="#id1251948" class="para">2</a>] </sup>The term combinational comes from
 	Digital Circuit Theory. In the context of ForSyDe, a
 	synchronous process is combinational, as opposed to
 	sequential, if its outputs don't depend on the history of the
 	input signals. That is, the process is stateless, all output
 	values can only depend on the input values consumed in the
-	same clock cycle.</p></div><div class="footnote"><p><sup>[<a name="ftn.id1251169" href="#id1251169" class="para">3</a>] </sup>In the sense of
-	belonging to any particular MoC</p></div><div class="footnote"><p><sup>[<a name="ftn.id1251259" href="#id1251259" class="para">4</a>] </sup>Current implementation is based on
+	same clock cycle.</p></div><div class="footnote"><p><sup>[<a name="ftn.id1252400" href="#id1252400" class="para">3</a>] </sup>In the sense of
+	belonging to any particular MoC</p></div><div class="footnote"><p><sup>[<a name="ftn.id1252490" href="#id1252490" class="para">4</a>] </sup>Current implementation is based on
 	  <a class="ulink" href="http://www.cs.chalmers.se/~koen/Lava/" target="_top">Lava</a>'s
 	  <a class="ulink" href="http://www.cs.chalmers.se/~koen/pubs/entry-asian99-lava.html" target="_top">Observable
-	  Sharing</a>.</p></div><div class="footnote"><p><sup>[<a name="ftn.id1251976" href="#id1251976" class="para">5</a>] </sup>More formally, a datatype with
+	  Sharing</a>.</p></div><div class="footnote"><p><sup>[<a name="ftn.id1253218" href="#id1253218" class="para">5</a>] </sup>More formally, a datatype with
 		data constructors whose arity is zero in all
-		cases.</p></div><div class="footnote"><p><sup>[<a name="ftn.id1252061" href="#id1252061" class="para">6</a>] </sup>Based
+		cases.</p></div><div class="footnote"><p><sup>[<a name="ftn.id1253303" href="#id1253303" class="para">6</a>] </sup>Based
 		on the <a class="ulink" href="http://hackage.haskell.org/cgi-bin/hackage-scripts/package/th-lift" target="_top"><code class="code">th-lift</code></a>
-		package</p></div><div class="footnote"><p><sup>[<a name="ftn.id1253496" href="#id1253496" class="para">7</a>] </sup>
+		package</p></div><div class="footnote"><p><sup>[<a name="ftn.id1254305" href="#id1254305" class="para">7</a>] </sup>Again,
+		consider an enumerated type to be an algebraic type
+		whose data constructors all have arity
+		zero.</p></div><div class="footnote"><p><sup>[<a name="ftn.id1254325" href="#id1254325" class="para">8</a>] </sup>In practice, the upper limit is
+		Haskell-compiler dependent. In the case of GHC,
+		current limit is 62.</p></div><div class="footnote"><p><sup>[<a name="ftn.id1256000" href="#id1256000" class="para">9</a>] </sup>
 		  We tried to implement pattern matching using the
 		  <a class="ulink" href="http://www.haskell.org/ghc/dist/current/docs/users_guide/template-haskell.html#th-quasiquotation" target="_top">new
 		  Quasiquoting mechanism in GHC</a> <a class="ulink" href="http://www.haskell.org/pipermail/template-haskell/2008-February/000655.html" target="_top">

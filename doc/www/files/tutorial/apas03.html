@@ -1,0 +1,203 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>3. Type-level decimal numerals</title><link rel="stylesheet" href="fptools.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.73.2"><link rel="start" href="index.html" title="ForSyDe tutorial"><link rel="up" href="apa.html" title="A. FSVecs: Vectors parameterized in size"><link rel="prev" href="apas02.html" title="2. How?"><link rel="next" href="apas04.html" title="4. Fixed Sized Vectors themselves"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">3. Type-level decimal numerals</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="apas02.html">Prev</a> </td><th width="60%" align="center">A. <code class="literal">FSVec</code>s: Vectors parameterized in size</th><td width="20%" align="right"> <a accesskey="n" href="apas04.html">Next</a></td></tr></table><hr></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="id1268575"></a>3. Type-level decimal numerals</h3></div></div></div>
+      
+      
+      <p>
+	We already mentioned that the trick is to use types to represent the size of
+	the vector. So, we want a type parameter to represent a number, but, How?
+      </p>
+      
+      <pre class="programlisting">
+-- Numerical digits
+data D0 -- empty type (supported by a EmptyDataDecls GHC extension, 
+        --             we could have included a phony constructor otherwise)
+data D1
+data D2
+..
+data D9
+
+data a :* b -- connective to build multidigit numerals (empty again)
+            -- note that the type constructor is infix (GHC TypeOperators extension)
+      </pre>
+
+      <p>
+	Using the definitions above we can represent arbitrarily-sized natural
+	numbers. Some examples:
+      </p>
+
+      <div class="segmentedlist"><table border="0"><thead><tr class="segtitle"><th>Number</th><th>Type-level representation</th></tr></thead><tbody><tr class="seglistitem"><td class="seg">0</td><td class="seg"><code class="code">D0</code></td></tr><tr class="seglistitem"><td class="seg">13</td><td class="seg"><code class="code">D1 :* D3</code></td></tr><tr class="seglistitem"><td class="seg">1024</td><td class="seg"><code class="code">D1 :* D0 :* D2 :* D4</code></td></tr></tbody></table></div>
+
+      <p>
+	It seems sensible, but very verbose. It would certainly be nicer to be
+	able to express 0 as <code class="code">D0</code>, 13 as <code class="code">D13</code> and so on.
+      </p>
+      
+      <p>
+	We solved the problem by using Template Haskell to generate
+	type synonyms (aliases) up to <code class="code">D5000</code>. The same
+	trick was used to emulate binaries (up to
+	<code class="code">B10000000000</code>), octals (up to <code class="code">O10000</code>)
+	and hexadecimals (up to <code class="code">H1000</code>):
+      </p>
+      
+	<pre class="screen">
+$ ghci -XTypeOperators  -XFlexibleContexts # Extensions used in different parts of this appendix
+Prelude&gt; :m +Data.TypeLevel
+Prelude Data.TypeLevel&gt; :i D124
+type D124 = (D1 :* D2) :* D4
+       -- Defined in Data.TypeLevel.Num.Aliases
+Prelude Data.TypeLevel&gt; :i HFF
+type HFF = (D2 :* D5) :* D5
+       -- Defined in Data.TypeLevel.Num.Aliases
+Prelude Data.TypeLevel&gt; :i B101
+type B101 = D5  -- Defined in Data.TypeLevel.Num.Aliases
+	</pre>      
+
+	<p>
+	  Of course, if you want to use a numeral which is out of the
+	  aliases range, the only option is to use the verbose decimal
+	  representation (it shouldn't be the normal case though)
+	</p>
+	
+	<p>
+	  Similarly to <code class="code">D13</code>, <code class="code">D124</code> ...
+	  undercase value-level aliases (<code class="code">d12</code>,
+	  <code class="code">d123</code>, .. declared as <code class="code">undefined</code>)
+	  are generated in order to create type-level values.
+	</p>
+	
+	<pre class="screen">
+Prelude Data.TypeLevel&gt; :i d123
+d123 :: (D1 :* D2) :* D3        -- Defined in Data.TypeLevel.Num.Aliases
+	</pre>
+
+	
+	<p>
+	  Fair enough. However, you might already have guessed that
+	  <code class="code">:*</code> can be used to construct ambiguous or
+	  not-normalized numerals, for instance:
+	</p>
+	
+	<pre class="programlisting">
+D0 :* D0 :* D1 -- numeral with trailing zeros
+(D1 :* D0) :* (D2 :* D2) -- malformed numeral
+	</pre>
+
+	<p>	
+	  That is when the natural (<code class="code">Nat</code>) and positive
+	  (<code class="code">Pos</code>) type-classes get in the game. We are
+	  going to omit the instances but, trust us, they guarantee
+	  that numerals are well-formed:
+	</p>
+
+	<pre class="programlisting">
+class Nat n where
+ toNum :: Num a =&gt; n -&gt; a
+
+class Nat n =&gt; Pos n
+	</pre>	
+	
+	<p>
+	  <code class="code">toNum</code> allows to pass the type-level numeral to value-level.
+	</p>
+
+	<pre class="screen"> 
+Prelude Data.TypeLevel&gt; toNum d123
+123
+-- a non-normalized numeral
+Prelude Data.TypeLevel&gt; toNum (undefined :: D0 :* D1)
+&lt;interactive&gt;:1:0:
+   No instance for (Data.TypeLevel.Num.Sets.PosI D0)
+     arising from a use of `toNum' at &lt;interactive&gt;:1:0-28
+   Possible fix:
+     add an instance declaration for (Data.TypeLevel.Num.Sets.PosI D0)
+   In the expression: toNum (undefined :: D0 :* D1)
+   In the definition of `it': it = toNum (undefined :: D0 :* D1)	  
+	</pre>
+	
+	<p>
+	  Based on the numerical representation we created, and using
+	  multiparameter type-classes, we can define type-level
+	  operations. The operations supported right now are:
+	</p>
+	
+	<div class="itemizedlist"><ul type="disc"><li>
+	    <p>
+	      Arithmetic: Successor, Predecesor, Addition,
+	      Subtraction, Multiplication, Division, Modulus, Greatest
+	      Common Divisor, Exponentiation and Logarithm.
+	    </p>
+	  </li><li>
+	    <p>
+	      Comparison: trichotomy classification, (&lt;), (&gt;) (&lt;=),
+	      (&gt;=), (==), Minimum, Maximum.
+	    </p>
+	  </li></ul></div>
+	
+	<p>
+	  Some examples:
+	</p>
+	
+	<pre class="screen">
+Prelude Data.TypeLevel&gt; :i Data.TypeLevel.divMod
+Data.TypeLevel.divMod :: (DivMod x y q r) =&gt; x -&gt; y -&gt; (q, r)
+       -- Defined in Data.TypeLevel.Num.Ops
+Prelude Data.TypeLevel&gt; d23 `Data.TypeLevel.divMod` d2
+(11,1)
+	</pre>
+	
+	<p>
+	  Note that the resulting type is calculated at compilation time:
+	</p>
+	
+	<pre class="screen">
+Prelude Data.TypeLevel&gt; :t d23 `Data.TypeLevel.divMod` d2
+d23 `Data.TypeLevel.divMod` d2 :: (D1 :* D1, D1)
+d23 `Data.TypeLevel.divMod` d2 :: (D1 :* D1, D1)
+	</pre>
+	
+	<p>
+	  Note as well that the operations are consistent, we cannot, for
+	  instance, calculate the predecessor of zero:
+	</p>
+
+      <pre class="screen">
+Prelude Data.TypeLevel&gt; Data.TypeLevel.pred d0
+
+&lt;interactive&gt;:1:0:
+   No instances for (Data.TypeLevel.Num.Ops.Failure
+                       (Data.TypeLevel.Num.Ops.PredecessorOfZeroError x),
+[..]
+	</pre>
+
+	<p>
+	  We can even set constraints in our functions for example, we
+	  want to guarantee (at compilation time) that a type-level
+	  numeral number is lower than 6 and greater than 3.
+	</p>
+	
+	<pre class="screen">
+Prelude Data.TypeLevel&gt; let check :: (Nat x, x :&lt;: D6, x :;&gt;: D3, Num a) =&gt; x -&gt; a; check n = toNum n
+	</pre>
+	
+	<p>
+	  For example, 2 does not meet the constraints.
+	</p>
+	
+         <pre class="screen">
+Prelude Data.TypeLevel&gt; check d2
+&lt;interactive&gt;:1:0:
+   Couldn't match expected type `CGT' against inferred type `CLT'
+[..]
+	 </pre>
+	 
+	 <p>
+	   Whereas 4 does
+	 </p>
+
+	 <pre class="screen">
+Prelude Data.TypeLevel&gt; check d4
+4
+	 </pre>
+
+	
+      </div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="apas02.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="apa.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="apas04.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">2. How? </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 4. Fixed Sized Vectors themselves</td></tr></table></div></body></html>

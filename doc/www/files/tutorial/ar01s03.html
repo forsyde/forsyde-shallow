@@ -1,0 +1,301 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>3. Introduction to ForSyDe</title><link rel="stylesheet" href="fptools.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.73.2"><link rel="start" href="index.html" title="ForSyDe tutorial"><link rel="up" href="index.html" title="ForSyDe tutorial"><link rel="prev" href="ar01s02.html" title="2. Installing ForSyDe"><link rel="next" href="ar01s04.html" title="4. Deep-embedded vs Shallow-embedded signals"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">3. Introduction to ForSyDe</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="ar01s02.html">Prev</a> </td><th width="60%" align="center"> </th><td width="20%" align="right"> <a accesskey="n" href="ar01s04.html">Next</a></td></tr></table><hr></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="introForSYDe"></a>3. Introduction to ForSyDe</h2></div></div></div>
+    
+    
+    
+    <p>
+      This section is a short introduction to some basic concepts
+      surrounding ForSyDe which are vital understand how to use its
+      implementation.  If you want to get your hands dirty and begin
+      with the implementation examples, go directly to <a class="xref" href="ar01s04.html" title="4. Deep-embedded vs Shallow-embedded signals">Section 4, &#8220;Deep-embedded vs Shallow-embedded signals&#8221;</a>.
+    </p> 
+    
+    
+    <p>
+      ForSyDe, which stands for Formal System Design, is a
+      methodology aimed at raising the abstraction level in which
+      systems (e.g. System on Chip Systems, Hardware or Software) are designed.
+    </p>
+    
+    <p>
+      ForSyDe systems are modelled as networks of <span class="emphasis"><em>processes</em></span>
+      interconnected by <span class="emphasis"><em>signals</em></span>. In
+      addition, the designer is allowed to use processes belonging to
+      different <span class="emphasis"><em>Models of Computation</em></span>.
+    </p>
+    
+    <p>
+      In order to understand how systems are modelled, it is important to
+      get familiar with the concepts outlined above.
+    </p>
+    
+    <div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="id1264734"></a>3.1. Signals</h3></div></div></div>
+       
+
+      <p>
+	Signals can be intuitively defined as
+	streams of information which flow through the different
+	processes forming a system.
+      </p>
+
+      <p>
+	For example, this is a signal containing the first 10 positive numbers
+      </p>
+      <div class="example"><a name="id1264752"></a><p class="title"><b>Example 1. Signal containing the first 10 positive numbers</b></p><div class="example-contents">&lt;1,2,3,4,5,6,7,8,9,10&gt;</div></div><br class="example-break">
+      
+      <p>
+	More formally, a signal is a sequence of events where each
+	event has a tag and a value. In ForSyDe, the tag of an event is
+	implicitly given by the event's position on the list. Furthermore, signals are
+	homogeneous (i.e. a signal cannot carry events of different
+	belonging to different types)
+      </p>
+      
+      <p>In the example signal above, is formed by integer values which are identical to the signal tags.</p>
+      
+      <div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3>The interpretation of tags, as we will see, is determined
+      by the <span class="emphasis"><em>Model of Computation</em></span> used, e.g. an identical tag of two events
+      in different signals does not necessarily imply that these
+      events happen at the same time. </div>
+    </div>
+    
+    <div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="id1264785"></a>3.2. Processes</h3></div></div></div>
+      
+      <p>
+	Processes are pure functions on signals, i.e. for a given set of input signals a process always gets the same
+	set of output signals.
+      </p>
+	
+      <div class="figure"><a name="processfun"></a><p class="title"><b>Figure 1. Processes viewed as functions</b></p><div class="figure-contents">
+	
+	<div class="mediaobject" align="center"><table border="0" summary="manufactured viewport for HTML img" cellspacing="0" cellpadding="0" width="360"><tr><td align="center" valign="middle"><object data="figures/processfun.svg" type="image/svg+xml" width="360" align="middle"></object></td></tr></table></div>
+      </div></div><br class="figure-break">
+      
+      <p>
+	They can also be viewed as a black box which performs computations over its input signals and
+	forward the results to adjacent processes through output signals.
+      </p>
+      
+      <div class="figure"><a name="processbox"></a><p class="title"><b>Figure 2. Processes viewed as boxes</b></p><div class="figure-contents">
+	
+	<div class="mediaobject" align="center"><table border="0" summary="manufactured viewport for HTML img" cellspacing="0" cellpadding="0" width="225"><tr><td align="center" valign="middle"><object data="figures/processbox.svg" type="image/svg+xml" width="225" align="middle"></object></td></tr></table></div>
+      </div></div><br class="figure-break">      
+      
+      <p>
+	Note that this still allows processes to have internal
+	state. A process does not necessarily react identically the
+	same event applied at different times. But it will produce the same, possibly infinite,  output signals
+	when confronted with identical, possibly infinite, input signals.
+      </p>
+      
+      <p>
+	One of the simplest examples one can think of, is a process which merely adds one to every value in its
+	only input signal: <span class="emphasis"><em>plus1</em></span>.	
+      </p>
+      
+      <div class="example"><a name="id1264892"></a><p class="title"><b>Example 2. The <span class="emphasis"><em>plus1</em></span> process</b></p><div class="example-contents">
+	
+	plus1(&lt;v<sub>1</sub>, v<sub>2</sub>, v<sub>3</sub>, ...&gt;) =
+	&lt;v<sub>1</sub>+1, v<sub>2</sub>+1, v<sub>3</sub>+1, ...&gt;)
+      </div></div><br class="example-break">
+    </div>
+    
+    
+    <div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="id1264925"></a>3.3. Process Constructors</h3></div></div></div>
+      
+      
+      <p>
+	In ForSyDe, all processes, even <span class="emphasis"><em>plus1</em></span>, must be created from 
+	<span class="emphasis"><em>process constructors</em></span>. A process constructor takes zero or more
+	functions and/or values which determine the initial state and behaviour of the process to be created.  
+      </p>
+
+      <div class="figure"><a name="processcons"></a><p class="title"><b>Figure 3. A process constructor</b></p><div class="figure-contents">
+	
+	<div class="mediaobject" align="center"><table border="0" summary="manufactured viewport for HTML img" cellspacing="0" cellpadding="0" width="270"><tr><td align="center" valign="middle"><object data="figures/processcons.svg" type="image/svg+xml" width="270" align="middle"></object></td></tr></table></div>
+      </div></div><br class="figure-break">
+      
+      
+      <p>
+	The ForSyDe methodology offers a set of well-defined
+	process constructors. For example, certain process constructors are aimed at creating
+	synchronous systems. A synchronous systems are governed by a global clock and all processes consume and produce
+	exactly one signal event in each clock-cycle.
+      </p>
+	
+      <p>
+	For instance, <span class="emphasis"><em>mapSY</em></span>, (where the suffix
+	<span class="emphasis"><em>SY</em></span> stands for
+	<span class="emphasis"><em>SY</em></span>ncrhonous) is a
+	combinational<sup>[<a name="id1265008" href="#ftn.id1265008" class="footnote">2</a>]</sup> process constructor.
+	<span class="emphasis"><em>mapSY</em></span> takes a function
+	<span class="emphasis"><em>f</em></span> and creates a process with one input
+	and output signal, resulting from the application of
+	<span class="emphasis"><em>f</em></span> to every value in the input.
+      </p>
+	
+      <div class="figure"><a name="mapSY"></a><p class="title"><b>Figure 4. The synchronous, combinational map process constructor: <span class="emphasis"><em>mapSY</em></span></b></p><div class="figure-contents">
+	
+	<div class="mediaobject" align="center"><table border="0" summary="manufactured viewport for HTML img" cellspacing="0" cellpadding="0" width="495"><tr><td align="center" valign="middle"><object data="figures/mapSY.svg" type="image/svg+xml" width="495" align="middle"></object></td></tr></table></div>
+      </div></div><br class="figure-break">
+      
+      <p>
+	<span class="emphasis"><em>plus1</em></span> can, in fact, be defined in terms of
+	<span class="emphasis"><em>mapSY</em></span> as <span class="emphasis"><em>plus1 = mapSY
+	(+1)</em></span>.
+      </p>
+      
+      <p>
+	ForSyDe also supports synchronous, sequential
+	systems. However, it does not allow loops formed exclusively
+	by combinational processes, also known as
+	<span class="emphasis"><em>combinational loops</em></span>, <span class="emphasis"><em>zero-delay
+	loops</em></span> or <span class="emphasis"><em>feedback loops</em></span>, since
+	their behaviour is not always decidable. Even with that,
+	combinational loops are still possible if they contain at
+	least one process formed by the
+	<span class="emphasis"><em>delaySY<sub>k</sub></em></span>
+	(<span class="emphasis"><em>k</em></span> &gt; 0) constructor, which is defined as follows.
+      </p>
+      
+      
+      <div class="figure"><a name="delaySY"></a><p class="title"><b>Figure 5. The synchronous, sequential delay process constructor: <span class="emphasis"><em>delaySY</em></span></b></p><div class="figure-contents">
+	
+	<div class="mediaobject" align="center"><table border="0" summary="manufactured viewport for HTML img" cellspacing="0" cellpadding="0" width="495"><tr><td align="center" valign="middle"><object data="figures/delaySY.svg" type="image/svg+xml" width="495" align="middle"></object></td></tr></table></div>
+      </div></div><br class="figure-break">
+      
+
+      <p>
+	<span class="emphasis"><em>delaySY<sub>k</sub></em></span> takes an
+	initial value <span class="emphasis"><em>v</em></span> and creates a process
+	which appends <span class="emphasis"><em>v</em></span>, replicated
+	<span class="emphasis"><em>k</em></span> times, to its input
+	signal. <span class="emphasis"><em>delaySY</em></span> provides the basic
+	mechanism with which to build sequential systems.
+      </p>
+      
+      <p>
+	Both <span class="emphasis"><em>mapSY</em></span> and
+	<span class="emphasis"><em>delaySY<sub>k</sub></em></span> are
+	considered primitive process constructors, since they cannot
+	be defined in terms of simpler ones. Primitive constructors
+	can be combined, forming derived process
+	constructors. For instance, <span class="emphasis"><em>sourceSY</em></span> is
+	the result of combining
+	<span class="emphasis"><em>delaySY<sub>1</sub></em></span> (normally
+	denoted simply as <span class="emphasis"><em>delaSY</em></span>) and
+	<span class="emphasis"><em>mapSY</em></span>.
+      </p>
+      
+      <div class="figure"><a name="sourceSY"></a><p class="title"><b>Figure 6. The <span class="emphasis"><em>sourceSY</em></span> derived process constructor</b></p><div class="figure-contents">
+	
+	<div class="mediaobject" align="center"><table border="0" summary="manufactured viewport for HTML img" cellspacing="0" cellpadding="0" width="450"><tr><td align="center" valign="middle"><object data="figures/sourceSY.svg" type="image/svg+xml" width="450" align="middle"></object></td></tr></table></div>
+      </div></div><br class="figure-break"> 
+      
+      <p>
+	<span class="emphasis"><em>sourceSY</em></span> takes an initial value <span class="emphasis"><em>v</em></span>
+	and a function <span class="emphasis"><em>f</em></span>, and creates a sequential process with no
+	inputs and just one output, resulting from the reiterated application of <span class="emphasis"><em>f</em></span>
+	to to <span class="emphasis"><em>v</em></span>.
+      </p>
+
+      <p>
+	For example, <span class="emphasis"><em>sourceSY</em></span>(1,(+1)), is a
+	counter with <span class="emphasis"><em>1</em></span> as its initial value.
+      </p>
+
+      <p>
+	ForSyDe supplies many other process constructors (e.g. <code class="code">zipWithSY</code>, <code class="code">mealySY</code> ...). However, a thoroughly description
+	is out of the scope of this tutorial. 
+      </p>
+      
+    </div>
+    <div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="id1264929"></a>3.4. Models of Computation and Domain Interfaces</h3></div></div></div>
+      
+      
+      <p>
+	A <span class="emphasis"><em>Model of Computation</em></span> (MoC), also known
+	as <span class="emphasis"><em>Computational Model</em></span> establishes a set of
+	constraints on the possible processes and signals contained by
+	a system. A system is said to belong to certain
+	<span class="emphasis"><em>MoC</em></span> if it satisfies its
+	constraints. 
+      </p>
+      
+      <p>
+	The behaviour of a process is observed in its
+	<span class="emphasis"><em>evaluation</em></span>. The evaluation is divided
+	in atomic steps called <span class="emphasis"><em>evaluation
+	cycles</em></span>, during which the process produces and
+	consumes signal values. MoCs specify how and when evaluation
+	cycles are fired.
+      </p>
+      
+      <p>
+	ForSyDe currently offers 3 MoCs.
+      </p>
+    
+      <div class="itemizedlist"><ul type="disc"><li>
+	  <p>
+	    The <span class="strong"><strong>Synchronous MoC</strong></span> was
+	    already mentioned in previous section.  All systems
+	    contain an implicit global clock. Its cycle matches
+	    the evaluation cycle of all the system processes, during which
+	    they must consume and produce exactly one value on every
+	    input and output signal.
+	  </p>
+	</li><li>
+	  <p>
+	    <span class="strong"><strong>Untimed
+	    MoC</strong></span>. Communication between processes can be
+	    thought as a specific variant of asynchronous, blocking
+	    message passing. There is no notion of time or global
+	    clock.
+	  </p>
+	  <p>
+	    Contrary to the Synchronous MoC, in which all the system
+	    processes evaluate in parallel during every cycle,
+	    untimed processes are fired individually. A process only
+	    evaluates when all their inputs have a minimum number of
+	    values ready to be read. That number may vary between
+	    inputs, but is fixed for each of them. On the other hand,
+	    the number of values produced by output signals 
+	    may vary independently between evaluation cycles.
+	  </p>
+	</li><li>
+	  <p>
+	    The <span class="strong"><strong>Continuous MoC</strong></span>
+	    models continuous signals representing them as
+	    continuous one-variable, piecewise functions.
+	  </p>    
+	  <div class="figure"><a name="id1265404"></a><p class="title"><b>Figure 7. Continuous signal</b></p><div class="figure-contents">
+	    
+	    &lt; (sin(x),[-10,0)), (-sin(x),[0,10)) &gt;
+	    <div class="mediaobject" align="center"><table border="0" summary="manufactured viewport for HTML img" cellspacing="0" cellpadding="0" width="360"><tr><td align="center" valign="middle"><object data="figures/piecewise_sin.svg" type="image/svg+xml" width="360" align="middle"></object></td></tr></table></div>    
+	  </div></div><br class="figure-break">
+	    
+	</li></ul></div>
+      
+      <p>
+	ForSyDe specifies a set of process constructors for each MoC. A
+	ForSyDe system is thus guaranteed to belong to a MoC if it was
+	built using constructors from one of those sets.
+      </p>
+
+      <p>
+	Nevertheless, it is possible to build heterogeneous systems,
+	i.e. systems which mix different MoCs. For that purpose,
+	ForSyDe provides special<sup>[<a name="id1265460" href="#ftn.id1265460" class="footnote">3</a>]</sup> processes in
+	charge of connecting two subsystems which belong to different
+	MoCs or which have different timing specifications (e.g. two
+	Synchronous subsystems with a different clock period).
+      </p>
+      
+    </div>
+  <div class="footnotes"><br><hr width="100" align="left"><div class="footnote"><p><sup>[<a name="ftn.id1265008" href="#id1265008" class="para">2</a>] </sup>The term combinational comes from
+	Digital Circuit Theory. In the context of ForSyDe, a
+	synchronous process is combinational, as opposed to
+	sequential, if its outputs don't depend on the history of the
+	input signals. That is, the process is stateless, all output
+	values can only depend on the input values consumed in the
+	same clock cycle.</p></div><div class="footnote"><p><sup>[<a name="ftn.id1265460" href="#id1265460" class="para">3</a>] </sup>In the sense of
+	belonging to any particular MoC</p></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="ar01s02.html">Prev</a> </td><td width="20%" align="center"> </td><td width="40%" align="right"> <a accesskey="n" href="ar01s04.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">2. Installing ForSyDe </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 4. Deep-embedded vs Shallow-embedded signals</td></tr></table></div></body></html>
