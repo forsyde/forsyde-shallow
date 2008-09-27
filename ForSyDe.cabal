@@ -73,7 +73,6 @@ extra-source-files: LICENSE,
                     tests/Main.hs,
                     tests/Install.hs,
                     tests/properties/Main.hs,
-                    tests/properties/Shallow,
                     tests/properties/Shallow/SynchronousMoC.hs,
                     tests/properties/Shallow.hs,
                     tests/properties/VHDLBackend.hs
