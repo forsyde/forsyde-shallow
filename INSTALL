@@ -1,0 +1,29 @@
+DEPENDENCIES
+ 
+ ForSyDe depends on GHC > 6.8.2 due to the use of numerous extensions,
+ namely Template Haskell (TH).
+
+ It depends on the type-level and parameterized-data packages and some
+ others normally bundled with GHC distributions.
+
+INSTALLATION
+
+See http://www.haskell.org/haskellwiki/Cabal/How_to_install_a_Cabal_package
+
+Here is a summary on how to install ForSyDe manually:
+
+To install globally, for the whole system (requires admin permissions):
+
+$ ./Setup.hs configure
+$ ./Setup.hs build
+$ ./Setup.hs haddock # generate documentation, optional, 
+                     # requires Haddock > 2.0 due to the use of TH
+$ sudo ./Setup.hs install
+
+To install locally and just for your own user:
+
+$ ./Setup.hs configure --user --prefix=The/selected/local/directory
+$ ./Setup.hs build
+$ ./Setup.hs haddock  # generate documentation, optional, 
+                      # requires Haddock > 2.0 due to the use of TH
+$ ./Setup.hs install
