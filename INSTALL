@@ -1,6 +1,6 @@
 DEPENDENCIES
  
- ForSyDe depends on GHC > 6.8.2 due to the use of numerous extensions,
+ ForSyDe depends on GHC >= 6.8.2 due to the use of numerous extensions,
  namely Template Haskell (TH).
 
  It depends on the type-level and parameterized-data packages and some
