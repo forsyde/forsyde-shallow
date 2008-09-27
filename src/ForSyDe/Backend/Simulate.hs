@@ -210,7 +210,7 @@ drive :: [Var s] -> ST s (ST s ())
 drive [] =
   do return (return ())
 
-drive ((rval,rwir):rs) =
+drive ((_,rwir):rs) =
   do wire <- readSTRef rwir
      writeSTRef rwir (error "detected combinational loop")
      driv1 <- drive (dependencies wire)

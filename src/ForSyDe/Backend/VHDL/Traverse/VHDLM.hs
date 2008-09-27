@@ -359,6 +359,9 @@ getEnumConsId consName = do
    []  -> return Nothing
    [_] -> liftM Just (liftEProne $ mkVHDLExtId consBase) 
    -- _ -> this shouldn't happen since the enumerated types stored are unique
+   _ ->  intError "ForSyDe.Backend.VHDL.Traverse.VHDLM.getEnum" 
+          (UntranslatableVHDLFun $ GeneralErr (Other "pattern match inconsistency"))
+
 
 -- | Add a cutom type to the global results and type translation table
 addCustomType :: TypeRep -> Either TypeDec SubtypeDec -> VHDLM ()

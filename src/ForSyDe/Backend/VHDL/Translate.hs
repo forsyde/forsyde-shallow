@@ -505,6 +505,9 @@ checkProcFunAST :: ProcFunAST
 -- FIXME: translate the default arguments!
 checkProcFunAST (ProcFunAST thName [Clause pats (NormalB exp) []] []) =
  return (thName, pats, exp)
+checkProcFunAST (ProcFunAST _ _ (_:_)) =
+ intError "ForSyDe.Backend.VHDL.Translate.checkProcFunSpec" 
+          (UntranslatableVHDLFun $ GeneralErr (Other "defalaut parameters are not yet supported"))
 checkProcFunAST (ProcFunAST _ [Clause _ _ whereConstruct@(_:_)] _) =  
   funErr (FunWhereConstruct whereConstruct)
 checkProcFunAST (ProcFunAST _ [Clause _ bdy@(GuardedB _) _] _) =  
