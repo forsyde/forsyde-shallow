@@ -1,12 +1,10 @@
--- FIXME: add a license and CR holder for th-lift and lava
--- FIXME: Fix copyright header on all src files (date and owner, SAM group, KTH/ICT/ECS)
--- FIXME: Add header to files which don't have it
 name:           ForSyDe
 version:        3.0
 cabal-version:  >= 1.2
 build-type:     Custom
 license:        BSD3
 license-file:   LICENSE
+author:         SAM group, KTH/ICT/ECS
 copyright:      Copyright (c) 2003-2008 SAM group, KTH/ICT/ECS
 maintainer:     ecs_forsyde_development@ict.kth.se
 homepage:       http://www.ict.kth.se/org/ict/ecs/sam/projects/forsyde/www/
@@ -21,6 +19,29 @@ category:       Language
 tested-with:    GHC==6.8.1, GHC==6.8.2
 data-files:     lib/forsyde.vhd
 extra-source-files: LICENSE,
+                    README,
+                    INSTALL,
+                    doc/www/files/tutorial/tutorial.pdf,
+                    doc/www/files/tutorial/tutorial.html,
+                    doc/www/files/tutorial/fptools.css,
+                    doc/www/files/tutorial/figures/SeqAddFour.svg
+                    doc/www/files/tutorial/figures/VHDLTree.svg,
+                    doc/www/files/tutorial/figures/compflow.svg,
+                    doc/www/files/tutorial/figures/delaySY.svg,
+                    doc/www/files/tutorial/figures/encoder.svg,
+                    doc/www/files/tutorial/figures/fullAdderMealy.svg,
+                    doc/www/files/tutorial/figures/fullAdderMoore.svg,
+                    doc/www/files/tutorial/figures/layout.png,
+                    doc/www/files/tutorial/figures/mapSY.svg,
+                    doc/www/files/tutorial/figures/piecewise_sin.svg,
+                    doc/www/files/tutorial/figures/portConstraints1.png,
+                    doc/www/files/tutorial/figures/portConstraints2.png,
+                    doc/www/files/tutorial/figures/processbox.svg,
+                    doc/www/files/tutorial/figures/processcons.svg,
+                    doc/www/files/tutorial/figures/processfun.svg,
+                    doc/www/files/tutorial/figures/sourceSY.svg,
+                    doc/www/files/tutorial/figures/sourceSY_counterProc1.svg,
+                    doc/www/files/tutorial/figures/sourceSY_counterProc2.svg,
                     examples/ALU.hs,
                     examples/ALU_Shallow.hs,
                     examples/ButtonEncoder.hs,
@@ -33,7 +54,31 @@ extra-source-files: LICENSE,
                     examples/Null.hs,
                     examples/ParAddFour.hs,
                     examples/SeqAddFour.hs,
-                    examples/ZipTwist.hs
+                    examples/ZipTwist.hs,
+                    examples/Equalizer_Shallow/README,
+                    examples/Equalizer_Shallow/AudioAnalyzer.lhs,
+                    examples/Equalizer_Shallow/AudioFilter.lhs,
+                    examples/Equalizer_Shallow/ButtonControl.lhs,
+                    examples/Equalizer_Shallow/DistortionControl.lhs,
+                    examples/Equalizer_Shallow/Equalizer.lhs,
+                    examples/Equalizer_Shallow/EqualizerTypes.lhs,
+                    examples/Equalizer_Shallow/Test,
+                    examples/Equalizer_Shallow/Test/AudioIn.mat,
+                    examples/Equalizer_Shallow/TestAnalyzer.lhs,
+                    examples/Equalizer_Shallow/TestButtonControl.lhs,
+                    examples/Equalizer_Shallow/TestDFT.lhs,
+                    examples/Equalizer_Shallow/TestDistortionControl.lhs,
+                    examples/Equalizer_Shallow/TestEqualizer.lhs,
+                    examples/Equalizer_Shallow/TestFilter.lhs,
+                    examples/Equalizer_Shallow/TestFIR.lhs,
+                    tests/Main.hs,
+                    tests/Install.hs,
+                    tests/properties/Main.hs,
+                    tests/properties/Shallow,
+                    tests/properties/Shallow/SynchronousMoC.hs,
+                    tests/properties/Shallow.hs,
+                    tests/properties/VHDLBackend.hs
+
 
 Library
   build-depends:   type-level,
@@ -130,5 +175,4 @@ Library
                      
 
 
--- FIXME: remove all the -fno-warn*
   ghc-options:	-Wall -fno-warn-name-shadowing -fno-warn-orphans
