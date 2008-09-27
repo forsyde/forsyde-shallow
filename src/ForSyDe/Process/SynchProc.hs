@@ -5,7 +5,7 @@
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  ForSyDe.Process.SynchProc
--- Copyright   :  (c) The ForSyDe Team 2007
+-- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
 -- License     :  BSD-style (see the file LICENSE)
 -- 
 -- Maintainer  :  ecs_forsyde_development@ict.kth.se

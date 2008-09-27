@@ -1,4 +1,18 @@
--- | The synchronuous library 'SynchronousLib' defines process constructors and processes for the synchronous computational model. A process constructor is a higher order function which together with combinational function(s) and values as arguments constructs a process.
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  ForSyDe.Shallow.SynchronousLib
+-- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
+-- License     :  BSD-style (see the file LICENSE)
+-- 
+-- Maintainer  :  forsyde_dev@ict.kth.se
+-- Stability   :  experimental
+-- Portability :  portable
+--
+-- The synchronuous library defines process constructors and processes
+-- for the synchronous computational model. A process constructor is a
+-- higher order function which together with combinational function(s)
+-- and values as arguments constructs a process.
+-----------------------------------------------------------------------------
 module ForSyDe.Shallow.SynchronousLib(
 			-- * Combinational process constructors
 			-- | Combinational process constructors are used for processes that do not have a state.

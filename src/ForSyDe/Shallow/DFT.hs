@@ -1,7 +1,17 @@
-{--# OPTIONS_GHC -w #--}
--- FIXME: remove warnings
-
--- | The module includes the standard Discrete Fourier Transform (DFT) function, and a fast Fourier transform (FFT) algorithm, for computing the DFT, when the size N is a power of 2.
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  ForSyDe.DFT
+-- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
+-- License     :  BSD-style (see the file LICENSE)
+-- 
+-- Maintainer  :  forsyde_dev@ict.kth.se
+-- Stability   :  experimental
+-- Portability :  portable
+--
+-- This module includes the standard Discrete Fourier Transform (DFT)
+-- function, and a fast Fourier transform (FFT) algorithm, for
+-- computing the DFT, when the input vectors' length is a power of 2.
+-----------------------------------------------------------------------------
 module ForSyDe.Shallow.DFT(dft, fft) where
 
 import ForSyDe.Shallow.Vector

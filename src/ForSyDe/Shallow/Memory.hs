@@ -1,7 +1,16 @@
-{--# OPTIONS_GHC -w #--}
--- FIXME: remove warnings
-
--- | The module 'Memory' contains the data structure and access functions for the memory model.
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  ForSyDe.Shallow.Model
+-- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
+-- License     :  BSD-style (see the file LICENSE)
+-- 
+-- Maintainer  :  forsyde_dev@ict.kth.se
+-- Stability   :  experimental
+-- Portability :  portable
+--
+-- This module contains the data structure and access
+-- functions for the memory model.
+-----------------------------------------------------------------------------
 module ForSyDe.Shallow.Memory (
                 Memory (..), Access (..), 
                 MemSize, Adr, newMem, memState, memOutput

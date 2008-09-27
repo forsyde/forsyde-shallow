@@ -1,11 +1,16 @@
-{--# OPTIONS_GHC -w #--}
--- FIXME: remove warnings
-
-{- |
-We follows the Box-Muller Method to Generate White Gaussian Noise 
-described at: http:\/\/www.dspguru.com\/howto\/tech\/wgn.htm
--}
-
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  ForSyDe.Shallow.Gaussian
+-- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
+-- License     :  BSD-style (see the file LICENSE)
+-- 
+-- Maintainer  :  forsyde_dev@ict.kth.se
+-- Stability   :  experimental
+-- Portability :  portable
+--
+-- We follow the Box-Muller method to generate white gaussian noise, 
+-- described at: <http://www.dspguru.com/howto/tech/wgn.htm>
+-----------------------------------------------------------------------------
 module ForSyDe.Shallow.Gaussian (
           pGaussianNoise
     )

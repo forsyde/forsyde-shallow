@@ -1,22 +1,30 @@
-{- |
-This is the filter library for ForSyDe heterogeneous MoCs - CT-MoC, SR-MoC,
- and Untimed-MoC.
-
-The filters at CT-MoC are based on the filters implemented at SR-MoC and Untimed-MoC, 
-which means a signal in CT-MoC is always digitalized by a A\/D converter, processed by 
-digital filters at SR or Untimed domain, and converted back into a CT domain signal by 
-a D\/A converter. A CT-filter is composed of one A\/D converter, one digital filter, and 
-one D\/A converter.
-
-The implementation of the filters at untimed and synchronous domains follows the
- way in a paper /An introduction to Haskell with applications to digital signal processing, 
-David M. Goblirsch, in Proceedings of the 1994 ACM symposium on Applied computing./,
-where the details of the FIR\/IIR, AR, and ARMA filters are introduced. The ARMA filter
-is the kernel part of our general linear filter 'zLinearFilter' in Z-domain at SR\/Untimed
-MoC, and is also the kernel digital filter for the linear filter 'sLinearFilter' in 
-S-domain at CT-MoC.
--}
-
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  ForSyDe.Shallow.FilterLib
+-- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
+-- License     :  BSD-style (see the file LICENSE)
+-- 
+-- Maintainer  :  forsyde_dev@ict.kth.se
+-- Stability   :  experimental
+-- Portability :  portable
+--
+-- This is the filter library for ForSyDe heterogeneous MoCs - CT-MoC, SR-MoC,
+-- and Untimed-MoC.
+--
+-- The filters at CT-MoC are based on the filters implemented at SR-MoC and Untimed-MoC, 
+-- which means a signal in CT-MoC is always digitalized by a A\/D converter, processed by 
+-- digital filters at SR or Untimed domain, and converted back into a CT domain signal by 
+-- a D\/A converter. A CT-filter is composed of one A\/D converter, one digital filter, and 
+-- one D\/A converter.
+--
+-- The implementation of the filters at untimed and synchronous domains follows the
+-- way in a paper /An introduction to Haskell with applications to digital signal processing, 
+-- David M. Goblirsch, in Proceedings of the 1994 ACM symposium on Applied computing./,
+-- where the details of the FIR\/IIR, AR, and ARMA filters are introduced. The ARMA filter
+-- is the kernel part of our general linear filter 'zLinearFilter' in Z-domain at SR\/Untimed
+-- MoC, and is also the kernel digital filter for the linear filter 'sLinearFilter' in 
+-- S-domain at CT-MoC.
+-----------------------------------------------------------------------------
 module ForSyDe.Shallow.FilterLib (
               -- *FIR filter
               firFilter,

@@ -1,8 +1,19 @@
 {-# LANGUAGE MagicHash, TemplateHaskell  #-}  
 {-# OPTIONS_GHC -fno-warn-deprecations #-}
 -- Due to the use of unboxed types, TH, and deprecated Packed Strings
--- Taken from HackageDB
--- (c) Ian Lynagh, 2006
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  Language.Haskell.TH.TypeLib
+-- Copyright   :  (c) Ian Lynagh, 2006, (c) SAM Group, KTH/ICT/ECS 2007-2008
+-- License     :  BSD-style (see the file LICENSE)
+-- 
+-- Maintainer  :  forsyde_dev@ict.kth.se
+-- Stability   :  experimental
+-- Portability :  portable
+--
+-- This module provides basic functions related to Template-Haskell's 'Type'.
+-- 
+-----------------------------------------------------------------------------
 module Language.Haskell.TH.Lift where
 
 import GHC.Exts

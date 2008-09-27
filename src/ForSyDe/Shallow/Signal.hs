@@ -1,5 +1,16 @@
--- | The module 'Signal' defines the data type 'Signal' and functions operating on this data type.
-
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  ForSyDe.Shallow.Signal
+-- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
+-- License     :  BSD-style (see the file LICENSE)
+-- 
+-- Maintainer  :  forsyde_dev@ict.kth.se
+-- Stability   :  experimental
+-- Portability :  portable
+--
+-- This module defines the shallow-embedded 'Signal' datatype and
+-- functions operating on it.
+-----------------------------------------------------------------------------
 module ForSyDe.Shallow.Signal( Signal (NullS, (:-)), (-:), (+-+), (!-), 
 	       signal, fromSignal,
 	       unitS, nullS, headS, tailS, atS, takeS, dropS,

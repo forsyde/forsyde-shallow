@@ -1,34 +1,15 @@
-{--# OPTIONS_GHC -w #--}
--- FIXME: remove warnings
-
-{-
-A FIR-filter is described by the following equation, which is illustrated in Figure \ref{fig:FIRFilter}:
-
-\begin{equation} 
-  y_n = \sum_{m=0}^k x_{n-m} h_m
-\end{equation}
-
-\begin{figure}[h]
-\centering
-\input{fig/FIR.pstex_t}
-\caption{FIR-filter}
-\label{fig:FIRFilter}
-\end{figure}
-
-The state of the FIR-Filter can be seen as a shift register with parallel output. The first element in the shift register at cycle $n$ is $x_n$ and the last element is $x_{n-k}$. In the next cycle a new value $x_{n+1}$ is shifted into the register from the left, all other elements are shifted one place to the right, and the value $x_{n-k}$ is discarded. We model the shift register with the process $\mathit{shiftreg}_k$. The process is based on the process constructor \process{scanlSY} which which takes the shift function \texttt{shiftrV} as first argument and an initial vector of size $k+1$ with zeroes as initial values. 
-
-The output of the shiftregister, a signal of vectors, is transformed with the process \process{unzipxSY} into a vector of signals. Then the process \process{innerProd} calculates the inner product of the coefficient vector $h$ and the output of the shift register. The process is implemented by the process constructor \process{zipWithSY} that takes a parametized function \function{ipV(h)} as arguments.
-
-\begin{figure}[h]
-\centering
-\input{fig/FIR_SpecificationModel.pstex_t}
-\caption{FIR-filter model}
-\label{fig:FIR-filter model}
-\end{figure}
-
-\begin{code}
--}
--- | The module implements a FIR-filter for the synchronous computational model.
+----------------------------------------------------------------------------
+-- |
+-- Module      :  ForSyDe.Shallow.FIR
+-- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
+-- License     :  BSD-style (see the file LICENSE)
+-- 
+-- Maintainer  :  forsyde_dev@ict.kth.se
+-- Stability   :  experimental
+-- Portability :  portable
+--
+-- This module implements a FIR filters for the synchronous computational model.
+-----------------------------------------------------------------------------
 module ForSyDe.Shallow.FIR (firSY) where
 
 import ForSyDe.Shallow.SynchronousLib

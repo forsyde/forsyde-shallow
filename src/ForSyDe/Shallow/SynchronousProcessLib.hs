@@ -1,7 +1,17 @@
-{--# OPTIONS_GHC -w #--}
--- FIXME: remove warnings
-
--- | The synchronous process library 'SynchronousProcessLib' defines processes for the synchronous computational model. It is based on the synchronous library 'SynchronousLib'.
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  ForSyDe.Shallow.SynchronousProcessLib
+-- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
+-- License     :  BSD-style (see the file LICENSE)
+-- 
+-- Maintainer  :  forsyde_dev@ict.kth.se
+-- Stability   :  experimental
+-- Portability :  portable
+--
+--  The synchronous process library defines processes for the
+--  synchronous computational model. It is based on the synchronous
+--  library "ForSyDe.Shallow.SynchronousLib".
+-----------------------------------------------------------------------------
 module ForSyDe.Shallow.SynchronousProcessLib(
 			       fifoDelaySY, finiteFifoDelaySY,
 			       memorySY, mergeSY, groupSY, counterSY

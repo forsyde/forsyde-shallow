@@ -1,10 +1,18 @@
-{- |
-This is the polynomial arithematic library. The arithematic operations include 
-addition, multiplication, division and power. However, the computation time is 
-not optimized for multiplication and is O(n2), which could be considered to be 
-optimized by FFT algorithms later.
--}
-
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  ForSyDe.Shallow.PolyArith
+-- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
+-- License     :  BSD-style (see the file LICENSE)
+-- 
+-- Maintainer  :  forsyde_dev@ict.kth.se
+-- Stability   :  experimental
+-- Portability :  portable
+--
+-- This is the polynomial arithematic library. The arithematic operations include 
+-- addition, multiplication, division and power. However, the computation time is 
+-- not optimized for multiplication and is O(n2), which could be considered to be 
+-- optimized by FFT algorithms later on.
+-----------------------------------------------------------------------------
 module ForSyDe.Shallow.PolyArith(
               -- *Polynomial data type
               Poly(..),

@@ -1,4 +1,22 @@
--- | The module 'Vector' defines the data type 'Vector' and the corresponding functions. It is a development of the module 'Vector' defined by Reekie.  Though the vector is modeled as a list, it should be viewed as an array, i.e. a vector has a fixed size. Unfortunately, it is not possible to have the size of the vector as a parameter of the vector data type, due to restrictions in Haskells type system. Still most operations are defined for vectors with the same size.
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  ForSyDe.Shallow.Vector
+-- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
+-- License     :  BSD-style (see the file LICENSE)
+-- 
+-- Maintainer  :  forsyde_dev@ict.kth.se
+-- Stability   :  experimental
+-- Portability :  portable
+--
+-- This module defines the data type 'Vector' and the
+-- corresponding functions. It is a development of the module
+-- defined by Reekie.  Though the vector is modeled as a list, it
+-- should be viewed as an array, i.e. a vector has a fixed
+-- size. Unfortunately, it is not possible to have the size of the
+-- vector as a parameter of the vector data type, due to restrictions
+-- in Haskells type system. Still most operations are defined for
+-- vectors with the same size.
+-----------------------------------------------------------------------------
 module ForSyDe.Shallow.Vector ( 
               Vector (..), vector, fromVector, unitV, nullV, lengthV,
               atV, replaceV, headV, tailV, lastV, initV, takeV, dropV, 

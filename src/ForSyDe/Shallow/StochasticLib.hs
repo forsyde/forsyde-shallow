@@ -1,41 +1,36 @@
-{--# OPTIONS_GHC -w #--}
--- FIXME: remove warnings
-
-{- |
-
-Module      :  ForSyDe
-Copyright   :  (c) SAM/KTH 2007
-License     :  BSD-style (see the file LICENSE)
-
-Maintainer  :  forsyde@kth.se
-Stability   :  experimental
-Portability :  portable 
-
-The stochastic library provides a few stochastic skeletons, which are
-relatives to the skeletons of the synchronous library. These skeletons are
-based on two elementary functions, 'sigmaUn' and 'sigmaGe'
-which provide stochastic signals. The background and motivation for this
-approach is described in the paper 
-
-Axel Jantsch, Ingo Sander, and Wenbiao Wu,
-\"The usage of stochastic processes in embedded system specifications\",
-In /Proceedings of the Ninth International Symposium on Hardware\/Software 
-Codesign/, April 2001 
-(<http://web.it.kth.se/~axel/papers/2001/codes-2001.pdf>). 
-
-Unfortunately, not 
-all of the suggested skeletons are implemented. In particular, consolidation
-based process constructors and all constructors for the untimed and the 
-discrete timed MoCs are missing.
-
--}
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  ForSyDe.Shallow.StochasticLib
+-- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
+-- License     :  BSD-style (see the file LICENSE)
+-- 
+-- Maintainer  :  forsyde_dev@ict.kth.se
+-- Stability   :  experimental
+-- Portability :  portable
+--
+-- The stochastic library provides a few stochastic skeletons, which are
+-- relatives to the skeletons of the synchronous library. These skeletons are
+-- based on two elementary functions, 'sigmaUn' and 'sigmaGe'
+-- which provide stochastic signals. The background and motivation for this
+-- approach is described in the paper 
+--
+-- Axel Jantsch, Ingo Sander, and Wenbiao Wu,
+-- \"The usage of stochastic processes in embedded system specifications\",
+-- In /Proceedings of the Ninth International Symposium on Hardware\/Software 
+-- Codesign/, April 2001 
+-- (<http://web.it.kth.se/~axel/papers/2001/codes-2001.pdf>). 
+--
+-- Unfortunately, not all of the suggested skeletons are
+-- implemented. In particular, consolidation based process
+-- constructors and all constructors for the untimed and the discrete
+-- timed MoCs are missing.
+-----------------------------------------------------------------------------
 
 module ForSyDe.Shallow.StochasticLib(
                      -- * Select based synchronous process constructors
                      selMapSY, selScanlSY, selMealySY, selMooreSY
                      -- * Elementary stochastic processes
-                    , sigmaUn, sigmaGe) 
-       where
+                    , sigmaUn, sigmaGe) where
 
 import ForSyDe.Shallow.SynchronousLib
 import ForSyDe.Shallow.Signal

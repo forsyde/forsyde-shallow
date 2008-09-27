@@ -1,10 +1,10 @@
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  ForSyDe.Backend.VHDL.TestBench
--- Copyright   :  (c) The ForSyDe Team 2008
+-- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2008
 -- License     :  BSD-style (see the file LICENSE)
 -- 
--- Maintainer  :  ecs_forsyde_development@ict.kth.se
+-- Maintainer  :  forsyde_dev@ict.kth.se
 -- Stability   :  experimental
 -- Portability :  portable
 --

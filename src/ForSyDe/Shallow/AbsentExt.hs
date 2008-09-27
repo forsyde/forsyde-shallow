@@ -1,4 +1,17 @@
--- |The module 'AbsentExt' is used to extend existing data types with the value \'absent\', which models the absence of a value.
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  ForSyDe.Shallow.AbsentExt
+-- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
+-- License     :  BSD-style (see the file LICENSE)
+-- 
+-- Maintainer  :  forsyde_dev@ict.kth.se
+-- Stability   :  experimental
+-- Portability :  portable
+--
+-- The 'AbstExt' is used to extend existing data types with the value
+--  \'absent\', which models the absence of a value.
+-- 
+-----------------------------------------------------------------------------
 module ForSyDe.Shallow.AbsentExt( 
 		  AbstExt (Abst, Prst), fromAbstExt, abstExt, psi, 
 	          isAbsent, isPresent, abstExtFunc)

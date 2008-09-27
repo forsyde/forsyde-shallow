@@ -1,37 +1,34 @@
-{--# OPTIONS_GHC -w #--}
--- FIXME: remove warnings
-
-{-|
-
-Module      :  ForSyDe
-Copyright   :  (c) SAM/KTH 2007
-License     :  BSD-style (see the file LICENSE)
-
-Maintainer  :  forsyde@kth.se
-Stability   :  experimental
-Portability :  portable 
-
-The ForSyDeUtilityLib is a container including all libraries that are related to the ForSyDe project and either extend the ForSyDe MoC libraries or add additional functionality to ForSyDe.
-
-* "DFT"
-
-* "Memory"
-
-* "Queue"
-
-* "BitVector"
-
-* "FilterLib"
-
-* "Gaussian"		
-
-* "PolyArith"		
-
-* "StochasticLib"
--}
-
--- #ignore-exports
-
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  ForSyDe.Shallow.UtilityLib
+-- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
+-- License     :  BSD-style (see the file LICENSE)
+-- 
+-- Maintainer  :  forsyde_dev@ict.kth.se
+-- Stability   :  experimental
+-- Portability :  portable
+--
+-- The ForSyDeUtilityLib is a container including all libraries that
+-- are related to the ForSyDe shallow-embedded implementation and
+-- either extend the ForSyDe MoC libraries or add additional
+-- functionality to ForSyDe.
+-- 
+-- * "ForSyDe.Shallow.DFT"
+-- 
+-- * "ForSyDe.Shallow.Memory"
+-- 
+-- * "ForSyDe.Shallow.Queue"
+-- 
+-- * "ForSyDe.Shallow.BitVector"
+--
+-- * "ForSyDe.Shallow.FilterLib"
+-- 
+-- * "ForSyDe.Shallow.Gaussian"		
+-- 
+-- * "ForSyDe.Shallow.PolyArith"		
+--
+-- * "ForSyDe.Shallow.StochasticLib"
+-----------------------------------------------------------------------------
 module ForSyDe.Shallow.UtilityLib(  
                       module ForSyDe.Shallow.DFT,            
                       module ForSyDe.Shallow.Memory,

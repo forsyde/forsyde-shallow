@@ -1,6 +1,16 @@
-{--# OPTIONS_GHC -w #--}
--- FIXME: remove warnings
-
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  ForSyDe.Shallow.AdaptivityLib
+-- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
+-- License     :  BSD-style (see the file LICENSE)
+-- 
+-- Maintainer  :  forsyde_dev@ict.kth.se
+-- Stability   :  experimental
+-- Portability :  portable
+--
+-- Adaptivity Library, yet to be completed.
+-- 
+-----------------------------------------------------------------------------
 module ForSyDe.Shallow.AdaptivityLib (applyfSY, applyfU) where
 
 import ForSyDe.Shallow.Signal

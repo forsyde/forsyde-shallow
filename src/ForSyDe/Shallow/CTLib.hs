@@ -1,35 +1,42 @@
-{- |
-This is the ForSyDe library for continuous time MoC (CT-MoC).
-Revision: $Revision: 1.7 $
-Id: $Id: CTLib.hs,v 1.7 2007/07/11 08:38:34 axel Exp $
-It is still experimental.
-Right now there are only constructors 'combCT', 'combCT2', 'delayCT', 
-'shiftCT', 'mealyCT', 'mooreCT', 'scaleCT', 'addCT', 'multCT' and 'absCT'.
-
-The main idea is to represent continuous time signals as functions
-@Real --> a@ with @a@ being a numerical type. This allows us to represent a 
-continuous time signal without loss of information because no sampling or 
-ADC is required. The sampling occurs only when a signal is evaluated, 
-for instance when it is plotted. 
-
-Thus, a /signal/ is represented as a sequence of functions and intervals. For
-instance a signal 
-
-@s = \<(sin,[0,100])\>@ 
-
-represents a sinus signal in the interval between 0 and 100. The signal 
-
-@s2 = \<(f1(x)=2x, [0,2]), (f2(x)=3+x,[2,4])\>@
-
-defines a signal that is defined by function @f1@ in the interval @[0,2]@ 
-and by function @f2@ in the interval @[2,4]@. 
-
-A /process/ transforms the incoming functions into outgoing functions. 
-The approach is described in more detail in the ANDRES deliverable D1.1a.
-Here we only briefly comment the main functions and constructors.
--}
-
---module Main (
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  ForSyDe.Shallow.CTLib
+-- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
+-- License     :  BSD-style (see the file LICENSE)
+-- 
+-- Maintainer  :  forsyde_dev@ict.kth.se
+-- Stability   :  experimental
+-- Portability :  portable
+--
+-- This is the ForSyDe library for continuous time MoC (CT-MoC).
+-- Revision: $Revision: 1.7 $
+-- Id: $Id: CTLib.hs,v 1.7 2007/07/11 08:38:34 axel Exp $
+-- It is still experimental.
+-- Right now there are only constructors 'combCT', 'combCT2', 'delayCT', 
+-- 'shiftCT', 'mealyCT', 'mooreCT', 'scaleCT', 'addCT', 'multCT' and 'absCT'.
+--
+-- The main idea is to represent continuous time signals as functions
+-- @Real --> a@ with @a@ being a numerical type. This allows us to represent a 
+-- continuous time signal without loss of information because no sampling or 
+-- ADC is required. The sampling occurs only when a signal is evaluated, 
+-- for instance when it is plotted. 
+-- 
+-- Thus, a /signal/ is represented as a sequence of functions and intervals. For
+-- instance a signal 
+-- 
+-- @s = \<(sin,[0,100])\>@ 
+--
+-- represents a sinus signal in the interval between 0 and 100. The signal 
+--
+-- @s2 = \<(f1(x)=2x, [0,2]), (f2(x)=3+x,[2,4])\>@
+--
+-- defines a signal that is defined by function @f1@ in the interval @[0,2]@ 
+-- and by function @f2@ in the interval @[2,4]@. 
+--
+-- A /process/ transforms the incoming functions into outgoing functions. 
+-- The approach is described in more detail in the ANDRES deliverable D1.1a.
+-- Here we only briefly comment the main functions and constructors.
+----------------------------------------------------------------------------
 module ForSyDe.Shallow.CTLib (
 --	      module ForSyDe.Shallow.CoreLib,
               -- * The signal data type

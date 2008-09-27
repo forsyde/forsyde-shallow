@@ -2,12 +2,12 @@
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  ForSyDe.System.Instantiate
--- Copyright   :  (c) The ForSyDe Team 2007
+-- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
 -- License     :  BSD-style (see the file LICENSE)
 -- 
--- Maintainer  :  ecs_forsyde_development@ict.kth.se
+-- Maintainer  :  forsyde_dev@ict.kth.se
 -- Stability   :  experimental
--- Portability :  non-portable (Template Haskell)
+-- Portability :  portable
 --
 -- This module provides instantiation capabilities to System Definitions
 -- ('SysDef's).through a  Template-Haskell-based function: 'instantiate'.

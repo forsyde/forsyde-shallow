@@ -1,7 +1,18 @@
-{--# OPTIONS_GHC -w #--}
--- FIXME: remove warnings
-
--- | The module 'Queue' provides two data types, that can be used to model queue structures, such as FIFOs. There is a data type for an queue of infinite size 'Queue' and one for finite size 'FiniteQueue'.
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  ForSyDe.Shallow.Queue
+-- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
+-- License     :  BSD-style (see the file LICENSE)
+-- 
+-- Maintainer  :  forsyde_dev@ict.kth.se
+-- Stability   :  experimental
+-- Portability :  portable
+--
+--
+-- This provides two data types, that can be used to model queue
+-- structures, such as FIFOs. There is a data type for an queue of
+-- infinite size 'Queue' and one for finite size 'FiniteQueue'.
+-----------------------------------------------------------------------------
 module ForSyDe.Shallow.Queue where
 
 import ForSyDe.Shallow.AbsentExt 

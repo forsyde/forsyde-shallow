@@ -2,10 +2,10 @@
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  ForSyDe.Netlist
--- Copyright   :  (c) The ForSyDe Team 2007
+-- Copyright   :  (c) Sam Group, KTH/ICT/ECS 2007-2008
 -- License     :  BSD-style (see the file LICENSE)
 -- 
--- Maintainer  :  ecs_forsyde_development@ict.kth.se
+-- Maintainer  :  forsyde_devt@ict.kth.se
 -- Stability   :  experimental
 -- Portability :  portable
 --
