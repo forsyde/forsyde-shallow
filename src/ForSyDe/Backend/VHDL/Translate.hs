@@ -363,8 +363,10 @@ doCustomTR2TM rep | isFSVec = do
  --  * if it wasn't ...
  when (not $ elem valueType vecs) $ do
       -- create the unconstrained vector type and add it to the global
-      -- results
-      addTypeDec $ TypeDec vectorId (TDA (UnconsArrayDef [fsvec_indexTM] valTM))
+      -- results. _Only_ if we are not working with "FSVec _ Bit" becuase
+      -- "type fsvec_std_logic" is already included in forsyde.vhd.
+      when (valueType /= typeOf (undefined :: Bit))
+           (addTypeDec $ TypeDec vectorId (TDA (UnconsArrayDef [fsvec_indexTM] valTM)))
       -- Add the default functions for the unconstrained
       -- vector type to the global results
       let funs =  genUnconsVectorFuns valTM vectorId
@@ -880,8 +882,13 @@ validUnaryFuns = [('B.not ,          Not  ),
                   ('V.tail,          genExprFCall1 tailId),
                   ('V.rotl,          genExprFCall1 rotlId),
                   ('V.rotr,          genExprFCall1 rotrId),
-                  ('V.reverse,       genExprFCall1 reverseId)]
-
+                  ('V.reverse,       genExprFCall1 reverseId),
+                  ('toBitVector8,    genExprFCall1 toBitVector8Id),
+                  ('toBitVector16,   genExprFCall1 toBitVector16Id),
+                  ('toBitVector32,   genExprFCall1 toBitVector32Id),
+                  ('fromBitVector8,  genExprFCall1 fromBitVector8Id),
+                  ('fromBitVector16, genExprFCall1 fromBitVector16Id),
+                  ('fromBitVector32, genExprFCall1 fromBitVector32Id)]
 
        
        

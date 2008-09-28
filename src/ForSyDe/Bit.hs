@@ -13,7 +13,18 @@
 -- 'Bit' Datatype. Note that the 'Num' instance is phony and shouldn't be used
 -- 
 -----------------------------------------------------------------------------
-module ForSyDe.Bit (Bit(..), not, bitToBool, boolToBit, BitStream(..))where
+module ForSyDe.Bit (Bit(..), 
+                    not, 
+                    bitToBool, 
+                    boolToBit,
+                    toBitVector8,
+                    fromBitVector8,
+                    toBitVector16,
+                    fromBitVector16,
+                    toBitVector32,
+                    fromBitVector32,
+                    toBitVector64,
+                    fromBitVector64) where
 
 import Language.Haskell.TH.Lift
 import Data.Int
@@ -23,7 +34,7 @@ import Prelude hiding (not)
 
 import Data.Param.FSVec (FSVec, reallyUnsafeVector)
 import qualified Data.Param.FSVec as V
-import Data.TypeLevel.Num (D8,D16,D32,D64, Nat)
+import Data.TypeLevel.Num (D8,D16,D32,D64,Nat)
 
 data Bit = H -- ^ High value 
          | L -- ^ Low value
@@ -77,6 +88,37 @@ boolToBit :: Bool -> Bit
 boolToBit True = H
 boolToBit False = L
 
+toBitVector8 :: Int8 -> FSVec D8 Bit
+toBitVector8 = reallyUnsafeToBitVector
+  
+fromBitVector8 :: FSVec D8 Bit -> Int8
+fromBitVector8 = fromBitVectorDef 0
+
+
+toBitVector16 :: Int16 -> FSVec D16 Bit
+toBitVector16 = reallyUnsafeToBitVector
+  
+fromBitVector16 :: FSVec D16 Bit -> Int16
+fromBitVector16 = fromBitVectorDef 0
+
+
+toBitVector32 :: Int32 -> FSVec D32 Bit
+toBitVector32 = reallyUnsafeToBitVector
+  
+fromBitVector32 :: FSVec D32 Bit -> Int32
+fromBitVector32 = fromBitVectorDef 0
+
+
+toBitVector64 :: Int64 -> FSVec D64 Bit
+toBitVector64 = reallyUnsafeToBitVector
+  
+fromBitVector64 :: FSVec D64 Bit -> Int64
+fromBitVector64 = fromBitVectorDef 0
+
+
+{- This would have been much more convenient
+   But it makes things really complicated int he VHDL
+   backend
 
 -- | Datatypes  which can be converted to and from
 --   vectors of bits
@@ -85,7 +127,6 @@ class BitStream d s | d -> s where
  toBitVector :: d -> FSVec s Bit
  -- | get a datatype from a bit vector
  fromBitVector :: FSVec s Bit -> d
-
 
 instance BitStream Int8 D8 where
   toBitVector = reallyUnsafeToBitVector
@@ -105,7 +146,7 @@ instance BitStream Int32 D32 where
 instance BitStream Int64 D64 where
   toBitVector = reallyUnsafeToBitVector
   fromBitVector = fromBitVectorDef 0
-
+-}
 
 -------------------
 -- Helper functions

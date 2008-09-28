@@ -31,6 +31,18 @@ package types is
   -- Indexes for unconstrained fsvecs:
   --  -1 is used to express the null vector, with bounds (0 to -1)
   subtype fsvec_index is integer range -1 to integer'high;
+
+  -- Unconstrained translation of "FSVec _ Bit"
+  -- needed for toBitVector and fromBitVector
+  type fsvec_std_logic is array (fsvec_index range <>) of std_logic;
+
+  function toBitVector8 (i : int8)  return fsvec_std_logic; 
+  function toBitVector16 (i : int16) return fsvec_std_logic;
+  function toBitVector32 (i : int32) return fsvec_std_logic;
+
+  function fromBitVector8 (v : fsvec_std_logic) return int8; 
+  function fromBitVector16 (v : fsvec_std_logic) return int16;
+  function fromBitVector32 (v : fsvec_std_logic) return int32;
   
 end types;
 
@@ -81,5 +93,66 @@ package body types is
     end if;
   end show;
 
+  function toBitVector8 (i : int8) return fsvec_std_logic is
+    variable inter : signed (0 to 7) := to_signed (i, 8);
+    variable ret : fsvec_std_logic (0 to 7); 
+  begin
+    for index in 0 to ret'length loop
+      ret(index) := inter(index);
+    end loop;
+    return ret;
+  end toBitVector8;
+
+
+  function toBitVector16 (i : int16) return fsvec_std_logic is
+    variable inter : signed (0 to 15) := to_signed (i, 16);
+    variable ret : fsvec_std_logic (0 to 15); 
+  begin
+    for index in 0 to ret'length loop
+      ret(index) := inter(index);
+    end loop;
+    return ret;
+  end toBitVector16;
+
+
+  function toBitVector32 (i : int32) return fsvec_std_logic is
+    variable inter : signed (0 to 31) := to_signed (i, 32);
+    variable ret : fsvec_std_logic (0 to 31); 
+  begin
+    for index in 0 to ret'length loop
+      ret(index) := inter(index);
+    end loop;
+    return ret;
+  end toBitVector32;
+
+
+  function fromBitVector8 (v : fsvec_std_logic) return int8 is
+    variable inter : signed (0 to 7);
+  begin
+    for index in 0 to inter'length loop
+      inter(index) := v(index);
+    end loop;
+    return to_integer(inter);
+  end frombitVector8;
+
+  function fromBitVector16 (v : fsvec_std_logic) return int16 is
+    variable inter : signed (0 to 15);
+  begin
+    for index in 0 to inter'length loop
+      inter(index) := v(index);
+    end loop;
+    return to_integer(inter);
+  end frombitVector16;
+
+
+  function fromBitVector32 (v : fsvec_std_logic) return int32 is
+    variable inter : signed (0 to 31);
+  begin
+    for index in 0 to inter'length loop
+      inter(index) := v(index);
+    end loop;
+    return to_integer(inter);
+  end frombitVector32;
   
+
 end types;

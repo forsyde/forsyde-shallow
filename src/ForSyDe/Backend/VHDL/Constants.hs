@@ -211,6 +211,34 @@ rotrId = unsafeVHDLBasicId "rotr"
 reverseId :: VHDLId
 reverseId = unsafeVHDLBasicId "reverse"
 
+-- | toBitVector8 function identifier
+toBitVector8Id :: VHDLId
+toBitVector8Id = unsafeVHDLBasicId "toBitVector8"
+
+-- | toBitVector16 function identifier
+toBitVector16Id :: VHDLId
+toBitVector16Id = unsafeVHDLBasicId "toBitVector16"
+
+-- | toBitVector32 function identifier
+toBitVector32Id :: VHDLId
+toBitVector32Id = unsafeVHDLBasicId "toBitVector32"
+
+
+-- | fromBitVector8 function identifier
+fromBitVector8Id :: VHDLId
+fromBitVector8Id = unsafeVHDLBasicId "fromBitVector8"
+
+
+-- | fromBitVector16 function identifier
+fromBitVector16Id :: VHDLId
+fromBitVector16Id = unsafeVHDLBasicId "fromBitVector16"
+
+
+-- | fromBitVector32 function identifier
+fromBitVector32Id :: VHDLId
+fromBitVector32Id = unsafeVHDLBasicId "fromBitVector32"
+
+
 
 -- | copy function identifier
 copyId :: VHDLId
