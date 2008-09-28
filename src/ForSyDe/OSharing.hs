@@ -11,12 +11,22 @@
 -- This module provides support for Observable Sharing: <http://www.cs.chalmers.se/~koen/pubs/entry-asian99-lava.html>
 -- 
 -- It provides:
---   'URef': Unsafe Unmutable references, using them causes side effects.
---   'URefTable': a table were 'URef's are used as key and can store any value.
--- 
+--
+--   * 'URef': Unsafe Unmutable references, using them causes side effects.
+--
+--   * 'URefTable': a table were 'URef's are used as key and can store
+--     any value.
 --    
--- /This Module was taken from Lava2000's/ @Ref.hs@ /module/: <http://www.cs.chalmers.se/~koen/Lava/>
+-- /This Module was taken from Lava2000's/ @Ref.hs@ /module/:
+--   <http://www.cs.chalmers.se/~koen/Lava/>
 -- 
+-- IMPORTANT WARNING: Even if all the functions causing side effects
+--                    are set as NOINLINE and that all currently known
+--                    Haskell compilers are based in graph reduction
+--                    (i.e. referential transparency will be preserved if 
+--                    sharing is), there are other optimisations than inlining
+--                    that can break Observable Sharing, e.g. Common 
+--                    Subexpression Elimination (CSE).
 -----------------------------------------------------------------------------
 module ForSyDe.OSharing
   ( -- Unsafe references
@@ -47,8 +57,6 @@ import Data.IORef (IORef, newIORef, readIORef, writeIORef)
 import Control.Monad.ST
 
 
--- FIXME FIXME FIXME: Add pragmas to avoid breaking optimizations in the
--- functions where unsafe* functions are used.
 
 -- | An Unsafe Unmutable Reference to a value of type a 
 --
@@ -80,13 +88,11 @@ instance Show a => Show (URef a) where
 --   side-effects, since the value returned (the 'URef') is not determined by
 --   the arguments of the function (i.e. different calls to 'newURef' with
 --   the same argument return different 'URef's). 
--- 
--- FIXME: the side effect caused can break optimizations in GHC check what has
--- to be done here and the rest of the code (e.g pragma noinline)
 newURef :: a -> URef a
 newURef a = unsafePerformIO $
   do r <- newIORef []
      return (URef r a)
+{-# NOINLINE newURef #-}
 
 -- | Read the value pointed by the 'URef'.
 readURef :: URef a -> a
@@ -171,6 +177,7 @@ addEntryST (URefTableST tab) r b = unsafeIOToST (addEntryIO tab r b)
 -- | Generates a memoizated version of a function taking 'URef' values 
 memoURef :: (URef a -> b) -> (URef a -> b)
 memoURef f = unsafePerformIO . memoURefIO (return . f)
+{-# NOINLINE memoURef #-}
 
 -- | 'IO' version of 'memoURef'
 memoURefIO :: (URef a -> IO b) -> (URef a -> IO b)
@@ -183,6 +190,7 @@ memoURefIO f = unsafePerformIO $
                                   do addEntryIO tab r b
                                      f r
      return f'
+{-# NOINLINE memoURefIO #-}
 
 -- | 'ST' version of 'memoURef'
 memoURefST :: (URef a -> ST s b) -> (URef a -> ST s b)
@@ -196,3 +204,4 @@ memoURefST f = unsafePerformST $
                                      f r
      return f'
  where unsafePerformST = unsafePerformIO . unsafeSTToIO
+{-# NOINLINE memoURefST #-}
