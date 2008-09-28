@@ -217,7 +217,7 @@ pprGraphWithHeaders yFiles graph =
   nest nestVal (
     text "<key id=\"process_type\" for=\"node\" attr.name=\"process_type\" attr.type=\"string\"/>" $+$
     text "<key id=\"value_arg\" for=\"node\" attr.name=\"value_arg\" attr.type=\"string\"/>" $+$
-    text "<key id=\"profun_arg\" for=\"node\" attr.name=\"procfun_arg\" attr.type=\"string\"/>" $+$
+    text "<key id=\"procfun_arg\" for=\"node\" attr.name=\"procfun_arg\" attr.type=\"string\"/>" $+$
     text "<key id=\"instance_parent\" for=\"node\" attr.name=\"instance_parent\" attr.type=\"string\"/>" $+$
     yFilesAttribs $+$
     pprOps yFiles graph) $+$
@@ -259,7 +259,7 @@ value_arg exp =
 procfun_arg :: ProcFunAST -> Doc
 -- FIXME: support default parameters
 procfun_arg (ProcFunAST n cls _) = 
- text "<data key=\"value_arg\">" $+$
+ text "<data key=\"procfun_arg\">" $+$
   nest nestVal (text $ pprint (FunD n cls)) $+$
  text "</data>"   
 
