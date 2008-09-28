@@ -42,8 +42,6 @@ import Data.Dynamic
 -- really equivalently implemented as a set of (possibly overlapping) trees
 -- capable of sharing nodes between them.
 --
--- TODO, put sample image
---
 -- There is no specific data structure for the netlist itself. Instead, a
 -- netlist is simply represented by its outputs. Each output is the root node
 -- of a tree ('NlTree'). The NlTrees can (and probably will) have common nodes.

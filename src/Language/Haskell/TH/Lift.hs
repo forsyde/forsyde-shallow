@@ -29,34 +29,30 @@ modName = "Language.Haskell.TH.Lift"
 
 -- | Automatically generate an instance of 'Lift' for one data type. For example:
 -- 
--- @
--- \{\-\# LANGUAGE TemplateHaskell \#\-\}
--- module Colour where
--- import Language.Haskell.TH.Lift
---
--- data RGB = Red | Green | Blue
---
--- \-\- Generate the Lift instance of RGB
--- \$(deriveLift1 ''RGB)
--- @
+-- >{-# LANGUAGE TemplateHaskell #-}
+-- >module Colour where
+-- >import Language.Haskell.TH.Lift
+-- >
+-- >data RGB = Red | Green | Blue
+-- >
+-- >-- Generate the Lift instance of RGB
+-- >$(deriveLift1 ''RGB)
 deriveLift1 :: Name -> Q [Dec]
 deriveLift1 = (liftM (\a -> [a])) . deriveLift 
 
 -- | Version of 'deriveLif1' used to automatically generate instances
 --   of Lift for multiple data types. For instance:
 --
--- @
--- \{\-\# LANGUAGE TemplateHaskell \#\-\}
--- module Colour where
--- import Language.Haskell.TH.Lift
---
--- data RGB = Red | Green | Blue
---
--- data Num a => Pixel a = Pixel a a a
---
--- \-\- Generate Lift instances for RGB and Pixel
--- $(mapM deriveLift [''RGB, ''Pixel])
--- @
+-- >{-# LANGUAGE TemplateHaskell #-}
+-- >module Colour where
+-- >import Language.Haskell.TH.Lift
+-- >
+-- >data RGB = Red | Green | Blue
+-- >
+-- >data Num a => Pixel a = Pixel a a a
+-- >
+-- >-- Generate Lift instances for RGB and Pixel
+-- >$(mapM deriveLift [''RGB, ''Pixel])
 deriveLift :: Name -> Q Dec
 deriveLift n
  = do i <- reify n

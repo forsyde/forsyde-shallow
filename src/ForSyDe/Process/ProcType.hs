@@ -44,19 +44,21 @@ class (Data a, Lift a) => ProcType a where
  --   taking nesting in account.  
  -- 
  --   For example:  
- -- @
- --   data Colors = Blue | Red
- --    deriving (Data, Typeable)
- --   data Shapes = Circle | Square
- --    deriving (Data, Typeable)
  --
- --   getEnums ((Blue,1), Circle) =
- --   FIXME: complete example
- -- @
+ -- 
+ -- >  module MyMod where
+ -- >
+ -- >  data Colour = Blue | Red
+ -- >   deriving (Data, Typeable)
+ -- >  data Shapes = Circle | Square
+ -- >   deriving (Data, Typeable)
+ -- >
+ -- >  getEnums (Prst Blue, Circle) =                 
+ -- >   fromList [EnumAlgTy "MyMod.Colour" ["Blue", "Red"],
+ -- >             EnumAlgTy "MyMod.Shapes" ["Circle", "Square"]]
  getEnums :: a -> Set EnumAlgTy
  -- | Read a process type
  readProcType :: ReadP a
-                
 
 -- Function to automatically generate ProcType, Data, Lift and
 -- Typeable instances for tuples (with 2 or more elements) with
