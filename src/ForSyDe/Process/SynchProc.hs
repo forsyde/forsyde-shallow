@@ -165,7 +165,7 @@ zipWith4SY id f s1 s2 s3 s4 = Signal (newNodeOutSig nodeRef ZipWithNSYOut)
                              getEnums (undefined ::d) `union`
                              getEnums (undefined ::e) ) 
                             f 
--- | The process constructor 'zipWith4SY' takes an identifier and a 
+-- | The process constructor 'zipWith5SY' takes an identifier and a 
 --   combinational function as arguments and returns a process with 
 --   five input signals and one output signal. 
 zipWith5SY :: forall a b c d e f.
@@ -198,7 +198,7 @@ zipWith5SY id f s1 s2 s3 s4 s5 = Signal (newNodeOutSig nodeRef ZipWithNSYOut)
                             f 
 
 
--- | The process constructor 'zipWith4SY' takes an identifier and a 
+-- | The process constructor 'zipWith6SY' takes an identifier and a 
 --   combinational function as arguments and returns a process with 
 --   five input signals and one output signal. 
 zipWith6SY :: forall a b c d e f g.
