@@ -3,7 +3,7 @@
 -- Due to the use of unboxed types, TH, and deprecated Packed Strings
 -----------------------------------------------------------------------------
 -- |
--- Module      :  Language.Haskell.TH.TypeLib
+-- Module      :  Language.Haskell.TH.Lift
 -- Copyright   :  (c) Ian Lynagh, 2006, (c) SAM Group, KTH/ICT/ECS 2007-2008
 -- License     :  BSD-style (see the file LICENSE)
 -- 
@@ -11,10 +11,12 @@
 -- Stability   :  experimental
 -- Portability :  portable
 --
--- This module provides basic functions related to Template-Haskell's 'Type'.
+-- Automatically derive Template Haskell's 'Lift' class for datatypes
+-- using Template Haskell splices.
 -- 
+-- Based on Lynagh's th-lift package: <http://hackage.haskell.org/cgi-bin/hackage-scripts/package/th-lift>
 -----------------------------------------------------------------------------
-module Language.Haskell.TH.Lift where
+module Language.Haskell.TH.Lift (deriveLift1, deriveLift) where
 
 import GHC.Exts
 import Data.PackedString
@@ -25,9 +27,36 @@ import Control.Monad (liftM)
 modName :: String
 modName = "Language.Haskell.TH.Lift"
 
+-- | Automatically generate an instance of 'Lift' for one data type. For example:
+-- 
+-- @
+-- \{\-\# LANGUAGE TemplateHaskell \#\-\}
+-- module Colour where
+-- import Language.Haskell.TH.Lift
+--
+-- data RGB = Red | Green | Blue
+--
+-- \-\- Generate the Lift instance of RGB
+-- \$(deriveLift1 ''RGB)
+-- @
 deriveLift1 :: Name -> Q [Dec]
 deriveLift1 = (liftM (\a -> [a])) . deriveLift 
 
+-- | Version of 'deriveLif1' used to automatically generate instances
+--   of Lift for multiple data types. For instance:
+--
+-- @
+-- \{\-\# LANGUAGE TemplateHaskell \#\-\}
+-- module Colour where
+-- import Language.Haskell.TH.Lift
+--
+-- data RGB = Red | Green | Blue
+--
+-- data Num a => Pixel a = Pixel a a a
+--
+-- \-\- Generate Lift instances for RGB and Pixel
+-- $(mapM deriveLift [''RGB, ''Pixel])
+-- @
 deriveLift :: Name -> Q Dec
 deriveLift n
  = do i <- reify n

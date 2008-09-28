@@ -32,8 +32,9 @@ $(deriveLift1 ''AbstExt)
 
 
 
--- |The function 'fromAbstExt' converts a value from a extended value.
-fromAbstExt	       :: a -> AbstExt a -> a
+-- |The function 'fromAbstExt' extracts the inner value contained in 'AbstExt'
+fromAbstExt	       :: a -- ^ Default value returned if the input is 'Abst' 
+                       -> AbstExt a -> a
 -- |Similar to 'fromAbstExt', but without default value
 unsafeFromAbstExt      :: AbstExt a -> a 
 -- |The functions 'isPresent' checks for the presence of a value.

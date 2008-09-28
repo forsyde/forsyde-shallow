@@ -507,7 +507,7 @@ checkProcFunAST (ProcFunAST thName [Clause pats (NormalB exp) []] []) =
  return (thName, pats, exp)
 checkProcFunAST (ProcFunAST _ _ (_:_)) =
  intError "ForSyDe.Backend.VHDL.Translate.checkProcFunSpec" 
-          (UntranslatableVHDLFun $ GeneralErr (Other "defalaut parameters are not yet supported"))
+          (UntranslatableVHDLFun $ GeneralErr (Other "default parameters are not yet supported"))
 checkProcFunAST (ProcFunAST _ [Clause _ _ whereConstruct@(_:_)] _) =  
   funErr (FunWhereConstruct whereConstruct)
 checkProcFunAST (ProcFunAST _ [Clause _ bdy@(GuardedB _) _] _) =  
@@ -553,7 +553,7 @@ transProcFunSpec fName fType fPats = do
  -- Finally, return the results
  return (fSpec, fVHDLName, fVHDLParIds, argsTM, retTM)
  
--- | Translate a function input pattern to a VHDLID, 
+-- | Translate an input pattern to a VHDLID, 
 --   making the necessary changes in the translation namespace
 transInputPat2VHDLId :: TH.Pat -> VHDLM VHDLId
 transInputPat2VHDLId  pat = do
@@ -655,7 +655,9 @@ transFunBodyExp2VHDL  e =
 
 -- | Translate a case alternative from Haskell to VHDL
 transMatch2VHDLCaseSmAlt :: TH.Exp -> TH.Match -> VHDLM CaseSmAlt
--- FIXME: the exp passed should be part of the context once VHDLM is reworked
+-- FIXME: the exp passed (which contains the full case expression for
+-- error reporting purposes) should be part of the context once VHDLM
+-- is reworked
 transMatch2VHDLCaseSmAlt contextExp (Match pat (NormalB matchExp) []) =
  do sm <- transFunBodyExp2VHDL matchExp
     case pat of

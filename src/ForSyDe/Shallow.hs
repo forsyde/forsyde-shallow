@@ -9,7 +9,7 @@
 -- Portability :  portable
 --
 --
--- Shallow-embedded implementation of ForSyDe (see 'ForSyDe.Shallow.Signal'). 
+-- Shallow-embedded implementation of ForSyDe (see "ForSyDe.Shallow.Signal"). 
 --
 -- Unlike systems built using the deep-embedded Signal type of ForSyDe
 -- (see 'ForSyDe.Signal'), systems built with 'ForSyDe.Shallow.Signal'
@@ -22,13 +22,16 @@
 -- 
 -- The shallow implementation of ForSyDe consists of three main libraries:
 -- 
--- * "CoreLib" contains the basic definitions and functions such as events and signals.
+-- * "ForSyDe.Shallow.CoreLib" contains the basic definitions and
+--   functions such as events and signals.
 --
--- * "MoCLib" defines the models of computations included in ForSyDe.
+-- * "ForSyDe.Shallow.MoCLib" defines the models of computations
+--   included in ForSyDe.
 --
--- * "UtilityLib" provides several additional modules that are usefule
---   and convenient in practice. Their status is typically 
+-- * "ForSyDe.Shallow.UtilityLib" provides several additional modules
+--   that are useful and convenient in practice. Their status is
 --   experimental.
+--
 -----------------------------------------------------------------------------
 module ForSyDe.Shallow(module ForSyDe.Shallow.CoreLib
               , module ForSyDe.Shallow.MoCLib

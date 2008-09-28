@@ -57,8 +57,10 @@ writeVHDLOps ops sysDef = do
 
 -- | Generate a function which, given a system definition and some simulation
 --   stimuli:
--- 1) Writes a VHDL model of the system 
--- 2) Simulates the VHDL model with Modelsim getting the results back to Haskell
+--    
+--     (1) Writes a VHDL model of the system 
+--     
+--     (2) Simulates the VHDL model with Modelsim getting the results back to Haskell
 writeAndModelsimVHDL :: SysFunToIOSimFun sysF simF =>  
                         Maybe Int -- ^ Number of cycles to simulate
                                 --   if 'Nothing' the number will be determined

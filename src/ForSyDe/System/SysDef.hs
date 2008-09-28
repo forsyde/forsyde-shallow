@@ -83,10 +83,6 @@ data SysDefVal = SysDefVal
                                --   on the newSysDef* function used
 
 
--- FIXME FIXME FIXME: The frontend doesn't currently check for duplicates in 
---                    process identifiers. newSysDef* should take care of that.
-
-
 
 -- | 'SysDef' constructor
 --
@@ -101,8 +97,9 @@ newSysDef f sysId inIds outIds = either currError id eProneResult
  where currError = uError "newSysDef"
        eProneResult = newSysDefEProne f Nothing sysId inIds outIds
 
--- | 'SysDef' constructor, Template Haskell version
---  FIXME: currently broken, do not use.
+-- | CURRENTLY BROKEN, do not use!
+--
+--  'SysDef' constructor, Template Haskell version
 --
 --   Builds a system definition out of a system function, a system identifiers 
 --   and its port identifers.

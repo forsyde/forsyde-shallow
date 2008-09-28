@@ -8,9 +8,9 @@
 -- Stability   :  experimental
 -- Portability :  portable
 --
---  The synchronous process library defines processes for the
---  synchronous computational model. It is based on the synchronous
---  library "ForSyDe.Shallow.SynchronousLib".
+-- The synchronous process library defines processes for the
+-- synchronous computational model. It is based on the synchronous
+-- library "ForSyDe.Shallow.SynchronousLib".
 -----------------------------------------------------------------------------
 module ForSyDe.Shallow.SynchronousProcessLib(
 			       fifoDelaySY, finiteFifoDelaySY,
@@ -22,23 +22,36 @@ import ForSyDe.Shallow.CoreLib
 import ForSyDe.Shallow.Queue
 import ForSyDe.Shallow.Memory
 
--- | The process 'fifoDelaySY' implements a synchronous model of a FIFO with infinite size. The FIFOs take a list of values at each event cycle and output one value. There is a delay of one cycle.
+-- | The process 'fifoDelaySY' implements a synchronous model of a
+-- FIFO with infinite size. The FIFOs take a list of values at each
+-- event cycle and output one value. There is a delay of one cycle.
 fifoDelaySY		:: Signal [a] -> Signal (AbstExt a)
 
--- | The process 'finiteFifoDelaySY' implements a FIFO with finite size. The FIFOs take a list of values at each event cycle and output one value. There is a delay of one cycle.
+-- | The process 'finiteFifoDelaySY' implements a FIFO with finite
+-- size. The FIFOs take a list of values at each event cycle and
+-- output one value. There is a delay of one cycle.
 finiteFifoDelaySY	:: Int -> Signal [a] -> Signal (AbstExt a)
 
--- | The process 'memorySY' implements a synchronous memory. It uses access functions of the type 'Read adr'  and 'Write adr value'.
+-- | The process 'memorySY' implements a synchronous memory. It uses
+-- access functions of the type 'Read adr' and 'Write adr value'.
 memorySY		:: Int -> Signal (Access a) -> Signal (AbstExt a) 
 
--- The process 'mergeSY' merges two input signals into a single signal. The process has an internal buffer in order to prevent loss of data. The process is deterministic and outputs events according to their time tag. If there are two valid values at on both signals. The value of the first signal is output first.
+-- | The process 'mergeSY' merges two input signals into a single
+-- signal. The process has an internal buffer in order to prevent loss
+-- of data. The process is deterministic and outputs events according
+-- to their time tag. If there are two valid values at on both
+-- signals. The value of the first signal is output first.
 mergeSY			:: Signal (AbstExt a) -> Signal (AbstExt a) 
 			   -> Signal (AbstExt a)
 
--- | The process 'counterSY' implements a counter, that counts from min to max. The  process 'counterSY has no input and its output is an infinite signal.
+-- | The process 'counterSY' implements a counter, that counts from
+--   min to max. The process 'counterSY' has no input and its output is
+--   an infinite signal.
 counterSY		:: (Enum a, Ord a) => a -> a -> Signal a
 
--- | The function 'groupSY' groups values into a vector of size n, which takes n cycles. While the grouping takes place the output from this process consists of absent values.
+-- | The function 'groupSY' groups values into a vector of size n,
+-- which takes n cycles. While the grouping takes place the output
+-- from this process consists of absent values.
 groupSY :: Int -> Signal a -> Signal (AbstExt (Vector a))
 
 fifoDelaySY xs		=  mooreSY fifoState fifoOutput (queue []) xs

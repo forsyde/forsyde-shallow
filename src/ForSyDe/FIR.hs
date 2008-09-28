@@ -11,7 +11,7 @@
 -- Stability   :  experimental
 -- Portability :  portable
 --
--- This module implements a FIR filters for the synchronous computational model.
+-- This module implements FIR filters for the synchronous computational model.
 -----------------------------------------------------------------------------
 module ForSyDe.FIR (fir) where
 

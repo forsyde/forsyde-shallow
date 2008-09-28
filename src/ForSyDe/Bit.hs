@@ -67,10 +67,12 @@ instance Num Bit where
  signum _ = L
  fromInteger n = if n<=0 then L else H
 
+-- | Convert a bit to a boolean
 bitToBool :: Bit -> Bool
 bitToBool H = True
 bitToBool L = False
 
+-- | Convert a boolean to a bit
 boolToBit :: Bool -> Bit
 boolToBit True = H
 boolToBit False = L
@@ -79,7 +81,9 @@ boolToBit False = L
 -- | Datatypes  which can be converted to and from
 --   vectors of bits
 class BitStream d s | d -> s where
+ -- | convert a data type to a bit vector
  toBitVector :: d -> FSVec s Bit
+ -- | get a datatype from a bit vector
  fromBitVector :: FSVec s Bit -> d
 
 

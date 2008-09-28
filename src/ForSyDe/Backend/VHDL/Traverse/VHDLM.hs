@@ -259,13 +259,17 @@ data VHDLRecursivity = VHDLRecursive | VHDLNonRecursive
 -- | Options passed to Quartus II by the VHDL Backend. Most of them are optional
 --   and Quartus will use a default value.
 --
---   It contains 
---   * what action to perform
---   * Minimum acceptable clock frequency (fMax) expressed in MHz
---   * FPGA family and specific device model.
---   * pin assignments, in the form (VHDL Pin, FPGA Pin). Note
---     that Quartus will automatically split composite VHDL ports 
----    (arrays and records) in various pins with different logical names. 
+--   It contains:
+-- 
+--     * What action to perform
+--
+--     * Optinally, the minimum acceptable clock frequency (fMax) expressed in MHz
+--
+--     * FPGA family and specific device model (both are independently optional).
+--
+--     * Pin assignments, in the form (VHDL Pin, FPGA Pin). Note
+--       that Quartus will automatically split composite VHDL ports 
+---      (arrays and records) in various pins with different logical names. 
 data QuartusOps = 
      QuartusOps {action :: QuartusAction,
                  fMax   :: Maybe Int,

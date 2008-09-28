@@ -8,8 +8,10 @@
 -- Stability   :  experimental
 -- Portability :  portable
 --
--- This module is a wrapper for all the publicly usable types and functions
--- of ForSyDe
+-- This module is a wrapper for all the publicly usable types and
+-- functions of ForSyDe's deep-embedded Domain Specific Language
+-- (DSL). For the shallow-embedded DSL, please see "ForSyDe.Shallow".
+--
 -- 
 -----------------------------------------------------------------------------
 module ForSyDe 

@@ -16,12 +16,11 @@
 --
 -- Axel Jantsch, Ingo Sander, and Wenbiao Wu,
 -- \"The usage of stochastic processes in embedded system specifications\",
--- In /Proceedings of the Ninth International Symposium on Hardware\/Software 
--- Codesign/, April 2001 
--- (<http://web.it.kth.se/~axel/papers/2001/codes-2001.pdf>). 
+-- In /Proceedings of the Ninth International Symposium on Hardware and Software Codesign/, 
+-- April 2001 (<http://web.it.kth.se/~axel/papers/2001/codes-2001.pdf>). 
 --
 -- Unfortunately, not all of the suggested skeletons are
--- implemented. In particular, consolidation based process
+-- implemented. In particular, consolidation-based process
 -- constructors and all constructors for the untimed and the discrete
 -- timed MoCs are missing.
 -----------------------------------------------------------------------------

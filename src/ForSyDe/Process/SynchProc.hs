@@ -8,11 +8,12 @@
 -- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
 -- License     :  BSD-style (see the file LICENSE)
 -- 
--- Maintainer  :  ecs_forsyde_development@ict.kth.se
+-- Maintainer  :  forsyde_dev@ict.kth.se
 -- Stability   :  experimental
 -- Portability :  non-portable (Template Haskell)
 --
--- This module provides the synchronous process constructors of ForSyDe 
+-- This module provides the synchronous process constructors of
+-- ForSyDe and some useful synchronous processes.
 --
 ----------------------------------------------------------------------------- 
 module ForSyDe.Process.SynchProc (
@@ -315,14 +316,8 @@ delaynSY id e n = instantiate id delaynSys
 --   the new state as its output value as illustrated by the 
 --   following example.  
 -- 
--- FIXME: change example
---
--- > SynchronousLib\> scanldSY (+) 0 (signal [1,2,3,4])
---
--- > {1,3,6,10} :: Signal Integer
--- 
--- This is in contrast to the function 'scanldSY', which has its current 
--- state as its output value. 
+--   This is in contrast to the function 'scanldSY', which has its current 
+--   state as its output value. 
 scanlSY	:: (ProcType a, ProcType b) =>
            ProcId -- ^Process Identifier
         -> ProcFun (a -> b -> a) -- ^Combinational function for next 
@@ -379,12 +374,6 @@ scanl3SY id f mem = instantiate id scanl3Sys
 --  similarly to the Haskell prelude function 'scanlSY'. In contrast to the
 --  process constructor 'scanlSY' here the output value is the current state
 --  and not the one of the next state.
---
--- FIXME: change example
---
--- > SynchronousLib> scanlSY (+) 0 (signal [1,2,3,4])
---
--- > {0,1,3,6} :: Signal Integer
 scanldSY :: (ProcType a, ProcType b) => 
            ProcId
         -> ProcFun (a -> b -> a) -- ^Combinational function 

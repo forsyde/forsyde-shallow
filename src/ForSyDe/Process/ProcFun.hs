@@ -76,8 +76,13 @@ defArgPF pf v = pf{ ast = astPF {pars = ((pars astPF) ++ [FunAST (ast v)])},
                     val = (val pf) (val v)}                    
   where astPF = ast pf 
                    
--- | Template Haskell constructor for 'ProcFun'
---   TODO: provide sample use-case
+-- | Template Haskell constructor for 'ProcFun', here is an example on how to use it
+--
+-- @
+--  plus1Fun :: ProcFun (Int -> Int)
+--  plus1Fun = $(newProcFun [d| plus1 :: Int -> Int
+--                              plus1 n = n + 1     |])
+-- @
 newProcFun :: Q [Dec] -> ExpQ
 newProcFun fDecQs = do 
       fDecs <- fDecQs   
