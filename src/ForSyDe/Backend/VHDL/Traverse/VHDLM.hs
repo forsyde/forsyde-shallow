@@ -15,6 +15,8 @@
 module ForSyDe.Backend.VHDL.Traverse.VHDLM where
 
 import ForSyDe.Backend.VHDL.AST
+import qualified ForSyDe.Backend.VHDL.AST as VHDL
+import {-# SOURCE #-} ForSyDe.Backend.VHDL.GlobalNameTable (globalNameTable)
 
 import ForSyDe.Ids
 import ForSyDe.ForSyDeErr
@@ -80,15 +82,20 @@ import Data.Typeable (TypeRep)
 
 -- | Translation namespace.
 --
--- This type provides the number of fresh names already generated and a tranlsation 
--- table from Template Haskell Names to VHDL Names. It only makes sense
--- in a process-function context. 
+-- This type provides the number of fresh names already generated and
+-- a tranlsation table from Template Haskell Names to VHDL Expressions (a symbol table). 
+-- It only makes sense in a process-function context.
 data TransNameSpace = TransNameSpace 
     {freshNameCount :: Int,
-     nameTable      :: [(Name, VHDLName)]}
+     nameTable      :: [(Name, (Int, [VHDL.Expr] -> VHDL.Expr ) )] }
+    -- The table entries work as follows:
+    -- (Template Haskell Name (table key), 
+    --   (Arity, function with which to construct the translated VHDL expression given its 
+    --           arguments already translated to VHDL                                      ))
 
-emptyTransNameSpace :: TransNameSpace
-emptyTransNameSpace = TransNameSpace 0 []
+-- | Initial trnaslation namespace for functions
+initTransNameSpace :: TransNameSpace
+initTransNameSpace = TransNameSpace 0 globalNameTable
 
 -----------
 -- VHDLM --
@@ -126,7 +133,7 @@ data LocalVHDLST = LocalVHDLST
 initLocalST :: SysDefVal -> LocalVHDLST
 initLocalST sysDefVal = 
  LocalVHDLST sysDefVal (SysDefC (sid sysDefVal) (loc sysDefVal)) 
-             emptyTransNameSpace emptyLocalTravResult
+             initTransNameSpace emptyLocalTravResult
 
 -- | Execute certain operation with a concrete local state.
 --   The initial local state is restored after the operation is executed
@@ -145,16 +152,16 @@ withLocalST l' action =  do
   -- return the result
   return res
 
--- | Execute certain operation with an empty translation namespace
+-- | Execute certain operation with the initial translation namespace
 --   The initial namespace is restored after the operation is executed
-withEmptyTransNameSpace :: VHDLM a -> VHDLM a
-withEmptyTransNameSpace action = do
+withInitTransNameSpace :: VHDLM a -> VHDLM a
+withInitTransNameSpace action = do
   -- get the initial name space
   st <- get
   let l = local st
       ns = transNameSpace l
   -- set the empty name space
-  put st{local=l{transNameSpace=emptyTransNameSpace}}
+  put st{local=l{transNameSpace=initTransNameSpace}}
   -- execute the action
   res <- action
   -- restore the initial name table
@@ -429,14 +436,14 @@ addSubProgBody newBody = do
                        {globalRes = gRes{subProgBodies = bodies ++ [newBody]}}})
 
 
--- | Add a TH-name VHDL-name pair to the translation namespace table
-addTransNamePair :: Name -> VHDLName -> VHDLM ()
-addTransNamePair thName vHDLName = do
+-- | Add a TH-name (arity, VHDL expression construtor fucntion)  pair to the translation namespace table
+addTransNamePair :: Name -> Int -> ([Expr] -> Expr) -> VHDLM ()
+addTransNamePair thName arity vHDLFun = do
  lState <- gets local
  let ns = transNameSpace lState
      table = nameTable ns
  modify (\st -> st{local=lState{transNameSpace=ns{
-                                       nameTable=(thName,vHDLName):table}}})
+                                       nameTable=(thName,(arity,vHDLFun)):table}}})
 
 -- | Get a fresh VHDL Identifier and increment the
 --   tranlation-namespace-count of freshly generated identifiers.

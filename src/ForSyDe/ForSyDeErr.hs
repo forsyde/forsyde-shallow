@@ -161,6 +161,8 @@ data VHDLExpErr =
   UnsupportedCasePat Pat   |
   -- | Where constructs in case alternatives are not supported
   CaseWhereConstruct [Dec] |
+  -- | Currification not supported function arguments must be fully supplied
+  CurryUnsupported Int Int |
   -- | Unkown identifier
   UnkownIdentifier Name    |
   -- Unsupported literal
@@ -200,6 +202,10 @@ instance Show VHDLExpErr where
  show (CaseWhereConstruct decs) = 
    "where constructs are not supported in case alternatives:\n" ++
    (render.to_HPJ_Doc.where_clause) decs 
+ show (CurryUnsupported expected real) =
+    "Currification is not supported, all arguments must be fully supplied\n"++
+    "  Expected arguments: " ++ show expected ++ " Provided arguments: " ++ 
+    show real 
  show (UnkownIdentifier name) = "unkown identifier `" ++ pprint name ++ "'"
  show UnsupportedLiteral = "unsupported literal"
  

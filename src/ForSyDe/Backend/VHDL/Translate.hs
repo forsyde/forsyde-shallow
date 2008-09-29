@@ -37,7 +37,6 @@ import Data.Int
 import Data.Char (digitToInt)
 import Data.List (intersperse)
 import Data.Maybe (isJust, fromJust)
-import Data.Bits ((.&.), (.|.), xor)
 import Control.Monad.State
 import qualified Data.Set as S
 import qualified Language.Haskell.TH as TH
@@ -206,7 +205,7 @@ transDelay2Block vPid inS (ProcValAST exp tr enums) outS = do
  -- Get the type of the initial value
  initTR <- transTR2TM tr
  -- Translate the initial value
- initExp <- withProcValC exp $ withEmptyTransNameSpace $ (transExp2VHDL exp)
+ initExp <- withProcValC exp $ withInitTransNameSpace $ (transExp2VHDL exp)
  -- Build the block
  let formalIn  = unsafeIdAppend vPid "_in"
      formalOut = unsafeIdAppend vPid "_out"
@@ -264,7 +263,7 @@ transVHDLName2SigDec ::  SimpleName -- ^ Signal name
              -> VHDLM SigDec
 transVHDLName2SigDec vId tr mExp = do
  tm <- transTR2TM tr
- mVExp <- DT.mapM (\e -> withEmptyTransNameSpace (transExp2VHDL e)) mExp
+ mVExp <- DT.mapM (\e -> withInitTransNameSpace (transExp2VHDL e)) mExp
  return $ SigDec vId tm mVExp
 
 
@@ -585,11 +584,12 @@ preparePatNameSpace :: Prefix -- ^ name prefix obtained so far
 --       type-annotated which would make things more difficult.
 
 -- variable pattern
-preparePatNameSpace prefix (VarP name) = addTransNamePair name prefix
+preparePatNameSpace prefix (VarP name) = 
+ addTransNamePair name 0 (\[] -> PrimName prefix)
 
 -- '@' pattern 
 preparePatNameSpace prefix (AsP name pat) = do
-  addTransNamePair name prefix
+  addTransNamePair name 0 (\[]  -> PrimName prefix)
   preparePatNameSpace prefix pat
 
 -- wildcard pattern
@@ -682,47 +682,6 @@ transMatch2VHDLCaseSmAlt contextExp (Match _ bdy@(GuardedB _) _) =
 transExp2VHDL :: TH.Exp -> VHDLM VHDL.Expr
 
 
--- Is it a quaternary function application?
-transExp2VHDL (VarE fName `AppE` arg1 `AppE` arg2 `AppE` arg3 `AppE` arg4)
- | isJust maybeQuatFun =
-  do vHDLarg1 <- transExp2VHDL arg1
-     vHDLarg2 <- transExp2VHDL arg2
-     vHDLarg3 <- transExp2VHDL arg3
-     vHDLarg4 <- transExp2VHDL arg4
-     return $ (fromJust maybeQuatFun) vHDLarg1 vHDLarg2 vHDLarg3 vHDLarg4
- where maybeQuatFun = lookup fName validQuatFuns
-
-
--- Is it a binary function application?
-transExp2VHDL (VarE fName `AppE` arg1 `AppE` arg2)
- | isJust maybeInfixOp =
-  do vHDLarg1 <- transExp2VHDL arg1
-     vHDLarg2 <- transExp2VHDL arg2
-     return $ (fromJust maybeInfixOp) vHDLarg1 vHDLarg2
- where maybeInfixOp = lookup fName validBinaryFuns
-
--- Is it static constant found in validConstants?
-transExp2VHDL (VarE fName) | isJust maybeConstant =
-     return $ (fromJust maybeConstant)      
- where maybeConstant = lookup fName validConstants
-
-
--- Is it a unary function application?
-transExp2VHDL (VarE fName `AppE` arg) | isJust maybeUnaryOp =
-  do vHDLarg <- transExp2VHDL arg
-     return $ (fromJust maybeUnaryOp) vHDLarg      
- where maybeUnaryOp = lookup fName validUnaryFuns
-
--- A FSVec generated with Template Haskell 
-transExp2VHDL (VarE unsafeFSVecCoerce `AppE` _ `AppE` (ConE con `AppE` ListE exps)) 
- | show unsafeFSVecCoerce == "Data.Param.FSVec.unsafeFSVecCoerce" &&
-   show con == "Data.Param.FSVec.FSVec" = do
-    vhdlExps <- mapM transExp2VHDL exps
-    return $ Aggregate (map (\e -> ElemAssoc Nothing e) vhdlExps)
-
--- Unkown function
-transExp2VHDL exp@(VarE fName `AppE` _) = expErr exp $ UnkownIdentifier fName
-
 -- TypeLevel-package numerical constant aliases
 transExp2VHDL (VarE name) | isTypeLevelAlias = do
  let constant = nameBase name
@@ -737,32 +696,44 @@ transExp2VHDL (VarE name) | isTypeLevelAlias = do
  where isTypeLevelAlias = (show name =~ aliasPat)
        aliasPat = "^Data\\.TypeLevel\\.Num\\.Aliases\\.(b[0-1]+|o[0-7]+|d[0-9]+|h[0-9A-F]+)$"
 
--- Local variable or unknown identifier
-transExp2VHDL exp@(VarE name) = 
-  do -- get the list of valid local names from the state monad
-     validLocalNames <- gets (nameTable.transNameSpace.local)
-     let mVHDLName = lookup name validLocalNames
-     maybe (expErr exp $ UnkownIdentifier name) 
-           (\name -> return $ PrimName name) 
-           mVHDLName       
-        
--- Unary constructor
-transExp2VHDL  (ConE cName `AppE` arg) | isJust consTranslation = 
-  do vHDLarg <- transExp2VHDL arg
-     return $ (fromJust consTranslation)  vHDLarg
-    where consTranslation = lookup cName validUnaryCons
 
--- Constant constructor located in the static table 'validConstantCons'
-transExp2VHDL  (ConE cName) | isJust consTranslation = 
-   return $ fromJust consTranslation
-    where consTranslation = lookup cName validConstantCons
 
--- Enumerated data constructor or Unkown constructor
-transExp2VHDL con@(ConE cName) = do
- mId <- getEnumConsId cName
- case mId of
-  Just id -> return $ PrimName (NSimple id)
-  Nothing -> expErr con $ UnkownIdentifier cName
+-- A FSVec generated with Template Haskell 
+transExp2VHDL (VarE unsafeFSVecCoerce `AppE` _ `AppE` (ConE con `AppE` ListE exps)) 
+ | show unsafeFSVecCoerce == "Data.Param.FSVec.unsafeFSVecCoerce" &&
+   show con == "Data.Param.FSVec.FSVec" = do
+    vhdlExps <- mapM transExp2VHDL exps
+    return $ Aggregate (map (\e -> ElemAssoc Nothing e) vhdlExps)
+
+
+-- Is it function/constructor application, a constant
+-- or an unkown name.
+transExp2VHDL e | isConsOrFun   =
+  do -- get the symbol table (name translation table)
+     nameTable <- gets (nameTable.transNameSpace.local)
+     case lookup name nameTable of
+       -- found name
+       Just (arity, transF) -> 
+            if arity /= numArgs 
+              then expErr e $ CurryUnsupported arity numArgs
+              else do exps <- mapM transExp2VHDL args
+                      return $ transF exps
+       -- Didn't find the name in the global table
+       Nothing -> do 
+         -- Check if it is a user-defined enumerated data constructor 
+         mId <- getEnumConsId name
+         case mId of
+            Just id -> return $ PrimName (NSimple id)
+            Nothing -> expErr e $ UnkownIdentifier name
+ where (f,args,numArgs) = unApp e 
+       mName = getName f
+       name = fromJust mName
+       isConsOrFun = isJust mName 
+       getName (VarE n) = Just n
+       getName (ConE n) = Just n
+       getName _        = Nothing
+
+
 
 -- Literals
 transExp2VHDL  (LitE (IntegerL integer))  = (return.transInteger2VHDL) integer
@@ -772,14 +743,9 @@ transExp2VHDL  (LitE (IntPrimL integer))  = (return.transInteger2VHDL) integer
 transExp2VHDL lit@(LitE _) = expErr lit $ UnsupportedLiteral
 
 -- Infix expressions
-transExp2VHDL infixExp@(InfixE (Just argl) (VarE fName) (Just argr)) = 
-  case maybeInfixOp of
-   Just op ->
-     do vHDLargl <- transExp2VHDL argl
-        vHDLargr <- transExp2VHDL argr
-        return $ op vHDLargl vHDLargr
-   Nothing -> expErr infixExp  $ UnkownIdentifier fName
- where maybeInfixOp = lookup fName validBinaryFuns
+transExp2VHDL (InfixE (Just argl) f@(VarE _) (Just argr)) = 
+ transExp2VHDL $ f `AppE` argl `AppE` argr
+
 -- Sections (unsupported)
 transExp2VHDL infixExp@(InfixE _ (VarE _) _) = expErr infixExp Section
 
@@ -809,93 +775,6 @@ transExp2VHDL exp = expErr exp Unsupported
 -- | Translate an integer to VHDL
 transInteger2VHDL :: Integer -> Expr
 transInteger2VHDL = PrimLit . show 
-
-----------------------------------------------------
--- Translation tables for constructors and functions
-----------------------------------------------------
-
--- | Translation table of valid unary constructors
-validUnaryCons :: [(TH.Name, Expr -> Expr)]
-validUnaryCons = [('Prst , genExprFCall1 presentId)]
-
-
--- | Translation table of valid constant constructors
-validConstantCons :: [(TH.Name, Expr)]
-validConstantCons = [('True , trueExpr ),
-                     ('False, falseExpr),
-                     ('H    , highExpr ),
-                     ('L    , lowExpr  ),
-                     ('Abst , PrimName $ NSimple absentId)]
-
-
--- | Translation table of valid quaternary functions
-validQuatFuns :: [(TH.Name, (Expr -> Expr -> Expr -> Expr -> Expr))]
-validQuatFuns = [('V.select, genExprFCall4 selId)]
-
-
--- | Translation table of valid binary functions
-validBinaryFuns :: [(TH.Name, (Expr -> Expr -> Expr))]
-validBinaryFuns = [('(&&)  ,   And   ),
-                   ('(||)  ,   Or    ),
-                   ('(.&.) ,   And   ),
-                   ('(.|.) ,   Or    ),
-                   ('xor   ,   Xor   ),
-                   ('(==)  ,   (:=:) ),
-                   ('(/=)  ,   (:/=:)),
-                   ('(<)   ,   (:<:) ), 
-                   ('(<=)  ,   (:<=:)),
-                   ('(>)   ,   (:>:) ),
-                   ('(>=)  ,   (:>=:)),  
-                   ('(+)   ,   (:+:) ),
-                   ('(-)   ,   (:-:) ),
-                   ('(*)   ,   (:*:) ),
-                   ('div   ,   (:/:) ),
-                   ('mod   ,   (Mod) ),
-                   ('rem   ,   (Rem) ),
-                   ('(^)   ,   (:**:)),
-                   ('(V.+>),   genExprFCall2 plusgtId),
-                   ('(V.<+),   genExprFCall2 ltplusId),
-                   ('(V.++),   genExprFCall2 plusplusId),
-                   ('(V.!) ,   genExprFCall2 exId),
-                   ('V.take,   genExprFCall2 takeId),
-                   ('V.drop,   genExprFCall2 dropId),
-                   ('V.shiftl, genExprFCall2 shiftlId),
-                   ('V.shiftr, genExprFCall2 shiftrId),
-                   ('V.copy,   genExprFCall2 copyId)]
-
-
--- | Translation table of valid unary functions
-validUnaryFuns :: [(TH.Name, (Expr -> Expr))]
-validUnaryFuns = [('B.not ,          Not  ),
-                  ('not   ,          Not  ),
-                  ('negate,          Neg  ),
-                  ('abs   ,          Abs  ),
-                  ('abstExt,         genExprFCall1 presentId),
-                  ('V.singleton,     genExprFCall1 singletonId),
-                  ('V.length,        genExprFCall1 lengthId),
-                  ('V.lengthT,       genExprFCall1 lengthId),
-                  ('V.genericLength, genExprFCall1 lengthId),
-                  ('V.null,          genExprFCall1 isnullId),
-                  ('V.head,          genExprFCall1 headId),
-                  ('V.last,          genExprFCall1 lastId),
-                  ('V.init,          genExprFCall1 initId),
-                  ('V.tail,          genExprFCall1 tailId),
-                  ('V.rotl,          genExprFCall1 rotlId),
-                  ('V.rotr,          genExprFCall1 rotrId),
-                  ('V.reverse,       genExprFCall1 reverseId),
-                  ('toBitVector8,    genExprFCall1 toBitVector8Id),
-                  ('toBitVector16,   genExprFCall1 toBitVector16Id),
-                  ('toBitVector32,   genExprFCall1 toBitVector32Id),
-                  ('fromBitVector8,  genExprFCall1 fromBitVector8Id),
-                  ('fromBitVector16, genExprFCall1 fromBitVector16Id),
-                  ('fromBitVector32, genExprFCall1 fromBitVector32Id)]
-
-       
-       
-
--- | Translation table of valid Constants
-validConstants :: [(TH.Name, Expr)]
-validConstants = [('V.empty, genExprFCall0 emptyId )]
 
 
 --------------------
@@ -940,3 +819,9 @@ transInt2TLNat n
 fSVecTyCon :: TyCon
 fSVecTyCon =(typeRepTyCon.typeOf) (undefined :: V.FSVec () ())
 
+-- unApply an expression and obtain the number of arguments found
+unApp :: Exp -> (Exp, [Exp], Int)
+unApp e = (first, rest, n)
+ where (first:rest, n) = unAppAc ([],0) e
+       unAppAc (xs,n) (f `AppE` arg) = unAppAc (arg:xs, n+1) f
+       unAppAc (xs,n) f = (f:xs,n)

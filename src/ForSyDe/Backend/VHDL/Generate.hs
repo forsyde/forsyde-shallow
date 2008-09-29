@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 -- |
--- Module      :  ForSyDe.Backend.VHDL.Traverse.VHDLM
+-- Module      :  ForSyDe.Backend.VHDL.Generate
 -- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
 -- License     :  BSD-style (see the file LICENSE)
 -- 
@@ -100,26 +100,51 @@ genExprFCall fName args =
    PrimFCall $ FCall (NSimple fName)  $
              map (\exp -> Nothing :=>: ADExpr exp) args
 
+-- | version of genExprFCall which requires exactly n arguments
+genExprFCallN :: VHDLId -> Int -> [Expr] -> Expr
+genExprFCallN fName n args = genExprFCall fName (takeExactly n args)
+ where takeExactly 0 [] = []
+       takeExactly n (x:xs) | n > 0 = x : takeExactly (n-1) xs
+       takeExactly _ _ = error "takeExactly: non exact length of input list"
 
 -- | Generate a function call from the Function Name (constant function)
 genExprFCall0 :: VHDLId -> Expr
 genExprFCall0 fName = genExprFCall fName []
 
+-- | List version of genExprFCall0
+genExprFCall0L :: VHDLId -> [Expr] -> Expr
+genExprFCall0L fName [] = genExprFCall fName []
+genExprFCall0L _ _ = error "ForSyDe.Backend.VHDL.Generate.genExprFCall0L incorrect length"
 
 -- | Generate a function call from the Function Name and an expression argument
 genExprFCall1 :: VHDLId -> Expr -> Expr
 genExprFCall1 fName arg = genExprFCall fName [arg]
 
+-- | List version of genExprFCall1
+genExprFCall1L :: VHDLId -> [Expr] -> Expr
+genExprFCall1L fName [arg] = genExprFCall fName [arg]
+genExprFCall1L _ _ = error "ForSyDe.Backend.VHDL.Generate.genExprFCall1L incorrect length"
 
--- | Generate a function call from the Function Name and four expression arguments
+-- | Generate a function call from the Function Name and two expression arguments
 genExprFCall2 :: VHDLId -> Expr -> Expr -> Expr
 genExprFCall2 fName arg1 arg2 = genExprFCall fName [arg1,arg2]
 
+-- | List version of genExprFCall2
+genExprFCall2L :: VHDLId -> [Expr] -> Expr
+genExprFCall2L fName [arg1, arg2] = genExprFCall fName [arg1,arg2]
+genExprFCall2L _ _ = error "ForSyDe.Backend.VHDL.Generate.genExprFCall2L incorrect length"
 
 -- | Generate a function call from the Function Name and two expression arguments
 genExprFCall4 :: VHDLId -> Expr -> Expr -> Expr -> Expr -> Expr
 genExprFCall4 fName arg1 arg2 arg3 arg4 = 
  genExprFCall fName [arg1,arg2,arg2,arg3,arg4]
+
+
+-- | List version of genExprFCall4
+genExprFCall4L :: VHDLId -> [Expr] -> Expr
+genExprFCall4L fName [arg1, arg2, arg3, arg4] = 
+ genExprFCall fName [arg1,arg2,arg2,arg3,arg4]
+genExprFCall4L _ _ = error "ForSyDe.Backend.VHDL.Generate.genExprFCall4L incorrect length"
 
 -- | Generate a procedure call from the Function Name and a list of expressions
 --   (its arguments)
