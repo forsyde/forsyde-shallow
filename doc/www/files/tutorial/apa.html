@@ -39,7 +39,7 @@ head :: FSVec  (s &gt; 0) a -&gt; FSVec (s - 1) a -- Not Haskell
       </pre>
 
       <p>
-	However, Haskell doesn't support dependent types (a numerically
+	However, Haskell does not support dependent types (a numerically
 	parameterized-vector is in practice a dependent type) nor type-level
 	lambdas directly. Yet, it is still possible to implement our <code class="code">FSVec</code>
 	type using Haskell plus a few GHC extensions.

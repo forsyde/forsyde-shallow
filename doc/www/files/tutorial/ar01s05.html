@@ -56,7 +56,7 @@ mapSY :: (ProcType a, ProcType b) =&gt;
 	      </p>
 	      <p>
 		Both <code class="code">a</code> and <code class="code">b</code> must be instances
-		of <em><span class="remark">(FIXME: ADD LINK ONCE IT'S READY!!!!!!!!!!!)</span></em> <code class="code">ProcType</code> (read Process Type).
+		of <code class="code">ProcType</code> (read Process Type).
 		<code class="code">ProcType</code> is used by ForSyDe's embedded
 		compiler to extract type and structure information of expressions. 
 	      </p>
@@ -84,7 +84,7 @@ import Data.Int (Int32)
 	  <code class="code">Int32</code>. Since deep-embedded systems might be
 	  later translated to hardware, it is required to be specific
 	  about the size of integers used (the size of <code class="code">Int</code> is
-	  platform-specific).  Additionally ,in all ForSyDe
+	  platform-specific).  Additionally, in all ForSyDe
 	  deep-embedded designs we need to tell GHC to enable the <a class="ulink" href="http://www.haskell.org/th/" target="_top">Template
 	  Haskell</a> (TH) extension, here is why:
 	</p>
@@ -228,7 +228,7 @@ combLoopSysDef = newSysDef s "combLoop" [] ["out"]
 	</pre>
 	
       </div>
-      <div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="id1266118"></a>5.1.2. Keypad encoder</h4></div></div></div>
+      <div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="id1266126"></a>5.1.2. Keypad encoder</h4></div></div></div>
 	
 
 	<p>
@@ -308,7 +308,7 @@ $(deriveLift1 ''Direction)
 	    </li><li>
 	      <p>
 		We are defining a custom enumerated
-		datatype<sup>[<a name="id1266278" href="#ftn.id1266278" class="footnote">5</a>]</sup> (<code class="code">Direction</code>)
+		datatype<sup>[<a name="id1266285" href="#ftn.id1266285" class="footnote">5</a>]</sup> (<code class="code">Direction</code>)
 		whose values will be carried by system signals. All
 		the values used in a system, and
 		<code class="code">Direction</code> in particular, must be
@@ -351,7 +351,7 @@ instance (ProcType a, ProcType b) =&gt;  ProcType (a,b)
 		<code class="code">DeriveDataTypeable</code> language
 		pragma). Additionally, ForSyDe provides a Template
 		Haskell module
-		<code class="code">Language.Haskell.TH.Lift</code><sup>[<a name="id1266363" href="#ftn.id1266363" class="footnote">6</a>]</sup> to automatically generate
+		<code class="code">Language.Haskell.TH.Lift</code><sup>[<a name="id1266370" href="#ftn.id1266370" class="footnote">6</a>]</sup> to automatically generate
 		instances of <code class="code">Lift</code>. In this case, since we
 		needed to instantiate a single datatype, we used
 		<code class="code">deriveLift1</code>.
@@ -360,8 +360,9 @@ instance (ProcType a, ProcType b) =&gt;  ProcType (a,b)
 	      <p>
 		The rest of the imports (<code class="code">Data.Param.FSVec</code>
 		and <code class="code">Data.TypeLevel.Num</code>) come from the
+		<a class="ulink" href="http://hackage.haskell.org/cgi-bin/hackage-scripts/package/parameterized-data" target="_top"><code class="code">parameterized-data</code></a>
+		and
 		<a class="ulink" href="http://hackage.haskell.org/cgi-bin/hackage-scripts/package/type-level" target="_top"><code class="code">type-level</code></a>
-		and <a class="ulink" href="http://hackage.haskell.org/cgi-bin/hackage-scripts/package/parameterized-data" target="_top"><code class="code">parameterized-data</code></a>
 		packages in order to support fixed-sized vectors.
 	      </p>
 	    </li></ul></div><p>
@@ -384,14 +385,14 @@ encoderFun = $(newProcFun
 
 	<p>
 	  The code should be self-explanatory, it makes use of the
-	  type <code class="code">ForSyDe.Bit.Bit</code>.with data constructors
+	  type <code class="code">ForSyDe.Bit.Bit</code>, with data constructors
 	  <code class="code">L</code> (low) and <code class="code">H</code> (high), and of
 	  vectors of size 4 (hence the <code class="code">D4</code> type
 	  parameter).  In order to get a deeper insight on how
 	  <code class="code">FSVec</code>s work, check <a class="xref" href="apa.html" title="A. FSVecs: Vectors parameterized in size">Appendix A, <i><code class="literal">FSVec</code>s: Vectors parameterized in size</i></a>. It
 	  is important to note that the system does not take
 	  simultaneous key-strokes in account, choosing the direction
-	  with higher precedence (i.e. situated in the outermost if
+	  with higher precedence (i.e. situated in the outermost <code class="code">if</code>
 	  expression). Also, using pattern matching with multiple
 	  function clauses instead of nested <code class="code">if</code>
 	  expressions would had been more clear. However, the VHDL
@@ -399,7 +400,7 @@ encoderFun = $(newProcFun
 	</p>
 	
 	<p>
-	  Here is the remaining the code needed to build the rest of the system.
+	  Here is the remaining code needed to build the rest of the system.
 	</p>
 
 	<pre class="programlisting">
@@ -411,7 +412,7 @@ encoderSysDef = newSysDef encoderProc "KeypadEncoder" ["arrowBits"] ["direction"
 	</pre>
 
 	<p>
-	  Finally, we can make some simulations.
+	  Finally, we can evaluate some simulations.
 	</p>
 
 	<pre class="screen">
@@ -443,7 +444,8 @@ simEncoder :: [FSVec D4 Bit] -&gt; [AbstExt Direction]
       <div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="counter"></a>5.2.1. A naive sequential system: <span class="emphasis"><em>counter</em></span></h4></div></div></div>
 	
 	<p>
-	  Our goal is to generate a signal whose values match its tags or more intuitively, a counter from 1 to infinity.
+	  Our goal is to generate a signal whose values match its tags
+	  or, more intuitively, a counter from 1 to infinity.
 	</p>
 	
 	<p>
@@ -470,7 +472,7 @@ counterSysDef = newSysDef counterProc "counter" [] ["count"]
 	  </pre>
 	  
 	  <p>
-	    We reuse <code class="code">addOnef</code> from previous examples. The counter is build by the mutually recursive calls of
+	    We reuse <code class="code">addOnef</code> from previous examples. The counter is built by the mutually recursive calls of
 	    <code class="code">mapSY</code> and <code class="code">delaySY</code> which should be interpreted as parallel equations.
 	  </p>
 	  
@@ -500,7 +502,7 @@ counterProc = sourceSY "counterProc" addOnef 1
 
 	</div>
 
-	<div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="id1266637"></a>5.2.2. Serial full adder</h4></div></div></div>
+	<div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="id1266648"></a>5.2.2. Serial full adder</h4></div></div></div>
 	
 	
 	<p>
@@ -639,7 +641,7 @@ faSysDef = newSysDef faProc "fullAdder" ["op1", "op2"] ["res"]
       </p>
       
       <p>
-	In ForSyDes deep-embedded DSL, hierarchical design is implemented through components, let's see
+	In ForSyDe's deep-embedded DSL, hierarchical design is implemented through components, let's see
 	an example.
       </p>
       
@@ -747,7 +749,7 @@ addFourSysDef = newSysDef addFourProc "addFour" ["in1"] ["out1"]
 	  <p>
 	    Those process functions, possibly with other constants,
 	    are passed to process constructors in order to build
-	    processes which are combined together
+	    processes which are combined together,
 	    creating the main process function.
 	  </p>
 	</li><li>
@@ -874,14 +876,14 @@ addFour.vhd plus1.vhd
 	      </p>
 	    </li><li>
 	      <p>
-		Custom types: enumerated<sup>[<a name="id1267365" href="#ftn.id1267365" class="footnote">7</a>]</sup> types.
+		Custom types: enumerated<sup>[<a name="id1267377" href="#ftn.id1267377" class="footnote">7</a>]</sup> types.
 	      </p>
 	    </li><li>
 	      <p>
 		The following containers, which can hold any primitive
 		or custom type and can be unrestrictively nested:
 		<code class="code">Data.Param.FSVec</code>, tuples of unlimited
-		size<sup>[<a name="id1267385" href="#ftn.id1267385" class="footnote">8</a>]</sup>,
+		size<sup>[<a name="id1267396" href="#ftn.id1267396" class="footnote">8</a>]</sup>,
 	      </p>
 	    </li></ol></div>
 	    
@@ -1069,12 +1071,12 @@ $ ghci Counter.hs
       </p>
       <div class="orderedlist"><ol type="1"><li>
 	  <p>
-	    generate an XML-based intermediate representation of
+	    Generate an XML-based intermediate representation of
 	    a system for further processing.
 	  </p>
 	</li><li>
 	  <p>
-	    obtain system diagrams.
+	    Obtain system diagrams.
 	  </p>
 	</li></ol></div>
       
@@ -1104,7 +1106,7 @@ addFour.graphml plus1.graphml
       </pre>
       
       <p>
-	As we can see, <code class="code">.graphml</code> is generated for each
+	As we can see, a <code class="code">.graphml</code> file is generated for each
 	system involved. In this case, one for the main system
 	(<code class="code">addFour.graphml</code>) and another one for <code class="code">plus1</code>
 	which was instantiated by <code class="code">addFour</code>.
@@ -1148,7 +1150,7 @@ addFour.graphml plus1.graphml
 	  </p>
 	</li></ul></div>
 	
-      <div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="id1267865"></a>5.5.1. Obtaining diagrams of ForSyDe</h4></div></div></div>
+      <div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="id1267876"></a>5.5.1. Obtaining diagrams of ForSyDe</h4></div></div></div>
 	
 	
 	<p>
@@ -1165,7 +1167,7 @@ addFour.graphml plus1.graphml
 	
 	<p>
 	  yWorks also distributes <a class="ulink" href="http://www.yworks.com/en/products_yed_about.html" target="_top"><span class="emphasis"><em>yEd</em></span></a>,
-	  a free (as en beer) multiplatform graph editor with
+	  a free (as in beer) multiplatform graph editor with
 	  impressive automatic layout features.
 	</p>
 
@@ -1212,13 +1214,15 @@ counter.graphml              sourceSY_counterProc.graphml
 	<p>
 	  Before running a layout algorithm it is convenient to set
 	  port constraints on the graph nodes. This is a workaround to
-	  make yEd respect the representation of shared signals
-	  (signals coming from the same process output). The GraphML
-	  format (and GraphML-yFiles) allows edge sharing through the
-	  use of <a class="link" href=""><span class="emphasis"><em>ports</em></span></a>, however,
-	  yEd does not currently respect them. Our current solution is
-	  to set a location for the edge ends in the GraphML backend
-	  and lock that location through yEd port constraints.
+	  make yEd faithfully represent shared signals
+	  (signals coming from the same process output), otherwise yEd
+	  will treat them as different outputs. The GraphML format
+	  (and GraphML-yFiles) allows edge sharing through the use of
+	  <a class="link" href=""><span class="emphasis"><em>ports</em></span></a>,
+	  however, yEd does not currently respect them. Our current
+	  solution is to set a location for the edge ends in the
+	  GraphML backend and lock that location through yEd port
+	  constraints.
 	</p>
 	
 	<p>
@@ -1279,7 +1283,7 @@ counter.graphml              sourceSY_counterProc.graphml
 
 	
       </div>
-      <div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="id1268201"></a>5.5.2. GraphML limitations</h4></div></div></div>
+      <div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="id1268213"></a>5.5.2. GraphML limitations</h4></div></div></div>
 	
 	<p>
 	  Unfortunately, GraphML nor yFiles-GraphML + yEd suit all ForSyDe needs: 
@@ -1287,21 +1291,17 @@ counter.graphml              sourceSY_counterProc.graphml
 	
 	<div class="itemizedlist"><ul type="disc"><li>
 	    <p>
-	      yFiles doesn&#8217;t respect GraphML ports (source signal
+	      yFiles does not respect GraphML ports (source signal
 	      sharing). We provide a workaround based on precalculate
 	      the location of edge ends plus yEd routing port constraints
 	      (which unfortunately cannot be saved).
 	    </p>
 	  </li><li>
 	    <p>
-	      yEd wipes out external <code class="code">&lt;data&gt;</code> tags (external GraphML attributes).
-	    </p>
-	  </li><li>
-	    <p>
 	      yEd wipes out external <code class="code">&lt;data&gt;</code> tags
-	      (external GraphML attributes) when saving a graph. That
-	      includes ForSyDe's metainformation, which will be lost
-	      after editing the graph with yEd.
+	      (external GraphML attributes). That includes ForSyDe's
+	      metainformation, which will be lost after editing the
+	      graph with yEd.
 	    </p>
 	  </li><li>
 	    <p>
@@ -1320,13 +1320,13 @@ counter.graphml              sourceSY_counterProc.graphml
     </div>
     
     
-  <div class="footnotes"><br><hr width="100" align="left"><div class="footnote"><p><sup>[<a name="ftn.id1266278" href="#id1266278" class="para">5</a>] </sup>More formally, a datatype with
+  <div class="footnotes"><br><hr width="100" align="left"><div class="footnote"><p><sup>[<a name="ftn.id1266285" href="#id1266285" class="para">5</a>] </sup>More formally, a datatype with
 		data constructors whose arity is zero in all
-		cases.</p></div><div class="footnote"><p><sup>[<a name="ftn.id1266363" href="#id1266363" class="para">6</a>] </sup>Based
+		cases.</p></div><div class="footnote"><p><sup>[<a name="ftn.id1266370" href="#id1266370" class="para">6</a>] </sup>Based
 		on the <a class="ulink" href="http://hackage.haskell.org/cgi-bin/hackage-scripts/package/th-lift" target="_top"><code class="code">th-lift</code></a>
-		package</p></div><div class="footnote"><p><sup>[<a name="ftn.id1267365" href="#id1267365" class="para">7</a>] </sup>Again,
+		package</p></div><div class="footnote"><p><sup>[<a name="ftn.id1267377" href="#id1267377" class="para">7</a>] </sup>Again,
 		consider an enumerated type to be an algebraic type
 		whose data constructors all have arity
-		zero.</p></div><div class="footnote"><p><sup>[<a name="ftn.id1267385" href="#id1267385" class="para">8</a>] </sup>In practice, the upper limit is
+		zero.</p></div><div class="footnote"><p><sup>[<a name="ftn.id1267396" href="#id1267396" class="para">8</a>] </sup>In practice, the upper limit is
 		Haskell-compiler dependent. In the case of GHC,
 		current limit is 62.</p></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="ar01s04.html">Prev</a> </td><td width="20%" align="center"> </td><td width="40%" align="right"> <a accesskey="n" href="ar01s06.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">4. Deep-embedded vs Shallow-embedded signals </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 6. Shallow-embedded signals</td></tr></table></div></body></html>

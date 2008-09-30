@@ -1,4 +1,4 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>5. FSVec issues</title><link rel="stylesheet" href="fptools.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.73.2"><link rel="start" href="index.html" title="ForSyDe tutorial"><link rel="up" href="apa.html" title="A. FSVecs: Vectors parameterized in size"><link rel="prev" href="apas04.html" title="4. Fixed Sized Vectors themselves"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">5. <code class="code">FSVec</code> issues</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="apas04.html">Prev</a> </td><th width="60%" align="center">A. <code class="literal">FSVec</code>s: Vectors parameterized in size</th><td width="20%" align="right"> </td></tr></table><hr></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="id1268883"></a>5. <code class="code">FSVec</code> issues</h3></div></div></div>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>5. FSVec issues</title><link rel="stylesheet" href="fptools.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.73.2"><link rel="start" href="index.html" title="ForSyDe tutorial"><link rel="up" href="apa.html" title="A. FSVecs: Vectors parameterized in size"><link rel="prev" href="apas04.html" title="4. Fixed Sized Vectors themselves"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">5. <code class="code">FSVec</code> issues</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="apas04.html">Prev</a> </td><th width="60%" align="center">A. <code class="literal">FSVec</code>s: Vectors parameterized in size</th><td width="20%" align="right"> </td></tr></table><hr></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="id1268882"></a>5. <code class="code">FSVec</code> issues</h3></div></div></div>
 	
 
 	<div class="orderedlist"><ol type="1"><li>
@@ -21,7 +21,7 @@ filter :: (a -&gt; Bool) -&gt; FSVec s a -&gt; FSVec s2 a
 	      Since <code class="code">FSVec</code> is an abstract data type,
 	      pattern matching is lost, but that is the general case
 	      in vector implementations
-	      <sup>[<a name="id1269060" href="#ftn.id1269060" class="footnote">9</a>]</sup>.
+	      <sup>[<a name="id1269058" href="#ftn.id1269058" class="footnote">9</a>]</sup>.
 	    </p>
 	  </li><li>
 	    <p>
@@ -61,8 +61,8 @@ vector :: Nat s =&gt; [a] -&gt; FSVec s a
 		  instead take an extra parameter which they give
 		  their result to.
 		</p>
-
-		<pre class="programlisting">		
+		
+		<pre class="programlisting">
 vectorCPS :: Nat s =&gt; vectorCPS :: [a] -&gt; (forall s. Nat s =&gt; FSVec s a -&gt; w) -&gt; w
 		</pre>
 
@@ -95,10 +95,10 @@ unsafeVector :: Nat s =&gt; s -&gt; [a] -&gt; FSVec s a
 		</pre>
 	    
 		<p>
-		  <code class="code">unsafeVector</code> doesn't suffer the
+		  <code class="code">unsafeVector</code> does not suffer the
 		  "existential type" problem of <code class="code">vectorCPS</code>,
 		  however it can happen that the dynamic length of the
-		  list doesn't match the provided length (that is why the
+		  list does not match the provided length (that is why the
 		  function name has an "unsafe" prefix). Furthermore if
 		  that is the case, we will only be able to know at
 		  runtime.
@@ -137,7 +137,7 @@ $(vectorTH [1 :: Int,2,3,4]) :: (Num t) =&gt; FSVec Data.TypeLevel.Num.Reps.D4 t
 	
 	
       <div class="footnotes"><br><hr width="100" align="left"><div class="footnote">
-		<p><sup>[<a name="ftn.id1269060" href="#id1269060" class="para">9</a>] </sup>
+		<p><sup>[<a name="ftn.id1269058" href="#id1269058" class="para">9</a>] </sup>
 		  We tried to implement pattern matching using the
 		  <a class="ulink" href="http://www.haskell.org/ghc/dist/current/docs/users_guide/template-haskell.html#th-quasiquotation" target="_top">new
 		  Quasiquoting mechanism in GHC</a> <a class="ulink" href="http://www.haskell.org/pipermail/template-haskell/2008-February/000655.html" target="_top">

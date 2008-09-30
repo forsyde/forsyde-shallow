@@ -1,4 +1,4 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>3. Type-level decimal numerals</title><link rel="stylesheet" href="fptools.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.73.2"><link rel="start" href="index.html" title="ForSyDe tutorial"><link rel="up" href="apa.html" title="A. FSVecs: Vectors parameterized in size"><link rel="prev" href="apas02.html" title="2. How?"><link rel="next" href="apas04.html" title="4. Fixed Sized Vectors themselves"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">3. Type-level decimal numerals</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="apas02.html">Prev</a> </td><th width="60%" align="center">A. <code class="literal">FSVec</code>s: Vectors parameterized in size</th><td width="20%" align="right"> <a accesskey="n" href="apas04.html">Next</a></td></tr></table><hr></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="id1268575"></a>3. Type-level decimal numerals</h3></div></div></div>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>3. Type-level decimal numerals</title><link rel="stylesheet" href="fptools.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.73.2"><link rel="start" href="index.html" title="ForSyDe tutorial"><link rel="up" href="apa.html" title="A. FSVecs: Vectors parameterized in size"><link rel="prev" href="apas02.html" title="2. How?"><link rel="next" href="apas04.html" title="4. Fixed Sized Vectors themselves"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">3. Type-level decimal numerals</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="apas02.html">Prev</a> </td><th width="60%" align="center">A. <code class="literal">FSVec</code>s: Vectors parameterized in size</th><td width="20%" align="right"> <a accesskey="n" href="apas04.html">Next</a></td></tr></table><hr></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="id1268562"></a>3. Type-level decimal numerals</h3></div></div></div>
       
       
       <p>
@@ -83,7 +83,7 @@ D0 :* D0 :* D1 -- numeral with trailing zeros
 	</pre>
 
 	<p>	
-	  That is when the natural (<code class="code">Nat</code>) and positive
+	  Now is when the natural (<code class="code">Nat</code>) and positive
 	  (<code class="code">Pos</code>) type-classes get in the game. We are
 	  going to omit the instances but, trust us, they guarantee
 	  that numerals are well-formed:
@@ -129,7 +129,7 @@ Prelude Data.TypeLevel&gt; toNum (undefined :: D0 :* D1)
 	  </li><li>
 	    <p>
 	      Comparison: trichotomy classification, (&lt;), (&gt;) (&lt;=),
-	      (&gt;=), (==), Minimum, Maximum.
+	      (&gt;=), (==), Minimum and Maximum.
 	    </p>
 	  </li></ul></div>
 	
@@ -146,7 +146,7 @@ Prelude Data.TypeLevel&gt; d23 `Data.TypeLevel.divMod` d2
 	</pre>
 	
 	<p>
-	  Note that the resulting type is calculated at compilation time:
+	  Note that the resulting type is calculated at compile time:
 	</p>
 	
 	<pre class="screen">
@@ -170,7 +170,7 @@ Prelude Data.TypeLevel&gt; Data.TypeLevel.pred d0
 	</pre>
 
 	<p>
-	  We can even set constraints in our functions for example, we
+	  We can even add constraints to our own functions. For instance, we
 	  want to guarantee (at compilation time) that a type-level
 	  numeral number is lower than 6 and greater than 3.
 	</p>

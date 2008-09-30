@@ -4,8 +4,8 @@
     
     <p>
       This section is a short introduction to some basic concepts
-      surrounding ForSyDe which are vital understand how to use its
-      implementation.  If you want to get your hands dirty and begin
+      surrounding ForSyDe which are vital to understand how to use its
+      implementation.  If you cannot wait to get your hands dirty and begin
       with the implementation examples, go directly to <a class="xref" href="ar01s04.html" title="4. Deep-embedded vs Shallow-embedded signals">Section 4, &#8220;Deep-embedded vs Shallow-embedded signals&#8221;</a>.
     </p> 
     
@@ -28,7 +28,7 @@
       get familiar with the concepts outlined above.
     </p>
     
-    <div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="id1264734"></a>3.1. Signals</h3></div></div></div>
+    <div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="id1264735"></a>3.1. Signals</h3></div></div></div>
        
 
       <p>
@@ -40,25 +40,31 @@
       <p>
 	For example, this is a signal containing the first 10 positive numbers
       </p>
-      <div class="example"><a name="id1264752"></a><p class="title"><b>Example 1. Signal containing the first 10 positive numbers</b></p><div class="example-contents">&lt;1,2,3,4,5,6,7,8,9,10&gt;</div></div><br class="example-break">
+      <div class="example"><a name="id1264754"></a><p class="title"><b>Example 1. Signal containing the first 10 positive numbers</b></p><div class="example-contents">&lt;1,2,3,4,5,6,7,8,9,10&gt;</div></div><br class="example-break">
       
       <p>
 	More formally, a signal is a sequence of events where each
-	event has a tag and a value. In ForSyDe, the tag of an event is
-	implicitly given by the event's position on the list. Furthermore, signals are
-	homogeneous (i.e. a signal cannot carry events of different
-	belonging to different types)
+	event has a tag and a value. In ForSyDe, the tag of an event
+	is implicitly given by the event's position on the list. For
+	instance, the sample signal above is formed by integer values
+	which are identical to the signal implicit tags.
       </p>
       
-      <p>In the example signal above, is formed by integer values which are identical to the signal tags.</p>
+      <p>
+	It is important to note that signals are homogeneous (i.e. a
+	signal cannot carry values belonging to different types)
+      </p>
+      
+ 
       
       <div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3>The interpretation of tags, as we will see, is determined
-      by the <span class="emphasis"><em>Model of Computation</em></span> used, e.g. an identical tag of two events
-      in different signals does not necessarily imply that these
-      events happen at the same time. </div>
+      by the <span class="emphasis"><em>Model of Computation</em></span> used, e.g. an
+      identical tag of two events in different signals does not
+      necessarily imply that these events happen at the same
+      time. </div>
     </div>
     
-    <div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="id1264785"></a>3.2. Processes</h3></div></div></div>
+    <div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="id1264786"></a>3.2. Processes</h3></div></div></div>
       
       <p>
 	Processes are pure functions on signals, i.e. for a given set of input signals a process always gets the same
@@ -92,7 +98,7 @@
 	only input signal: <span class="emphasis"><em>plus1</em></span>.	
       </p>
       
-      <div class="example"><a name="id1264892"></a><p class="title"><b>Example 2. The <span class="emphasis"><em>plus1</em></span> process</b></p><div class="example-contents">
+      <div class="example"><a name="id1264894"></a><p class="title"><b>Example 2. The <span class="emphasis"><em>plus1</em></span> process</b></p><div class="example-contents">
 	
 	plus1(&lt;v<sub>1</sub>, v<sub>2</sub>, v<sub>3</sub>, ...&gt;) =
 	&lt;v<sub>1</sub>+1, v<sub>2</sub>+1, v<sub>3</sub>+1, ...&gt;)
@@ -100,7 +106,7 @@
     </div>
     
     
-    <div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="id1264925"></a>3.3. Process Constructors</h3></div></div></div>
+    <div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="id1264926"></a>3.3. Process Constructors</h3></div></div></div>
       
       
       <p>
@@ -118,7 +124,7 @@
       <p>
 	The ForSyDe methodology offers a set of well-defined
 	process constructors. For example, certain process constructors are aimed at creating
-	synchronous systems. A synchronous systems are governed by a global clock and all processes consume and produce
+	synchronous systems. Synchronous systems are governed by a global clock and all processes consume and produce
 	exactly one signal event in each clock-cycle.
       </p>
 	
@@ -126,7 +132,7 @@
 	For instance, <span class="emphasis"><em>mapSY</em></span>, (where the suffix
 	<span class="emphasis"><em>SY</em></span> stands for
 	<span class="emphasis"><em>SY</em></span>ncrhonous) is a
-	combinational<sup>[<a name="id1265008" href="#ftn.id1265008" class="footnote">2</a>]</sup> process constructor.
+	combinational<sup>[<a name="id1265010" href="#ftn.id1265010" class="footnote">2</a>]</sup> process constructor.
 	<span class="emphasis"><em>mapSY</em></span> takes a function
 	<span class="emphasis"><em>f</em></span> and creates a process with one input
 	and output signal, resulting from the application of
@@ -166,8 +172,9 @@
 
       <p>
 	<span class="emphasis"><em>delaySY<sub>k</sub></em></span> takes an
-	initial value <span class="emphasis"><em>v</em></span> and creates a process
-	which appends <span class="emphasis"><em>v</em></span>, replicated
+	initial value <span class="emphasis"><em>s<sub>0</sub></em></span>
+	and creates a process which appends
+	<span class="emphasis"><em>s<sub>0</sub></em></span>, replicated
 	<span class="emphasis"><em>k</em></span> times, to its input
 	signal. <span class="emphasis"><em>delaySY</em></span> provides the basic
 	mechanism with which to build sequential systems.
@@ -192,10 +199,10 @@
       </div></div><br class="figure-break"> 
       
       <p>
-	<span class="emphasis"><em>sourceSY</em></span> takes an initial value <span class="emphasis"><em>v</em></span>
+	<span class="emphasis"><em>sourceSY</em></span> takes an initial value <span class="emphasis"><em>s<sub>0</sub></em></span>
 	and a function <span class="emphasis"><em>f</em></span>, and creates a sequential process with no
 	inputs and just one output, resulting from the reiterated application of <span class="emphasis"><em>f</em></span>
-	to to <span class="emphasis"><em>v</em></span>.
+	to <span class="emphasis"><em>s<sub>0</sub></em></span>.
       </p>
 
       <p>
@@ -209,12 +216,12 @@
       </p>
       
     </div>
-    <div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="id1264929"></a>3.4. Models of Computation and Domain Interfaces</h3></div></div></div>
+    <div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="id1264931"></a>3.4. Models of Computation and Domain Interfaces</h3></div></div></div>
       
       
       <p>
 	A <span class="emphasis"><em>Model of Computation</em></span> (MoC), also known
-	as <span class="emphasis"><em>Computational Model</em></span> establishes a set of
+	as <span class="emphasis"><em>Computational Model</em></span>, establishes a set of
 	constraints on the possible processes and signals contained by
 	a system. A system is said to belong to certain
 	<span class="emphasis"><em>MoC</em></span> if it satisfies its
@@ -267,7 +274,7 @@
 	    models continuous signals representing them as
 	    continuous one-variable, piecewise functions.
 	  </p>    
-	  <div class="figure"><a name="id1265404"></a><p class="title"><b>Figure 7. Continuous signal</b></p><div class="figure-contents">
+	  <div class="figure"><a name="id1265416"></a><p class="title"><b>Figure 7. Continuous signal</b></p><div class="figure-contents">
 	    
 	    &lt; (sin(x),[-10,0)), (-sin(x),[0,10)) &gt;
 	    <div class="mediaobject" align="center"><table border="0" summary="manufactured viewport for HTML img" cellspacing="0" cellpadding="0" width="360"><tr><td align="center" valign="middle"><object data="figures/piecewise_sin.svg" type="image/svg+xml" width="360" align="middle"></object></td></tr></table></div>    
@@ -284,18 +291,18 @@
       <p>
 	Nevertheless, it is possible to build heterogeneous systems,
 	i.e. systems which mix different MoCs. For that purpose,
-	ForSyDe provides special<sup>[<a name="id1265460" href="#ftn.id1265460" class="footnote">3</a>]</sup> processes in
+	ForSyDe provides special<sup>[<a name="id1265472" href="#ftn.id1265472" class="footnote">3</a>]</sup> processes in
 	charge of connecting two subsystems which belong to different
 	MoCs or which have different timing specifications (e.g. two
 	Synchronous subsystems with a different clock period).
       </p>
       
     </div>
-  <div class="footnotes"><br><hr width="100" align="left"><div class="footnote"><p><sup>[<a name="ftn.id1265008" href="#id1265008" class="para">2</a>] </sup>The term combinational comes from
+  <div class="footnotes"><br><hr width="100" align="left"><div class="footnote"><p><sup>[<a name="ftn.id1265010" href="#id1265010" class="para">2</a>] </sup>The term combinational comes from
 	Digital Circuit Theory. In the context of ForSyDe, a
 	synchronous process is combinational, as opposed to
 	sequential, if its outputs don't depend on the history of the
 	input signals. That is, the process is stateless, all output
 	values can only depend on the input values consumed in the
-	same clock cycle.</p></div><div class="footnote"><p><sup>[<a name="ftn.id1265460" href="#id1265460" class="para">3</a>] </sup>In the sense of
+	same clock cycle.</p></div><div class="footnote"><p><sup>[<a name="ftn.id1265472" href="#id1265472" class="para">3</a>] </sup>In the sense of
 	belonging to any particular MoC</p></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="ar01s02.html">Prev</a> </td><td width="20%" align="center"> </td><td width="40%" align="right"> <a accesskey="n" href="ar01s04.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">2. Installing ForSyDe </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 4. Deep-embedded vs Shallow-embedded signals</td></tr></table></div></body></html>
