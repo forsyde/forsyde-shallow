@@ -6,7 +6,7 @@
 -- Copyright   :  (c) The ForSyDe Team 2007
 -- License     :  BSD-style (see the file LICENSE)
 -- 
--- Maintainer  :  forsyde_dev@ict.kth.se
+-- Maintainer  :  forsyde-dev@ict.kth.se
 -- Stability   :  experimental
 -- Portability :  non-portable (Template Haskell)
 --

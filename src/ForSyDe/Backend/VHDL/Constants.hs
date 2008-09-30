@@ -4,7 +4,7 @@
 -- Copyright   :  (c) SAM Group, KTH/ICT/ECS
 -- License     :  BSD-style (see the file LICENSE)
 -- 
--- Maintainer  :  forsyde_dev@ict.kth.se
+-- Maintainer  :  forsyde-dev@ict.kth.se
 -- Stability   :  experimental
 -- Portability :  portable
 --

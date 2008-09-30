@@ -6,7 +6,7 @@ license:        BSD3
 license-file:   LICENSE
 author:         SAM group, KTH/ICT/ECS
 copyright:      Copyright (c) 2003-2008 SAM group, KTH/ICT/ECS
-maintainer:     forsyde_dev@ict.kth.se
+maintainer:     forsyde-dev@ict.kth.se
 homepage:       http://www.ict.kth.se/org/ict/ecs/sam/projects/forsyde/www/
 stability:      alpha
 synopsis:       

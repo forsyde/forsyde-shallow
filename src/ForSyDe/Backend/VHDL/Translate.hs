@@ -5,7 +5,7 @@
 -- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
 -- License     :  BSD-style (see the file LICENSE)
 -- 
--- Maintainer  :  forsyde_dev@ict.kth.se
+-- Maintainer  :  forsyde-dev@ict.kth.se
 -- Stability   :  experimental
 -- Portability :  portable
 --
@@ -476,7 +476,7 @@ primTypeTable = [-- Commented out due to representation overflow
 ------------------------
 
 
--- | Throw an expression error
+-- | Throw a function error
 funErr :: VHDLFunErr -> VHDLM a
 funErr err = throwFError $ UntranslatableVHDLFun err
 
@@ -579,7 +579,7 @@ preparePatNameSpace :: Prefix -- ^ name prefix obtained so far
 -- NOTE: a good alternative to adding selected names to the
 --       translation table would be declaring a variable
 --       assignment. It would probably make the generated code more
---       readable but at the same times, it requires knowing the
+--       readable but at the same time, it requires knowing the
 --       pattern type, and TH's AST is unfortunately not
 --       type-annotated which would make things more difficult.
 
