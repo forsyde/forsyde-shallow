@@ -18,6 +18,7 @@ description:
 category:       Language
 tested-with:    GHC==6.8.1, GHC==6.8.2
 data-files:     lib/forsyde.vhd
+-- In order to include all this files with sdist
 extra-source-files: LICENSE,
                     README,
                     INSTALL,
@@ -44,6 +45,7 @@ extra-source-files: LICENSE,
                     doc/www/files/tutorial/figures/sourceSY_counterProc2.svg,
                     examples/ALU.hs,
                     examples/ALU_Shallow.hs,
+                    examples/BitVector.hs,
                     examples/ButtonEncoder.hs,
                     examples/CarrySelectAdder.hs,
                     examples/Counter.hs,
@@ -75,7 +77,10 @@ extra-source-files: LICENSE,
                     tests/properties/Main.hs,
                     tests/properties/Shallow/SynchronousMoC.hs,
                     tests/properties/Shallow.hs,
-                    tests/properties/VHDLBackend.hs
+                    tests/properties/VHDLBackend.hs,
+-- due to a bug in cabal 1.2, sdist does not include hs-boot files
+                    src/ForSyDe/Backend/VHDL/GlobalNameTable.hs-boot,
+                    src/ForSyDe/System/SysDef.hs-boot
 
 
 Library
