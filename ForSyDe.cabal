@@ -97,7 +97,8 @@ Library
                    directory,
                    filepath,
                    old-time,
-                   random
+                   random,
+                   array
 
   hs-source-dirs:  src, dist/build/autogen
   exposed-modules: Language.Haskell.TH.Lift,
