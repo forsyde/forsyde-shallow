@@ -177,13 +177,14 @@ vhdlConvToFSVec4 = writeVHDL convToFSVec4Sys
 ------ Full Adder
 
 fullAddFun :: ProcFun (Bit -> Bit -> Bit -> (Bit, Bit))
-fullAddFun = $(newProcFun [d|fullAddFun :: Bit -> Bit -> Bit -> (Bit, Bit)
-                             -- I would like to use 'where'-clauses. Is this possible?
-                             -- fullAddFun a b c_in = (c_out, sum)
-                             --  where c_out = (a .&. b) .|. (a .&. c_in) .|. (b .&. c_in)
-                             --        sum = (a `xor` b) `xor` c_in  |])
-                             fullAddFun a b c_in = ((a .&. b) .|. (a .&. c_in) .|. (b .&. c_in),
-						    (a `xor` b) `xor` c_in) |])
+fullAddFun = $(newProcFun 
+  [d|fullAddFun :: Bit -> Bit -> Bit -> (Bit, Bit)
+     fullAddFun a b c_in = (c_out, sum)
+       where c_out :: Bit
+             c_out = (a .&. b) .|. (a .&. c_in) .|. (b .&. c_in)
+             sum :: Bit
+             sum = (a `xor` b) `xor` c_in  |])
+   
 
 --fullAddProc :: Signal Bit -> Signal Bit -> Signal Bit -> Signal (Bit, Bit)
 --fullAddProc = zipWith3SY "fulladd" fullAddFun
