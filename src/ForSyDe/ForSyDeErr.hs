@@ -129,7 +129,7 @@ data VHDLFunErr =
   -- | Unsupported declaration block
   UnsupportedDecBlock  [Dec]   |
   -- | Insufficient number of parameters 
-  InsParamNum Int              |
+  InsParamNum Name Int         |
   -- | Unsupported input pattern in function 
   UnsupportedFunPat Pat        |
   -- | Multiple clauses
@@ -157,7 +157,10 @@ instance Show VHDLFunErr where
    "   name2 arg1 arg2 .... = defintion2\n"   
   show (FunGuardedBody body) = "guards are not supported in functions:\n" ++
                                (render.to_HPJ_Doc.(pprBody True)) body
-  show (InsParamNum n) = "insufficient number of parameters (" ++ show n ++ ")"
+  show (InsParamNum name n) = 
+    "insufficient number of parameters (" ++ show n ++ ") in the defintion of `" ++
+    pprint name ++
+    "'\n point free definitons are not suported by the VHDL backend"
   show (UnsupportedFunPat pat) = 
       "input pattern `" ++ pprint pat ++ "' is not supported"
   show (MultipleClauses cs) = "multiple clauses (" ++ 

@@ -527,8 +527,8 @@ decs2ProcFuns decs = do
       return (f, t, n1, cls, xs)
    -- A type signature followed by its value declaration
    -- which will be translated to a function
-   SigD n1 t : v@(ValD p@(VarP n2) bdy ds) : xs | n1 == n2 -> do
-      return (v, t, n1, [Clause [p] bdy ds] , xs)
+   SigD n1 t : v@(ValD (VarP n2) bdy ds) : xs | n1 == n2 -> do
+      return (v, t, n1, [Clause [] bdy ds] , xs)
    -- Otherwise the provided declaration block is not supported
    _ -> funErr $ UnsupportedDecBlock decs    
  t' <- maybe (funErr $ PolyDec dec) return (type2TypeRep t) 
@@ -598,7 +598,7 @@ transProcFunSpec fName fType fPats = do
  -- Check that the number of patterns equal the function parameter number
      expectedN = length argsTR
      actualN = length fPats
- when (expectedN /= actualN) (funErr $ InsParamNum actualN)
+ when (expectedN /= actualN) (funErr $ InsParamNum fName actualN)
  -- Get a VHDL identifier for each input pattern and
  -- initialize the translation namespace
  fVHDLParIds <- mapM transInputPat2VHDLId fPats 
