@@ -52,9 +52,8 @@ compile_forsyde_vhd cd pd lbi = do
    modelsimError err = putStrLn $ 
     "Error: " ++ err ++ "\n" ++
     "       ForSyDe will work, but you will not be able to automatically\n" ++
-    "       simulate the ForSyDe-generated VHDL models with Modelsim\n" ++
-    "       (see function ForSyDe.Backend.VHDL.writeAndSimulateVHDL).\n\n" ++
-    "       In order to fix this, make sure that the Modelsim executables " ++ 
+    "       compile or simulate the ForSyDe-generated VHDL models with Modelsim\n\n" ++
+    "       In order to fix this, make sure that the Modelsim executables\n" ++ 
     "       can be found in PATH and reinstall ForSyDe"
 
 -- Look for modelsim executables
