@@ -14,6 +14,7 @@
 -----------------------------------------------------------------------------
 module ForSyDe.Backend.VHDL.Translate where
 
+
 import ForSyDe.Backend.VHDL.AST
 import qualified ForSyDe.Backend.VHDL.AST as VHDL
 import ForSyDe.Backend.VHDL.Constants
@@ -32,7 +33,9 @@ import ForSyDe.Process.ProcVal
 import ForSyDe.Process.ProcType
 
 import Data.Typeable.TypeRepLib (unArrowT)
+import Language.Haskell.TH.TypeLib (type2TypeRep)
 
+import Data.Generics (tyconUQname)
 import Data.Int
 import Data.Char (digitToInt)
 import Data.List (intersperse)
@@ -205,7 +208,7 @@ transDelay2Block vPid inS (ProcValAST exp tr enums) outS = do
  -- Get the type of the initial value
  initTR <- transTR2TM tr
  -- Translate the initial value
- initExp <- withProcValC exp $ withInitTransNameSpace $ (transExp2VHDL exp)
+ initExp <- withProcValC exp $ withInitFunTransST $ (transExp2VHDL exp)
  -- Build the block
  let formalIn  = unsafeIdAppend vPid "_in"
      formalOut = unsafeIdAppend vPid "_out"
@@ -263,7 +266,7 @@ transVHDLName2SigDec ::  SimpleName -- ^ Signal name
              -> VHDLM SigDec
 transVHDLName2SigDec vId tr mExp = do
  tm <- transTR2TM tr
- mVExp <- DT.mapM (\e -> withInitTransNameSpace (transExp2VHDL e)) mExp
+ mVExp <- DT.mapM (\e -> withInitFunTransST (transExp2VHDL e)) mExp
  return $ SigDec vId tm mVExp
 
 
@@ -288,7 +291,12 @@ transPort2IfaceSigDec m pid trep = do
 
 -- | Translate a local TH name to a VHDL Identifier
 transTHName2VHDL :: TH.Name -> VHDLM VHDLId 
-transTHName2VHDL = transPortId2VHDL . nameBase 
+-- we use pprint becase it shows unique names for local names
+-- e.g. let x = 1 in let x =2 in x is printed as
+--      let x_0 = 1 in let x_1 = 2 in x_1
+-- we want unique names because it saves us from dealing wiht
+-- name scopes and having a global name table.
+transTHName2VHDL = transPortId2VHDL . tyconUQname  . pprint
 
 -- | Translate a system identifier to a VHDL identifier
 transSysId2VHDL :: SysId -> VHDLM VHDLId
@@ -480,7 +488,7 @@ primTypeTable = [-- Commented out due to representation overflow
 funErr :: VHDLFunErr -> VHDLM a
 funErr err = throwFError $ UntranslatableVHDLFun err
 
--- | Translate a typed function ast to VHDL
+-- | Translate a typed function AST to VHDL
 transProcFun2VHDL :: TypedProcFunAST  -- ^ input ast
     -> VHDLM (SubProgBody, VHDLId, [VHDLId], [TypeMark], TypeMark)
     -- ^ Function, Function name, name of inputs, type of inputs, return type   
@@ -489,31 +497,82 @@ transProcFun2VHDL (TypedProcFunAST fType fEnums fAST) = do
  addEnumTypes fEnums
  -- Check if the procFunAST fullfils the restrictions of the VHDL Backend
  -- FIXME: translate the default arguments
- (fName, fInputPats, fBodyExp) <- checkProcFunAST fAST
+ (fName, fInputPats, fBodyExp, whereDecs) <- checkProcFunAST fAST
  -- Get the function spec and initialize the translation namespace
  (fSpec, fVHDLName, fVHDLPars, argsTM, retTM) <- 
   transProcFunSpec fName fType fInputPats
+ -- Translate the where declarations and them to the
+ -- auxiliary declarations of the function
+ transDecs whereDecs
  -- Translate the function's body
  bodySm <- transFunBodyExp2VHDL fBodyExp
- let  fBody = SubProgBody fSpec [] [bodySm]
+ decs <- gets (auxDecs.funTransST.local)
+ let  fBody = SubProgBody fSpec decs [bodySm]
  return (fBody, fVHDLName, fVHDLPars, argsTM, retTM)
 
+-- | Translate a typed function AST to VHDL (only returning the functions body
+transProcFun2VHDLBody :: TypedProcFunAST -> VHDLM SubProgBody
+transProcFun2VHDLBody tpf = do
+ (body, _, _, _, _) <- transProcFun2VHDL tpf
+ return body
+
+-- | Translate a list of declarations to a list of process function 
+--   ASTs
+decs2ProcFuns :: [Dec] -> VHDLM [TypedProcFunAST]
+decs2ProcFuns [] = return []
+decs2ProcFuns decs = do
+ (dec, t, name, clauses, restDecs) <- case decs of
+   -- A  type signature followed by its function declaration
+   SigD n1 t : f@(FunD n2 cls) : xs | n1 == n2 -> 
+      return (f, t, n1, cls, xs)
+   -- A type signature followed by its value declaration
+   -- which will be translated to a function
+   SigD n1 t : v@(ValD p@(VarP n2) bdy ds) : xs | n1 == n2 -> do
+      return (v, t, n1, [Clause [p] bdy ds] , xs)
+   -- Otherwise the provided declaration block is not supported
+   _ -> funErr $ UnsupportedDecBlock decs    
+ t' <- maybe (funErr $ PolyDec dec) return (type2TypeRep t) 
+ let tpf = TypedProcFunAST t' S.empty (ProcFunAST name clauses [])
+ restTPFs <- decs2ProcFuns restDecs
+ return $ tpf:restTPFs
+
+-- | Tranlate a list of declarations and add them to the auxiliary
+--   declarations in the function translation state
+transDecs :: [Dec] -> VHDLM ()
+transDecs decs = do
+  -- first we tranlsate the declarations to process functions
+  tpfs <- decs2ProcFuns decs
+  -- Before translating the process functions we add their names to the
+  -- name translation table. It is important to note that, since
+  -- Template Haskell makes local names unique (e.g. [| let x = 1 in
+  -- let x = 2 in x |] is tranlsated to let x_0 = 1 in let x_1 = 2 in x_2),
+  -- we don't have to take care of name scopes i.e. we can have a global name
+  -- scope.
+  mapM_ addDecName tpfs
+  -- Translate the declarations to VHDL and add them
+  -- to the auxiliary declarations of the function translation
+  bodyDecs <- mapM (liftM SPSB . transProcFun2VHDLBody) tpfs
+  addDecsToFunTransST bodyDecs
+ where addDecName :: TypedProcFunAST -> VHDLM ()
+       addDecName (TypedProcFunAST t _ (ProcFunAST n _ _)) = do
+          let arity = (length.fst.unArrowT) t
+          vhdlId <- transTHName2VHDL n
+          addTransNamePair n arity (genExprFCallN vhdlId arity) 
 
 -- | Check if a process function AST fulfils the VHDL backend restrictions.
---   It returs the function TH-name its input paterns and its body expression. 
+--   It returs the function TH-name its input paterns, its body expression,
+--   and the list of theclarations in the where construct. 
 checkProcFunAST :: ProcFunAST
-                -> VHDLM (Name, [Pat], Exp)
+                -> VHDLM (Name, [Pat], Exp, [Dec])
 -- FIXME: translate the default arguments!
-checkProcFunAST (ProcFunAST thName [Clause pats (NormalB exp) []] []) =
- return (thName, pats, exp)
+checkProcFunAST (ProcFunAST thName [Clause pats (NormalB exp) decs] []) =
+ return (thName, pats, exp, decs)
 checkProcFunAST (ProcFunAST _ _ (_:_)) =
  intError "ForSyDe.Backend.VHDL.Translate.checkProcFunSpec" 
           (UntranslatableVHDLFun $ GeneralErr (Other "default parameters are not yet supported"))
-checkProcFunAST (ProcFunAST _ [Clause _ _ whereConstruct@(_:_)] _) =  
-  funErr (FunWhereConstruct whereConstruct)
 checkProcFunAST (ProcFunAST _ [Clause _ bdy@(GuardedB _) _] _) =  
   funErr (FunGuardedBody bdy)
-checkProcFunAST (ProcFunAST _ clauses@(_:_:_) _) =  
+checkProcFunAST (ProcFunAST _ clauses@(_:_) _) =  
   funErr (MultipleClauses clauses)
 -- cannot happen
 checkProcFunAST (ProcFunAST _ [] _) =  
@@ -660,8 +719,9 @@ transMatch2VHDLCaseSmAlt :: TH.Exp -> TH.Match -> VHDLM CaseSmAlt
 -- FIXME: the exp passed (which contains the full case expression for
 -- error reporting purposes) should be part of the context once VHDLM
 -- is reworked
-transMatch2VHDLCaseSmAlt contextExp (Match pat (NormalB matchExp) []) =
- do sm <- transFunBodyExp2VHDL matchExp
+transMatch2VHDLCaseSmAlt contextExp (Match pat (NormalB matchExp) decs) =
+ do transDecs decs
+    sm <- transFunBodyExp2VHDL matchExp
     case pat of
      -- FIXME: support pattern matching with tuples, AbsExt, 
      -- and enumerated types
@@ -672,8 +732,6 @@ transMatch2VHDLCaseSmAlt contextExp (Match pat (NormalB matchExp) []) =
      VarP name -> do vHDLExp <- transExp2VHDL (VarE name)
                      return $ CaseSmAlt [ChoiceE vHDLExp] [sm]
      _ -> expErr contextExp $ UnsupportedCasePat pat
-transMatch2VHDLCaseSmAlt contextExp (Match _ _ whereDecs@(_:_)) =
- expErr contextExp $ CaseWhereConstruct whereDecs
 transMatch2VHDLCaseSmAlt contextExp (Match _ bdy@(GuardedB _) _) =
  expErr contextExp $ CaseGuardedBody bdy
 
@@ -710,7 +768,7 @@ transExp2VHDL (VarE unsafeFSVecCoerce `AppE` _ `AppE` (ConE con `AppE` ListE exp
 -- or an unkown name.
 transExp2VHDL e | isConsOrFun   =
   do -- get the symbol table (name translation table)
-     nameTable <- gets (nameTable.transNameSpace.local)
+     nameTable <- gets (nameTable.funTransST.local)
      case lookup name nameTable of
        -- found name
        Just (arity, transF) -> 
@@ -754,10 +812,14 @@ transExp2VHDL (TupE exps) = do
  vExps <- mapM transExp2VHDL exps
  return $ Aggregate $ map (\expr -> ElemAssoc Nothing expr) vExps
 
+-- Let expressions
+transExp2VHDL (LetE decs e) = do
+ transDecs decs
+ transExp2VHDL e
+
 -- Unsupported expressions
 transExp2VHDL lamE@(LamE _ _) = expErr lamE  LambdaAbstraction
 transExp2VHDL condE@(CondE _ _ _) = expErr condE Conditional
-transExp2VHDL letE@(LetE _ _) = expErr letE Let
 transExp2VHDL caseE@(CaseE _ _) = expErr caseE Case
 transExp2VHDL doE@(DoE _) = expErr doE Do	
 transExp2VHDL compE@(CompE _) = expErr compE ListComprehension

@@ -76,26 +76,34 @@ import Data.Typeable (TypeRep)
 --          1) generate and write to disk the corresponding Design File
 --          2) add the System Definition to the table
 
------------------
--- TransNameSpace
------------------
+-------------
+-- FunTransST
+-------------
 
--- | Translation namespace.
+-- | Function translation state. State used during the translation of
+--   ProcFuns to VHDL.
 --
--- This type provides the number of fresh names already generated and
--- a tranlsation table from Template Haskell Names to VHDL Expressions (a symbol table). 
+-- This type provides the number of fresh names already generated,
+-- a translation table from Template Haskell Names to VHDL Expressions 
+-- (a symbol table) and auxiliary VHDL declarations.
+-- 
 -- It only makes sense in a process-function context.
-data TransNameSpace = TransNameSpace 
+data FunTransST = FunTransST 
     {freshNameCount :: Int,
-     nameTable      :: [(Name, (Int, [VHDL.Expr] -> VHDL.Expr ) )] }
-    -- The table entries work as follows:
-    -- (Template Haskell Name (table key), 
-    --   (Arity, function with which to construct the translated VHDL expression given its 
-    --           arguments already translated to VHDL                                      ))
+     nameTable      :: [(Name, (Int, [VHDL.Expr] -> VHDL.Expr ) )],
+     -- The table entries work as follows:
+     -- (Template Haskell Name (table key), 
+     --   (Arity, function with which to construct the translated VHDL expression 
+     --           given itsarguments already translated to VHDL                           --    )
+     -- )
+     auxDecs        :: [SubProgDecItem]}
+     -- Auxiliary VHDL declarations generated during the translation of 
+     -- the ProcFun to be put in the declaration block of the translated VHDL
+     -- function.
 
--- | Initial trnaslation namespace for functions
-initTransNameSpace :: TransNameSpace
-initTransNameSpace = TransNameSpace 0 globalNameTable
+-- | Initial translation state for functions
+initFunTransST :: FunTransST
+initFunTransST = FunTransST 0 globalNameTable []
 
 -----------
 -- VHDLM --
@@ -119,9 +127,9 @@ data LocalVHDLST = LocalVHDLST
    {currSysDef     :: SysDefVal, -- System definition which is currently 
                                  -- being compiled
    context         :: Context,  -- Error Context
-   transNameSpace  :: TransNameSpace,  -- Translation namespace for functions
-                                       -- It only makes sense
-                                       -- in a process-function context 
+   funTransST      :: FunTransST,  -- Translation state for functions (ProcFuns)
+                                   -- It only makes sense
+                                   -- in a process-function context 
    localRes        :: LocalTravResult} -- Result accumulated during the 
                                        -- traversal of current System Definition 
                                        -- netlist
@@ -133,7 +141,7 @@ data LocalVHDLST = LocalVHDLST
 initLocalST :: SysDefVal -> LocalVHDLST
 initLocalST sysDefVal = 
  LocalVHDLST sysDefVal (SysDefC (sid sysDefVal) (loc sysDefVal)) 
-             initTransNameSpace emptyLocalTravResult
+             initFunTransST emptyLocalTravResult
 
 -- | Execute certain operation with a concrete local state.
 --   The initial local state is restored after the operation is executed
@@ -152,22 +160,22 @@ withLocalST l' action =  do
   -- return the result
   return res
 
--- | Execute certain operation with the initial translation namespace
---   The initial namespace is restored after the operation is executed
-withInitTransNameSpace :: VHDLM a -> VHDLM a
-withInitTransNameSpace action = do
+-- | Execute certain operation with the initial function translation state
+--   The initial state is restored after the operation is executed
+withInitFunTransST :: VHDLM a -> VHDLM a
+withInitFunTransST action = do
   -- get the initial name space
   st <- get
   let l = local st
-      ns = transNameSpace l
+      ns = funTransST l
   -- set the empty name space
-  put st{local=l{transNameSpace=initTransNameSpace}}
+  put st{local=l{funTransST=initFunTransST}}
   -- execute the action
   res <- action
   -- restore the initial name table
   st' <- get
   let l' = local st'
-  put st'{local=l'{transNameSpace=ns}}
+  put st'{local=l'{funTransST=ns}}
   -- return the result
   return res
       
@@ -436,14 +444,26 @@ addSubProgBody newBody = do
                        {globalRes = gRes{subProgBodies = bodies ++ [newBody]}}})
 
 
--- | Add a TH-name (arity, VHDL expression construtor fucntion)  pair to the translation namespace table
+-- | Add a TH-name (arity, VHDL expression construtor function)  pair to the translation namespace table
 addTransNamePair :: Name -> Int -> ([Expr] -> Expr) -> VHDLM ()
 addTransNamePair thName arity vHDLFun = do
  lState <- gets local
- let ns = transNameSpace lState
-     table = nameTable ns
- modify (\st -> st{local=lState{transNameSpace=ns{
+ let s = funTransST lState
+     table = nameTable s
+ modify (\st -> st{local=lState{funTransST=s{
                                        nameTable=(thName,(arity,vHDLFun)):table}}})
+
+-- | Add a declarations to Auxiliary VHDL declarations of the Function
+--   translation state
+addDecsToFunTransST :: [SubProgDecItem] -> VHDLM ()
+addDecsToFunTransST decs = do
+ lState <- gets local
+ let s = funTransST lState
+     auxs = auxDecs s
+ modify (\st -> st{local=lState{funTransST=s{
+                                       auxDecs=decs++auxs}}})
+
+
 
 -- | Get a fresh VHDL Identifier and increment the
 --   tranlation-namespace-count of freshly generated identifiers.
@@ -457,9 +477,9 @@ addTransNamePair thName arity vHDLFun = do
 genFreshVHDLId :: VHDLM VHDLId
 genFreshVHDLId = do
  lState <- gets local
- let ns = transNameSpace lState
+ let ns = funTransST lState
      count = freshNameCount ns
- modify (\st -> st{local=lState{transNameSpace=ns{freshNameCount=count+1}}})
+ modify (\st -> st{local=lState{funTransST=ns{freshNameCount=count+1}}})
  return $ unsafeVHDLBasicId ("fresh_" ++ show count) 
 
 -- | Lift an 'EProne' value to the VHDL monad setting current error context

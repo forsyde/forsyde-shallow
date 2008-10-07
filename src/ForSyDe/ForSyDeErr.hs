@@ -124,6 +124,10 @@ data ForSyDeErr =
 
 -- | Function translation errors in the VHDL backend
 data VHDLFunErr =
+  -- | Polymorphic declaration
+  PolyDec Dec                  |
+  -- | Unsupported declaration block
+  UnsupportedDecBlock  [Dec]   |
   -- | Insufficient number of parameters 
   InsParamNum Int              |
   -- | Unsupported input pattern in function 
@@ -132,8 +136,6 @@ data VHDLFunErr =
   MultipleClauses [Clause]     |
   -- | Guards in case alternatives are not supported
   FunGuardedBody Body          |
-  -- | Where constructs in case alternatives are not supported
-  FunWhereConstruct [Dec]      |
   -- | A general Error which applies to a function
   --   (e.g. its name or parameters are not a VHDL identifier,
   --         an error in an inner expression ... )
@@ -141,11 +143,20 @@ data VHDLFunErr =
 
 
 instance Show VHDLFunErr where
+  show (PolyDec dec) = "polymorphic daclaration:\n" ++
+           pprint dec ++
+           "\nDeclarations within a ProcFun must be monomorphic in order to be " ++
+           "translatable to VHDL"
+  show (UnsupportedDecBlock decs) = "Unsupported declaration block:\n" ++
+   concatMap pprint decs ++
+   "All declaration blocks within a process function must follow the following " ++
+   "pattern:\n" ++
+   "   name1 :: type\n" ++
+   "   name1 arg1 arg2 ... = defintion1\n" ++
+   "   name2 :: type\n" ++
+   "   name2 arg1 arg2 .... = defintion2\n"   
   show (FunGuardedBody body) = "guards are not supported in functions:\n" ++
                                (render.to_HPJ_Doc.(pprBody True)) body
-  show (FunWhereConstruct decs) = 
-   "where constructs are not supported in functions:\n" ++
-   (render.to_HPJ_Doc.where_clause) decs 
   show (InsParamNum n) = "insufficient number of parameters (" ++ show n ++ ")"
   show (UnsupportedFunPat pat) = 
       "input pattern `" ++ pprint pat ++ "' is not supported"
@@ -160,8 +171,6 @@ data VHDLExpErr =
   -- Unsupported case pattern 
   UnsupportedCasePat Pat   |
   -- | Where constructs in case alternatives are not supported
-  CaseWhereConstruct [Dec] |
-  -- | Currification not supported function arguments must be fully supplied
   CurryUnsupported Int Int |
   -- | Unkown identifier
   UnkownIdentifier Name    |
@@ -173,8 +182,6 @@ data VHDLExpErr =
   LambdaAbstraction        |
   -- Conditional expressions are only supported in a function body
   Conditional              |
-  -- Let expressions are not supported
-  Let                      |
   -- Case expressions are only supported in a function body
   Case                     |
   -- Do expressions are not supported
@@ -199,21 +206,16 @@ instance Show VHDLExpErr where
   (render.to_HPJ_Doc.(pprBody True)) body
  show (UnsupportedCasePat pat) = "unsupported case pattern: `" ++ 
                                  pprint pat ++ "'"
- show (CaseWhereConstruct decs) = 
-   "where constructs are not supported in case alternatives:\n" ++
-   (render.to_HPJ_Doc.where_clause) decs 
  show (CurryUnsupported expected real) =
     "Currification is not supported, all arguments must be fully supplied\n"++
     "  Expected arguments: " ++ show expected ++ " Provided arguments: " ++ 
     show real 
  show (UnkownIdentifier name) = "unkown identifier `" ++ pprint name ++ "'"
- show UnsupportedLiteral = "unsupported literal"
- 
+ show UnsupportedLiteral = "unsupported literal" 
  show Section            = "sections are not supported"
  show LambdaAbstraction  = "lambda abstractions are not supported"
  show Conditional        = "conditional expressions are only supported within" 
                            ++ " a function body"
- show Let                = "let expressions are not supported"
  show Case               = "case expressions are only supported within" 
                            ++ " a function body"
  show Do                 = "do expressions are not suupported"
