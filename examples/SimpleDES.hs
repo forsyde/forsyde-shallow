@@ -22,7 +22,7 @@ splitKey key = (Data.Param.FSVec.take d5 key, Data.Param.FSVec.drop d5 key)
 
 p8 :: FSVec D10 Bit -> FSVec D8 Bit
 p8 key =    key!d5 +> key!d2 +> key!d6 +> key!d3 
-          +> key!d7 +> key!d4 +> key!d9 +> key!d8 +> empty
+         +> key!d7 +> key!d4 +> key!d9 +> key!d8 +> empty
 
 
 subkey1 key = p8 (rotatedKey1 Data.Param.FSVec.++ rotatedKey2)
@@ -57,10 +57,11 @@ splitBlock block = (Data.Param.FSVec.take d4 block,
  
 f_mapping :: FSVec D4 Bit -> FSVec D8 Bit
 f_mapping nibble =   nibble!d3 +> nibble!d0 +> nibble!d1 +> nibble!d2
-          +> nibble!d1 +> nibble!d2 +> nibble!d3 +> nibble!d0 +> empty
+                  +> nibble!d1 +> nibble!d2 +> nibble!d3 +> nibble!d0 +> empty
 
 f_xor :: FSVec D8 Bit -> FSVec D4 Bit -> FSVec D8 Bit
 f_xor key nibble = Data.Param.FSVec.zipWith xor key (f_mapping nibble)
+
 
 s0 :: FSVec D4 (FSVec D4 (FSVec D2 Bit))
 s0 =    -- Row 0 = 1, 0, 3, 2
@@ -104,8 +105,132 @@ s1 =    -- Row 0 = 0, 1, 2, 3
 p4 :: FSVec D4 Bit -> FSVec D4 Bit
 p4 byte = byte!d1 +> byte!d3 +> byte!d2 +> byte!d0 +> empty
 
+access :: FSVec D4 (FSVec D4 (FSVec D2 Bit)) -> 
+          FSVec D2 Bit -> FSVec D2 Bit -> FSVec D2 Bit
+access matrix row col = if row == (L +> L +> empty) then
+                           if col == (L +> L +> empty) then
+                              (matrix!d0)!d0
+                           else
+                              if col == (L +> H +> empty) then
+                                 (matrix!d0)!d1
+                              else
+                                 if col == (H +> L +> empty) then
+                                    (matrix!d0)!d2
+                                 else
+                                    (matrix!d0)!d3
+                        else 
+                           if row == (L +> H +> empty) then
+                              if col == (L +> L +> empty) then
+                                 (matrix!d1)!d0
+                              else
+                                 if col == (L +> H +> empty) then
+                                    (matrix!d1)!d1
+                                 else
+                                    if col == (H +> L +> empty) then
+                                       (matrix!d1)!d2
+                                    else
+                                       (matrix!d1)!d3
+                            else
+                               if row == (H +> L +> empty) then
+                                  if col == (L +> L +> empty) then
+                                     (matrix!d2)!d0
+                                  else
+                                     if col == (L +> H +> empty) then
+                                        (matrix!d2)!d1
+                                     else
+                                        if col == (H +> L +> empty) then
+                                           (matrix!d2)!d2
+                                        else
+                                           (matrix!d2)!d3
+                               else
+                                  if col == (L +> L +> empty) then
+                                     (matrix!d3)!d0
+                                  else
+                                     if col == (L +> H +> empty) then
+                                        (matrix!d3)!d1
+                                     else
+                                        if col == (H +> L +> empty) then
+                                           (matrix!d3)!d2
+                                        else
+                                           (matrix!d3)!d3
+
+rowS0 :: FSVec D8 Bit -> FSVec D2 Bit
+rowS0 pmatrix = pmatrix!d0 +> pmatrix!d3 +> empty
+
+rowS1 :: FSVec D8 Bit -> FSVec D2 Bit
+rowS1 pmatrix = pmatrix!d4 +> pmatrix!d7 +> empty
+
+colS0 :: FSVec D8 Bit -> FSVec D2 Bit
+colS0 pmatrix = pmatrix!d1 +> pmatrix!d2 +> empty
+
+colS1 :: FSVec D8 Bit -> FSVec D2 Bit
+colS1 pmatrix = pmatrix!d5 +> pmatrix!d6 +> empty
+
+outputS0 :: FSVec D8 Bit -> FSVec D2 Bit
+outputS0 pmatrix = access s0 row col
+                          where 
+                             row = rowS0 pmatrix
+                             col = colS0 pmatrix
+
+outputS1 :: FSVec D8 Bit -> FSVec D2 Bit
+outputS1 pmatrix = access s1 row col
+                          where 
+                             row = rowS1 pmatrix
+                             col = colS1 pmatrix
+
+output :: FSVec D8 Bit -> FSVec D4 Bit
+output pmatrix = p4 $ outS0 Data.Param.FSVec.++ outS1
+                 where outS0 = outputS0 pmatrix
+                       outS1 = outputS1 pmatrix
+
+f_k :: FSVec D8 Bit -> FSVec D8 Bit -> FSVec D8 Bit
+f_k subkey input = left Data.Param.FSVec.++ right 
+                   where right = Data.Param.FSVec.drop d4 input
+                         left' = Data.Param.FSVec.take d4 input 
+                         left = Data.Param.FSVec.zipWith xor left' (output pmatrix)
+                         pmatrix = f_xor subkey right
+
+-- switch 
+
 switch :: (FSVec D8 Bit) -> FSVec D8 Bit
 switch nibble =  Data.Param.FSVec.drop d4 nibble 
                  Data.Param.FSVec.++ 
                  Data.Param.FSVec.take d4 nibble
- 
+
+
+encrypt key plaintext = id 
+                        $ ip_bar 
+                        $ f_k (subkey_2) 
+                        $ switch 
+                        $ f_k (subkey_1) 
+                        $ ip 
+                        plaintext
+                        where 
+                           subkey_1 = subkey1 key 
+                           subkey_2 = subkey2 key
+
+decrypt key ciphertext = id
+                         $ ip_bar 
+                         $ f_k (subkey_1) 
+                         $ switch 
+                         $ f_k (subkey_2) 
+                         $ ip 
+                         ciphertext
+                         where 
+                            subkey_1 = subkey1 key 
+                            subkey_2 = subkey2 key
+
+-- Test Data 
+plain1 = L +> L +> H +> L +> 
+         L +> H +> L +> L +> empty
+
+plain2 = H +> L +> H +> L +> 
+         H +> H +> H +> H +> empty
+
+enc1 = encrypt myKey plain1
+dec1 = decrypt myKey enc1
+
+enc2 = encrypt myKey plain2
+dec2 = decrypt myKey enc2
+
+
