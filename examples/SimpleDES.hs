@@ -24,17 +24,21 @@ p8 :: FSVec D10 Bit -> FSVec D8 Bit
 p8 key =    key!d5 +> key!d2 +> key!d6 +> key!d3 
          +> key!d7 +> key!d4 +> key!d9 +> key!d8 +> empty
 
+shift :: FSVec D5 Bit -> FSVec D5 Bit
+shift vec = rotr vec
+
+
 
 subkey1 key = p8 (rotatedKey1 Data.Param.FSVec.++ rotatedKey2)
              where
-               rotatedKey1 = rotr key1
-               rotatedKey2 = rotr key2
+               rotatedKey1 = SimpleDES.shift key1
+               rotatedKey2 = SimpleDES.shift key2
                (key1, key2) = splitKey (p10 key)
 
 subkey2 key = p8 (rotatedKey1 Data.Param.FSVec.++ rotatedKey2)
              where
-               rotatedKey1 = (rotl . rotl) key1
-               rotatedKey2 = (rotl . rotl) key2
+               rotatedKey1 = (SimpleDES.shift . SimpleDES.shift . SimpleDES.shift) key1
+               rotatedKey2 = (SimpleDES.shift . SimpleDES.shift . SimpleDES.shift) key2
                (key1, key2) = splitKey (p10 key)
                  
 myKey = $(vectorTH [H :: Bit,L,H,L,L,L,L,L,H,L])
@@ -58,6 +62,13 @@ splitBlock block = (Data.Param.FSVec.take d4 block,
 f_mapping :: FSVec D4 Bit -> FSVec D8 Bit
 f_mapping nibble =   nibble!d3 +> nibble!d0 +> nibble!d1 +> nibble!d2
                   +> nibble!d1 +> nibble!d2 +> nibble!d3 +> nibble!d0 +> empty
+
+exp_perm :: FSVec D4 Bit -> FSVec D8 Bit
+exp_perm nibble =    nibble!d3 +> nibble!d0 +> nibble!d1 +> nibble!d2
+                  +> nibble!d1 +> nibble!d2 +> nibble!d3 +> nibble!d0 +> empty
+
+zipxor :: FSVec D8 Bit -> FSVec D8 Bit -> FSVec D8 Bit
+zipxor key input = Data.Param.FSVec.zipWith xor key input
 
 f_xor :: FSVec D8 Bit -> FSVec D4 Bit -> FSVec D8 Bit
 f_xor key nibble = Data.Param.FSVec.zipWith xor key (f_mapping nibble)
@@ -178,17 +189,39 @@ outputS1 pmatrix = access s1 row col
                              row = rowS1 pmatrix
                              col = colS1 pmatrix
 
+
 output :: FSVec D8 Bit -> FSVec D4 Bit
 output pmatrix = p4 $ outS0 Data.Param.FSVec.++ outS1
                  where outS0 = outputS0 pmatrix
                        outS1 = outputS1 pmatrix
 
-f_k :: FSVec D8 Bit -> FSVec D8 Bit -> FSVec D8 Bit
-f_k subkey input = left Data.Param.FSVec.++ right 
-                   where right = Data.Param.FSVec.drop d4 input
-                         left' = Data.Param.FSVec.take d4 input 
-                         left = Data.Param.FSVec.zipWith xor left' (output pmatrix)
-                         pmatrix = f_xor subkey right
+s0matrix = outputS0
+s1matrix = outputS1
+
+f :: FSVec D8 Bit -> FSVec D4 Bit -> FSVec D4 Bit
+f subkey nibble 
+    = p4 (out_S0 Data.Param.FSVec.++ out_S1)
+      where out_S0  = s0matrix out_xor
+            out_S1  = s1matrix out_xor
+            out_xor = zipxor subkey out_ep
+            out_ep  = exp_perm nibble
+
+f_k' :: FSVec D8 Bit -> FSVec D8 Bit -> FSVec D8 Bit
+f_k' subkey input = left Data.Param.FSVec.++ right 
+                    where right = Data.Param.FSVec.drop d4 input
+                          left' = Data.Param.FSVec.take d4 input 
+                          left = Data.Param.FSVec.zipWith xor left' (output pmatrix)
+                          pmatrix = f_xor subkey right
+
+f_k :: FSVec D8 Bit -> FSVec D8 Bit 
+    -> FSVec D8 Bit
+f_k subkey input 
+   = left Data.Param.FSVec.++ right 
+     where 
+       right = Data.Param.FSVec.drop d4 input
+       left' = Data.Param.FSVec.take d4 input 
+       left = Data.Param.FSVec.zipWith xor left' out_f
+       out_f = f subkey right
 
 -- switch 
 
@@ -233,5 +266,21 @@ dec1 = decrypt myKey enc1
 enc2 = encrypt myKey plain2
 dec2 = decrypt myKey enc2
 
+key1 = H +> L +> H +> L +> L +> L +> L +> L +> H +> L +> empty 
+subkey_1 = subkey1 key1
+subkey_2 = subkey2 key1
 
+plain = L +> L +> H +> L +> L +> H +> L +> L +> empty
+ipLeft = Data.Param.FSVec.take d4 (ip plain)
+ipRight = Data.Param.FSVec.drop d4 (ip plain)
 
+enc = encrypt key1 plain
+fk = f_k subkey_1 $ ip $ plain
+ep = exp_perm ipLeft
+zxor = zipxor subkey_1 (exp_perm ipLeft) 
+rS0 = rowS0 zxor
+rS1 = rowS1 zxor
+cS0 = colS0 zxor
+cS1 = colS1 zxor
+oS0 = outputS0 zxor
+oS1 = outputS1 zxor
