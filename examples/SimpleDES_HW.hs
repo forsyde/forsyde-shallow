@@ -11,59 +11,6 @@ import Data.Param.FSVec
 import Data.TypeLevel.Num.Reps
 import Data.TypeLevel.Num.Aliases
 
--- Calculation of subkey 1 and subkey 2
-p10 :: FSVec D10 Bit -> FSVec D10 Bit
-p10 key =    key!d2 +> key!d4 +> key!d1 +> key!d6 +> key!d5 
-          +> key!d9 +> key!d0 +> key!d8 +> key!d7 +> key!d5 +> empty
-
-splitKey :: FSVec D10 Bit -> (FSVec D5 Bit, FSVec D5 Bit) 
-splitKey key = (Data.Param.FSVec.take d5 key, Data.Param.FSVec.drop d5 key)
-
-p8 :: FSVec D10 Bit -> FSVec D8 Bit
-p8 key =    key!d5 +> key!d2 +> key!d6 +> key!d3 
-         +> key!d7 +> key!d4 +> key!d9 +> key!d8 +> empty
-
-shift :: FSVec D5 Bit -> FSVec D5 Bit
-shift vec = rotl vec
-
--- Hardware Component 'p10Sys'
-
-p10Fun :: ProcFun (FSVec D10 Bit -> FSVec D10 Bit)
-p10Fun 
-   = $(newProcFun [d| p10 :: FSVec D10 Bit -> FSVec D10 Bit
-                      p10 key =    key!d2 +> key!d4 +> key!d1 
-                                +> key!d6 +> key!d5 +> key!d9 
-                                +> key!d0 +> key!d8 +> key!d7 
-                                +> key!d5 +> empty |])
-
-splitKeyFun :: ProcFun (FSVec D10 Bit -> (FSVec D5 Bit, FSVec D5 Bit))
-splitKeyFun 
-   = $(newProcFun [d| splitKey :: FSVec D10 Bit 
-                               -> (FSVec D5 Bit, FSVec D5 Bit) 
-                      splitKey key = (Data.Param.FSVec.take d5 key, 
-                                      Data.Param.FSVec.drop d5 key)
-                    |])                 
-p8Fun :: ProcFun (FSVec D10 Bit -> FSVec D8 Bit)    
-p8Fun 
-   = $(newProcFun [d| p8 :: FSVec D10 Bit -> FSVec D8 Bit
-                      p8 key =    key!d5 +> key!d2 +> key!d6 
-                               +> key!d3 +> key!d7 +> key!d4 
-                               +> key!d9 +> key!d8 +> empty
-                    |])
-
-shiftFun :: ProcFun (FSVec D5 Bit -> FSVec D5 Bit)
-shiftFun 
-   = $(newProcFun [d| shift :: FSVec D5 Bit -> FSVec D5 Bit
-                      shift vec = rotl vec
-                    |])
-
-mergeKeyFun :: ProcFun (FSVec D5 Bit -> FSVec D5 Bit -> FSVec D10 Bit)
-mergeKeyFun 
-   = $(newProcFun [d| mergeKey :: FSVec D5 Bit -> FSVec D5 Bit -> FSVec D10 Bit
-                      mergeKey keyLeft keyRight 
-                         = keyLeft Data.Param.FSVec.++ keyRight
-                    |]) 
-
 -- System Definition: subkeysSys
 --
 -- Generation of Subkey 1 (8 bit) and Subkey 2 (8 bit) from an initial
@@ -136,48 +83,11 @@ subkeysProc = unzipSY "unzipKeys" . mapSY "subKeys" subkeysFun
 subkeysSys :: SysDef (Signal (FSVec D10 Bit) -> (Signal (FSVec D8 Bit), Signal (FSVec D8 Bit)))
 subkeysSys = newSysDef subkeysProc "genSubkeys" ["key"] ["subkey1", "subkey2"]
            
-compileQuartus_subkeysSys :: IO ()
-compileQuartus_subkeysSys = writeVHDLOps vhdlOps subkeysSys
- where vhdlOps = defaultVHDLOps{execQuartus=Just quartusOps}
-       quartusOps = QuartusOps{action=FullCompilation,
-                               fMax=Just 50, -- in MHz
-                               fpgaFamiliyDevice=Just ("CycloneII",
-                                                       Just "EP2C35F672C6"),
-                               -- Possibility for Pin Assignments
-                               pinAssigs=[]
-                              }
 
 
-
-
--- TO BE CONTINUED...
-
-subkey1 key = p8 (rotatedKey1 Data.Param.FSVec.++ rotatedKey2)
-             where
-               rotatedKey1 = SimpleDES_HW.shift key1
-               rotatedKey2 = SimpleDES_HW.shift key2
-               (key1, key2) = splitKey (p10 key)
-
-subkey2 key = p8 (rotatedKey1 Data.Param.FSVec.++ rotatedKey2)
-             where
-               rotatedKey1 = (SimpleDES_HW.shift . SimpleDES_HW.shift) key1
-               rotatedKey2 = (SimpleDES_HW.shift . SimpleDES_HW.shift) key2
-               (key1, key2) = splitKey (p10 key)
-                              
-myKey = $(vectorTH [H :: Bit,L,H,L,L,L,L,L,H,L])
-
-
--- S-DES Encryption
-
-ip :: FSVec D8 Bit -> FSVec D8 Bit
-ip block =    block!d1 +> block!d5 +> block!d2 +> block!d0
-           +> block!d3 +> block!d7 +> block!d4 +> block!d6 +> empty
-
-ipBar :: FSVec D8 Bit -> FSVec D8 Bit
-ipBar block =    block!d3 +> block!d0 +> block!d2 +> block!d4
-               +> block!d6 +> block!d1 +> block!d7 +> block!d5 +> empty
-
--- Hardware Component 'ipSys' (Initial Permutation)
+-- System Definition: ipSys
+--
+-- Initial permutation of plaintext
 
 ipFun :: ProcFun (FSVec D8 Bit -> (FSVec D4 Bit, FSVec D4 Bit))
 ipFun = $(newProcFun [d| ip :: FSVec D8 Bit -> (FSVec D4 Bit, FSVec D4 Bit)
@@ -199,7 +109,10 @@ ipSys = newSysDef ipProc "ip" ["in"] ["ipLeft", "ipRight"]
 ipVHDL = writeVHDL ipSys
 
 
--- Hardware Component 'ipBarSys' (Final Permutation)
+
+-- System Definition: ipBarSys
+-- 
+-- Inverse of initial permutation
 
 ipBarFun :: ProcFun (FSVec D4 Bit -> FSVec D4 Bit -> FSVec D8 Bit)
 ipBarFun = $(newProcFun [d| ipBar :: FSVec D4 Bit -> FSVec D4 Bit -> FSVec D8 Bit
@@ -220,13 +133,14 @@ ipBarVHDL = writeVHDL ipBarSys
 
 
 
--- Hardware Component 'f'  
+-- System Definition: f
+--
+-- 'f' consists of several blocks that achieve a combination of
+-- permutation and substitution
 
--- Expansion/Permutation
-
-f_mapping :: FSVec D4 Bit -> FSVec D8 Bit
-f_mapping nibble =   nibble!d3 +> nibble!d0 +> nibble!d1 +> nibble!d2
-                  +> nibble!d1 +> nibble!d2 +> nibble!d3 +> nibble!d0 +> empty
+-- System Definition: expPermSys
+-- 
+-- A 4-bit input is extended to 8 bit and permutated
 
 expPermFun :: ProcFun (FSVec D4 Bit -> FSVec D8 Bit)
 expPermFun = $(newProcFun [d| f_mapping :: FSVec D4 Bit -> FSVec D8 Bit
@@ -246,11 +160,12 @@ expPermProc = mapSY "expPermProc" expPermFun
 expPermSys :: SysDef (Signal (FSVec D4 Bit) -> Signal (FSVec D8 Bit))
 expPermSys = newSysDef expPermProc "expPerm" ["in"] ["out"] 
 
--- xor with subkey
 
-f_xor :: FSVec D8 Bit -> FSVec D4 Bit -> FSVec D8 Bit
-f_xor key nibble = Data.Param.FSVec.zipWith xor key (f_mapping nibble)
 
+-- System Definition: xorSybkeySys
+--
+-- xor operation of subkey and 8-bit value
+ 
 xorSubkeyFun :: ProcFun (FSVec D8 Bit -> FSVec D8 Bit -> FSVec D8 Bit)
 xorSubkeyFun = $(newProcFun [d| f_xor :: FSVec D8 Bit -> FSVec D8 Bit  
                                       -> FSVec D8 Bit
@@ -277,19 +192,10 @@ xorSubkeySys :: SysDef (Signal (FSVec D8 Bit) -> Signal (FSVec D8 Bit)
 xorSubkeySys = newSysDef xorSubkeyProc "xorSubKey" ["key", "input"]
                ["out"]
 
+{-
 xorSubkeyProc' :: Signal (FSVec D8 Bit) -> Signal (FSVec D8 Bit) 
                -> (Signal (FSVec D4 Bit, FSVec D4 Bit))
 xorSubkeyProc' keySignal permSignal = mapSY "splitByteProc" splitByteFun (zipWithSY "xorSubKeyProc" xorSubkeyFun keySignal permSignal) 
-
---xorSubkeySys' :: SysDef (Signal (FSVec D8 Bit) -> Signal (FSVec D8 Bit) 
---                         -> (Signal (FSVec D4 Bit, FSVec D4 Bit))
---xorSubkeySys' = newSysDef xorSubkeyProc' "xorSubKey2" ["key", "input"] ["pair_nibble"]
-
--- splitByte
- 
-splitBlock :: FSVec D8 Bit -> (FSVec D4 Bit, FSVec D4 Bit)
-splitBlock block = (Data.Param.FSVec.take d4 block, 
-                    Data.Param.FSVec.drop d4 block)
 
 splitByteFun :: ProcFun (FSVec D8 Bit -> (FSVec D4 Bit, FSVec D4 Bit))
 splitByteFun = $(newProcFun [d| splitByte :: FSVec D8 Bit 
@@ -310,11 +216,11 @@ splitByteSys :: SysDef (Signal (FSVec D8 Bit)
 splitByteSys = newSysDef splitByteProc "splitByte" ["byte"]
                ["pair_nibble"]
 splitByteVHDL = writeVHDL splitByteSys
+-}
 
--- Indexes for Matrix S0 and S1
-
-rowS0 :: FSVec D8 Bit -> FSVec D2 Bit
-rowS0 pmatrix = pmatrix!d0 +> pmatrix!d3 +> empty
+-- System Definition: rowS0Sys
+--
+-- Gives indexes for row for S0 matrix
 
 rowS0Fun :: ProcFun (FSVec D8 Bit -> FSVec D2 Bit)
 rowS0Fun = $(newProcFun [d| rowS0 :: FSVec D8 Bit -> FSVec D2 Bit
@@ -328,9 +234,9 @@ rowS0Proc = mapSY "rowS0Proc" rowS0Fun
 rowS0Sys :: SysDef (Signal (FSVec D8 Bit) -> Signal (FSVec D2 Bit))
 rowS0Sys = newSysDef rowS0Proc "rowS0" ["pmatrix"] ["rowS0"]
 
-
-colS0 :: FSVec D8 Bit -> FSVec D2 Bit
-colS0 pmatrix = pmatrix!d1 +> pmatrix!d2 +> empty
+-- System Definition: colS0Sys
+--
+-- Gives indexes for column for S0 matrix
 
 colS0Fun :: ProcFun (FSVec D8 Bit -> FSVec D2 Bit)
 colS0Fun = $(newProcFun [d| colS0 :: FSVec D8 Bit -> FSVec D2 Bit
@@ -344,8 +250,9 @@ colS0Sys :: SysDef (Signal (FSVec D8 Bit) -> Signal (FSVec D2 Bit))
 colS0Sys = newSysDef colS0Proc "colS0" ["pmatrix"] ["colS0"]
  
 
-rowS1 :: FSVec D8 Bit -> FSVec D2 Bit
-rowS1 pmatrix = pmatrix!d4 +> pmatrix!d7 +> empty
+-- System Definition: rowS1Sys
+--
+-- Gives indexes for column for S1 matrix
 
 rowS1Fun :: ProcFun (FSVec D8 Bit -> FSVec D2 Bit)
 rowS1Fun = $(newProcFun [d| rowS1 :: FSVec D8 Bit -> FSVec D2 Bit
@@ -360,9 +267,9 @@ rowS1Sys :: SysDef (Signal (FSVec D8 Bit) -> Signal (FSVec D2 Bit))
 rowS1Sys = newSysDef rowS1Proc "rowS1" ["pmatrix"] ["rowS1"]
 
 
-
-colS1 :: FSVec D8 Bit -> FSVec D2 Bit
-colS1 pmatrix = pmatrix!d5 +> pmatrix!d6 +> empty
+-- System Definition: colS1Sys
+--
+-- Gives indexes for column for S1 matrix
 
 colS1Fun :: ProcFun (FSVec D8 Bit -> FSVec D2 Bit)
 colS1Fun = $(newProcFun [d| colS1 :: FSVec D8 Bit -> FSVec D2 Bit
@@ -376,7 +283,9 @@ colS1Sys :: SysDef (Signal (FSVec D8 Bit) -> Signal (FSVec D2 Bit))
 colS1Sys = newSysDef colS1Proc "colS1" ["pmatrix"] ["colS1"]
 
 
--- Output S0
+-- System Definition: outputS0Sys
+--
+-- Gives values for matrix S0 based on row and column index
 
 outputS0Fun :: ProcFun (FSVec D2 Bit -> FSVec D2 Bit -> FSVec D2 Bit)
 outputS0Fun 
@@ -446,7 +355,9 @@ outputS0Sys = newSysDef outputS0Proc "outputS0" ["row", "col"] ["out"]
 outputS0VHDL = writeVHDL outputS0Sys
 
 
--- Output S1
+-- System Definition: outputS1Sys
+--
+-- Gives values for matrix S1 based on row and column index
 
 outputS1Fun :: ProcFun (FSVec D2 Bit -> FSVec D2 Bit -> FSVec D2 Bit)
 outputS1Fun 
@@ -516,10 +427,9 @@ outputS1Sys = newSysDef outputS1Proc "outputS1" ["row", "col"] ["out"]
 outputS1VHDL = writeVHDL outputS1Sys
 
 
+-- System Definition: p4Sys
+--
 -- Permute output of S0 and S1
-p4 :: FSVec D4 Bit -> FSVec D4 Bit
-p4 byte = byte!d1 +> byte!d3 +> 
-          byte!d2 +> byte!d0 +> empty
 
 p4Fun :: ProcFun (FSVec D2 Bit -> FSVec D2 Bit 
                   -> FSVec D4 Bit)
@@ -542,7 +452,10 @@ p4Sys :: SysDef (Signal (FSVec D2 Bit)
 p4Sys = newSysDef p4Proc "p4" ["S0", "S1"] ["out"]
 
 
--- Concat Nibbles
+-- System Definition: xorNibblesSys
+--
+-- xor operation on two nibbles
+
 xorNibblesFun :: ProcFun (FSVec D4 Bit -> FSVec D4 Bit -> FSVec D4 Bit)
 xorNibblesFun = $(newProcFun [d| xorNibbles :: FSVec D4 Bit -> FSVec D4 Bit 
                                          -> FSVec D4 Bit
@@ -561,17 +474,9 @@ xorNibblesProc = zipWithSY "xorNibblesProc" xorNibblesFun
 xorNibblesSys :: SysDef (Signal (FSVec D4 Bit) -> Signal (FSVec D4 Bit) -> Signal (FSVec D4 Bit))
 xorNibblesSys = newSysDef xorNibblesProc "xorNibbles" ["n1", "n2"] ["out"]
 
-
-
-
--- Switch
-switch :: (FSVec D8 Bit) -> FSVec D8 Bit
-switch nibble =  Data.Param.FSVec.drop d4 nibble 
-                 Data.Param.FSVec.++ 
-                 Data.Param.FSVec.take d4 nibble
-
-
--- HW Implementation of Switch
+-- System Definition: switchSys
+--
+-- The switch exchanges the left and right nibbles
 
 switchFun :: ProcFun (FSVec D4 Bit -> FSVec D4 Bit -> (FSVec D4 Bit, FSVec D4 Bit))
 switchFun = $(newProcFun [d| switch :: FSVec D4 Bit -> FSVec D4 Bit 
@@ -579,7 +484,6 @@ switchFun = $(newProcFun [d| switch :: FSVec D4 Bit -> FSVec D4 Bit
                              switch left right 
                                  = (right, left)
                             |])
-
 
 switchProc :: Signal (FSVec D4 Bit) -> Signal (FSVec D4 Bit) 
            -> (Signal (FSVec D4 Bit), Signal (FSVec D4 Bit))
@@ -590,10 +494,10 @@ switchSys :: SysDef (Signal (FSVec D4 Bit) -> Signal (FSVec D4 Bit)
 switchSys = newSysDef switchProc "switch" ["leftIn", "leftRight"] ["leftOut", "rightOut"]
 
 
-
-
-
--- fSys
+-- System Definition: fSys
+-- 
+-- fSys changes nibbles using both permutation and substitution based
+-- on the value of a subkey
 
 fProc :: Signal (FSVec D4 Bit) -> Signal (FSVec D8 Bit) -> Signal (FSVec D4 Bit)
 fProc nibble subkey = out
@@ -612,7 +516,10 @@ fSys :: SysDef (Signal (FSVec D4 Bit) -> Signal (FSVec D8 Bit) -> Signal (FSVec 
 fSys = newSysDef fProc "fSys" ["nibble", "subkey"] ["out"]
 
 
--- fkSys
+-- System Definition: fkSys
+--
+-- fkSys changes left and right nibble of a byte using permutation and
+-- substitution based on the value of a subkey 
 
 fkProc :: Signal (FSVec D4 Bit) -> Signal (FSVec D4 Bit) 
        -> Signal (FSVec D8 Bit)
@@ -630,7 +537,9 @@ fkSys = newSysDef fkProc "fkSys" ["ipLeft", "ipRight", "subkey"]
                                  ["fkSysLeft", "fkSysRight"]
 
 
--- encryptSys
+-- System Definition: encryptSys
+-- 
+-- encryptSys encrypts a plaintext based on two subkeys
 
 encryptProc :: Signal (FSVec D8 Bit) -> Signal (FSVec D8 Bit)
             -> Signal (FSVec D8 Bit) -> Signal (FSVec D8 Bit)
@@ -650,7 +559,9 @@ encryptSys :: SysDef (Signal (FSVec D8 Bit) -> Signal (FSVec D8 Bit)
                       -> Signal (FSVec D8 Bit) -> Signal (FSVec D8 Bit))
 encryptSys = newSysDef encryptProc "encryptSys" ["subkey1", "subkey2", "plain"] ["cipher"]
 
--- decryptSys 
+-- System Definition: decryptSys
+-- 
+-- decryptSys decrypts a plaintext based on two subkeys
 
 decryptProc :: Signal (FSVec D8 Bit) -> Signal (FSVec D8 Bit)
             -> Signal (FSVec D8 Bit) -> Signal (FSVec D8 Bit)
@@ -670,7 +581,10 @@ decryptSys :: SysDef (Signal (FSVec D8 Bit) -> Signal (FSVec D8 Bit)
                       -> Signal (FSVec D8 Bit) -> Signal (FSVec D8 Bit))
 decryptSys = newSysDef decryptProc "decryptSys" ["subkey1", "subkey2", "cipher"] ["plain"]
 
--- desSys 
+-- System Definition: desSys
+--
+-- desSys combines encryption, decryption and subkey module. It takes
+-- a plaintext, a cyphertext and a key as input
 
 desProc :: Signal (FSVec D10 Bit) -> Signal (FSVec D8 Bit) -> Signal
            (FSVec D8 Bit) -> (Signal (FSVec D8 Bit), Signal (FSVec D8 Bit))
@@ -686,207 +600,6 @@ desSys :: SysDef (   Signal (FSVec D10 Bit) -> Signal (FSVec D8 Bit)
                   -> (Signal (FSVec D8 Bit), Signal (FSVec D8 Bit)))
 desSys = newSysDef desProc "desSys" ["key", "plainIn", "cipherIn"]
          ["cipherOut", "plainOut"]
-
-outputS0Fun' :: ProcFun (FSVec D2 Bit -> FSVec D2 Bit -> FSVec D2 Bit)
-outputS0Fun' 
-   = $(newProcFun [d| accessS0 :: FSVec D2 Bit -> FSVec D2 Bit 
-                               -> FSVec D2 Bit
-                      accessS0 row col 
-                          = if 
-                              row == (L +> L +> empty)
-                            then
-                              (L +> L +> empty)
-                            else
-                              (s0!d0)!d0
-                            where
-                                s0 :: FSVec D4 (FSVec D4 (FSVec D2 Bit))
-                                s0 =    -- Row 0 = 1, 0, 3, 2
-                                       ((L +> H +> empty) +> (L +> L +> empty) 
-                                         +> (H +> H +> empty) +> (H +> L +> empty) 
-                                         +> empty)
-                                     +> 
-                                        -- Row 1 = 3, 2, 1, 0
-                                        ((H +> H +> empty) +> (H +> L +> empty) 
-                                         +> (L +> H +> empty) +> (L +> L +> empty) 
-                                         +> empty)
-                                     +> 
-                                        -- Row 2 = 0, 2, 1, 3
-                                        ((L +> L +> empty) +> (H +> L +> empty) 
-                                         +> (L +> H +> empty) +> (H +> H +> empty) 
-                                         +> empty) 
-                                     +> 
-                                        -- Row 3 = 3, 1, 3, 2
-                                        ((H +> H +> empty) +> (L +> H +> empty) 
-                                         +> (H +> H +> empty) +> (H +> L +> empty) 
-                                         +> empty)
-                                     +>
-                                        empty
-                                             |])
-
-outputS0Proc' :: Signal (FSVec D2 Bit) -> Signal (FSVec D2 Bit) 
-             -> Signal (FSVec D2 Bit)
-outputS0Proc' = zipWithSY "outputS0Proc" outputS0Fun'
-
-outputS0Sys' :: SysDef ( Signal (FSVec D2 Bit) -> Signal (FSVec D2 Bit) 
-                        -> Signal (FSVec D2 Bit))
-outputS0Sys' = newSysDef outputS0Proc' "outputS0" ["row", "col"] ["out"]
-
-outputS0VHDL' = writeVHDL outputS0Sys'
-
-
-access :: FSVec D4 (FSVec D4 (FSVec D2 Bit)) -> 
-          FSVec D2 Bit -> FSVec D2 Bit -> FSVec D2 Bit
-access matrix row col = if row == (L +> L +> empty) then
-                           if col == (L +> L +> empty) then
-                              (matrix!d0)!d0
-                           else
-                              if col == (L +> H +> empty) then
-                                 (matrix!d0)!d1
-                              else
-                                 if col == (H +> L +> empty) then
-                                    (matrix!d0)!d2
-                                 else
-                                    (matrix!d0)!d3
-                        else 
-                           if row == (L +> H +> empty) then
-                              if col == (L +> L +> empty) then
-                                 (matrix!d1)!d0
-                              else
-                                 if col == (L +> H +> empty) then
-                                    (matrix!d1)!d1
-                                 else
-                                    if col == (H +> L +> empty) then
-                                       (matrix!d1)!d2
-                                    else
-                                       (matrix!d1)!d3
-                            else
-                               if row == (H +> L +> empty) then
-                                  if col == (L +> L +> empty) then
-                                     (matrix!d2)!d0
-                                  else
-                                     if col == (L +> H +> empty) then
-                                        (matrix!d2)!d1
-                                     else
-                                        if col == (H +> L +> empty) then
-                                           (matrix!d2)!d2
-                                        else
-                                           (matrix!d2)!d3
-                               else
-                                  if col == (L +> L +> empty) then
-                                     (matrix!d3)!d0
-                                  else
-                                     if col == (L +> H +> empty) then
-                                        (matrix!d3)!d1
-                                     else
-                                        if col == (H +> L +> empty) then
-                                           (matrix!d3)!d2
-                                        else
-                                           (matrix!d3)!d3
-
-
-
-
-s0 :: FSVec D4 (FSVec D4 (FSVec D2 Bit))
-s0 =    -- Row 0 = 1, 0, 3, 2
-        ((L +> H +> empty) +> (L +> L +> empty) +> 
-         (H +> H +> empty) +> (H +> L +> empty) +> empty)
-     +> 
-        -- Row 1 = 3, 2, 1, 0
-        ((H +> H +> empty) +> (H +> L +> empty) +> 
-         (L +> H +> empty) +> (L +> L +> empty) +> empty)
-     +> 
-        -- Row 2 = 0, 2, 1, 3
-        ((L +> L +> empty) +> (H +> L +> empty) +> 
-         (L +> H +> empty) +> (H +> H +> empty) +> empty)
-     +> 
-        -- Row 3 = 3, 1, 3, 2
-        ((H +> H +> empty) +> (L +> H +> empty) +> 
-         (H +> H +> empty) +> (H +> L +> empty) +> empty)
-     +>
-        empty
-  
-s1 :: FSVec D4 (FSVec D4 (FSVec D2 Bit))
-s1 =    -- Row 0 = 0, 1, 2, 3
-        ((L +> L +> empty) +> (L +> H +> empty) +> 
-         (H +> L +> empty) +> (H +> H +> empty) +> empty)
-     +> 
-        -- Row 1 = 2, 0, 1, 3
-        ((H +> L +> empty) +> (L +> L +> empty) +> 
-         (L +> H +> empty) +> (H +> H +> empty) +> empty)
-     +> 
-        -- Row 2 = 3, 0, 1, 0
-        ((H +> H +> empty) +> (L +> L +> empty) +> 
-         (L +> H +> empty) +> (L +> L +> empty) +> empty)
-     +> 
-        -- Row 3 = 2, 1, 0, 3
-        ((H +> L +> empty) +> (L +> H +> empty) +> 
-         (L +> L +> empty) +> (H +> H +> empty) +> empty)
-     +>
-        empty
-
-outputS0 :: FSVec D8 Bit -> FSVec D2 Bit
-outputS0 pmatrix = access s0 row col
-                          where 
-                             row = rowS0 pmatrix
-                             col = colS0 pmatrix
-
-outputS1 :: FSVec D8 Bit -> FSVec D2 Bit
-outputS1 pmatrix = access s1 row col
-                          where 
-                             row = rowS1 pmatrix
-                             col = colS1 pmatrix
-
-output :: FSVec D8 Bit -> FSVec D4 Bit
-output pmatrix = p4 $ outS0 Data.Param.FSVec.++ outS1
-                 where outS0 = outputS0 pmatrix
-                       outS1 = outputS1 pmatrix
-
-f_k :: FSVec D8 Bit -> FSVec D8 Bit -> FSVec D8 Bit
-f_k subkey input = left Data.Param.FSVec.++ right 
-                   where right = Data.Param.FSVec.drop d4 input
-                         left' = Data.Param.FSVec.take d4 input 
-                         left = Data.Param.FSVec.zipWith xor left' (output pmatrix)
-                         pmatrix = f_xor subkey right
-
-
-
-encrypt key plaintext = id 
-                        $ ipBar 
-                        $ f_k (subkey_2) 
-                        $ switch 
-                        $ f_k (subkey_1) 
-                        $ ip 
-                        plaintext
-                        where 
-                           subkey_1 = subkey1 key 
-                           subkey_2 = subkey2 key
-
-decrypt key ciphertext = id
-                         $ ipBar 
-                         $ f_k (subkey_1) 
-                         $ switch 
-                         $ f_k (subkey_2) 
-                         $ ip 
-                         ciphertext
-                         where 
-                            subkey_1 = subkey1 key 
-                            subkey_2 = subkey2 key
-
--- Test Data 
-
-
-
-plain1 = L +> L +> H +> L +> 
-         L +> H +> L +> L +> empty
-
-plain2 = H +> L +> H +> L +> 
-         H +> H +> H +> H +> empty
-
-enc1 = encrypt myKey plain1
-dec1 = decrypt myKey enc1
-
-enc2 = encrypt myKey plain2
-dec2 = decrypt myKey enc2
 
 
 -- Output Quartus
@@ -925,3 +638,16 @@ cS1 = simulate colS1Sys zxor
 oS0 = simulate outputS0Sys rS0 cS0
 oS1 = simulate outputS1Sys rS1 cS1
 cipher = simulate decryptSys subkey_1 subkey_2 enc
+
+-- Hardware Generation
+compileQuartus_subkeysSys :: IO ()
+compileQuartus_subkeysSys = writeVHDLOps vhdlOps subkeysSys
+ where vhdlOps = defaultVHDLOps{execQuartus=Just quartusOps}
+       quartusOps = QuartusOps{action=FullCompilation,
+                               fMax=Just 50, -- in MHz
+                               fpgaFamiliyDevice=Just ("CycloneII",
+                                                       Just "EP2C35F672C6"),
+                               -- Possibility for Pin Assignments
+                               pinAssigs=[]
+                              }
+
