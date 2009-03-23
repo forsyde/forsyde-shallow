@@ -6,7 +6,9 @@
 module SimpleDES_HW where
 
 import ForSyDe
+import ForSyDe.Bit
 import Data.Bits
+import Data.Int
 import Data.Param.FSVec
 import Data.TypeLevel.Num.Reps
 import Data.TypeLevel.Num.Aliases
@@ -22,11 +24,11 @@ subkeysFun
                       subkeys key = (subkey1, subkey2)
                          where 
                            -- Subkey 1
-                           subkey2 :: FSVec D8 Bit                                      
+                           subkey2 :: FSVec D8 Bit                             
                            subkey2 = p8 ls3Left ls3Right
                            
                            -- Subkey 1          
-                           subkey1 :: FSVec D8 Bit                                      
+                           subkey1 :: FSVec D8 Bit                              
                            subkey1 = p8 ls1Left ls1Right
                            
                            -- Shifted Values - Akward implementation            
@@ -559,6 +561,38 @@ encryptSys :: SysDef (Signal (FSVec D8 Bit) -> Signal (FSVec D8 Bit)
                       -> Signal (FSVec D8 Bit) -> Signal (FSVec D8 Bit))
 encryptSys = newSysDef encryptProc "encryptSys" ["subkey1", "subkey2", "plain"] ["cipher"]
 
+int2bv8Fun :: ProcFun (Int8 -> FSVec D8 Bit)
+int2bv8Fun = $(newProcFun [d| int2bv8 :: Int8 -> FSVec D8 Bit 
+                              int2bv8 x = toBitVector8 x |]) 
+
+int2bv8Proc :: Signal Int8 -> Signal (FSVec D8 Bit)
+int2bv8Proc x = mapSY "int2bv8" int2bv8Fun x 
+
+int2bv8Sys :: SysDef (Signal Int8 -> Signal (FSVec D8 Bit))
+int2bv8Sys = newSysDef int2bv8Proc "int2bv8Sys" ["int"] ["bv8"] 
+
+encryptProc' :: Signal (FSVec D8 Bit) -> Signal (FSVec D8 Bit)
+            -> Signal Int8 -> Signal Int8
+encryptProc' subkey1 subkey2 plaintext = ciphertext 
+   where
+      ciphertext = (instantiate "bv82int" bv82intSys) ciphertext_bv8
+      ciphertext_bv8 = (instantiate "ipBarSys" ipBarSys) fkSys2Left fkSys2Right
+      (fkSys2Left, fkSys2Right) 
+         = (instantiate "fkSys2" fkSys) switchLeft switchRight subkey2
+      (switchLeft, switchRight) 
+         = (instantiate "switchSys" switchSys) fk1SysLeft fk1SysRight
+      (fk1SysLeft, fk1SysRight) 
+         = (instantiate "fkSys1" fkSys) ipSysLeft ipSysRight subkey1
+      (ipSysLeft, ipSysRight)
+         = (instantiate "ipSys" ipSys) plaintext_bv
+      plaintext_bv = (instantiate "int2bv8" int2bv8Sys) plaintext
+
+encryptSys' :: SysDef (Signal (FSVec D8 Bit) -> Signal (FSVec D8 Bit)
+                      -> Signal Int8 -> Signal Int8)
+encryptSys' = newSysDef encryptProc' "encryptSys" ["subkey1", "subkey2", "plain"] ["cipher"]
+
+
+
 -- System Definition: decryptSys
 -- 
 -- decryptSys decrypts a plaintext based on two subkeys
@@ -577,9 +611,41 @@ decryptProc subkey1 subkey2 ciphertext = plaintext
       (ipSysLeft, ipSysRight)
          = (instantiate "ipSys" ipSys) ciphertext
 
+
 decryptSys :: SysDef (Signal (FSVec D8 Bit) -> Signal (FSVec D8 Bit)
                       -> Signal (FSVec D8 Bit) -> Signal (FSVec D8 Bit))
 decryptSys = newSysDef decryptProc "decryptSys" ["subkey1", "subkey2", "cipher"] ["plain"]
+
+
+bv82intFun :: ProcFun (FSVec D8 Bit -> Int8)
+bv82intFun = $(newProcFun [d| bv82int :: FSVec D8 Bit -> Int8 
+                              bv82int x = fromBitVector8 x |]) 
+
+bv82intProc :: Signal (FSVec D8 Bit) -> Signal Int8
+bv82intProc x = mapSY "bv82int" bv82intFun x 
+
+bv82intSys :: SysDef (Signal (FSVec D8 Bit) -> Signal Int8)
+bv82intSys = newSysDef bv82intProc "bv82intSys" ["bv8"] ["sys"]
+
+decryptProc' :: Signal (FSVec D8 Bit) -> Signal (FSVec D8 Bit)
+             -> Signal Int8 -> Signal Int8
+decryptProc' subkey1 subkey2 ciphertext = plaintext
+   where
+      plaintext = (instantiate "bv82int" bv82intSys) plaintext_bv8
+      plaintext_bv8 = (instantiate "ipBarSys" ipBarSys) fk1SysLeft fk1SysRight
+      (fk1SysLeft, fk1SysRight) 
+         = (instantiate "fkSys1" fkSys) switchLeft switchRight subkey1
+      (switchLeft, switchRight) 
+         = (instantiate "switchSys" switchSys) fk2SysLeft fk2SysRight
+      (fk2SysLeft, fk2SysRight) 
+         = (instantiate "fkSys2" fkSys) ipSysLeft ipSysRight subkey2
+      (ipSysLeft, ipSysRight)
+         = (instantiate "ipSys" ipSys) ciphertext_bv8
+      ciphertext_bv8 = (instantiate "int2bv8" int2bv8Sys) ciphertext
+
+decryptSys' :: SysDef (Signal (FSVec D8 Bit) -> Signal (FSVec D8 Bit)
+                      -> Signal (Int8) -> Signal Int8)
+decryptSys' = newSysDef decryptProc' "decryptSys" ["subkey1", "subkey2", "cipher"] ["plain"]
 
 -- System Definition: desSys
 --
@@ -637,7 +703,8 @@ cS0 = simulate colS0Sys zxor
 cS1 = simulate colS1Sys zxor
 oS0 = simulate outputS0Sys rS0 cS0
 oS1 = simulate outputS1Sys rS1 cS1
-cipher = simulate decryptSys subkey_1 subkey_2 enc
+dec = simulate decryptSys subkey_1 subkey_2 enc
+
 
 -- Hardware Generation
 compileQuartus_subkeysSys :: IO ()
@@ -651,3 +718,17 @@ compileQuartus_subkeysSys = writeVHDLOps vhdlOps subkeysSys
                                pinAssigs=[]
                               }
 
+-- Modelsim
+vhdlSim = writeAndModelsimVHDL Nothing encryptSys subkey_1 subkey_2 plain
+
+-- Hardware Generation
+compileQuartus_desSys :: IO ()
+compileQuartus_desSys = writeVHDLOps vhdlOps desSys
+ where vhdlOps = defaultVHDLOps{execQuartus=Just quartusOps}
+       quartusOps = QuartusOps{action=FullCompilation,
+                               fMax=Just 50, -- in MHz
+                               fpgaFamiliyDevice=Just ("CycloneII",
+                                                       Just "EP2C35F672C6"),
+                               -- Possibility for Pin Assignments
+                               pinAssigs=[]
+                              }
