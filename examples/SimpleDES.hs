@@ -10,6 +10,8 @@ import Data.Bits
 import Data.Param.FSVec
 import Data.TypeLevel.Num.Reps
 import Data.TypeLevel.Num.Aliases
+import qualified Data.Param.FSVec as FS
+
 
 -- Calculation of subkey 1 and subkey 2
 p10 :: FSVec D10 Bit -> FSVec D10 Bit
@@ -17,7 +19,7 @@ p10 key =    key!d2 +> key!d4 +> key!d1 +> key!d6 +> key!d5
           +> key!d9 +> key!d0 +> key!d8 +> key!d7 +> key!d5 +> empty
                  
 splitKey :: FSVec D10 Bit -> (FSVec D5 Bit, FSVec D5 Bit) 
-splitKey key = (Data.Param.FSVec.take d5 key, Data.Param.FSVec.drop d5 key)
+splitKey key = (FS.take d5 key, FS.drop d5 key)
 
 
 p8 :: FSVec D10 Bit -> FSVec D8 Bit
@@ -29,13 +31,13 @@ shift vec = rotr vec
 
 
 
-subkey1 key = p8 (rotatedKey1 Data.Param.FSVec.++ rotatedKey2)
+subkey1 key = p8 (rotatedKey1 FS.++ rotatedKey2)
              where
                rotatedKey1 = SimpleDES.shift key1
                rotatedKey2 = SimpleDES.shift key2
                (key1, key2) = splitKey (p10 key)
 
-subkey2 key = p8 (rotatedKey1 Data.Param.FSVec.++ rotatedKey2)
+subkey2 key = p8 (rotatedKey1 FS.++ rotatedKey2)
              where
                rotatedKey1 = (SimpleDES.shift . SimpleDES.shift . SimpleDES.shift) key1
                rotatedKey2 = (SimpleDES.shift . SimpleDES.shift . SimpleDES.shift) key2
@@ -56,22 +58,22 @@ ip_bar block =    block!d3 +> block!d0 +> block!d2 +> block!d4
                +> block!d6 +> block!d1 +> block!d7 +> block!d5 +> empty
 
 splitBlock :: FSVec D8 Bit -> (FSVec D4 Bit, FSVec D4 Bit)
-splitBlock block = (Data.Param.FSVec.take d4 block, 
-                    Data.Param.FSVec.drop d4 block)
+splitBlock block = (FS.take d4 block, 
+                    FS.drop d4 block)
  
 f_mapping :: FSVec D4 Bit -> FSVec D8 Bit
 f_mapping nibble =   nibble!d3 +> nibble!d0 +> nibble!d1 +> nibble!d2
                   +> nibble!d1 +> nibble!d2 +> nibble!d3 +> nibble!d0 +> empty
 
-exp_perm :: FSVec D4 Bit -> FSVec D8 Bit
-exp_perm nibble =    nibble!d3 +> nibble!d0 +> nibble!d1 +> nibble!d2
+expPerm :: FSVec D4 Bit -> FSVec D8 Bit
+expPerm nibble =    nibble!d3 +> nibble!d0 +> nibble!d1 +> nibble!d2
                   +> nibble!d1 +> nibble!d2 +> nibble!d3 +> nibble!d0 +> empty
 
 zipxor :: FSVec D8 Bit -> FSVec D8 Bit -> FSVec D8 Bit
-zipxor key input = Data.Param.FSVec.zipWith xor key input
+zipxor key input = FS.zipWith xor key input
 
 f_xor :: FSVec D8 Bit -> FSVec D4 Bit -> FSVec D8 Bit
-f_xor key nibble = Data.Param.FSVec.zipWith xor key (f_mapping nibble)
+f_xor key nibble = FS.zipWith xor key (f_mapping nibble)
 
 
 s0 :: FSVec D4 (FSVec D4 (FSVec D2 Bit))
@@ -191,7 +193,7 @@ outputS1 pmatrix = access s1 row col
 
 
 output :: FSVec D8 Bit -> FSVec D4 Bit
-output pmatrix = p4 $ outS0 Data.Param.FSVec.++ outS1
+output pmatrix = p4 $ outS0 FS.++ outS1
                  where outS0 = outputS0 pmatrix
                        outS1 = outputS1 pmatrix
 
@@ -200,35 +202,36 @@ s1matrix = outputS1
 
 f :: FSVec D8 Bit -> FSVec D4 Bit -> FSVec D4 Bit
 f subkey nibble 
-    = p4 (out_S0 Data.Param.FSVec.++ out_S1)
-      where out_S0  = s0matrix out_xor
-            out_S1  = s1matrix out_xor
-            out_xor = zipxor subkey out_ep
-            out_ep  = exp_perm nibble
+    = p4 (outS0 FS.++ outS1)
+      where outS0  = s0matrix outXor
+            outS1  = s1matrix outXor
+            outXor = zipxor subkey outEP
+            outEP  = expPerm nibble
 
 f_k' :: FSVec D8 Bit -> FSVec D8 Bit -> FSVec D8 Bit
-f_k' subkey input = left Data.Param.FSVec.++ right 
-                    where right = Data.Param.FSVec.drop d4 input
-                          left' = Data.Param.FSVec.take d4 input 
-                          left = Data.Param.FSVec.zipWith xor left' (output pmatrix)
+f_k' subkey input = left FS.++ right 
+                    where right = FS.drop d4 input
+                          left' = FS.take d4 input 
+                          left = FS.zipWith xor left' (output pmatrix)
                           pmatrix = f_xor subkey right
 
 f_k :: FSVec D8 Bit -> FSVec D8 Bit 
     -> FSVec D8 Bit
 f_k subkey input 
-   = left Data.Param.FSVec.++ right 
+   = outLeft FS.++ outRight 
      where 
-       right = Data.Param.FSVec.drop d4 input
-       left' = Data.Param.FSVec.take d4 input 
-       left = Data.Param.FSVec.zipWith xor left' out_f
-       out_f = f subkey right
+       outLeft = FS.zipWith xor inpLeft fOut
+       outRight = inpRight
+       fOut = f subkey inpRight
+       inpLeft = FS.take d4 input 
+       inpRight = FS.drop d4 input
 
 -- switch 
 
 switch :: (FSVec D8 Bit) -> FSVec D8 Bit
-switch nibble =  Data.Param.FSVec.drop d4 nibble 
-                 Data.Param.FSVec.++ 
-                 Data.Param.FSVec.take d4 nibble
+switch nibble =  FS.drop d4 nibble 
+                 FS.++ 
+                 FS.take d4 nibble
 
 
 encrypt key plaintext = id 
@@ -271,13 +274,13 @@ subkey_1 = subkey1 key1
 subkey_2 = subkey2 key1
 
 plain = L +> L +> H +> L +> L +> H +> L +> L +> empty
-ipLeft = Data.Param.FSVec.take d4 (ip plain)
-ipRight = Data.Param.FSVec.drop d4 (ip plain)
+ipLeft = FS.take d4 (ip plain)
+ipRight = FS.drop d4 (ip plain)
 
 enc = encrypt key1 plain
 fk = f_k subkey_1 $ ip $ plain
-ep = exp_perm ipLeft
-zxor = zipxor subkey_1 (exp_perm ipLeft) 
+ep = expPerm ipLeft
+zxor = zipxor subkey_1 (expPerm ipLeft) 
 rS0 = rowS0 zxor
 rS1 = rowS1 zxor
 cS0 = colS0 zxor

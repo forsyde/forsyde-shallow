@@ -9,10 +9,10 @@ import ForSyDe
 import ForSyDe.Bit
 import Data.Bits
 import Data.Int
-import Data.Param.FSVec
+import Data.Param.FSVec 
 import Data.TypeLevel.Num.Reps
 import Data.TypeLevel.Num.Aliases
-
+import qualified Data.Param.FSVec as FSVec
 -- System Definition: subkeysSys
 --
 -- Generation of Subkey 1 (8 bit) and Subkey 2 (8 bit) from an initial
