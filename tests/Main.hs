@@ -38,8 +38,8 @@ main = do
  where compilePropertiesCmd = 
          "ghc --make -itests/properties -iexamples -package-conf testInstallation.conf " ++ 
                  "tests/properties/Main.hs -o properties"
-       properties = case os of
-                     Windows _ -> "properties.exe"
+       properties = case buildOS of
+                     Windows -> "properties.exe"
                      _ -> "./properties"
 
 -- Check if we need to do the tests, This will be true unless an

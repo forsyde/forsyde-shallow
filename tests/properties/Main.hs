@@ -11,7 +11,7 @@ main :: IO ()
 main = do
     hSetBuffering stdout LineBuffering
     putStrLn "Running ForSyDe's unit test suite"
-    runTestCount $ test ["VHDL Backend Test" ~: vhdlBackendTest,
+    runTestCount $ test [--"VHDL Backend Test" ~: vhdlBackendTest,
                          "Shallow Library Test" ~: shallowTest]
   where runTestCount t = do (c, _) <- myRunTestText t 
                             if errors c /= 0 || failures c /= 0 
