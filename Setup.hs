@@ -29,7 +29,10 @@ forsydePostInst _ _  = compile_forsyde_vhd NoCopyDest
 
 forsydePostCopy :: Args -> CopyFlags -> PackageDescription -> 
                    LocalBuildInfo -> IO ()
-forsydePostCopy _ cf  = compile_forsyde_vhd (copyDest cf)
+forsydePostCopy _ cf  = compile_forsyde_vhd $ removeFlag $ (copyDest cf) where
+  removeFlag c = case c of
+                 Distribution.Simple.Setup.Flag x -> x
+                 _ -> error "Not a Flag"
 
 
 -- NOTE: Most of this code is duplicated from ForSyDe.Backend.VHDL.Modelsim,
