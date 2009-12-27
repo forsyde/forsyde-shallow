@@ -46,7 +46,7 @@ import System.IO (Handle)
 import Data.IORef (IORef)
 import Foreign (Ptr, FunPtr, StablePtr, ForeignPtr)
 import Data.Array (Array)
-import Control.Exception (Exception, 
+import Control.OldException (Exception, 
                           AsyncException,
                           ArrayException, 
                           ArithException, 
