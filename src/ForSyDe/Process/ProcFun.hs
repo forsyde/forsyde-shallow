@@ -29,8 +29,8 @@ import ForSyDe.Process.ProcType
 import ForSyDe.Process.ProcVal (ProcValAST, mkProcValAST)
 import ForSyDe.ForSyDeErr
 
-import Language.Haskell.TH
-import Language.Haskell.TH.Syntax
+import Language.Haskell.TH hiding (Loc)
+import Language.Haskell.TH.Syntax hiding (Loc)
 import Language.Haskell.TH.LiftInstances ()
 import Data.Dynamic
 import Data.Maybe (fromJust)
@@ -90,7 +90,8 @@ newProcFun fDecQs = do
       (name, cls) <- recover (currErr $ IncorrProcFunDecs fDecs) 
                              (checkDecs fDecs)
       -- Generate the main expression
-      errInfo <- qCurrentModule
+      loc <- qLocation
+      let errInfo = loc_module loc in do
       exp <-  [| let  fName    = name
                       fClauses = cls 
                  in ProcFun $(varE name)

@@ -35,7 +35,7 @@ import Control.Monad.Error
 import Control.Monad.ST
 import Control.Monad.State
 import Data.Typeable
-import Language.Haskell.TH
+import Language.Haskell.TH hiding (Loc)
 import Language.Haskell.TH.LiftInstances ()
 
 
@@ -185,8 +185,9 @@ newSysDefTHName sysFName inIds outIds =  do
                                             (outIds, outN)
            when (isJust portCheck) (currError (fromJust portCheck))
            -- Build the system definition
-           errInfo <- currentModule
+           loc <- location
            let
+            errInfo = loc_module loc
             -- Input arguments passed to the  system function
             -- in order to get the netlist
             inArgs = [ [| Signal $ newInPort $(litE $ stringL id) |] 

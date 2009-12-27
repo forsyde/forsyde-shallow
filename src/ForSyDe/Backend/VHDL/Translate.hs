@@ -43,7 +43,7 @@ import Data.Maybe (isJust, fromJust)
 import Control.Monad.State
 import qualified Data.Set as S
 import qualified Language.Haskell.TH as TH
-import Language.Haskell.TH hiding (global)
+import Language.Haskell.TH hiding (global,Loc)
 import qualified Data.Traversable as DT
 import Data.Typeable
 import qualified Data.Param.FSVec as V
