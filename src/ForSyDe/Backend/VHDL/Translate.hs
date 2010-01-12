@@ -142,7 +142,7 @@ transUnzipNSY2Block vPid inSig outSigs outTRTypes = do
                    [1..length outSigs]
  -- Generate the port interface of the block
      nOuts = length outSigs
-     tupTyCon = mkTyCon $ replicate (nOuts-1) ','
+     tupTyCon = mkTyCon $ '(':replicate (nOuts-1) ','++")"
      inTRType = tupTyCon `mkTyConApp` outTRTypes    
  outTMTypes <- mapM transTR2TM outTRTypes
  inTMType <- transTR2TM inTRType
@@ -411,7 +411,7 @@ doCustomTR2TM rep | isTuple = do
   return $ Left $ (TypeDec recordId (TDR $ RecordTypeDef elems))
  where (cons, args) = splitTyConApp rep
        conStr = tyConString cons
-       isTuple = all (==',') conStr
+       isTuple = (length conStr > 2) && (all (==',') (reverse.tail.reverse.tail $ conStr))
        
 
 -- | AbstExt?
