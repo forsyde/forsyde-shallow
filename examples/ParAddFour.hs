@@ -33,8 +33,8 @@ parAddFour toAdd s1 s2 s3 s4 = (sum1, sum2, sum3, sum4)
 parAddFourSys :: SysDef (Signal Int32 
            -> Signal Int32 -> Signal Int32 -> Signal Int32 -> Signal Int32 
            -> (Signal Int32, Signal Int32, Signal Int32, Signal Int32))
-parAddFourSys = $(newSysDefTHName 'parAddFour ["toAdd","s1","s2","s3","s4"]
-                                        ["sum1","sum2","sum3","sum4"])
+parAddFourSys = newSysDef parAddFour "parAddFour" ["toAdd","s1","s2","s3","s4"]
+                                        ["sum1","sum2","sum3","sum4"]
 
 
 simParAddFour :: [Int32]

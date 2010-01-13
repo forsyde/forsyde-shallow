@@ -150,7 +150,7 @@ convFromFSVec4Proc :: Signal (FSVec D4 Bit) -> (Signal Bit, Signal Bit, Signal B
 convFromFSVec4Proc = (unzip4SY "unzip4" . mapSY "conv4" convFromFSVec4Fun)   
 
 convFromFSVec4Sys :: SysDef (Signal (FSVec D4 Bit) -> (Signal Bit, Signal Bit, Signal Bit, Signal Bit))
-convFromFSVec4Sys = $(newSysDefTHName 'convFromFSVec4Proc ["vector4"] ["v3", "v2", "v1", "v0"])
+convFromFSVec4Sys = newSysDef convFromFSVec4Proc "convFromFSVec" ["vector4"] ["v3", "v2", "v1", "v0"]
 
 simConvFromFSVec4 :: [FSVec D4 Bit] -> ([Bit], [Bit], [Bit], [Bit])
 simConvFromFSVec4 = simulate convFromFSVec4Sys
@@ -168,7 +168,7 @@ convToFSVec4Proc :: Signal Bit -> Signal Bit -> Signal Bit -> Signal Bit -> Sign
 convToFSVec4Proc = zipWith4SY "toVector4" convToFSVec4Fun
 
 convToFSVec4Sys :: SysDef (Signal Bit -> Signal Bit -> Signal Bit -> Signal Bit -> Signal (FSVec D4 Bit))
-convToFSVec4Sys =  $(newSysDefTHName 'convToFSVec4Proc ["x3", "x2", "x1", "x0"] ["vec4"])
+convToFSVec4Sys =  newSysDef convToFSVec4Proc "convToFSVec" ["x3", "x2", "x1", "x0"] ["vec4"]
 
 simConvToFSVec4 = simulate convToFSVec4Sys
 
@@ -192,7 +192,7 @@ fullAddProc :: Signal Bit -> Signal Bit -> Signal Bit -> (Signal Bit, Signal Bit
 fullAddProc a b c_in = (unzipSY "unzipSY") $ (zipWith3SY "fulladd" fullAddFun a b c_in)
 
 fullAddSys :: SysDef (Signal Bit -> Signal Bit -> Signal Bit -> (Signal Bit, Signal Bit))
-fullAddSys = $(newSysDefTHName 'fullAddProc ["a", "b", "c_in"] ["cout", "sum"])
+fullAddSys = newSysDef fullAddProc "fullAddSys" ["a", "b", "c_in"] ["cout", "sum"]
 
 simFullAdd :: [Bit] -> [Bit] -> [Bit] -> ([Bit], [Bit])
 simFullAdd = simulate fullAddSys
@@ -240,9 +240,9 @@ fourBitAdderSys :: SysDef (Signal Bit   -- C_IN
 			    Signal Bit, -- SUM2
 			    Signal Bit, -- SUM1
 			    Signal Bit)) -- SUM0 	
-fourBitAdderSys = $(newSysDefTHName 'fourBitAdder ["C_IN", "A3", "A2", "A1", "A0",
+fourBitAdderSys = newSysDef fourBitAdder "fourBitAdder" ["C_IN", "A3", "A2", "A1", "A0",
                                              "B3", "B2", "B1", "B0"]
-                                            ["C_OUT", "SUM3", "SUM2", "SUM1", "SUM0"])
+                                            ["C_OUT", "SUM3", "SUM2", "SUM1", "SUM0"]
 
 simFourBitAdder = simulate fourBitAdderSys
 
@@ -275,7 +275,7 @@ add4FSVecProc a b = (cout, sum)
 add4FSVecSys :: SysDef (Signal (FSVec D4 Bit)
               -> Signal (FSVec D4 Bit)
               -> (Signal Bit, Signal (FSVec D4 Bit)))
-add4FSVecSys = $(newSysDefTHName 'add4FSVecProc ["a", "b"] ["cout", "sum"])
+add4FSVecSys = newSysDef add4FSVecProc "add4FSVec" ["a", "b"] ["cout", "sum"]
 
 simAdd4FSVecSys = simulate add4FSVecSys
 
@@ -288,14 +288,14 @@ oneProc :: Signal Bit
 oneProc = constSY "high" H
 
 oneSys :: SysDef (Signal Bit)
-oneSys = $(newSysDefTHName 'oneProc [] ["one"])
+oneSys = newSysDef oneProc "one" [] ["one"]
 
 -- Constant input 'L' modeled with constSY
 zeroProc :: Signal Bit
 zeroProc = constSY "low" L
  
 zeroSys :: SysDef (Signal Bit)
-zeroSys = $(newSysDefTHName 'zeroProc [] ["zero"])
+zeroSys = newSysDef zeroProc "zero" [] ["zero"]
 
 ----- ALU
 
@@ -317,7 +317,7 @@ aluSys :: SysDef (Signal(FSVec D2 Bit)
               ->  Signal (FSVec D4 Bit)
               ->  Signal (FSVec D4 Bit)
               ->  (Signal Bit, Signal (FSVec D4 Bit)))
-aluSys = $(newSysDefTHName 'aluProc ["sel", "a", "b"] ["cout", "data"])
+aluSys = newSysDef aluProc "alu" ["sel", "a", "b"] ["cout", "data"]
     
 
 simALU :: [FSVec D2 Bit] ->  [FSVec D4 Bit] -> [FSVec D4 Bit] -> ([Bit], [FSVec D4 Bit])

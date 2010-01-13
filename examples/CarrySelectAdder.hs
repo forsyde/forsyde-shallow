@@ -31,7 +31,7 @@ fullAddProc :: Signal Bit -> Signal Bit -> Signal Bit -> (Signal Bit, Signal Bit
 fullAddProc a b c_in = (unzipSY "unzipSY") $ (zipWith3SY "fulladd" fullAddFun a b c_in)
 
 fullAddSys :: SysDef (Signal Bit -> Signal Bit -> Signal Bit -> (Signal Bit, Signal Bit))
-fullAddSys = $(newSysDefTHName 'fullAddProc ["a", "b", "c_in"] ["cout", "sum"])
+fullAddSys = newSysDef fullAddProc "fullAdd" ["a", "b", "c_in"] ["cout", "sum"]
 
 simFullAdd :: [Bit] -> [Bit] -> [Bit] -> ([Bit], [Bit])
 simFullAdd = simulate fullAddSys
@@ -100,9 +100,9 @@ fourBitAdderSys :: SysDef (Signal Bit   -- C_IN
 			    Signal Bit, -- SUM2
 			    Signal Bit, -- SUM1
 			    Signal Bit)) -- SUM0 	
-fourBitAdderSys = $(newSysDefTHName 'fourBitAdder ["C_IN", "A3", "A2", "A1", "A0",
+fourBitAdderSys = newSysDef fourBitAdder "fourBitAdder" ["C_IN", "A3", "A2", "A1", "A0",
                                              "B3", "B2", "B1", "B0"]
-                                            ["C_OUT", "SUM3", "SUM2", "SUM1", "SUM0"])
+                                            ["C_OUT", "SUM3", "SUM2", "SUM1", "SUM0"]
 
 simFourBitAdder = simulate fourBitAdderSys
 
@@ -152,9 +152,9 @@ fourBitCSAdder c_in a3 a2 a1 a0 b3 b2 b1 b0
                        one = instantiate "One" oneSys
                        zero = instantiate "Zero" zeroSys
 
-fourBitCSAdderSys = $(newSysDefTHName 'fourBitCSAdder ["C_IN", "A3", "A2", "A1", "A0",
+fourBitCSAdderSys = newSysDef fourBitCSAdder "fourBitCSAdder" ["C_IN", "A3", "A2", "A1", "A0",
                                              "B3", "B2", "B1", "B0"]
-                                            ["C_OUT", "SUM3", "SUM2", "SUM1", "SUM0"])
+                                            ["C_OUT", "SUM3", "SUM2", "SUM1", "SUM0"]
 
 
 simFourBitCSAdder = simulate fourBitCSAdderSys
@@ -239,7 +239,7 @@ adder4BitProc :: Signal Bit -> Signal (FSVec D4 Bit) -> Signal (FSVec D4 Bit) ->
 adder4BitProc cin a b = (unzipSY "unzip") $ (zipWith3SY "4BitAdder" adder4BitFun cin a b)
 
 adder4BitSys :: SysDef (Signal Bit -> Signal (FSVec D4 Bit) -> Signal (FSVec D4 Bit) -> (Signal Bit, Signal (FSVec D4 Bit)))
-adder4BitSys = $(newSysDefTHName 'adder4BitProc ["cin", "a", "b"] ["cout", "sum"])
+adder4BitSys = newSysDef adder4BitProc "adder4Bit" ["cin", "a", "b"] ["cout", "sum"]
 
 simAdder4Bit = simulate adder4BitSys
 
@@ -297,7 +297,7 @@ csAdder4BitProc cin a b = (cout, sum) where
                           zero = instantiate "Zero" zeroSys
                            
 csAdder4BitSys :: SysDef (Signal Bit -> Signal (FSVec D4 Bit) -> Signal (FSVec D4 Bit) -> (Signal Bit, Signal (FSVec D4 Bit)))
-csAdder4BitSys = $(newSysDefTHName 'csAdder4BitProc ["cin", "a", "b"] ["cout", "sum"])
+csAdder4BitSys = newSysDef csAdder4BitProc "csAdder4Bit" ["cin", "a", "b"] ["cout", "sum"]
 
 simCSAdder4Bit = simulate csAdder4BitSys
 
@@ -323,7 +323,7 @@ csAdder16BitProc a b = (cout, sum) where
                        zero = instantiate "Zero" zeroSys         
 
 
-csAdder16BitSys = $(newSysDefTHName 'csAdder16BitProc ["a", "b"] ["cout", "sum"])
+csAdder16BitSys = newSysDef csAdder16BitProc "csAdder16Bit" ["a", "b"] ["cout", "sum"]
 
 simCSAdder16Bit = simulate csAdder16BitSys
 
