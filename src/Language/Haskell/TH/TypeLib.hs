@@ -198,8 +198,8 @@ type2TypeRep (ForallT _ (_:_) _) = Nothing
 type2TypeRep (ForallT _ _ t) = type2TypeRep t
 type2TypeRep (VarT _) = Nothing
 -- Tuple tyCon strings don't correspond to hierarchical names. They are
--- simply sequences of commas: e.g. 2-tuple ","   3-tuple ",," .... 
-type2TypeRep (TupleT n) = Just $  strCon (replicate (n-1) ',')
+-- simply sequences of commas plus paranthesis: e.g. 2-tuple "(,)"   3-tuple "(,,)" .... 
+type2TypeRep (TupleT n) = Just $  strCon ('(':replicate (n-1) ','++")")
 type2TypeRep ArrowT = Just $ typeableCon (undefined :: () -> ()) 
 type2TypeRep ListT = Just $ typeableCon (undefined :: [()])
 type2TypeRep (t1 `AppT` t2) = do

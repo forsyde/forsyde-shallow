@@ -170,7 +170,7 @@ genTupInstances n = do
   genTypeableIns names tupType = do
    -- generate n-1 commas to be consistent with the (faulty) instances
    -- of tuples from 2 to 7 elements
-   let strRep = replicate (n-1) ','
+   let strRep = '(':replicate (n-1) ','++")"
        typeOfExpr = [| mkTyCon 
                         $(litE $ stringL strRep)
                         `mkTyConApp`
