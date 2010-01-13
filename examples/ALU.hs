@@ -44,7 +44,7 @@ and4BitProc = zipWithSY "and4" and4BitFun
 and4BitSys :: SysDef (Signal (FSVec D4 Bit) 
                    -> Signal (FSVec D4 Bit) 
                    -> Signal (FSVec D4 Bit))
-and4BitSys =  $(newSysDefTHName 'and4BitProc ["a", "b"] ["y"])
+and4BitSys =  newSysDef and4BitProc "and4Bit" ["a", "b"] ["y"]
 
 simAnd4Bit :: [FSVec D4 Bit] -> [FSVec D4 Bit] -> [FSVec D4 Bit]
 simAnd4Bit = simulate and4BitSys
@@ -70,7 +70,7 @@ or4BitProc = zipWithSY "or4" or4BitFun
 or4BitSys :: SysDef (Signal (FSVec D4 Bit) 
                    -> Signal (FSVec D4 Bit) 
                    -> Signal (FSVec D4 Bit))
-or4BitSys =  $(newSysDefTHName 'or4BitProc ["a", "b"] ["y"])
+or4BitSys =  newSysDef or4BitProc "or4Bit" ["a", "b"] ["y"]
 
 simOr4Bit :: [FSVec D4 Bit] -> [FSVec D4 Bit] -> [FSVec D4 Bit]
 simOr4Bit = simulate or4BitSys
@@ -88,7 +88,7 @@ lslProc :: Signal (FSVec D4 Bit) -> Signal (FSVec D4 Bit)
 lslProc = mapSY "lsl" lslFun
 
 lslSys :: SysDef (Signal (FSVec D4 Bit) -> Signal (FSVec D4 Bit))
-lslSys = $(newSysDefTHName 'lslProc ["in"] ["out"])
+lslSys = newSysDef lslProc "lsl" ["in"] ["out"]
 
 simLsl :: [FSVec D4 Bit] -> [FSVec D4 Bit]
 simLsl = simulate lslSys
@@ -130,7 +130,7 @@ mux41Proc = zipWith5SY "mux41" mux41Fun
 mux41Sys :: SysDef (Signal (FSVec D2 Bit) -> Signal (FSVec D4 Bit) 
                  -> Signal (FSVec D4 Bit) -> Signal (FSVec D4 Bit)  
                  -> Signal (FSVec D4 Bit) -> Signal (FSVec D4 Bit))
-mux41Sys = $(newSysDefTHName 'mux41Proc ["sel", "d3", "d2", "d1", "d0"] ["out"])
+mux41Sys = newSysDef mux41Proc "mux41" ["sel", "d3", "d2", "d1", "d0"] ["out"]
 
 simMux41 :: [FSVec D2 Bit] -> [FSVec D4 Bit] -> [FSVec D4 Bit] 
          -> [FSVec D4 Bit] -> [FSVec D4 Bit] -> [FSVec D4 Bit]
