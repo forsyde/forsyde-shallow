@@ -65,8 +65,8 @@ genLibDesignFile :: GlobalTravResult -> DesignFile
 genLibDesignFile  (GlobalTravResult typeDecs subtypeDecs subProgBodies) = 
    DesignFile commonContextClause [LUPackageDec packageDec, 
                                    LUPackageBody packageBody]
- where packageDec = PackageDec typesId (packageTypeDecs ++ 
-                                        packageSubtypeDecs ++
+ where packageDec = PackageDec typesId (packageSubtypeDecs ++
+                                        packageTypeDecs ++ 
                                         subProgSpecs)
        packageTypeDecs = map PDITD typeDecs
        packageSubtypeDecs = map PDISD subtypeDecs
