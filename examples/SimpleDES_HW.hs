@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 -- The module implements a simplified version of the DES
 -- Encryption-Decryption Algorithm. The implementation is based on
 -- Stallings: Cryptography and Network Security 4/e, Pearson Education,
@@ -23,35 +24,45 @@ subkeysFun
    = $(newProcFun [d| subkeys :: FSVec D10 Bit -> (FSVec D8 Bit, FSVec D8 Bit) 
                       subkeys key = (subkey1, subkey2)
                          where 
-                           -- Subkey 1
-                           subkey2 :: FSVec D8 Bit                             
-                           subkey2 = p8 ls3Left ls3Right
-                           
-                           -- Subkey 1          
-                           subkey1 :: FSVec D8 Bit                              
-                           subkey1 = p8 ls1Left ls1Right
-                           
+                           fst5 :: (FSVec D5 Bit, FSVec D5 Bit) -> FSVec D5 Bit
+                           fst5 (a, b) = a
+                           snd5 :: (FSVec D5 Bit, FSVec D5 Bit) -> FSVec D5 Bit
+                           snd5 (a, b) = b
+                          
+                           -- Shifts one bit to the left (which means
+                           -- from d1 to d0, which in fact is 'rotr') 
+                           shiftOneLeft :: FSVec D5 Bit -> FSVec D5 Bit
+                           shiftOneLeft vec = rotr vec
+
+                           -- P10: Permutation
+                           p10 :: FSVec D10 Bit 
+                               -> (FSVec D5 Bit, FSVec D5 Bit)
+                           p10 key = (   key!d2 +> key!d4 +> key!d1 
+                                      +> key!d6 +> key!d3 +> empty,
+                                         key!d9 +> key!d0 +> key!d8 
+                                      +> key!d7 +> key!d5 +> empty )
+
+                           -- Outputs of P10
+                           p10Out :: (FSVec D5 Bit, FSVec D5 Bit)
+                           p10Out = p10 key
+                           p10Left :: FSVec D5 Bit          
+                           p10Left = fst5 p10Out
+                           p10Right :: FSVec D5 Bit          
+                           p10Right = snd5 p10Out           
+
                            -- Shifted Values - Akward implementation            
-                           ls3Right :: FSVec D5 Bit          
-                           ls3Right = shiftOneLeft ls2Right          
-                           ls3Left :: FSVec D5 Bit
-                           ls3Left = shiftOneLeft ls2Left   
-                           ls2Right :: FSVec D5 Bit          
-                           ls2Right = shiftOneLeft ls1Right          
-                           ls2Left :: FSVec D5 Bit
-                           ls2Left = shiftOneLeft ls1Left          
                            ls1Right :: FSVec D5 Bit          
                            ls1Right = shiftOneLeft p10Right          
                            ls1Left :: FSVec D5 Bit
                            ls1Left = shiftOneLeft p10Left
-
-                           -- Outputs of P10          
-                           p10Left :: FSVec D5 Bit          
-                           p10Left = fst5 p10Out
-                           p10Right :: FSVec D5 Bit          
-                           p10Right = snd5 p10Out          
-                           p10Out :: (FSVec D5 Bit, FSVec D5 Bit)
-                           p10Out = p10 key 
+                           ls2Right :: FSVec D5 Bit          
+                           ls2Right = shiftOneLeft ls1Right          
+                           ls2Left :: FSVec D5 Bit
+                           ls2Left = shiftOneLeft ls1Left          
+                           ls3Right :: FSVec D5 Bit          
+                           ls3Right = shiftOneLeft ls2Right          
+                           ls3Left :: FSVec D5 Bit
+                           ls3Left = shiftOneLeft ls2Left   
 
                            -- P8: Permutation and reduction to 8 Bits
                            p8 :: FSVec D5 Bit -> FSVec D5 Bit
@@ -59,23 +70,15 @@ subkeysFun
                            p8 vec1 vec2 =   vec2!d0 +> vec1!d2 +> vec2!d1 
                                          +> vec1!d3 +> vec2!d2 +> vec1!d4 
                                          +> vec2!d4 +> vec2!d3 +> empty
+ 
 
-                           -- Shifts one bit to the left (which means
-                           -- from d1 to d0, which in fact is 'rotr') 
-                           shiftOneLeft :: FSVec D5 Bit -> FSVec D5 Bit
-                           shiftOneLeft vec = rotr vec 
-
-                           -- P10: Permutation
-                           p10 :: FSVec D10 Bit 
-                               -> (FSVec D5 Bit, FSVec D5 Bit)
-                           p10 key = (   key!d2 +> key!d4 +> key!d1 
-                                      +> key!d6 +> key!d5 +> empty,
-                                         key!d9 +> key!d0 +> key!d8 
-                                      +> key!d7 +> key!d5 +> empty )
-                           fst5 :: (FSVec D5 Bit, FSVec D5 Bit) -> FSVec D5 Bit
-                           fst5 (a, b) = a
-                           snd5 :: (FSVec D5 Bit, FSVec D5 Bit) -> FSVec D5 Bit
-                           snd5 (a, b) = b                           
+                           -- Subkey 1
+                           subkey2 :: FSVec D8 Bit                             
+                           subkey2 = p8 ls3Left ls3Right
+                           
+                           -- Subkey 1          
+                           subkey1 :: FSVec D8 Bit                              
+                           subkey1 = p8 ls1Left ls1Right
                     |])
 
 
