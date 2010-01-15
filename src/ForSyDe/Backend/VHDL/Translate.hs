@@ -848,7 +848,10 @@ transInteger2VHDL = PrimLit . show
 transTLNat2Int :: TypeRep -> Int
 transTLNat2Int tr
   -- Digit
-  | isDigit = (digitToInt.last.tyConString) cons
+  -- FIXME: Could be made cleaner. It was like this before:
+  -- isDigit = (digitToInt.last.tyConString) cons
+  -- which was not able to take care of e.g. Data.TypeLevel.Num.Aliases.D10
+  | isDigit = (read.reverse.takeWhile (/='D').reverse.tyConString) cons
   -- Connective
   | otherwise = 10 * (transTLNat2Int prefix) + (transTLNat2Int lastDigit) 
  where (cons, args@(~[prefix, lastDigit])) = splitTyConApp tr

@@ -394,13 +394,17 @@ addCustomType rep eTD = do
  modify (\st -> st{global = 
                     case eTD of
                      Left td@(TypeDec id _) -> 
+                       if id `notElem` (map snd transTable) then
                         globalST
                              {typeTable = transTable ++ [(rep, id)],
                               globalRes = gRes{typeDecs = tDecs ++ [td]}}
+                       else globalST
                      Right std@(SubtypeDec id _) -> 
+                       if id `notElem` (map snd transTable) then
                         globalST
                              {typeTable = transTable ++ [(rep, id)],
                               globalRes = gRes{subtypeDecs = stDecs ++ [std]}}
+                       else globalST
                    })
 
 -- | Add type declaration to the global results
