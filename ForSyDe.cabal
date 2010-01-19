@@ -7,7 +7,7 @@ license-file:   LICENSE
 author:         SAM group, KTH/ICT/ECS
 copyright:      Copyright (c) 2003-2008 SAM group, KTH/ICT/ECS
 maintainer:     forsyde-dev@ict.kth.se
-homepage:       http://www.ict.kth.se/org/ict/ecs/sam/projects/forsyde/www/
+homepage:       http://www.ict.kth.se/forsyde/
 stability:      alpha
 synopsis:       
  ForSyDe's Haskell-embedded Domain Specific Language.
