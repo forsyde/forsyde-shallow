@@ -45,8 +45,6 @@ writeVHDLM = do
    let workDir = rootDir </> "vhdl" </> "work"
    liftIO $ createDirectoryIfMissing True workDir
    liftIO $ setCurrentDirectory workDir
-   -- write the local results for the first-level entity
-   writeLocalVHDLM
    -- if we are in recursive mode, also write the local results
    -- for the rest of the subsystems
    rec <- isRecursiveSet
@@ -55,6 +53,8 @@ writeVHDLM = do
                         withLocalST (initLocalST ((readURef.unPrimSysDef) s))
                                     writeLocalVHDLM 
                  mapM_ writeSub subs
+   -- write the local results for the first-level entity
+   writeLocalVHDLM
    -- create and change to systemName/vhdl/systemName_lib
    -- (remember we are in workDir)
    let libDir = ".." </> rootDir ++ "_lib"
@@ -232,8 +232,3 @@ defineVHDL outs ins = do
 
 -- Othewise there is a problem of inconsisten tags
     _ -> intError "ForSyDe.Backend.VHDL.Traverse.defineVHDL" InconsOutTag
-
-
-
-
-
