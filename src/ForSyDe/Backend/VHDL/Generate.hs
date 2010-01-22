@@ -65,13 +65,21 @@ genLibDesignFile :: GlobalTravResult -> DesignFile
 genLibDesignFile  (GlobalTravResult typeDecs subtypeDecs subProgBodies) = 
    DesignFile commonContextClause [LUPackageDec packageDec, 
                                    LUPackageBody packageBody]
- where packageDec = PackageDec typesId (packageSubtypeDecs ++
+ -- Due to dependency among types and subtypes we first output
+ -- unconstrained types (which may have constarined types depending on),
+ -- then subtypes (which we may have composite types depending on)
+ -- A general solution could be a type dependency resolving algorithm
+ where packageDec = PackageDec typesId (packageUnconsTypeDecs ++
+                                        packageSubtypeDecs ++
                                         packageTypeDecs ++ 
                                         subProgSpecs)
-       packageTypeDecs = map PDITD typeDecs
+       packageUnconsTypeDecs = map PDITD $ filter (\a -> isUnconsType a) typeDecs
+       packageTypeDecs = map PDITD $ filter (\a -> (not.isUnconsType) a) typeDecs
        packageSubtypeDecs = map PDISD subtypeDecs
        subProgSpecs = map (\(SubProgBody spec _ _) -> PDISS spec) subProgBodies
        packageBody = PackageBody typesId subProgBodies
+       isUnconsType (TypeDec _ (TDA (UnconsArrayDef _ _))) = True
+       isUnconsType _ = False
 
   
 -- | Generate a list of association from two lists of signal identifiers

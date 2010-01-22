@@ -44,4 +44,4 @@ testInstall = do
      ExitSuccess -> return ()
      e@(ExitFailure _) -> exitWith e
   putStrLn "done."
- where setupCWD command = setupWrapper "dist" command Nothing 
+ where setupCWD command = setupWrapper command Nothing 
