@@ -205,7 +205,7 @@ fourBitCSAdderSys2 :: SysDef (Signal Bit   -- C_IN
 	        -> Signal Bit   -- B1
 	        -> Signal Bit   -- B0
 	        -> Signal (FSVec D5 Bit))
-fourBitCSAdderSys2 = newSysDef fourBitCSAdder "fourBitCSAdder" ["C_IN", "A3", "A2", "A1", "A0",
+fourBitCSAdderSys2 = newSysDef fourBitCSAdder' "fourBitCSAdder" ["C_IN", "A3", "A2", "A1", "A0",
                                              "B3", "B2", "B1", "B0"]
                                             ["vect5"]
 
