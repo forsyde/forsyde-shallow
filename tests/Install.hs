@@ -26,8 +26,8 @@ testInstall = do
   putStrLn "Building ForSyDe ..." 
   setupCWD ["build","-v0"]
   putStrLn "  done.\n"
---  putStrLn "Testing the haddock markup of ForSyDe ... " 
---  setupCWD ["haddock", "-v0"]
+  putStrLn "Testing the haddock markup of ForSyDe ... " 
+  setupCWD ["haddock", "-v0"]
   putStrLn "  done.\n"
   putStrLn "Copying ForSyDe under testInstallation/ ... "
   setupCWD ["copy", "-v0"]
