@@ -14,7 +14,7 @@ synopsis:
 description: 
  The ForSyDe (Formal System Design) methodology has been developed with the objective to move system design to a higher level of abstraction and to bridge the abstraction gap by transformational design refinement. 
  
- This library provides ForSyDe's implementation as a Haskell-embedded Domain Specific Language (DSL). For more information, please see ForSyDe's website: <http://www.ict.kth.se/org/ict/ecs/sam/projects/forsyde/www/>.
+ This library provides ForSyDe's implementation as a Haskell-embedded Domain Specific Language (DSL). For more information, please see ForSyDe's website: <http://www.ict.kth.se/forsyde/>.
 category:       Language
 tested-with:    GHC==6.10.4
 data-files:     lib/forsyde.vhd
@@ -101,7 +101,7 @@ Library
                    array,
                    syb
 
-  hs-source-dirs:  src, dist/build/autogen
+  hs-source-dirs:  src
   exposed-modules: Language.Haskell.TH.Lift,
                    Language.Haskell.TH.LiftInstances,
                    ForSyDe,
