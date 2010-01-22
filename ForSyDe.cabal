@@ -1,11 +1,11 @@
 name:           ForSyDe
-version:        3.0
+version:        3.1
 cabal-version:  >= 1.2
 build-type:     Custom
 license:        BSD3
 license-file:   LICENSE
-author:         SAM group, KTH/ICT/ECS
-copyright:      Copyright (c) 2003-2008 SAM group, KTH/ICT/ECS
+author:         SAM group, KTH/ICT/ES
+copyright:      Copyright (c) 2003-2010 SAM group, KTH/ICT/ES
 maintainer:     forsyde-dev@ict.kth.se
 homepage:       http://www.ict.kth.se/forsyde/
 stability:      alpha
@@ -16,7 +16,7 @@ description:
  
  This library provides ForSyDe's implementation as a Haskell-embedded Domain Specific Language (DSL). For more information, please see ForSyDe's website: <http://www.ict.kth.se/org/ict/ecs/sam/projects/forsyde/www/>.
 category:       Language
-tested-with:    GHC==6.8.1, GHC==6.8.2
+tested-with:    GHC==6.10.4
 data-files:     lib/forsyde.vhd
 -- In order to include all this files with sdist
 extra-source-files: LICENSE,
