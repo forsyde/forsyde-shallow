@@ -53,7 +53,7 @@ compile_forsyde_vhd cd pd lbi = do
    forsyde_vhd_dir = (datadir $ absoluteInstallDirs pd lbi cd) </> 
                      "lib"
    modelsimError err = putStrLn $ 
-    "Error: " ++ err ++ "\n" ++
+    "Warning: " ++ err ++ "\n" ++
     "       ForSyDe will work, but you will not be able to automatically\n" ++
     "       compile or simulate the ForSyDe-generated VHDL models with Modelsim\n\n" ++
     "       In order to fix this, make sure that the Modelsim executables\n" ++ 
