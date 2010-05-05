@@ -27,9 +27,8 @@ buttonControl :: Signal (AbstExt OverrideMsg) -> Signal (AbstExt Sensor)
 buttonControl overrides bassDn bassUp trebleDn trebleUp 
     = (bass, treble) 
       where (bass, treble) = unzipSY levels
- 	    levels = ((holdSY (0.0, 0.0)) `funComb2` levelControl) 
-                           button overrides
-            button = buttonInterface bassDn bassUp trebleDn trebleUp
+            levels = holdSY (0.0, 0.0) $ levelControl button overrides 
+ 	    button = buttonInterface bassDn bassUp trebleDn trebleUp
 \end{code}
 
 \subsection{The Process \process{Button Interface}}
