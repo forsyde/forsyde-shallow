@@ -139,8 +139,8 @@ Library
                    ForSyDe.Shallow.UtilityLib,
                    ForSyDe.Shallow.Gaussian,
                    ForSyDe.Shallow.Vector,
-                   ForSyDe.Shallow.Memory
-		   ForSyDe.Shallow.DataflowLib
+                   ForSyDe.Shallow.Memory,
+                   ForSyDe.Shallow.DataflowLib
 
  
   other-modules:   Paths_ForSyDe,
