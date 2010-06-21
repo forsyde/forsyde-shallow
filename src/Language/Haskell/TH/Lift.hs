@@ -19,7 +19,6 @@
 module Language.Haskell.TH.Lift (deriveLift1, deriveLift) where
 
 import GHC.Exts
-import Data.PackedString
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
 import Language.Haskell.TH.Syntax.Internals

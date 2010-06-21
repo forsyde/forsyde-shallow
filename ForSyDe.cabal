@@ -87,7 +87,6 @@ Library
   build-depends:   type-level,
                    parameterized-data,
                    containers,
-                   packedstring,
                    base>=4 && <6, 
                    regex-posix, 
                    mtl, 
