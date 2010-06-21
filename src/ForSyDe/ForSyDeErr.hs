@@ -42,7 +42,6 @@ import Data.Maybe (fromMaybe)
 import Debug.Trace
 import Control.Monad.Error 
 import Data.Dynamic
-import Data.Typeable
 import Language.Haskell.TH.Syntax hiding (Loc)
 import Language.Haskell.TH.Ppr
 import Language.Haskell.TH.PprLib

@@ -81,11 +81,11 @@ instance (Typeable s, Nat s, ProcType a) => ProcType (FSVec s a) where
  getEnums _ = getEnums (undefined :: a)
  readProcType = do
           skipSpaces  
-          char '<'
+          _ <- char '<'
           elems <- countSepBy (toInt (undefined :: s))
                               readProcType 
                               (skipSpaces >> char ',' >> skipSpaces)
-          char '>'
+          _ <- char '>'
           return (reallyUnsafeVector elems)
    where countSepBy n p sep = 
             if n == 0 
@@ -96,9 +96,9 @@ instance (Typeable s, Nat s, ProcType a) => ProcType (FSVec s a) where
 instance ProcType a =>  ProcType (AbstExt a) where
  getEnums _ = getEnums (undefined :: a)
  readProcType = skipSpaces >> (absP <++ prstP)
-   where absP = do string "Abst" 
+   where absP = do _ <- string "Abst" 
                    return Abst
-         prstP = do string "Prst"
+         prstP = do _ <- string "Prst"
                     skipSpaces
                     v <- readProcType
                     return $ Prst v
