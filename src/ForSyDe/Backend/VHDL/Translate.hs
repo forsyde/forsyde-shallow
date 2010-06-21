@@ -35,7 +35,7 @@ import ForSyDe.Process.ProcType
 import Data.Typeable.TypeRepLib (unArrowT)
 import Language.Haskell.TH.TypeLib (type2TypeRep)
 
-import Data.Generics (tyconUQname)
+import Data.Data (tyconUQname)
 import Data.Int
 import Data.Char (digitToInt)
 import Data.List (intersperse)

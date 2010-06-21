@@ -31,7 +31,6 @@ import ForSyDe.ForSyDeErr
 import ForSyDe.System.SysFun (checkSysFType, SysFun(..))
 
 import Data.Maybe (isJust, fromJust)
-import Control.Monad.Error
 import Control.Monad.ST
 import Control.Monad.State
 import Data.Typeable

@@ -24,7 +24,7 @@ import ForSyDe.System.SysDef (SysDefVal(..))
 import ForSyDe.Netlist.Traverse (TravSEIO)
 import ForSyDe.Process.ProcType (EnumAlgTy(..))
 
-import Data.Generics (tyconModule)
+import Data.Data (tyconModule)
 import Data.Maybe (fromJust)
 import qualified Data.Set as S (filter)
 import Data.Set (Set, union, empty, toList)

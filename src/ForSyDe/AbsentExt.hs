@@ -20,7 +20,7 @@ module ForSyDe.AbsentExt(
 	          isAbsent, isPresent, abstExtFunc)
 	        where
 
-import Data.Generics
+import Data.Data
 import Language.Haskell.TH.Lift
 
 

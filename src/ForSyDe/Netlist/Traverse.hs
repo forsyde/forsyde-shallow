@@ -31,7 +31,6 @@ import Data.Monoid (mempty)
 import qualified Data.Traversable as DT (Traversable(traverse,mapM)) 
 import Control.Applicative (pure, (<$>))
 import Control.Monad.State
-import Data.List (lookup)
 import Control.Monad.ST (ST)
 
 -- Instances to traverse a netlist Node (and implicitly the whole netlist)

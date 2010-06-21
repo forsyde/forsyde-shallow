@@ -24,12 +24,11 @@ import ForSyDe.System.SysFun(SysFunToSimFun(..))
 import ForSyDe.ForSyDeErr
 import ForSyDe.Process.ProcVal
 
-import Control.Monad (liftM, mapM_, zipWithM_)
 import Data.Maybe (fromJust)
 import Control.Monad.ST
 import Data.STRef
 import qualified Data.Traversable as DT
-import Data.List (lookup, transpose)
+import Data.List (transpose)
 import Data.Dynamic
 
 -- | 'simulate' takes a system definition and generates a function 

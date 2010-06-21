@@ -24,7 +24,6 @@ import ForSyDe.Backend.VHDL.Traverse.VHDLM
 import System.IO
 import System.Directory
 import System.Process
-import System.FilePath
 import Control.Monad.State
 import System.Exit (ExitCode(..))
 

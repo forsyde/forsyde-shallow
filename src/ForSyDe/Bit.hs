@@ -29,7 +29,7 @@ module ForSyDe.Bit (Bit(..),
 import Language.Haskell.TH.Lift
 import Data.Int
 import Data.Bits
-import Data.Generics (Data, Typeable)
+import Data.Data (Data, Typeable)
 import Prelude hiding (not)
 
 import Data.Param.FSVec (FSVec, reallyUnsafeVector)

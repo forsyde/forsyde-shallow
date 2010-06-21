@@ -30,7 +30,6 @@ import ForSyDe.Process.ProcType (ProcType(..))
 import Language.Haskell.TH.TypeLib
 
 import Data.Dynamic
-import Control.Monad (when, liftM3)
 import Text.Regex.Posix ((=~))
 import qualified Language.Haskell.TH as TH (Exp)
 import Language.Haskell.TH

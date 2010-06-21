@@ -98,8 +98,8 @@ Library
                    filepath,
                    old-time,
                    random,
-                   array,
-                   syb
+                   array
+
 
   hs-source-dirs:  src
   exposed-modules: Language.Haskell.TH.Lift,

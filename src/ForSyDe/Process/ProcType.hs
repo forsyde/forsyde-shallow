@@ -20,7 +20,7 @@ module ForSyDe.Process.ProcType (
 
 import Control.Monad (replicateM)
 import Data.List (intersperse)
-import Data.Generics
+import Data.Data
 import Data.Set (Set, union)
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax (Lift(..))

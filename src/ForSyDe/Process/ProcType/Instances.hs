@@ -27,7 +27,7 @@ import Data.TypeLevel.Num.Sets (Nat, toInt)
 import Data.Param.FSVec (FSVec, reallyUnsafeVector)
 
 
-import Data.Generics
+import Data.Data
 import Control.Monad (liftM, liftM2, mzero)
 import Text.ParserCombinators.ReadP
 import Data.Set (empty, singleton)
