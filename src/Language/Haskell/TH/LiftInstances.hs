@@ -43,9 +43,14 @@ import Language.Haskell.TH.Syntax
   Dec, 
   Exp(LitE),
   Q,
-  Lift(..))
+  Lift(..),
+  Pred,
+  TyVarBndr,
+  Kind,
+  FamFlavour,
+  Pragma,
+  InlineSpec)
 
-import Control.Monad (mapM)
 import Data.Ratio (Ratio)
 import Data.Int (Int8, Int16, Int32, Int64)
 
@@ -67,8 +72,14 @@ $(mapM deriveLift
        ''Clause, 
        ''Type, 
        ''Dec, 
-       ''Exp])
-
+       ''Exp,
+       ''Pred,
+       ''TyVarBndr,
+       ''Kind,
+       ''FamFlavour,
+       ''Pragma,
+       ''InlineSpec])
+       
 instance Lift Int64 where
   lift x = return (LitE (IntegerL (fromIntegral x)))
 

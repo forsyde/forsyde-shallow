@@ -118,16 +118,16 @@ genTupInstances n = do
                    (map (\n -> varE  'getEnums `appE` undef n) names)     
         getEnumsD = funD 'getEnums [clause [wildP]  (normalB getEnumsExpr) []] 
         readProcTypeExpr = doE $ 
-            noBindS [| skipSpaces >> char '(' |] : 
-            (intersperse (noBindS [| skipSpaces >> char ',' |]) 
+            bindS wildP [| skipSpaces >> char '(' |] : 
+            (intersperse (bindS wildP [| skipSpaces >> char ',' |]) 
                         (map (\n -> bindS (varP n) [| readProcType |]) names) ++
-             [noBindS [| skipSpaces >> char ')' |],
+             [bindS wildP [| skipSpaces >> char ')' |],
               noBindS [| return $(tupE $ map varE names) |] ] )
         readProcTypeD = funD 'readProcType 
                              [clause []  (normalB readProcTypeExpr) []]
-        procTypeCxt = map (\vName -> conT ''ProcType `appT` varT vName) names ++
-                      map (\vName -> conT ''Data `appT` varT vName) names ++
-                      map (\vName -> conT ''Lift `appT` varT vName) names
+        procTypeCxt = map (\vName -> return $ ClassP ''ProcType [VarT vName]) names ++
+                      map (\vName -> return $ ClassP ''Data [VarT vName]) names ++
+                      map (\vName -> return $ ClassP ''Lift [VarT vName]) names
     instanceD (cxt procTypeCxt) 
                      (conT ''ProcType `appT` tupType) 
                      [getEnumsD, readProcTypeD]
@@ -162,7 +162,7 @@ genTupInstances n = do
                                       [toConstr $(varE a)] |] 
        dataTypeOfD = funD 'dataTypeOf
                           [clause [varP a] (normalB dataTypeOfExpr) []]
-       dataCxt = map (\vName -> conT ''Data `appT` varT vName) names 
+       dataCxt = map (\vName -> return $ ClassP ''Data [VarT vName]) names 
    instanceD (cxt dataCxt) 
              (conT ''Data `appT` tupType) 
              [gfoldlD, gunfoldD, toConstrD, dataTypeOfD]
@@ -178,7 +178,7 @@ genTupInstances n = do
                      |]
        typeOfD = funD 'typeOf
                       [clause [wildP] (normalB typeOfExpr) []]
-       typeableCxt = map (\vName -> conT ''Typeable `appT` varT vName) names
+       typeableCxt = map (\vName -> return $ ClassP ''Typeable [VarT vName]) names
    instanceD (cxt typeableCxt) 
              (conT ''Typeable `appT` tupType) 
              [typeOfD]
@@ -188,7 +188,7 @@ genTupInstances n = do
            varE 'tupE `appE` listE (map (\n -> varE 'lift `appE` varE n) names)
        liftD = funD 'lift 
                  [clause [tupP (map varP names)] (normalB liftExpr) []]
-       liftCxt = map (\vName -> conT ''Lift `appT` varT vName) names
+       liftCxt = map (\vName -> return $ ClassP ''Lift [VarT vName]) names
    instanceD (cxt liftCxt) 
              (conT ''Lift `appT` tupType) 
              [liftD]

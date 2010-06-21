@@ -33,15 +33,14 @@ module Language.Haskell.TH.TypeLib
  where
 
 import Data.Dynamic
-import Data.Typeable
-import Language.Haskell.TH (Type(..), Cxt, Name, pprint, mkName)
+import Language.Haskell.TH (Type(..), Cxt, TyVarBndr(..), pprint, mkName)
 import Text.Regex.Posix ((=~))
 import Data.Maybe(isJust)
 
 -- Due to type translations
 import GHC.Exts (RealWorld)
 import Data.Word (Word, Word8, Word16, Word32, Word64)
-import Data.Int (Int, Int8, Int16, Int32, Int64)
+import Data.Int (Int8, Int16, Int32, Int64)
 import System.IO (Handle)
 import Data.IORef (IORef)
 import Foreign (Ptr, FunPtr, StablePtr, ForeignPtr)
@@ -68,15 +67,15 @@ import Control.Concurrent.MVar (MVar)
 --  where @a@ and @b@ are the the context variables and  
 --  @(Show a, Show b)@ are the context constraints 
 data Context = Context 
-                   [Name] -- Variable names 
-                   Cxt    -- Constraints (the context itself)
+                   [TyVarBndr] -- Variable names 
+                   Cxt         -- Constraints (the context itself)
 
 instance Show Context where
 -- FIXME: this is really ugly, refactor and improve its look
- showsPrec _ (Context n cxt) = 
-   showVars n . showConstraints cxt 
-   where showVars n = showForall (not (null n))  (showVars' n)
-         showVars' (n:ns) = shows n . showChar ' ' . showVars' ns
+ showsPrec _ (Context tvb cxt) = 
+   showVars tvb . showConstraints cxt 
+   where showVars tvb = showForall (not (null tvb))  (showVars' tvb)
+         showVars' ((PlainTV n):tvbs) = shows n . showChar ' ' . showVars' tvbs
          showVars' []   = id
          showConstraints c = (\s -> if not (null c) then ' ':s else s).
                              showParen (length c > 1) (showConstraints' c) .
@@ -89,8 +88,8 @@ instance Show Context where
                                else s
 
 -- | 'Context' constructor
-mkContext :: [Name] -> Cxt -> Context
-mkContext n c = Context n c
+mkContext :: [TyVarBndr] -> Cxt -> Context
+mkContext tvb c = Context tvb c
 
 -- | Empty context for monomorphic types
 monoContext :: Context
@@ -102,8 +101,8 @@ isPoly (Context [] _) = False
 isPoly _              = True
 
 -- | Returns the variable names related to a context
-contextVarNames :: Context -> [Name]
-contextVarNames (Context n _) = n
+contextVarNames :: Context -> [TyVarBndr]
+contextVarNames (Context tvb _) = tvb
 
 -- | Returns the context constraints
 contextConstraints :: Context -> Cxt
@@ -111,7 +110,7 @@ contextConstraints (Context _ cxt) = cxt
 
 -- | Builds a 'ForallT' type out of a context and a type
 mkForallT :: Context -> Type -> Type
-mkForallT (Context n cxt) t = ForallT n cxt t
+mkForallT (Context tvb cxt) t = ForallT tvb cxt t
 
 --------------------------------
 -- Functions to observe a 'Type'
