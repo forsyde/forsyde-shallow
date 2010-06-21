@@ -16,7 +16,7 @@ description:
  
  This library provides ForSyDe's implementation as a Haskell-embedded Domain Specific Language (DSL). For more information, please see ForSyDe's website: <http://www.ict.kth.se/forsyde/>.
 category:       Language
-tested-with:    GHC==6.10.4
+tested-with:    GHC==6.12.2
 data-files:     lib/forsyde.vhd
 -- In order to include all this files with sdist
 extra-source-files: LICENSE,
@@ -85,7 +85,7 @@ extra-source-files: LICENSE,
 
 Library
   build-depends:   type-level,
-                   parameterized-data,
+                   parameterized-data >= 0.1.5,
                    containers,
                    base>=4 && <6, 
                    regex-posix, 
