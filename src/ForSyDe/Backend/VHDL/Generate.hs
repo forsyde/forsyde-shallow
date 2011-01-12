@@ -646,13 +646,13 @@ genAbstExtFuns elemTM absExtTM =
                              [ElemAssoc Nothing falseExpr, 
                               ElemAssoc Nothing $ PrimName $ defaultSN ])
        presentSpec = 
-          Function absentId [IfaceVarDec extPar elemTM] absExtTM
+          Function presentId [IfaceVarDec extPar elemTM] absExtTM
        presentExpr = 
           ReturnSm (Just $ Aggregate [ElemAssoc Nothing trueExpr, 
                                       ElemAssoc Nothing $ PrimName $ NSimple extPar ])
-       fromAbstExtSpec = Function absentId [IfaceVarDec defaultPar elemTM,
-                                            IfaceVarDec extPar     absExtTM] 
-                                           elemTM
+       fromAbstExtSpec = Function fromAbstExtId [IfaceVarDec defaultPar elemTM,
+                                                 IfaceVarDec extPar     absExtTM] 
+                                                elemTM
        fromAbstExtExpr = 
           IfSm (PrimName $ NSelected (NSimple extPar :.: SSimple isPresentId))
                [ReturnSm (Just $ PrimName $ 
@@ -661,17 +661,17 @@ genAbstExtFuns elemTM absExtTM =
                (Just $ Else
                  [ReturnSm (Just $ PrimName $ NSimple defaultPar)])
        unsafeFromAbstExtSpec = 
-          Function absentId [IfaceVarDec extPar absExtTM] elemTM
+          Function unsafeFromAbstExtId [IfaceVarDec extPar absExtTM] elemTM
        unsafeFromAbstExtExpr =
           ReturnSm (Just $ 
                     PrimName (NSelected (NSimple extPar :.: SSimple valueId)))
        isPresentSpec = 
-          Function absentId [IfaceVarDec extPar absExtTM] booleanTM
+          Function isPresentId [IfaceVarDec extPar absExtTM] booleanTM
        isPresentExpr =
            ReturnSm (Just $
                    PrimName (NSelected (NSimple extPar :.: SSimple isPresentId)))
        isAbsentSpec = 
-          Function absentId [IfaceVarDec extPar absExtTM] booleanTM
+          Function isAbsentId [IfaceVarDec extPar absExtTM] booleanTM
        isAbsentExpr =
            ReturnSm (Just $
              Not $ PrimName (NSelected (NSimple extPar :.: SSimple isPresentId)))
