@@ -446,7 +446,7 @@ mooreSY :: (ProcType a, ProcType b, ProcType c) =>
 mooreSY id nextState output initial = instantiate id mooreSys
  where mooreSys = newSysDef mooreSysF ("mooreSY_"++id)
                                       ["in1"] ["out1"] 
-       mooreSysF = mapSY "map" output . scanldSY "mooreScan" nextState initial
+       mooreSysF = mapSY "map" output . scanldSY ("scanld_"++id) nextState initial
 
 
 -- | The process constructor 'moore2SY' behaves like 'mooreSY', but has two 
@@ -464,7 +464,7 @@ moore2SY id nextState output initial = instantiate id moore2Sys
  where moore2Sys = newSysDef moore2SysF ("moore2SY_"++id)
                                         ["in1", "in2"] ["out1"] 
        moore2SysF i1 i2 = 
-         mapSY "map" output $ scanld2SY "mooreScan" nextState initial i1 i2
+         mapSY "map" output $ scanld2SY ("scanld2_"++id) nextState initial i1 i2
 
 
 
@@ -485,7 +485,7 @@ moore3SY id nextState output initial = instantiate id moore3Sys
  where moore3Sys = newSysDef moore3SysF ("moore3SY_"++id)
                                         ["in1", "in2", "in3"] ["out1"] 
        moore3SysF i1 i2 i3 = 
-         mapSY "map" output $ scanld3SY "mooreScan" nextState initial i1 i2 i3
+         mapSY "map" output $ scanld3SY ("scanld3_"++id) nextState initial i1 i2 i3
 
 
 -- | The process constructor 'melaySY' is used to model state machines of
@@ -510,7 +510,7 @@ mealySY :: (ProcType a, ProcType b, ProcType c) =>
 mealySY id nextState output initial = instantiate id mealySys
   where mealySys = newSysDef mealySysF ("mealySY_"++id) ["in1"] ["out1"]
         mealySysF i = zipWithSY "zipWith" output state i
-           where state = scanldSY "scanld" nextState initial i
+           where state = scanldSY ("scanld_"++id) nextState initial i
 
 -- | The process constructor 'mealy2SY' behaves like 'mealySY', but has 
 --   two input signals.
@@ -528,7 +528,7 @@ mealy2SY id nextState output initial = instantiate id mealy2Sys
   where mealy2Sys = newSysDef mealy2SysF ("mealySY_"++id) 
                                          ["in1", "in2"] ["out1"]
         mealy2SysF i1 i2 = zipWith3SY "zipWith" output state i1 i2
-           where state = scanld2SY "scanld" nextState initial i1 i2
+           where state = scanld2SY ("scanld2_"++id) nextState initial i1 i2
  
 
 
@@ -550,7 +550,7 @@ mealy3SY id nextState output initial = instantiate id mealy3Sys
   where mealy3Sys = newSysDef mealy3SysF ("mealySY_"++id) 
                                          ["in1", "in2", "in3"] ["out1"]
         mealy3SysF i1 i2 i3 = zipWith4SY "zipWith" output state i1 i2 i3
-           where state = scanld3SY "scanld" nextState initial i1 i2 i3
+           where state = scanld3SY ("scanld3_"++id) nextState initial i1 i2 i3
  
 
 
