@@ -298,14 +298,12 @@ delaynSY :: ProcType a =>
 	 -> Int       -- ^ Number of Delay cycles 
 	 -> Signal a  -- ^Input signal
 	 -> Signal a  -- ^Output signal
-delaynSY id e n = instantiate id delaynSys
- where delaynSys = newSysDef delaynSysF ("delay"++show n++"SY_"++id) 
-                                        ["in1"] ["out1"]
-       delaynSysF s =  (\(a,_,_) -> a) $ delaynSYacum (s, 1, n)
+delaynSY id e n s = (\(a,_,_) -> a) $ delaynSYacum (s, 1, n)
+    where
        delaynSYacum acum@(lastSig, curr, max)
         | curr > max = acum
         | otherwise  = 
-           delaynSYacum (delaySY ("delay" ++ show curr) e lastSig, curr+1, max)
+           delaynSYacum (delaySY (id ++ "_" ++ show curr) e lastSig, curr+1, max)
          
 
 
@@ -325,10 +323,9 @@ scanlSY	:: (ProcType a, ProcType b) =>
         -> a -- ^Initial state
 	-> Signal b -- ^ Input signal 
 	-> Signal a -- ^ Output signal
-scanlSY id f mem = instantiate id scanlSys
-    where scanlSys = newSysDef scanlSysF ("scanlSY_"++id) ["in1"] ["out1"]
-          scanlSysF s = s'
-            where s' = zipWithSY "zipWith" f (delaySY "delay" mem s') s 
+scanlSY id f mem s = s'
+            where s' = zipWithSY (id ++ "_NxtSt") f 
+                                 (delaySY (id ++ "_Delay") mem s') s 
 
 
 -- | The process constructor 'scanl2SY' behaves like 'scanlSY', but has two 
@@ -341,12 +338,9 @@ scanl2SY :: (ProcType a, ProcType b, ProcType c) =>
 	-> Signal b -- ^ First Input signal 
         -> Signal c -- ^ Second Input signal
 	-> Signal a -- ^ Output signal
-scanl2SY id f mem = instantiate id scanl2Sys
-    where scanl2Sys = newSysDef scanl2SysF ("scanl2SY_"++id) 
-                                           ["in1", "in2"] ["out1"]
-          scanl2SysF s1 s2 = s'
-           where s' = zipWith3SY "zipWith" f (delaySY "delay" mem s') s1 s2 
-
+scanl2SY id f mem s1 s2 = s'
+    where s' = zipWith3SY (id ++ "_NxtSt") f 
+                          (delaySY (id ++ "_Delay") mem s') s1 s2 
 
 
 -- | The process constructor 'scanl2SY' behaves like 'scanlSY', but has two 
@@ -360,13 +354,9 @@ scanl3SY :: (ProcType a, ProcType b, ProcType c, ProcType d) =>
         -> Signal c -- ^ Second Input signal
         -> Signal d -- ^ Third Input signal
 	-> Signal a -- ^ Output signal
-scanl3SY id f mem = instantiate id scanl3Sys
-    where scanl3Sys = newSysDef scanl3SysF ("scanl3SY_"++id) 
-                                           ["in1", "in2", "in3"] ["out1"]
-          scanl3SysF s1 s2 s3 = s'
-            where s' = zipWith4SY "zipWith" f (delaySY "delay" mem s') s1 s2 s3
-
-
+scanl3SY id f mem s1 s2 s3 = s'
+    where s' = zipWith4SY (id ++ "_NxtSt") f
+                          (delaySY (id ++ "_Delay") mem s') s1 s2 s3
 
 -- | The process constructor 'scanldSY' is used to construct a finite state
 --  machine process without output decoder. It takes an initial value and a
@@ -381,11 +371,9 @@ scanldSY :: (ProcType a, ProcType b) =>
         -> a -- ^Initial state
         -> Signal b -- ^ Input signal 
         -> Signal a -- ^ Output signal
-scanldSY id f mem = instantiate id scanldSys
-    where scanldSys = newSysDef scanldSysF ("scanlSY_"++id) ["in1"] ["out1"]
-          scanldSysF s = s'
-            where s' = delaySY "delay" mem $ zipWithSY "zipWith" f s' s 
-
+scanldSY id f mem s = s'
+    where s' = delaySY (id ++ "_Delay") mem $
+                       zipWithSY (id ++ "_NxtSt") f s' s 
 
 -- | The process constructor 'scanld2SY' behaves like 'scanldSY', but has 
 --   two input signals.
@@ -397,16 +385,12 @@ scanld2SY :: (ProcType a, ProcType b, ProcType c) =>
          -> Signal b -- ^ First Input signal
          -> Signal c -- ^ Second Input signal
          -> Signal a -- ^ Output signal
-scanld2SY id f mem = instantiate id scanld2Sys
-    where scanld2Sys = newSysDef scanld2SysF ("scanld2SY_"++id) 
-                                             ["in1", "in2"] ["out1"]
-          scanld2SysF s1 s2 = s'
-            where s' = delaySY "delay" mem $ zipWith3SY "zipWith" f s' s1 s2 
+scanld2SY id f mem s1 s2 = s'
+    where s' = delaySY (id ++ "_Delay") mem $
+                       zipWith3SY (id ++ "_NxtSt") f s' s1 s2 
 
-
-
--- | The process constructor 'scanld2SY' behaves like 'scanldSY', but has 
---   two input signals.
+-- | The process constructor 'scanld3SY' behaves like 'scanldSY', but has 
+--   three input signals.
 scanld3SY :: (ProcType a, ProcType b, ProcType c, ProcType d) => 
             ProcId
          -> ProcFun (a -> b -> c -> d -> a) -- ^Combinational function 
@@ -416,13 +400,25 @@ scanld3SY :: (ProcType a, ProcType b, ProcType c, ProcType d) =>
          -> Signal c -- ^ Second Input signal
          -> Signal d -- ^ Second Input signal
          -> Signal a -- ^ Output signal
-scanld3SY id f mem = instantiate id scanld3Sys
-    where scanld3Sys = newSysDef scanld3SysF ("scanld3SY_"++id) 
-                                            ["in1", "in2", "in3"] ["out1"]
-          scanld3SysF s1 s2 s3 = s' 
-            where s' = delaySY "delay" mem $ zipWith4SY "zipWith" f s' s1 s2 s3 
+scanld3SY id f mem s1 s2 s3 = s' 
+    where s' = delaySY (id ++ "_Delay") mem $
+                       zipWith4SY (id ++ "_NxtSt") f s' s1 s2 s3 
 
-
+-- | The process constructor 'scanld4SY' behaves like 'scanldSY', but has 
+--   four input signals.
+scanld4SY :: (ProcType a, ProcType b, ProcType c, ProcType d, ProcType e) => 
+            ProcId
+         -> ProcFun (a -> b -> c -> d -> e -> a) -- ^Combinational function 
+                                                 -- for next state decoder
+         -> a -- ^Initial state
+         -> Signal b -- ^ First Input signal
+         -> Signal c -- ^ Second Input signal
+         -> Signal d -- ^ Third Input signal
+         -> Signal e -- ^ Fourth Input signal
+         -> Signal a -- ^ Output signal
+scanld4SY id f mem s1 s2 s3 s4 = s' 
+    where s' = delaySY (id ++ "_Delay") mem $
+                       zipWith5SY (id ++ "_NxtSt") f s' s1 s2 s3 s4
 
 -- | The process constructor 'mooreSY' is used to model state machines
 -- of \"Moore\" type, where the output only depends on the current
@@ -443,10 +439,8 @@ mooreSY :: (ProcType a, ProcType b, ProcType c) =>
         -> a -- ^Initial state
         -> Signal b -- ^Input signal
         -> Signal c -- ^Output signal
-mooreSY id nextState output initial = instantiate id mooreSys
- where mooreSys = newSysDef mooreSysF ("mooreSY_"++id)
-                                      ["in1"] ["out1"] 
-       mooreSysF = mapSY "map" output . scanldSY ("scanld_"++id) nextState initial
+mooreSY id nextState output initial =
+    mapSY (id ++ "_OutDec") output .scanldSY id nextState initial
 
 
 -- | The process constructor 'moore2SY' behaves like 'mooreSY', but has two 
@@ -460,17 +454,12 @@ moore2SY :: (ProcType a, ProcType b, ProcType c, ProcType d) =>
          -> Signal b -- ^First Input signal
          -> Signal c -- ^Second Input signal
          -> Signal d -- ^Output signal
-moore2SY id nextState output initial = instantiate id moore2Sys
- where moore2Sys = newSysDef moore2SysF ("moore2SY_"++id)
-                                        ["in1", "in2"] ["out1"] 
-       moore2SysF i1 i2 = 
-         mapSY "map" output $ scanld2SY ("scanld2_"++id) nextState initial i1 i2
+moore2SY id nextState output initial i1 i2 =
+    mapSY (id ++ "_OutDec") output $ scanld2SY id nextState initial i1 i2
 
 
-
-
--- | The process constructor 'moore2SY' behaves like 'mooreSY', but has two 
---   input signals.
+-- | The process constructor 'moore3SY' behaves like 'mooreSY', but has 
+--   three input signals.
 moore3SY :: (ProcType a, ProcType b, ProcType c, ProcType d, ProcType e) =>
             ProcId
          -> ProcFun (a -> b -> c -> d -> a) -- ^ Combinational function for
@@ -481,12 +470,24 @@ moore3SY :: (ProcType a, ProcType b, ProcType c, ProcType d, ProcType e) =>
          -> Signal c -- ^Second Input signal
          -> Signal d -- ^Third Input signal
          -> Signal e -- ^Output signal
-moore3SY id nextState output initial = instantiate id moore3Sys
- where moore3Sys = newSysDef moore3SysF ("moore3SY_"++id)
-                                        ["in1", "in2", "in3"] ["out1"] 
-       moore3SysF i1 i2 i3 = 
-         mapSY "map" output $ scanld3SY ("scanld3_"++id) nextState initial i1 i2 i3
+moore3SY id nextState output initial i1 i2 i3 =
+    mapSY (id ++ "_OutDec") output $ scanld3SY id nextState initial i1 i2 i3
 
+-- | The process constructor 'moore3SY' behaves like 'mooreSY', but has 
+--   four input signals.
+moore4SY :: (ProcType a, ProcType b, ProcType c, ProcType d, ProcType e, ProcType f) =>
+            ProcId
+         -> ProcFun (a -> b -> c -> d -> e -> a) -- ^ Combinational function for
+                                                 --   next state decoder
+         -> ProcFun (a -> f) -- ^Combinational function for output decoder
+         -> a -- ^Initial state
+         -> Signal b -- ^First Input signal
+         -> Signal c -- ^Second Input signal
+         -> Signal d -- ^Third Input signal
+         -> Signal e -- ^Fourth Input signal
+         -> Signal f -- ^Output signal
+moore4SY id nextState output initial i1 i2 i3 i4 =
+    mapSY (id ++ "_OutDec") output $ scanld4SY id nextState initial i1 i2 i3 i4
 
 -- | The process constructor 'melaySY' is used to model state machines of
 -- \"Mealy\" type, where the output only depends on the current state and
@@ -507,10 +508,9 @@ mealySY :: (ProcType a, ProcType b, ProcType c) =>
         -> a -- ^Initial state
         -> Signal b -- ^Input signal 
         -> Signal c -- ^Output signal
-mealySY id nextState output initial = instantiate id mealySys
-  where mealySys = newSysDef mealySysF ("mealySY_"++id) ["in1"] ["out1"]
-        mealySysF i = zipWithSY "zipWith" output state i
-           where state = scanldSY ("scanld_"++id) nextState initial i
+mealySY id nextState output initial i =
+    zipWithSY (id ++ "_OutDec") output state i
+    where state = scanldSY id nextState initial i
 
 -- | The process constructor 'mealy2SY' behaves like 'mealySY', but has 
 --   two input signals.
@@ -524,16 +524,13 @@ mealy2SY :: (ProcType a, ProcType b, ProcType c, ProcType d) =>
         -> Signal b -- ^First Input signal
         -> Signal c -- ^Second Input signal 
         -> Signal d -- ^Output signal
-mealy2SY id nextState output initial = instantiate id mealy2Sys
-  where mealy2Sys = newSysDef mealy2SysF ("mealySY_"++id) 
-                                         ["in1", "in2"] ["out1"]
-        mealy2SysF i1 i2 = zipWith3SY "zipWith" output state i1 i2
-           where state = scanld2SY ("scanld2_"++id) nextState initial i1 i2
- 
+mealy2SY id nextState output initial i1 i2 = 
+    zipWith3SY (id ++ "_OutDec") output state i1 i2
+    where state = scanld2SY id nextState initial i1 i2
 
 
--- | The process constructor 'mealy2SY' behaves like 'mealySY', but has 
---   two input signals.
+-- | The process constructor 'mealy3SY' behaves like 'mealySY', but has 
+--   three input signals.
 mealy3SY :: (ProcType a, ProcType b, ProcType c, ProcType d, 
              ProcType e) => 
            ProcId
@@ -546,12 +543,28 @@ mealy3SY :: (ProcType a, ProcType b, ProcType c, ProcType d,
         -> Signal c -- ^Second Input signal 
         -> Signal d -- ^Third Input signal 
         -> Signal e -- ^Output signal
-mealy3SY id nextState output initial = instantiate id mealy3Sys
-  where mealy3Sys = newSysDef mealy3SysF ("mealySY_"++id) 
-                                         ["in1", "in2", "in3"] ["out1"]
-        mealy3SysF i1 i2 i3 = zipWith4SY "zipWith" output state i1 i2 i3
-           where state = scanld3SY ("scanld3_"++id) nextState initial i1 i2 i3
- 
+mealy3SY id nextState output initial i1 i2 i3 =
+    zipWith4SY (id ++ "_OutDec") output state i1 i2 i3
+    where state = scanld3SY id nextState initial i1 i2 i3
+
+-- | The process constructor 'mealy4SY' behaves like 'mealySY', but has 
+--   four input signals.
+mealy4SY :: (ProcType a, ProcType b, ProcType c, ProcType d, 
+             ProcType e, ProcType f) => 
+           ProcId
+        -> ProcFun (a -> b -> c -> d -> e -> a) -- ^Combinational function for next 
+                                                -- state decoder  
+        -> ProcFun (a -> b -> c -> d -> e -> f) -- ^Combinational function for 
+                                                -- output decoder
+        -> a -- ^Initial state
+        -> Signal b -- ^First Input signal
+        -> Signal c -- ^Second Input signal 
+        -> Signal d -- ^Third Input signal 
+        -> Signal e -- ^Fourth Input signal 
+        -> Signal f -- ^Output signal
+mealy4SY id nextState output initial i1 i2 i3 i4 =
+    zipWith5SY (id ++ "_OutDec") output state i1 i2 i3 i4
+    where state = scanld4SY id nextState initial i1 i2 i3 i4
 
 
 -- | The process constructor 'filterSY' discards the values who do not fulfill a predicate given by a predicate function and replaces them with absent events.
@@ -581,14 +594,9 @@ sourceSY :: ProcType a =>
          -> ProcFun (a -> a) 
          -> a 
          -> Signal a
-sourceSY id f s0 = instantiate id sourceSys
- where sourceSys = newSysDef sourceSysF ("sourceSY_"++id) 
-                                        [] ["out1"]
-       sourceSysF = o  
-         where o = delaySY "delay" s0 s
-               s = mapSY  "map" f o
-
-
+sourceSY id f s0 = o  
+         where o = delaySY (id ++ "_Delay") s0 s
+               s = mapSY (id ++ "_Nxt") f o
 
 
 -- | The process constructor 'fillSY' creates a process that 'fills' a signal 
