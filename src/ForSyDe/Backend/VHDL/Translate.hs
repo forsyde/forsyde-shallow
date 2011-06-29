@@ -362,7 +362,7 @@ doCustomTR2TM rep | isFSVec = do
  -- Translate the type of the elements contained in the vector
  valTM <- transTR2TM valueType
  -- Build the unconstrained vector identifier
- let vectorId = unsafeVHDLBasicId ("fsvec_"++ fromVHDLId valTM)
+ let vectorId = unsafeVHDLContainerId [valTM] ("fsvec_"++ fromVHDLId valTM)
  -- Obtain the unconstrained vector together with its functions and add them
  -- to the global traversing-results (if this wasn't previously done):
  --  * Check if the unconstrained array was previously translated
@@ -401,7 +401,7 @@ doCustomTR2TM rep | isTuple = do
   let elems = zipWith (\fieldId fieldTM -> ElementDec fieldId fieldTM )
                       [tupVHDLIdSuffix n | n <- [1..]] fieldTMs              
   -- Create the Type Declaration identifier
-      recordId = unsafeVHDLBasicId $ 
+      recordId = unsafeVHDLContainerId fieldTMs $ 
               (tupStrSuffix $ length fieldTMs) ++ "_" ++ 
               (concatMap fromVHDLId.intersperse (unsafeVHDLBasicId "_")) fieldTMs
   -- Add the default functions for the tuple type to the global results
@@ -422,7 +422,7 @@ doCustomTR2TM rep | isAbsExt = do
                ElementDec valueId     valueTM  ]
               
   -- Create the Type Declaration identifier
-      recordId = unsafeVHDLBasicId $ 
+      recordId = unsafeVHDLContainerId [valueTM] $ 
                     "abs_ext_" ++ fromVHDLId valueTM
   -- Add the default functions for the vector type to the global results
       funs =  genAbstExtFuns valueTM recordId

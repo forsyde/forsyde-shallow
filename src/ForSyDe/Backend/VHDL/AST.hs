@@ -66,6 +66,14 @@ unsafeVHDLBasicId str = Basic str
 unsafeVHDLExtId :: String -> VHDLId
 unsafeVHDLExtId str = Extended str
 
+-- | unsafely create a VHDLId for different containers. They are basic or
+--   extended based on the type of values they contain.
+unsafeVHDLContainerId :: [VHDLId] -> String -> VHDLId
+unsafeVHDLContainerId ids = if any isExt ids then unsafeVHDLExtId
+                            else unsafeVHDLBasicId
+                            where
+                                isExt (Extended _) = True
+                                isExt (Basic _)    = False
 
 -- | Create a VHDL basic identifier from a String, previously checking if the  
 --   String is correct
