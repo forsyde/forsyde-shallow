@@ -26,10 +26,11 @@ module ForSyDe.Process.SynchProc (
  -- | Sequential process constructors are used for processes that have a state.
  --   One of the input parameters is the initial state.
  delaySY, delaynSY,
- scanlSY, scanl2SY, scanl3SY, scanldSY, scanld2SY,
- scanld3SY, mooreSY, moore2SY, moore3SY, mealySY,
- mealy2SY, mealy3SY, sourceSY, 
- filterSY, fillSY, holdSY,
+ scanlSY, scanl2SY, scanl3SY, scanl4SY,
+ scanldSY, scanld2SY, scanld3SY, scanld4SY,
+ mooreSY, moore2SY, moore3SY, moore4SY,
+ mealySY, mealy2SY, mealy3SY, mealy4SY,
+ sourceSY, filterSY, fillSY, holdSY,
  -- * Synchronous Processes
  -- | The library contains a few simple processes that are applicable to many 
  -- cases.
@@ -343,8 +344,8 @@ scanl2SY id f mem s1 s2 = s'
                           (delaySY (id ++ "_Delay") mem s') s1 s2 
 
 
--- | The process constructor 'scanl2SY' behaves like 'scanlSY', but has two 
---   input signals.
+-- | The process constructor 'scanl3SY' behaves like 'scanlSY', but has 
+--   three input signals.
 scanl3SY :: (ProcType a, ProcType b, ProcType c, ProcType d) =>
            ProcId -- ^Process Identifier
         -> ProcFun (a -> b -> c -> d -> a) -- ^Combinational function for next 
@@ -357,6 +358,22 @@ scanl3SY :: (ProcType a, ProcType b, ProcType c, ProcType d) =>
 scanl3SY id f mem s1 s2 s3 = s'
     where s' = zipWith4SY (id ++ "_NxtSt") f
                           (delaySY (id ++ "_Delay") mem s') s1 s2 s3
+
+-- | The process constructor 'scanl4SY' behaves like 'scanlSY', but has 
+--   four input signals.
+scanl4SY :: (ProcType a, ProcType b, ProcType c, ProcType d, ProcType e) =>
+           ProcId -- ^Process Identifier
+        -> ProcFun (a -> b -> c -> d -> e -> a) -- ^Combinational function
+                                                -- for next state decoder
+        -> a        -- ^Initial state
+	    -> Signal b -- ^ First Input signal 
+        -> Signal c -- ^ Second Input signal
+        -> Signal d -- ^ Third Input signal
+        -> Signal e -- ^ Fourth Input signal
+	    -> Signal a -- ^ Output signal
+scanl4SY id f mem s1 s2 s3 s4 = s'
+    where s' = zipWith5SY (id ++ "_NxtSt") f
+                          (delaySY (id ++ "_Delay") mem s') s1 s2 s3 s4
 
 -- | The process constructor 'scanldSY' is used to construct a finite state
 --  machine process without output decoder. It takes an initial value and a
