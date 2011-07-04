@@ -76,12 +76,16 @@ globalNameTable = [
   ('V.shiftl        , (2, genExprFCall2L shiftlId                        ) ),
   ('V.shiftr        , (2, genExprFCall2L shiftrId                        ) ),
   ('V.copy          , (2, genExprFCall2L copyId                          ) ),
+  ('fromAbstExt     , (2, genExprFCall2L fromAbstExtId                   ) ),
 -- unary functions
   ('B.not           , (1, genUnOpCall Not                                ) ),
   ('not             , (1, genUnOpCall Not                                ) ),
   ('negate          , (1, genUnOpCall Neg                                ) ),
   ('abs             , (1, genUnOpCall Abs                                ) ),
   ('abstExt         , (1, genExprFCall1L presentId                       ) ),
+  ('isAbsent        , (1, genExprFCall1L isAbsentId                      ) ),
+  ('isPresent       , (1, genExprFCall1L isPresentId                     ) ),
+  ('unsafeFromAbstExt, (1, genExprFCall1L unsafeFromAbstExtId            ) ),
   ('V.singleton     , (1, genExprFCall1L singletonId                     ) ),
   ('V.length        , (1, genExprFCall1L lengthId                        ) ),
   ('V.lengthT       , (1, genExprFCall1L lengthId                        ) ),
@@ -101,7 +105,7 @@ globalNameTable = [
   ('fromBitVector16 , (1, genExprFCall1L fromBitVector16Id               ) ),
   ('fromBitVector32 , (1, genExprFCall1L fromBitVector32Id               ) ),
 -- constants
-  ('V.empty               , (0, genExprFCall0L emptyId                         ) )]
+  ('V.empty         , (0, genExprFCall0L emptyId                         ) )]
  where genBinOpCall op = \[e1, e2] -> e1 `op` e2
        genUnOpCall op = \[e] -> op e
        genZeroConsCall cons = \[] -> cons
