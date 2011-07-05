@@ -540,6 +540,9 @@ decs2ProcFuns decs = do
 --   declarations in the function translation state
 transDecs :: [Dec] -> VHDLM ()
 transDecs decs = do
+  -- Before anything, clear the previous declaration blocks
+  -- FIXME: this shouldn't be here
+  clearAux
   -- first we tranlsate the declarations to process functions
   tpfs <- decs2ProcFuns decs
   -- Before translating the process functions we add their names to the
@@ -558,6 +561,10 @@ transDecs decs = do
           let arity = (length.fst.unArrowT) t
           vhdlId <- transTHName2VHDL n
           addTransNamePair n arity (genExprFCallN vhdlId arity) 
+       clearAux = do
+          lState <- gets local
+          let s = funTransST lState
+          modify (\st -> st{local=lState{funTransST=s{auxDecs=[]}}})
 
 -- | Check if a process function AST fulfils the VHDL backend restrictions.
 --   It returs the function TH-name its input paterns, its body expression,
