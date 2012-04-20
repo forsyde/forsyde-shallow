@@ -139,7 +139,7 @@ data SolverMode = S2Z   -- ^Tustin tranfer from s-domain to z-domain
 -- There are two solver modes, 'S2Z' and 'RK4'.
 -- Caused by the precision problem, the time interval in CT uses Rational data
 -- type and the digital data types in all the domains are Double.
-sLinearFilter :: (Num a, Fractional a) =>
+sLinearFilter :: (Num a, Fractional a, Show a, Eq a) =>
         SolverMode   -- ^Specify the solver mode
     ->  Rational     -- ^Fixed simulation interval
     -> [a]  -- ^Coefficients of the polynomial numerator in s-domain
@@ -158,7 +158,7 @@ sLinearFilter filterMode step bs as inS =  outS
                       where (bs',as') = h2ARMACoef $ s2zCoef step bs as
 
 -- |Digital filter using Runge Kutta 4 solver.
-rk4FilterDigital :: Fractional a => 
+rk4FilterDigital :: (Fractional a, Show a, Eq a) => 
                     Rational -> [a] -> [a] -> Signal a -> Signal a
 rk4FilterDigital step as bs inSDigital = outSDigital
   where
@@ -188,11 +188,11 @@ rk4FilterDigital step as bs inSDigital = outSDigital
     step' = fromRational step
 
 -- The length of the function list is 'n-1' for nth order filter
-ffn' :: (Num t, Num t1) => t -> [[t1] -> t1]
+ffn' :: (Num t, Num t1, Eq t) => t -> [[t1] -> t1]
 ffn' n = ffn 0 n
 
 -- Construct the functions for the diagonal '1'
-ffn :: (Num t1, Num t) => Int -> t -> [[t1] -> t1]
+ffn :: (Num t1, Num t, Eq t) => Int -> t -> [[t1] -> t1]
 ffn _ 1 = []
 ffn m n = ff1 m : ffn (m+1) (n-1) 
 
@@ -247,7 +247,7 @@ zLinearFilter bs as = armaFilterTrim bs' as'
 -- >      T(z + 1)
 --
 -- in which, 'T' is the sampling interval.
-s2zCoef :: (Num a, Fractional a) =>
+s2zCoef :: (Num a, Fractional a, Eq a) =>
             Rational   -- ^Sampling rate in Z-domain
         -> [a] -- ^Coefficients of the polynomial numerator in s-domain
         -> [a] -- ^Coefficients of the polynomial denominator in s-domain

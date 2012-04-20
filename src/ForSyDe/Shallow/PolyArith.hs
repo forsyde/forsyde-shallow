@@ -53,7 +53,7 @@ divPoly (Poly c) (PolyPair (a, b)) =
   PolyPair (mulPoly b (Poly c), a)
 
 -- |Addition operations of polynomials.
-addPoly :: Num a => Poly a -> Poly a -> Poly a
+addPoly :: (Num a, Eq a) => Poly a -> Poly a -> Poly a
 addPoly (Poly a) (Poly b) = Poly $ addPolyCoef a b
 addPoly (PolyPair (a, b)) (PolyPair (c, d)) =
     if b==d then  -- simplifyPolyPair $

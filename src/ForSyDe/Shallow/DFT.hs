@@ -40,7 +40,7 @@ fft :: Int -> Vector (Complex Double) -> Vector (Complex Double)
 fft bigN xv | bigN == (lengthV xv) = mapV (bigX xv) (kVector bigN)
 	    | otherwise = error "FFT: Vector has not the right size!"
 
-kVector :: (Num b, Num a) => a -> Vector b      
+kVector :: (Num b, Num a, Eq a) => a -> Vector b      
 kVector bigN = iterateV bigN (+1) 0 
 
 

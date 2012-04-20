@@ -54,7 +54,7 @@ nullV    :: Vector a -> Bool
 lengthV  :: Vector a -> Int
 
 -- | The function 'atV' returns the n-th element in a vector, starting from zero.
-atV      :: Num a => Vector b -> a -> b
+atV      :: (Num a, Eq a) => Vector b -> a -> b
 
 -- |  The function 'replaceV' replaces an element in a vector.
 replaceV :: Vector a -> Int -> a -> Vector a
@@ -145,21 +145,21 @@ reverseV  :: Vector a -> Vector a
 -- > Vector> iterateV 5 (+1) 1
 --
 -- > <1,2,3,4,5> :: Vector Integer
-iterateV :: Num a => a -> (b -> b) -> b -> Vector b
+iterateV :: (Num a, Eq a) => a -> (b -> b) -> b -> Vector b
 
 -- | The function 'generateV' behaves in the same way, but starts with the application of the supplied function to the supplied value. 
 --
 -- > Vector> generateV 5 (+1) 1
 -- 
 -- > <2,3,4,5,6> :: Vector Integer
-generateV :: Num a => a -> (b -> b) -> b -> Vector b
+generateV :: (Num a, Eq a) => a -> (b -> b) -> b -> Vector b
 
 -- | The function 'copyV' generates a vector with a given number of copies of the same element. 
 --
 -- > Vector> copyV 7 5 
 -- 
 -- > <5,5,5,5,5,5,5> :: Vector Integer
-copyV     :: Num a => a -> b -> Vector b
+copyV     :: (Num a, Eq a) => a -> b -> Vector b
 
 
 {-

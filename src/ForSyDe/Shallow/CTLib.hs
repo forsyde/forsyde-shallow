@@ -81,12 +81,12 @@ revision=filter (\ c -> (not (c=='$'))) "$Revision: 1.7 $, $Date: 2007/07/11 08:
 --  function and the interval on which the function is defined.
 -- The continuous time signal is then defined as a sequence of SubsigCT 
 -- elements: Signal SubsigCT
-data (Num a) => 
+data (Num a, Show a) => 
     SubsigCT a = SubsigCT ((Rational -> a),     -- The function Time -> Value
                            (Rational,Rational)) -- The interval on which the
                                                 --  function is defined
 
-instance (Num a) => Show (SubsigCT a) where
+instance (Num a, Show a) => Show (SubsigCT a) where
     show ss = show (sampleSubsig timeStep ss)
 
 --unit :: String -- all time numbers are in terms of this unit.
@@ -100,7 +100,7 @@ timeStep = 10.0e-9
 -----------------------------------------------------------------------
 -- |'combCT' is a process constructor with one input and one output signal.
 -- It instantiates a combinatorial, stateless process.
-combCT :: (Num a) =>
+combCT :: (Num a, Show a) =>
           Rational -- ^The partitioning of the input signal. In other words
                    -- this gives the time period which is consumed by the
                    -- process during each evaluation cycle.
@@ -115,7 +115,7 @@ combCT c f s | (duration (takeCT c s)) < c = NullS
 
 -- |'combCT2' is a process constructor just like 'combCT' but operates on
 -- two input signals.
-combCT2 :: (Num a) =>
+combCT2 :: (Num a, Show a) =>
            Rational -- ^The partitioning of both input signals
 	-> ((Rational -> a) -> (Rational -> a) -> (Rational->a)) 
            -- ^The function defining the process behaviour.
@@ -140,7 +140,7 @@ combCT2 c f s1 s2 | (duration (takeCT c s1)) < c
 -- |'delayCT' is a delay process which simply delays the
 -- output but does not buffer it. The value at each time t is the same as 
 -- for the input signal, after the initial delay.
-delayCT :: (Num a) =>
+delayCT :: (Num a, Show a) =>
            Rational           -- ^ The delay
         -> Signal (SubsigCT a) -- ^ The input signal
         -> Signal (SubsigCT a) -- ^ The output signal
@@ -152,7 +152,7 @@ delayCT delay (SubsigCT (f,(a,b)) :- s)
 ----
 -- |'shiftCT'  shifts the shape of the input signal by delay 
 -- to the right.
-shiftCT :: (Num a) =>
+shiftCT :: (Num a, Show a) =>
            Rational          -- ^ The delay
         -> Signal (SubsigCT a) -- ^ The input signal
         -> Signal (SubsigCT a) -- ^ The output signal
@@ -171,7 +171,7 @@ shiftCT delay s     = shiftCT' delay (dropCT delay s) -- The new signal shall
 -- | initCT takes an initial signal, outputs it and then copies its second 
 -- input signal, which is delayed by the duration of the initial signal.
 -- The delay is realized by 'delayCT' 
-initCT :: (Num a) => 
+initCT :: (Num a, Show a) => 
           Signal (SubsigCT a) -- ^ The initial signal output first.
        -> Signal (SubsigCT a) -- ^ Then this signal is output, but delayed.
        -> Signal (SubsigCT a) -- ^ The concatation of the two inputs.
@@ -179,7 +179,7 @@ initCT s0 s1 = s0 +-+ (delayCT (duration s0) s1)
 
 -----------------------------------------------------------------------------
 -- |The state-full constructor 'mealyCT' resembles a Mealy machine.
-mealyCT :: (Num b, Num c) =>
+mealyCT :: (Num b, Num c, Show b, Show c) =>
            (a -> Rational)                  -- ^The gamma function which defines
                                            -- the partitioning of the input
                                            -- signal. 
@@ -198,7 +198,7 @@ mealyCT gamma g f w s
 	  w' = applyG1 g w (takeCT c s)
 
 -- |The state-full constructor 'mooreCT' resembles a Moore machine.
-mooreCT :: (Num b, Num c) =>
+mooreCT :: (Num b, Num c, Show b, Show c) =>
            (a -> Rational)                  -- ^The gamma function which defines
                                            -- the partitioning of the input
                                            -- signal. 
@@ -222,7 +222,7 @@ mooreCT gamma g f w s
 -- Some useful process constructors:
 -- 
 -- |'scaleCT' amplifies an input by a constant factor:
-scaleCT :: (Num a) =>
+scaleCT :: (Num a, Show a) =>
            a                   -- ^The scaling factor
         -> Signal (SubsigCT a) -- ^The input signal
         -> Signal (SubsigCT a) -- ^The output signal of the process
@@ -241,7 +241,7 @@ scaleCT k = applyF1 f'
 --	      where f' x = k * (g x)
 
 -- |'addCT' adds two input signals together.
-addCT :: (Num a) =>
+addCT :: (Num a, Show a) =>
          Signal (SubsigCT a) -- ^The first input signal
       -> Signal (SubsigCT a) -- ^The second input signal
       -> Signal (SubsigCT a) -- ^The output signal
@@ -262,7 +262,7 @@ addCT s1 s2 = applyF2 f s1' s2'
 -- 	      where f' x = (g1 x) + (g2 x)
 	      
 -- |'multCT' multiplies two input signals together.
-multCT :: (Num a) =>
+multCT :: (Num a, Show a) =>
           Signal (SubsigCT a) -- ^The first input signal
        -> Signal (SubsigCT a) -- ^The second input signal
        -> Signal (SubsigCT a) -- ^The output signal
@@ -283,7 +283,7 @@ multCT s1 s2 = applyF2 f s1' s2'
 --               where f' x = (g1 x) * (g2 x)
 
 -- |'absCT' takes the absolute value of a signal.
-absCT :: (Num a,Ord a) =>
+absCT :: (Num a,Ord a, Show a) =>
          Signal (SubsigCT a) -- ^The input signal
       -> Signal (SubsigCT a) -- ^The output signal
 absCT = applyF1 f
@@ -293,7 +293,7 @@ absCT = applyF1 f
 
 -- | 'sineWave' generates a sinus signal with the given frequency defined
 -- over  a given period. The function is defined as @f(x)=sin(2*pi*freq*x)@.
-sineWave :: (Floating a) =>
+sineWave :: (Floating a, Show a) =>
             Rational          -- ^The frequency
          -> (Rational,Rational) -- ^The interval of the signal
          -> Signal (SubsigCT a) -- ^The generated signal
@@ -304,14 +304,14 @@ sineWave freq timeInterval
         --sineFunction t = sin (2*pi * freq * t)
         sineFunction t = (sin (2*pi * (fromRational (freq * t))))
 -- | constCT generates a constant signal for a given time duration.
-constCT :: (Num a) => 
+constCT :: (Num a, Show a) => 
            Rational -- ^ The time duration of the generated signal.
         -> a        -- ^ The constant value of the signal.
         -> Signal (SubsigCT a) -- ^ The resulting signal.
 constCT t c = signal [SubsigCT ((\_->c), (0,t))]
 
 -- | zeroCT generates a constant 0 signal for the given time duration.
-zeroCT :: (Num a) => 
+zeroCT :: (Num a, Show a) => 
           Rational            -- ^ The time duration
        -> Signal (SubsigCT a) -- ^ The generated signal.
 zeroCT t = constCT t 0
@@ -341,7 +341,7 @@ data DACMode = DAlinear -- ^linear interpolation
  Note, that the process 'd2aConverter' is an ideal component, i.e. there
  are no losses due to a limited resolution due to a fixed number of bits. 
 -}
-d2aConverter :: (Fractional a) =>
+d2aConverter :: (Fractional a, Show a) =>
                 DACMode           -- ^Mode of conversion
               -> Rational           -- ^Duration of input signal
               -> Signal a             -- ^Input signal (untimed MoC)
@@ -350,13 +350,13 @@ d2aConverter mode c xs
         | mode == DAlinear = d2aLinear c 0.0 xs
         | otherwise = d2aHolder c 0.0 xs
   where
-    d2aHolder :: (Num a) => 
+    d2aHolder :: (Num a, Show a) => 
                  Rational -> Rational -> Signal a -> Signal (SubsigCT a)
     d2aHolder _ _ NullS = NullS
     d2aHolder c holdT (x:-xs) = (SubsigCT (constRationalF x,(holdT,holdT+c)) )
                                 :- d2aHolder c (holdT+c) xs
 
-    d2aLinear :: (Fractional a) =>
+    d2aLinear :: (Fractional a, Show a) =>
                  Rational -> Rational -> Signal a -> Signal (SubsigCT a)
     d2aLinear _ _ NullS = NullS
     d2aLinear _ _ (_:-NullS) = NullS
@@ -382,7 +382,7 @@ linearRationalF c holdT m n x = (1-alpha)*m + alpha*n
    i.e. there are no losses due to a limited resolution due to a fixed
    number of bits.  
 -}
-a2dConverter :: (Num a) =>
+a2dConverter :: (Num a, Show a) =>
                 Rational            -- ^Sampling Period
              -> Signal (SubsigCT a) -- ^Input signal (continuous time)
 	     -> Signal a            -- ^Output signal (untimed)
@@ -390,7 +390,7 @@ a2dConverter _ NullS = NullS
 a2dConverter c s | (duration (takeCT c s)) < c = NullS
                  | otherwise = f (takeCT c s)
                                +-+ a2dConverter c (dropCT c s)
-    where f :: (Num a ) => Signal (SubsigCT a) -> Signal a
+    where f :: (Num a, Show a) => Signal (SubsigCT a) -> Signal a
           f NullS = NullS
           f (SubsigCT (g,(a,_)) :- _) = signal [g a]
 
@@ -398,19 +398,19 @@ a2dConverter c s | (duration (takeCT c s)) < c = NullS
 -- Helpter functions for the CT MoC:
 -- | applyF1 applies a function on a sub-signal, which means the function of 
 -- the subsignal is transformed to another function:
-applyF1 :: (Num a, Num b) =>
+applyF1 :: (Num a, Num b, Show a, Show b) =>
            ((Rational -> a) -> (Rational -> b)) -- The transformer
         -> Signal (SubsigCT a)                            -- The input signal
         -> Signal (SubsigCT b)                            -- The output signal
 applyF1 _ NullS = NullS
 applyF1 f (ss :- s) = (applyF' f ss) :- (applyF1 f s)
-    where applyF' :: (Num a, Num b) =>
+    where applyF' :: (Num a, Num b, Show a, Show b) =>
                      ((Rational -> a) -> (Rational -> b)) 
                   -> (SubsigCT a) -> (SubsigCT b)
           applyF' f (SubsigCT (f',(a,b))) = SubsigCT ((f f'), (a,b))
 
 -- | applyF2 works just like applyF1 but operates on two incoming signals.
-applyF2 :: (Num a, Num b, Num c) =>
+applyF2 :: (Num a, Num b, Num c, Show a, Show b, Show c) =>
            ((Rational -> a) -> (Rational->b) -> (Rational -> c))
         -> Signal (SubsigCT a) 
         -> Signal (SubsigCT b) 
@@ -443,26 +443,26 @@ applyF2 f (ss1 :- s1) (ss2 :- s2) = (applyF' f ss1 ss2) :- (applyF2 f s1 s2)
 -- Another possibility may be to give a sub-signal that is relative to the 
 -- current evaluation, i.e. the left most point is always 0. Would that make
 -- sense?
-applyG1 :: (Num b) =>
+applyG1 :: (Num b, Show b) =>
            (a -> (Rational -> b) -> a) -> a -> Signal (SubsigCT b) -> a
 applyG1 _ w NullS = w
 applyG1 g w (ss :- _) = applyG1' g w ss
     where 
-    applyG1' :: (Num b) =>
+    applyG1' :: (Num b, Show b) =>
                 (a -> (Rational -> b) -> a) -> a -> (SubsigCT b) -> a
     applyG1' g w (SubsigCT (f, (_,_))) = g w f
 
 -- | cutEq partitions the two signals such that the partitioning are identical
 -- in both result signals, but only up to the duration of the shorter of the 
 -- two signals:
-cutEq :: (Num a, Num b) =>
+cutEq :: (Num a, Num b, Show a, Show b) =>
          Signal (SubsigCT a) -> Signal (SubsigCT b) 
       -> (Signal (SubsigCT a), Signal (SubsigCT b))
 cutEq NullS s2 = (NullS, s2) 
 cutEq s1 NullS = (s1, NullS) 
 cutEq s1 s2 = unzipCT (cutEq' s1 s2)
     where 
-    cutEq' :: (Num a, Num b) =>
+    cutEq' :: (Num a, Num b, Show a, Show b) =>
               Signal (SubsigCT a) -> Signal  (SubsigCT b) 
 	   -> Signal ((SubsigCT a), (SubsigCT b))
     cutEq' NullS _    = NullS
@@ -485,14 +485,14 @@ cutEq s1 s2 = unzipCT (cutEq' s1 s2)
 	where (s1,s2) = unzipCT s
 
 -- The take and drop functions on CT signals:
-takeCT :: (Num a) => 
+takeCT :: (Num a, Show a) => 
           Rational -> Signal (SubsigCT a) -> Signal (SubsigCT a)
 takeCT _ NullS = NullS
 takeCT 0 _     = NullS
 takeCT c (ss:-s) | (durationSS ss) >= c = (takeSubSig c ss) :- NullS
 		 | otherwise        = ss :- (takeCT (c - (durationSS ss)) s)
 
-dropCT :: (Num a) =>
+dropCT :: (Num a, Show a) =>
           Rational -> Signal (SubsigCT a) -> Signal (SubsigCT a)
 dropCT _ NullS   = NullS
 dropCT 0 s       = s
@@ -500,26 +500,26 @@ dropCT c (ss:-s) | (durationSS ss > c) = dropSubSig c ss :- s
 		 | otherwise           = dropCT (c - (durationSS ss)) s
 
 -- The interval length of a signal:
-duration :: (Num a) => Signal (SubsigCT a) -> Rational
+duration :: (Num a, Show a) => Signal (SubsigCT a) -> Rational
 duration NullS = 0
 duration (ss:- s) = (durationSS ss) + (duration s)
 
 -- The interval length of a sub-signal:
-durationSS :: (Num a) => (SubsigCT a) -> Rational
+durationSS :: (Num a, Show a) => (SubsigCT a) -> Rational
 durationSS (SubsigCT (_, (a,b))) = b-a
 
 -- The start time of a signal:
-startTime :: (Num a) => Signal (SubsigCT a) -> Rational
+startTime :: (Num a, Show a) => Signal (SubsigCT a) -> Rational
 startTime NullS = 0
 startTime (SubsigCT (_,(a,_)) :- _) = a
 
 -- The take and drop functions for sub-signals:
-takeSubSig :: (Num a) => Rational -> (SubsigCT a) -> (SubsigCT a)
+takeSubSig :: (Num a, Show a) => Rational -> (SubsigCT a) -> (SubsigCT a)
 takeSubSig c (SubsigCT (f,(a,b))) | c >= (b-a) = SubsigCT (f,(a,b))
                                   | otherwise  = SubsigCT (f,(a,a+c))
 
 
-dropSubSig :: (Num a) => Rational -> (SubsigCT a) -> (SubsigCT a)
+dropSubSig :: (Num a, Show a) => Rational -> (SubsigCT a) -> (SubsigCT a)
 dropSubSig c (SubsigCT (f,(a,b))) | c > (b-a) = SubsigCT (f,(b,b))
                                   | otherwise = SubsigCT (f,(a+c,b))
 
@@ -555,7 +555,7 @@ dropSubSig c (SubsigCT (f,(a,b))) | c > (b-a) = SubsigCT (f,(b,b))
 
 -- |'sample' computes the values of a signal with a given step size. 
 -- It returns a list with (x, (f x)) pairs of type [(Rational,Rational)].
-sample :: (Num a) =>
+sample :: (Num a, Show a) =>
           Rational            -- ^ The sampling period
        -> Signal (SubsigCT a) -- ^The signal to be sampled
        -> [(Rational,a)]      -- ^The list of (time,value) pairs of the 
@@ -564,14 +564,14 @@ sample _ NullS = []
 sample step (ss :- s) = sampleSubsig step ss ++ (sample step s)
 
 -- sampleSubsig samples a Subsig signal:
-sampleSubsig :: (Num a) => Rational -> (SubsigCT  a) -> [(Rational,a)]
+sampleSubsig :: (Num a, Show a) => Rational -> (SubsigCT  a) -> [(Rational,a)]
 sampleSubsig step (SubsigCT (f,(a,b)))
     | b>a = (a,(f a)) : (sampleSubsig step (SubsigCT (f,(a+step,b))))
     | otherwise = []
 
 -- |'showParts' allows to see how a signal is partitioned into sub-signals.
 -- It returns the sequence of intervals.
-showParts :: (Num a) =>
+showParts :: (Num a, Show a) =>
              Signal (SubsigCT a)   -- ^The partitioned signal
           -> [(Double,Double)] -- ^The sequence of intervals
 showParts NullS = []
@@ -581,7 +581,7 @@ showParts (SubsigCT (_,(a,b)):-s) = (fromRational a,fromRational b)
 -----------------------------------------------------------------------------
 -- |'plot' plots one signal in a graph with the default sampling period 
 -- of 1\/200 of the duration of the signal.
-plot :: (Num a) =>
+plot :: (Num a, Show a) =>
         Signal (SubsigCT a) -- ^The signal to be plotted.
      -> IO String          -- ^A reporting message.
 plot s = plotCT step [s]
@@ -590,7 +590,7 @@ plot s = plotCT step [s]
 -- |'plotCT' plots a list of signals in the same graph. The sampling period 
 -- has to be given as argument. In the graph default label names are used
 -- to identify the signals.
-plotCT :: (Num a) =>
+plotCT :: (Num a, Show a) =>
           Rational              -- ^The sampling period
        -> [Signal (SubsigCT a)] -- ^The list of signals to be ploted 
                                 -- in the same graph
@@ -622,7 +622,7 @@ plotCT step sigs = plotCT' step (map (\ s -> (s,"")) sigs)
 			       while the .tex file contains the labels and 
                                text.
 -}
-plotCT' :: (Num a) =>
+plotCT' :: (Num a, Show a) =>
            Rational             -- ^Sampling period
         -> [(Signal (SubsigCT a), String)]
            -- ^A list of (signal,label) pairs. The signals are plotted and
@@ -632,13 +632,13 @@ plotCT' _ [] = return []
 plotCT' 0 _        = error "plotCT: Cannot compute signal with step=0.\n"
 plotCT' step sigs = plotSig (expandSig 1 sigs)
     where 
-      expandSig :: (Num a ) => 
+      expandSig :: (Num a, Show a) => 
                    Int -> [(Signal (SubsigCT a),String)] 
                        -> [(Int,String,[(Rational,a)])]
       expandSig _ [] = []
       expandSig i ((sig,label):sigs) 
           = (i, label, (sample step sig)) : (expandSig (i+1) sigs)
-      plotSig :: (Num a) => [(Int,String,[(Rational,a)])] -> IO String
+      plotSig :: (Num a, Show a) => [(Int,String,[(Rational,a)])] -> IO String
       plotSig sigs 
           = do mkDir "./fig"
                writeDatFiles sigs
@@ -675,7 +675,7 @@ plotCT' step sigs = plotSig (expandSig 1 sigs)
       replChar _ [] = []
       replChar replSet (c:s) | elem c replSet = '_' : (replChar replSet s)
                              | otherwise      = c   : (replChar replSet s)
-      dumpSig :: (Num a) => [(Rational,a)] -> String
+      dumpSig :: (Num a, Show a) => [(Rational,a)] -> String
       dumpSig points = concatMap f points
         where f (x,y) = show ((fromRational x) :: Float) ++ "    " 
                         ++ show (y) ++ "\n"
@@ -748,7 +748,7 @@ The values are written to the file ./fig/ct-moc.vcd. If the file exists, it
 is overwritten. If the directory does not exist, it is created.
 
 -}
-vcdGen :: (Num a) 
+vcdGen :: (Num a, Show a) 
           => Rational             -- ^Sampling period; defines for what
                                   -- time stamps the values are written.
               -> [(Signal (SubsigCT a), String)]
@@ -762,13 +762,13 @@ vcdGen step sigs =
       -- putStr (show (distLabels (expandSig 1 sigs)))
       plotSig (expandSig 1 sigs)
     where 
-      expandSig :: (Num a ) => 
+      expandSig :: (Num a, Show a) => 
                    Int -> [(Signal (SubsigCT a),String)] 
                        -> [(Int,String,[(Rational,a)])]
       expandSig _ [] = []
       expandSig i ((sig,label):sigs) 
           = (i, label, (sample step sig)) : (expandSig (i+1) sigs)
-      plotSig :: (Num a) => [(Int,String,[(Rational,a)])] -> IO String
+      plotSig :: (Num a, Show a) => [(Int,String,[(Rational,a)])] -> IO String
       plotSig sigs 
           = do writeVCDFile sigs
                -- We return some reporting string:

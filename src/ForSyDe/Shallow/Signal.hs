@@ -96,7 +96,7 @@ readS		   :: Read a => [Char] -> Signal a
 
 
 -- | The function 'copyS' creates a signal with n values 'x'.
-copyS :: Num a => a -> b -> Signal b
+copyS :: (Num a, Eq a) => a -> b -> Signal b
 
 
 -- | The combinator 'fanS' takes two processes 'p1' and 'p2' and and generates a process network, where a signal is split and processed by the processes 'p1' and 'p2'.

@@ -31,7 +31,7 @@ import ForSyDe.Shallow.Vector
 type BitVector = Vector Integer
 
 -- |To judge whether the input bit-vector is in a proper form.
-isBitVector :: (Num t) =>
+isBitVector :: (Num t, Eq t) =>
           Vector t  -- ^Input bit-vector
        -> Bool      -- ^Output boolean value
 isBitVector NullV = True
@@ -75,13 +75,13 @@ bitVectorToInt' (x:>xv) bit = x * 2^(bit-1) + bitVectorToInt' xv (bit-1)
 data Parity = Even | Odd deriving (Show, Eq)
 
 -- |To add even parity bit on the bit-vector in the tail.
-addEvenParityBit :: Num a => Vector a -> Vector a
+addEvenParityBit :: (Num a, Eq a) => Vector a -> Vector a
 addEvenParityBit = addParityBit Even
 -- |To add odd parity bit on the bit-vector in the tail.
-addOddParityBit :: Num a => Vector a -> Vector a
+addOddParityBit :: (Num a, Eq a) => Vector a -> Vector a
 addOddParityBit  = addParityBit Odd
 
-addParityBit :: Num a => Parity -> Vector a -> Vector a
+addParityBit :: (Num a, Eq a) => Parity -> Vector a -> Vector a
 addParityBit p v 
   | isBitVector v = case p of
                      Even -> resZero even
@@ -92,24 +92,24 @@ addParityBit p v
 
 
 -- |To remove the parity bit in the tail.
-removeParityBit :: Num t => Vector t -> Vector t
+removeParityBit :: (Num t, Eq t) => Vector t -> Vector t
 removeParityBit v 
  | isBitVector v = takeV (lengthV v - 1) v
  | otherwise = error "removeParityBit: Vector is not a BitVector "
 
 -- |To check the even parity of the bit-vector.
-isEvenParity :: Num t => Vector t -> Bool
+isEvenParity :: (Num t, Eq t) => Vector t -> Bool
 isEvenParity = isParityCorrect Even
 
 -- |To check the odd parity of the bit-vector.
-isOddParity :: Num t => Vector t -> Bool
+isOddParity :: (Num t, Eq t) => Vector t -> Bool
 isOddParity = isParityCorrect Odd
 
-isParityCorrect :: Num t => Parity -> Vector t -> Bool 
+isParityCorrect :: (Num t, Eq t) => Parity -> Vector t -> Bool 
 isParityCorrect Even xv = evenNumber xv
 isParityCorrect Odd xv  = not $ evenNumber xv 
 
-evenNumber :: Num t => Vector t -> Bool
+evenNumber :: (Num t, Eq t) => Vector t -> Bool
 evenNumber NullV   = True
 evenNumber (0:>xv) = xor False (evenNumber xv)
 evenNumber (1:>xv) = xor True (evenNumber xv)

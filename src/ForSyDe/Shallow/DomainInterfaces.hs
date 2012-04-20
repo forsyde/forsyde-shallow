@@ -20,10 +20,10 @@ import ForSyDe.Shallow.SynchronousLib
 
 
 -- | The domain interface constructor 'downDI' takes a parameter 'k' and downsamples an input signal.
-downDI     :: Num a => a -> Signal b -> Signal b
+downDI     :: (Num a, Eq a) => a -> Signal b -> Signal b
 
 -- | The domain interface constructors 'upDI' takes a parameter 'k' and upsamples an input signal.
-upDI       :: Num a => a -> Signal b -> Signal (AbstExt b)
+upDI       :: (Num a, Eq a) => a -> Signal b -> Signal (AbstExt b)
 
 -- | The domain interface constructor 'par2ser2DI' converts two parallel signals into one signal.
 par2ser2DI :: Signal a -> Signal a -> Signal a
