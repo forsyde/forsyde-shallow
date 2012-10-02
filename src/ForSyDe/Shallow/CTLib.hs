@@ -69,7 +69,7 @@ import System.Cmd
 import System.Time
 import System.IO
 import System.Directory
---import Control.Exception
+import Control.Exception
 import Data.Ratio
 import Numeric()
 
