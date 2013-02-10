@@ -16,7 +16,7 @@ Since \process{Group Samples} needs $N$ cycles for the grouping, it produces $N-
 module AudioAnalyzer (audioAnalyzer) where
 
 import ForSyDe.Shallow
-import Complex
+import Data.Complex
 import EqualizerTypes
 
 input = 0.1 :- 0.2 :- input

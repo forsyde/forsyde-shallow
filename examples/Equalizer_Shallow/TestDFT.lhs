@@ -2,7 +2,7 @@
 module TestFFT where
 
 import ForSyDe.Shallow
-import Complex
+import Data.Complex
 
 toComplex a = a:+0
 

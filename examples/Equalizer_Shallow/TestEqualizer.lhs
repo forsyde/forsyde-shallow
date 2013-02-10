@@ -1,7 +1,7 @@
 \begin{code}
 module TestEqualizer where
 
-import IO
+import System.IO
 import Equalizer
 import EqualizerTypes
 import ForSyDe.Shallow

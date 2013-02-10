@@ -13,7 +13,7 @@ module ButtonControl (buttonControl) where
 
 import ForSyDe.Shallow
 import EqualizerTypes
-import Combinators
+--import Combinators
 
 data State   = Operating 
 	     | Locked deriving(Eq, Show)
