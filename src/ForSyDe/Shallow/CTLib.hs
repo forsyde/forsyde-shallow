@@ -67,7 +67,7 @@ module ForSyDe.Shallow.CTLib (
 import ForSyDe.Shallow.CoreLib
 import System.Cmd
 import System.Time
-import System.IO
+--import System.IO
 import System.Directory
 import Control.Exception
 import Data.Ratio
@@ -650,7 +650,7 @@ plotCT' step sigs = plotSig (expandSig 1 sigs)
                         (\ file -> (writeFile file
                                     (mkPlotScript (map mkDatFileName sigs))))
                -- We fire up gnuplot:
-               system ("gnuplot -persist " ++ fname)
+               _ <- system ("gnuplot -persist " ++ fname)
                -- We return some reporting string:
                return ("Signal(s) " ++(mkAllLabels sigs) ++ " plotted.")
       writeDatFiles [] = return ()

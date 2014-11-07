@@ -397,11 +397,12 @@ matchState (Value v) x		= x == v
 --
 ------------------------------------------------------------------------
 
-
+selectRules :: [([FiringToken a], [FiringToken a1], [FiringToken Bool])]
 selectRules = [ ([Wild], [], [Value True]),
  		   ([], [Wild], [Value False]) ]
 
 
+selectOutput :: Signal t1 -> Signal t1 -> t -> [[t1]]
 selectOutput xs ys _ =  [ [headS xs], [headS ys] ]
 
 selectDF			:: Eq a => Signal a -> Signal a 
@@ -410,16 +411,21 @@ selectDF			=  zipWith3DF selectRules selectOutput
 
 
 
+s1 :: Signal Integer
 s1 = signal [1,2,3,4,5,6]
+s2 :: Signal Integer
 s2 = signal [7,8,9,10,11,12]
+s3 :: Signal Bool
 s3 = signal [True, True, False, False, True, True]
 
+rs :: (Eq c, Num c) => Signal c -> Signal c
 rs xs			        = mealyDF firingRule nextState output initState xs
    where firingRule	        = [(Wild, [Wild])]
 	 nextState state xs	= [(state + headS xs)]
 	 output state _		= [[state]]
 	 initState		= 0
 
+rs2 :: Signal Integer -> Signal Integer
 rs2			   = mealyDF fs ns o init
    where init		   = [0,0,0,0,0]
 	 fs		   = [(Wild, ([Wild, Wild]))]
