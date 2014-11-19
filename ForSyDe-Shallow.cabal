@@ -1,0 +1,79 @@
+name:           ForSyDe-Shallow
+version:        3.3.0
+cabal-version:  >= 1.2
+build-type:     Simple
+license:        BSD3
+license-file:   LICENSE
+author:         ES group, KTH/ICT/ES
+copyright:      Copyright (c) 2003-2013 ES group, KTH/ICT/ES
+maintainer:     forsyde-dev@ict.kth.se
+homepage:       http://forsyde.ict.kth.se/
+stability:      alpha
+synopsis:       
+ ForSyDe's Haskell-embedded Domain Specific Language.
+description: 
+ The ForSyDe (Formal System Design) methodology has been developed with the objective to move system design to a higher level of abstraction and to bridge the abstraction gap by transformational design refinement. 
+ 
+ This library provides ForSyDe's implementation as a Haskell-embedded Domain Specific Language (DSL). For more information, please see ForSyDe's website: <http://forsyde.ict.kth.se/>.
+
+ This library provides the shallow implementation of ForSyDe in Haskell.
+category:       Language
+tested-with:    GHC==7.8.3
+-- In order to include all this files with sdist
+extra-source-files: LICENSE,
+                    README,
+                    INSTALL,
+                    examples/Equalizer_Shallow/README,
+                    examples/Equalizer_Shallow/AudioAnalyzer.lhs,
+                    examples/Equalizer_Shallow/AudioFilter.lhs,
+                    examples/Equalizer_Shallow/ButtonControl.lhs,
+                    examples/Equalizer_Shallow/DistortionControl.lhs,
+                    examples/Equalizer_Shallow/Equalizer.lhs,
+                    examples/Equalizer_Shallow/EqualizerTypes.lhs,
+                    examples/Equalizer_Shallow/Test/AudioIn.mat,
+                    examples/Equalizer_Shallow/TestAnalyzer.lhs,
+                    examples/Equalizer_Shallow/TestButtonControl.lhs,
+                    examples/Equalizer_Shallow/TestDFT.lhs,
+                    examples/Equalizer_Shallow/TestDistortionControl.lhs,
+                    examples/Equalizer_Shallow/TestEqualizer.lhs,
+                    examples/Equalizer_Shallow/TestFilter.lhs,
+                    examples/Equalizer_Shallow/TestFIR.lhs
+
+
+Library
+  build-depends:   base>=4 && <6,
+                   directory,
+                   old-time,
+                   process,
+                   random
+
+
+  hs-source-dirs:  src
+  exposed-modules: ForSyDe.Shallow,
+                   ForSyDe.Shallow.AbsentExt,
+                   ForSyDe.Shallow.MoCLib,
+                   ForSyDe.Shallow.AdaptivityLib,
+                   ForSyDe.Shallow.PolyArith,
+                   ForSyDe.Shallow.BitVector,
+                   ForSyDe.Shallow.Queue,
+                   ForSyDe.Shallow.CTLib,
+                   ForSyDe.Shallow.Signal,
+                   ForSyDe.Shallow.CoreLib,
+                   ForSyDe.Shallow.StochasticLib,
+                   ForSyDe.Shallow.DFT,
+                   ForSyDe.Shallow.SynchronousLib,
+                   ForSyDe.Shallow.DomainInterfaces,
+                   ForSyDe.Shallow.SynchronousProcessLib,
+                   ForSyDe.Shallow.FIR,
+                   ForSyDe.Shallow.UntimedLib,
+                   ForSyDe.Shallow.FilterLib,
+                   ForSyDe.Shallow.UtilityLib,
+                   ForSyDe.Shallow.Gaussian,
+                   ForSyDe.Shallow.Vector,
+                   ForSyDe.Shallow.Memory,
+                   ForSyDe.Shallow.DataflowLib,
+                   ForSyDe.Shallow.SDFLib
+
+
+
+  ghc-options:	-Wall -fno-warn-name-shadowing

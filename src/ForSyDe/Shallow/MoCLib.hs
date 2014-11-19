@@ -28,8 +28,9 @@ module ForSyDe.Shallow.MoCLib(
                       module ForSyDe.Shallow.CTLib,
 		      module ForSyDe.Shallow.UntimedLib,
                       module ForSyDe.Shallow.DataflowLib,
-                      module ForSyDe.Shallow.DomainInterfaces
-		    ) where
+                      module ForSyDe.Shallow.DomainInterfaces,
+		      module ForSyDe.Shallow.SDFLib
+                      ) where
 
 import ForSyDe.Shallow.StochasticLib
 import ForSyDe.Shallow.SynchronousLib
@@ -38,3 +39,4 @@ import ForSyDe.Shallow.UntimedLib
 import ForSyDe.Shallow.DomainInterfaces
 import ForSyDe.Shallow.SynchronousProcessLib
 import ForSyDe.Shallow.DataflowLib
+import ForSyDe.Shallow.SDFLib
