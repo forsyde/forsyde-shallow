@@ -397,6 +397,7 @@ matchState (Value v) x		= x == v
 --
 ------------------------------------------------------------------------
 
+{-
 selectRules :: [([FiringToken a], [FiringToken a1], [FiringToken Bool])]
 selectRules = [ ([Wild], [], [Value True]),
  		   ([], [Wild], [Value False]) ]
@@ -431,7 +432,7 @@ rs2			   = mealyDF fs ns o init
 	 fs		   = [(Wild, ([Wild, Wild]))]
 	 ns state xs	   = [drop 2 state ++ fromSignal (takeS 2 xs)]
 	 o state _	   = [[(sum state)]]
-
+-}
 
 
 

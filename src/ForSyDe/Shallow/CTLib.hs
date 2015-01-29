@@ -65,7 +65,7 @@ module ForSyDe.Shallow.CTLib (
     where
 
 import ForSyDe.Shallow.CoreLib
-import System.Cmd
+import System.Process
 import System.Time
 --import System.IO
 import System.Directory

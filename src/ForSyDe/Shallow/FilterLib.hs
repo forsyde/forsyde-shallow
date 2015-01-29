@@ -48,7 +48,6 @@ import ForSyDe.Shallow.MoCLib
 import ForSyDe.Shallow.CoreLib
 import ForSyDe.Shallow.PolyArith
 import Data.List (zipWith5)
-import Control.Monad.Instances () -- Monad instance for (-> r)
 
 -- |The FIR filter. Let '[x_n]' denote the input signal, '[y_n]' denote the ouput
 -- signal, and '[h_n]' the impulse response of the filter. Suppose the length of
