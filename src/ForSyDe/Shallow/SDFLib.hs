@@ -44,7 +44,8 @@ mapSDF :: Int -> Int -> ([a] -> [b]) -> Signal a -> Signal b
 mapSDF _ _ _ NullS   = NullS
 mapSDF c p f xs     
     | c <= 0         = error "mapSDF: Number of consumed tokens must be positive integer" 
-    | lengthS xs < c = NullS 
+    | not $ sufficient_tokens c xs 
+                     = NullS
     | otherwise      = if length produced_tokens == p then
                           signal produced_tokens +-+ mapSDF c p f (dropS c xs) 
                        else   
@@ -63,7 +64,8 @@ zipWithSDF (_, _) _ _ _ NullS = NullS
 zipWithSDF (c1, c2) p f as bs 
     | c1 <= 0 || c2 <= 0  
          = error "zipWithSDF: Number of consumed tokens must be positive integer"
-    | lengthS as < c1 || lengthS bs < c2     
+    |    (not $ sufficient_tokens c1 as) 
+      || (not $ sufficient_tokens c2 bs)    
          = NullS
     | otherwise    
          = if length produced_tokens == p then
@@ -88,7 +90,9 @@ zipWith3SDF (_, _, _) _ _ _ _ NullS= NullS
 zipWith3SDF (c1, c2, c3) p f as bs cs
     | c1 <= 0 || c2 <= 0 || c3 <= 0 
          = error "zipWith3SDF: Number of consumed tokens must be positive integer"
-    | lengthS as < c1 || lengthS bs < c2 || lengthS cs < c3     
+    |    (not $ sufficient_tokens c1 as) 
+      || (not $ sufficient_tokens c2 bs)    
+      || (not $ sufficient_tokens c3 cs)    
          = NullS
     | otherwise    
          = if length produced_tokens == p then
@@ -119,8 +123,10 @@ zipWith4SDF (_, _, _, _) _ _ _ _ _ NullS = NullS
 zipWith4SDF (c1, c2, c3, c4) p f as bs cs ds
     | c1 <= 0 || c2 <= 0 || c3 <= 0 || c4 <= 0
          = error "zipWith4SDF: Number of consumed tokens must be positive integer"
-    |     lengthS as < c1 || lengthS bs < c2 || lengthS cs < c3 
-       || lengthS ds < c4     
+    |    (not $ sufficient_tokens c1 as) 
+      || (not $ sufficient_tokens c2 bs)    
+      || (not $ sufficient_tokens c3 cs)    
+      || (not $ sufficient_tokens c4 ds)    
          = NullS
     | otherwise    
          = if length produced_tokens == p then
@@ -327,6 +333,14 @@ actor44SDF (c1, c2, c3, c4) (p1, p2, p3, p4) f as bs cs ds
 --
 ------------------------------------------------------------------------
 
+sufficient_tokens :: (Num a, Eq a, Ord a) => a -> Signal t -> Bool
+sufficient_tokens 0 _       = True
+sufficient_tokens _ NullS   = False
+sufficient_tokens n (_:-xs) = if n < 0 then
+                                 error "sufficient_tokens: n must not be negative"
+                              else
+                                 sufficient_tokens (n-1) xs
+
 unzipSDF :: (Int, Int) -> Signal ([a], [b]) 
          -> (Signal a, Signal b)
 unzipSDF (p1, p2) xs = (s1, s2) 
@@ -402,6 +416,8 @@ unzip4SDF (p1, p2, p3, p4) xs = (s1, s2, s3, s4)
              else  
                 error "unzip4SDF: Process does not produce correct number of tokens" 
 
+
+
 ------------------------------------------------------------------------
 --
 -- Test of Library (not exported)
@@ -416,4 +432,13 @@ f1 [x] = [([x,x], [x,x,x])]
 s3 = unzipSDF (2,3) $ mapSDF 1 1 f1 s1        
                      
 s4 = actor12SDF 1 (2,3) f1 s1
+
+s5 = signal [1.0,2.0,3.0,4.0,5.0]
+
+multiply [x1,x2] [y] = [(x1+x2)* y]
+multiply _   _   = error "Single list item expected"
+
+feedback input = (i1,output) 
+   where output = actor21SDF (2,1) 1 multiply input i1
+         i1 = delaySDF 1 output
 -}

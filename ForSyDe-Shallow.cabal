@@ -1,5 +1,5 @@
 name:           ForSyDe-Shallow
-version:        3.3.0
+version:        3.3.0.1
 cabal-version:  >= 1.2
 build-type:     Simple
 license:        BSD3
