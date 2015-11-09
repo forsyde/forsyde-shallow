@@ -35,7 +35,7 @@ isBitVector :: (Num t, Eq t) =>
           Vector t  -- ^Input bit-vector
        -> Bool      -- ^Output boolean value
 isBitVector NullV = True
-isBitVector (x:>xs) = (x == 0 || x == 1) && isBitVector xs
+isBitVector (x:>xs) = (x `elem` [0, 1]) && isBitVector xs
 
 -- |To transform the input integer to a bit-vector with specified number of
 -- bits.
@@ -53,7 +53,7 @@ intToBitVector _    _ | otherwise =
 intToBitVector' :: (Num a, Ord a1, Num a1, Integral t) => 
                    t -> a1 -> Vector a
 intToBitVector' 0    _ = NullV
-intToBitVector' bits n = if (n >= 2^(bits-1)) then
+intToBitVector' bits n = if n >= 2^(bits-1) then
 			     1 :> intToBitVector' (bits-1) (n - 2^(bits-1))
 			 else  
 			     0 :> intToBitVector' (bits-1) n
@@ -61,7 +61,7 @@ intToBitVector' bits n = if (n >= 2^(bits-1)) then
 -- |To transform the input bit-vecotr to an integer.
 bitVectorToInt :: BitVector -> Integer
 bitVectorToInt (1:>xv) | isBitVector xv 
-               = bitVectorToInt' xv (lengthV xv) - 2^(lengthV xv) 
+               = bitVectorToInt' xv (lengthV xv) - 2 ^ lengthV xv 
 bitVectorToInt (0:>xv) | isBitVector xv 
                = bitVectorToInt' xv (lengthV xv)
 bitVectorToInt _ = error "bitVectorToInt: Vector is not a BitVector!"

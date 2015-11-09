@@ -31,4 +31,4 @@ applyf3SY = zipWith4SY ($)
 
 applyfU :: Int -> Signal ([a] -> [b]) -> Signal a -> Signal b
 applyfU tokenNum = comb2UC tokenNum apply
-      where apply f x = f x
+      where apply f = f

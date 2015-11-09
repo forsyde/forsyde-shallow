@@ -48,20 +48,20 @@ abstExt :: a -> AbstExt a
 
 -- | The data type 'AbstExt' is defined as an instance of 'Show' and 'Read'. \'_\' represents the value 'Abst' while a present value is represented with its value, e.g.  'Prst' 1 is represented as \'1\'.
 instance Show a => Show (AbstExt a) where
-	 showsPrec _ x	       = showsAbstExt x
+	 showsPrec _	       = showsAbstExt
 
-showsAbstExt :: Show a => AbstExt a -> [Char] -> [Char]
+showsAbstExt :: Show a => AbstExt a -> String -> String
 showsAbstExt Abst	       = (++) "_"       
 showsAbstExt (Prst x)	       = (++) (show x)
 
 instance Read a => Read (AbstExt a) where
- 	 readsPrec _ x	       =  readsAbstExt x 
+ 	 readsPrec _	       =  readsAbstExt 
 
 readsAbstExt		       :: (Read a) => ReadS (AbstExt a)
 readsAbstExt s		       =     [(Abst, r1)    | ("_", r1) <- lex s]
                                   ++ [(Prst x, r2)  | (x, r2) <- reads s]
 
-abstExt v		       =  Prst v
+abstExt  		       =  Prst
 
 fromAbstExt x Abst	       =  x   
 fromAbstExt _ (Prst y)	       =  y   
