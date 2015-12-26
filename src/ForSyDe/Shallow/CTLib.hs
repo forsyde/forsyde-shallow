@@ -43,18 +43,19 @@ module ForSyDe.Shallow.CTLib (
               SubsigCT(..), 
               timeStep,
               -- * Primary process constructors
-              combCT, combCT2, mooreCT, mealyCT, delayCT, shiftCT, initCT,
+              mapCT, zipWithCT,
+              combCT, comb2CT, -- mooreCT, mealyCT, delayCT, initCT,
               -- * Derived process constructors
               -- | These constructors instantiate very useful processes.
               -- They could be defined in terms of the basic constructors
               -- but are typically defined in a more direct way for 
               -- the sake of efficieny.
-	      scaleCT, addCT, multCT, absCT,
+	      -- scaleCT, addCT, multCT, absCT,
               -- * Convenient functions and processes
               -- | Several helper functions are available to obtain parts
               -- of a signal, the duration, the start time of a signal, and
               -- to generate a sine wave and constant signals.
-              takeCT, dropCT, duration, startTime, sineWave, constCT, zeroCT,
+              takeCT, dropCT, duration, startTime, -- sineWave, constCT, zeroCT,
               -- * AD and DA converters
               DACMode(..), a2dConverter, d2aConverter,
               -- * Some helper functions
@@ -73,6 +74,8 @@ import Control.Exception
 import Data.Ratio
 import Numeric()
 
+
+       
 -- The revision number of this file:
 revision :: String
 revision=filter (\ c -> (not (c=='$'))) "$Revision: 1.7 $, $Date: 2007/07/11 08:38:34 $"
@@ -81,10 +84,9 @@ revision=filter (\ c -> (not (c=='$'))) "$Revision: 1.7 $, $Date: 2007/07/11 08:
 --  function and the interval on which the function is defined.
 -- The continuous time signal is then defined as a sequence of SubsigCT 
 -- elements: Signal SubsigCT
-data (Num a, Show a) => 
-    SubsigCT a = SubsigCT ((Rational -> a),     -- The function Time -> Value
-                           (Rational,Rational)) -- The interval on which the
-                                                --  function is defined
+data SubsigCT a = SubsigCT ((Rational -> a),     -- The function Time -> Value
+                            (Rational,Rational)) -- The interval on which the
+                                                 --  function is defined
 
 instance (Num a, Show a) => Show (SubsigCT a) where
     show ss = show (sampleSubsig timeStep ss)
@@ -97,76 +99,29 @@ instance (Num a, Show a) => Show (SubsigCT a) where
 timeStep :: Rational 
 timeStep = 10.0e-9
 
------------------------------------------------------------------------
--- |'combCT' is a process constructor with one input and one output signal.
--- It instantiates a combinatorial, stateless process.
-combCT :: (Num a, Show a) =>
-          Rational -- ^The partitioning of the input signal. In other words
-                   -- this gives the time period which is consumed by the
-                   -- process during each evaluation cycle.
-       -> ((Rational -> a) -> (Rational -> a)) -- ^The function that 
-                                                      -- defines the process 
-                                                      -- behaviour
-	->Signal (SubsigCT a)   -- ^The input signal
-        -> Signal (SubsigCT a)  -- ^The output signal of the process.
-combCT _ _ NullS = NullS
-combCT c f s | (duration (takeCT c s)) < c = NullS
-	      | otherwise = applyF1 f (takeCT c s) +-+ combCT c f (dropCT c s)
+mapCT g NullS = NullS
+mapCT g (SubsigCT (f, (f_start, f_end)):-fs) = (SubsigCT (\x -> g (f x), (f_start, f_end)) :- mapCT g fs)
 
--- |'combCT2' is a process constructor just like 'combCT' but operates on
--- two input signals.
-combCT2 :: (Num a, Show a) =>
-           Rational -- ^The partitioning of both input signals
-	-> ((Rational -> a) -> (Rational -> a) -> (Rational->a)) 
-           -- ^The function defining the process behaviour.
-	-> Signal (SubsigCT a) -- ^The first input signal
-        -> Signal (SubsigCT a) -- ^The second input signal
-        -> Signal (SubsigCT a) -- ^The output signal of the process
-combCT2 _ _ NullS _ = NullS
-combCT2 _ _ _ NullS = NullS
-combCT2 c f s1 s2 | (duration (takeCT c s1)) < c
-		      || (duration (takeCT c s2)) < c = NullS
-		  | startTime s1 /= startTime s2 
-                      && abs(startTime s1 - startTime s2) > 0
-		      = error ("combCT2: s1 and s2 have not identical start"
-			       ++ " times: startTime s1 = "
-			       ++ (show (startTime s1)) ++ ", startTime s2 = "
-			       ++ (show (startTime s2)) ++ ";")
-		  | otherwise = applyF2 f s1' s2'
-				+-+ combCT2 c f (dropCT c s1) (dropCT c s2)
-		  where (s1',s2') = cutEq (takeCT c s1) (takeCT c s2)
+zipWithCT h NullS _ = NullS
+zipWithCT h _ NullS = NullS
+zipWithCT h (SubsigCT (f, (f_start, f_end)):-fs) (SubsigCT (g, (g_start, g_end)):-gs)
+    | f_start /= g_start = error "Start times not aligned"
+    | f_end == g_end     = (SubsigCT (\x -> h (f x) (g x), (f_start, f_end)) :- zipWithCT h fs gs)
+    | f_end < g_end      = (SubsigCT (\x -> h (f x) (g x), (f_start, f_end))
+                              :- zipWithCT h fs (SubsigCT (g, (f_end, g_end)) :- gs))                           
+    | f_end > g_end      = (SubsigCT (\x -> h (f x) (g x), (f_start, g_end))
+                              :- zipWithCT h (SubsigCT (f, (g_end, f_end)) :- fs) gs)
 
----
--- |'delayCT' is a delay process which simply delays the
--- output but does not buffer it. The value at each time t is the same as 
--- for the input signal, after the initial delay.
-delayCT :: (Num a, Show a) =>
-           Rational           -- ^ The delay
-        -> Signal (SubsigCT a) -- ^ The input signal
-        -> Signal (SubsigCT a) -- ^ The output signal
-delayCT _     NullS = NullS
-delayCT delay (SubsigCT (f,(a,b)) :- s) 
-              = SubsigCT (f,(a+delay, b+delay)) :- delayCT delay s
+combCT = mapCT
+comb2CT = zipWithCT
 
+    
+delayCT period value fs    = (SubsigCT (\x -> value, (0,period))) :- addTime period fs                                
 
-----
--- |'shiftCT'  shifts the shape of the input signal by delay 
--- to the right.
-shiftCT :: (Num a, Show a) =>
-           Rational          -- ^ The delay
-        -> Signal (SubsigCT a) -- ^ The input signal
-        -> Signal (SubsigCT a) -- ^ The output signal
-shiftCT _     NullS = NullS
-shiftCT 0     s     = s
-shiftCT delay s     = shiftCT' delay (dropCT delay s) -- The new signal shall
-                                                      --  only start delay 
-                                                      -- seconds later.
-    where 
-      shiftCT' _      NullS = NullS
-      shiftCT' delay (SubsigCT (f,(a,b)) :- s) 
-          = SubsigCT (f',(a,b)) :- (shiftCT' delay s)
-          where f' x = f (x-delay)
+addTime delay NullS = NullS
+addTime delay (SubsigCT (f, (start, end)) :- fs) = (SubsigCT (f, (start+delay, end+delay)) :- addTime delay fs)
 
+{-
 ----
 -- | initCT takes an initial signal, outputs it and then copies its second 
 -- input signal, which is delayed by the duration of the initial signal.
@@ -176,7 +131,9 @@ initCT :: (Num a, Show a) =>
        -> Signal (SubsigCT a) -- ^ Then this signal is output, but delayed.
        -> Signal (SubsigCT a) -- ^ The concatation of the two inputs.
 initCT s0 s1 = s0 +-+ (delayCT (duration s0) s1)
-
+-}
+        
+{-       
 -----------------------------------------------------------------------------
 -- |The state-full constructor 'mealyCT' resembles a Mealy machine.
 mealyCT :: (Num b, Num c, Show b, Show c) =>
@@ -315,7 +272,8 @@ zeroCT :: (Num a, Show a) =>
           Rational            -- ^ The time duration
        -> Signal (SubsigCT a) -- ^ The generated signal.
 zeroCT t = constCT t 0
-
+-}
+        
 -----------------------------------------------------------------------------
 -- DA and AD converter processes:
 --
