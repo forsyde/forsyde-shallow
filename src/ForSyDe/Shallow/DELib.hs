@@ -2,7 +2,7 @@ module DELib where
 
 import ForSyDe.Shallow.Signal
        
-type Time = Int
+type Time = Integer
 
 data DEToken a = U | D a deriving (Eq, Show, Ord)
 
@@ -36,30 +36,48 @@ mapDE' f w ((t,v):-xs) = if (f v) == w then
                          else
                             (t, (f v)) :- mapDE' f (f v) xs 
 
--- FIXME: Add old values on the inputs to zipWithDE - More patterns needed!
 zipWithDE :: Ord a => (DEToken a -> DEToken a -> DEToken a) -> Signal (Time, DEToken a) -> Signal (Time, DEToken a) -> Signal (Time, DEToken a)    
 zipWithDE f = zipWithDE' f U U U
 
 zipWithDE' f _ _ _ NullS          NullS          = NullS
-zipWithDE' f _ _ _ _              NullS          = NullS           
-zipWithDE' f _ _ _ NullS          _              = NullS
-zipWithDE' f _ _ U ((tx, vx):-xs) ((ty, vy):-ys)
+-- zipWithDE' f _ U _ _              NullS          = NullS           
+zipWithDE' f _ U _ ((tx, vx):-xs) NullS          = (tx, U) :- zipWithDE' f vx U (f vx U) xs NullS               
+zipWithDE' f _ y _ ((tx, vx):-xs) NullS          = (tx, f vx y) :- zipWithDE' f vx y (f vx y) xs NullS           
+-- zipWithDE' f U _ _ NullS          _              = NullS
+zipWithDE' f U _ _ NullS          ((ty, vy):-ys) = (ty, U) :- zipWithDE' f U vy (f U vy) NullS ys 
+zipWithDE' f x _ _ NullS          ((ty, vy):-ys) = (ty, f x vy) :- zipWithDE' f x vy (f x vy) NullS ys 
+zipWithDE' f U U _ ((tx, vx):-xs) ((ty, vy):-ys)
    = if tx < ty then
-        zipWithDE' f vx U U xs ((ty, vy):-ys)
+        (tx, U) :- zipWithDE' f vx U U xs ((ty, vy):-ys)
      else 
-        if ty > tx then
-           zipWithDE' f U vy U ((tx, vx):-xs) ys
+        if ty < tx then
+           (ty, U) :- zipWithDE' f U vy U ((tx, vx):-xs) ys
         else          
            (tx, f vx vy) :- zipWithDE' f vx vy (f vx vy) xs ys
-zipWithDE' f x y w ((tx, vx):-xs) ((ty, vy):-ys)
+zipWithDE' f U y _ ((tx, vx):-xs) ((ty, vy):-ys)
    = if tx < ty then
-        zipWithDE' f vx y (f vx y) xs ((ty, vy):-ys)
+        (tx, f vx y) :- zipWithDE' f vx y (f vx y) xs ((ty, vy):-ys)
      else 
-        if ty > tx then
-           zipWithDE' f x vy (f x vy) ((tx, vx):-xs) ys
+        if ty < tx then
+           (ty, U) :- zipWithDE' f U vy U ((tx, vx):-xs) ys
         else          
            (tx, f vx vy) :- zipWithDE' f vx vy (f vx vy) xs ys
-
+zipWithDE' f x U _ ((tx, vx):-xs) ((ty, vy):-ys)
+   = if tx < ty then
+        (tx, U) :- zipWithDE' f vx U U xs ((ty, vy):-ys)
+     else 
+        if ty < tx then
+           (ty, f x vy) :- zipWithDE' f x vy (f x vy) ((tx, vx):-xs) ys
+        else          
+           (tx, f vx vy) :- zipWithDE' f vx vy (f vx vy) xs ys
+zipWithDE' f x y _ ((tx, vx):-xs) ((ty, vy):-ys)
+   = if tx < ty then
+        (tx, f vx y) :- zipWithDE' f vx y (f vx y) xs ((ty, vy):-ys)
+     else 
+        if ty < tx then
+           (ty, f x vy) :- zipWithDE' f x vy (f x vy) ((tx, vx):-xs) ys
+        else          
+           (tx, f vx vy) :- zipWithDE' f vx vy (f vx vy) xs ys
 
 liftDE f U     = U
 liftDE f (D x) = D (f x)
@@ -84,11 +102,12 @@ sourceDE2 = out
 
 system s1 = out
    where out = zipWithDE addDE s1 i1
-         i1 = delayDE 2 (D 2) out
+         i1 = delayDE 4 (D 3) out
 
-s1 = (10, D 1) :- (20, D 2) :- NullS
+s0 = (12, D 100) :- NullS
+s1 = (0, D 4) :- (10, D 1) :- (20, D 2) :- NullS
 s2 = (15, D 10) :- (18, D 20) :- NullS 
-
+s4 = (5, D 1000) :- NullS
 -- Test cases
 test1 = delayDE 1 (D 1) s1
 
@@ -101,4 +120,6 @@ test4 = sourceDE1
 test5 = sourceDE2
 
 test6 = system s1
+
+test7 = system s0
       
