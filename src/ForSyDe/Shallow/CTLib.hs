@@ -50,7 +50,7 @@ module ForSyDe.Shallow.CTLib (
               -- They could be defined in terms of the basic constructors
               -- but are typically defined in a more direct way for 
               -- the sake of efficieny.
-	      -- scaleCT, addCT, multCT, absCT,
+              -- scaleCT, addCT, multCT, absCT,
               -- * Convenient functions and processes
               -- | Several helper functions are available to obtain parts
               -- of a signal, the duration, the start time of a signal, and
@@ -343,7 +343,7 @@ linearRationalF c holdT m n x = (1-alpha)*m + alpha*n
 a2dConverter :: (Num a, Show a) =>
                 Rational            -- ^Sampling Period
              -> Signal (SubsigCT a) -- ^Input signal (continuous time)
-	     -> Signal a            -- ^Output signal (untimed)
+             -> Signal a            -- ^Output signal (untimed)
 a2dConverter _ NullS = NullS
 a2dConverter c s | (duration (takeCT c s)) < c = NullS
                  | otherwise = f (takeCT c s)
@@ -378,10 +378,9 @@ applyF2 _ _ NullS = NullS
 applyF2 f (ss1 :- s1) (ss2 :- s2) = (applyF' f ss1 ss2) :- (applyF2 f s1 s2)
     where applyF' f (SubsigCT (f1,(a,b))) (SubsigCT (f2,(c,d))) 
               | (a==c) && (b==d) 
-	        || (abs (a-c)< 0)
-		|| (abs (b-d)< 0)
-	        = SubsigCT ((f f1 f2), (a,b))
-	        
+                || (abs (a-c)< 0)
+                || (abs (b-d)< 0)
+                = SubsigCT ((f f1 f2), (a,b))
               | otherwise    = error ("applyF2: The two subintervals are"
                                       ++ " not identical: (a,b) = ("
                                       ++ (show a) ++ ", "
@@ -422,25 +421,25 @@ cutEq s1 s2 = unzipCT (cutEq' s1 s2)
     where 
     cutEq' :: (Num a, Num b, Show a, Show b) =>
               Signal (SubsigCT a) -> Signal  (SubsigCT b) 
-	   -> Signal ((SubsigCT a), (SubsigCT b))
+              -> Signal ((SubsigCT a), (SubsigCT b))
     cutEq' NullS _    = NullS
     cutEq' _ NullS    = NullS
     cutEq' (ss1:-s1) (ss2:-s2) 
-	| dur1 == dur2 = (ss1,ss2) :- (cutEq' s1 s2)
-	| dur1 <  dur2 = (ss1, takeSubSig dur1 ss2) 
-			 :- (cutEq' s1 ((dropSubSig dur1 ss2) :- s2))
-	| dur1 >  dur2 = (takeSubSig dur2 ss1, ss2) 
-			 :- (cutEq' ((dropSubSig dur2 ss1) :- s1) s2)
+        | dur1 == dur2 = (ss1,ss2) :- (cutEq' s1 s2)
+        | dur1 <  dur2 = (ss1, takeSubSig dur1 ss2) 
+                         :- (cutEq' s1 ((dropSubSig dur1 ss2) :- s2))
+        | dur1 >  dur2 = (takeSubSig dur2 ss1, ss2)
+                         :- (cutEq' ((dropSubSig dur2 ss1) :- s1) s2)
         | otherwise = error ("cutEq' pattern match error: dur1="++(show dur1)
                              ++ ", dur2="++ (show dur2)++";")
-	where dur1 = durationSS ss1
-	      dur2 = durationSS ss2
-    unzipCT :: Num a =>
-               Signal ((SubsigCT a), (SubsigCT b)) 
-	    -> (Signal (SubsigCT a), Signal (SubsigCT b))
-    unzipCT NullS = (NullS, NullS)
-    unzipCT ((ss1,ss2) :- s) = (ss1:-s1, ss2:-s2)
-	where (s1,s2) = unzipCT s
+        where dur1 = durationSS ss1
+              dur2 = durationSS ss2
+
+unzipCT :: Num a => Signal ((SubsigCT a), (SubsigCT b)) 
+                    -> (Signal (SubsigCT a), Signal (SubsigCT b))
+unzipCT NullS = (NullS, NullS)
+unzipCT ((ss1,ss2) :- s) = (ss1:-s1, ss2:-s2)
+        where (s1,s2) = unzipCT s
 
 -- The take and drop functions on CT signals:
 takeCT :: (Num a, Show a) => 
@@ -448,14 +447,14 @@ takeCT :: (Num a, Show a) =>
 takeCT _ NullS = NullS
 takeCT 0 _     = NullS
 takeCT c (ss:-s) | (durationSS ss) >= c = (takeSubSig c ss) :- NullS
-		 | otherwise        = ss :- (takeCT (c - (durationSS ss)) s)
+                 | otherwise        = ss :- (takeCT (c - (durationSS ss)) s)
 
 dropCT :: (Num a, Show a) =>
           Rational -> Signal (SubsigCT a) -> Signal (SubsigCT a)
 dropCT _ NullS   = NullS
 dropCT 0 s       = s
 dropCT c (ss:-s) | (durationSS ss > c) = dropSubSig c ss :- s
-		 | otherwise           = dropCT (c - (durationSS ss)) s
+                 | otherwise           = dropCT (c - (durationSS ss)) s
 
 -- The interval length of a signal:
 duration :: (Num a, Show a) => Signal (SubsigCT a) -> Rational
