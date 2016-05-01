@@ -50,12 +50,12 @@ module ForSyDe.Shallow.CTLib (
               -- They could be defined in terms of the basic constructors
               -- but are typically defined in a more direct way for 
               -- the sake of efficieny.
-              -- scaleCT, addCT, multCT, absCT,
+              scaleCT, addCT, multCT, absCT,
               -- * Convenient functions and processes
               -- | Several helper functions are available to obtain parts
               -- of a signal, the duration, the start time of a signal, and
               -- to generate a sine wave and constant signals.
-              takeCT, dropCT, duration, startTime, -- sineWave, constCT, zeroCT,
+              takeCT, dropCT, duration, startTime, sineWave, -- constCT, zeroCT,
               -- * AD and DA converters
               DACMode(..), a2dConverter, d2aConverter,
               -- * Some helper functions
@@ -100,7 +100,8 @@ timeStep :: Rational
 timeStep = 10.0e-9
 
 mapCT g NullS = NullS
-mapCT g (SubsigCT (f, (f_start, f_end)):-fs) = (SubsigCT (\x -> g (f x), (f_start, f_end)) :- mapCT g fs)
+mapCT g (SubsigCT (f, (f_start, f_end)):-fs)
+      = (SubsigCT (\x -> g (f x), (f_start, f_end)) :- mapCT g fs)
 
 zipWithCT h NullS _ = NullS
 zipWithCT h _ NullS = NullS
@@ -178,15 +179,18 @@ mooreCT gamma g f w s
 -------------------------------------------------------------------------
 -- Some useful process constructors:
 -- 
+-}
 -- |'scaleCT' amplifies an input by a constant factor:
 scaleCT :: (Num a, Show a) =>
            a                   -- ^The scaling factor
         -> Signal (SubsigCT a) -- ^The input signal
         -> Signal (SubsigCT a) -- ^The output signal of the process
-scaleCT k = applyF1 f'
-    where f' f x = k * (f x)
+scaleCT factor = mapCT (* factor)
+--scaleCT k = applyF1 f'
+--    where f' f x = k * (f x)
 
--- scaleCT' has the same functionality as scaleCT but operates with a
+{-
+-- |'scaleCT' has the same functionality as scaleCT but operates with a
 -- given signal partitioning rather than on the 
 -- SubsigCT elements.
 --scaleCT' :: (Num a) =>
@@ -196,17 +200,18 @@ scaleCT k = applyF1 f'
 --scaleCT' step k = combCT step f
 --    where f g = f'
 --	      where f' x = k * (g x)
-
+-}
 -- |'addCT' adds two input signals together.
 addCT :: (Num a, Show a) =>
          Signal (SubsigCT a) -- ^The first input signal
       -> Signal (SubsigCT a) -- ^The second input signal
       -> Signal (SubsigCT a) -- ^The output signal
-addCT s1 s2 = applyF2 f s1' s2'
-    where (s1',s2') = cutEq s1 s2
-          f g1 g2 = f'
-              where f' x = (g1 x) + (g2 x)
-	      
+addCT = zipWithCT (+)
+--addCT s1 s2 = applyF2 f s1' s2'
+--    where (s1',s2') = cutEq s1 s2
+--          f g1 g2 = f'
+--              where f' x = (g1 x) + (g2 x)
+{-	      
 -- addCT' has the same functionality as addCT but operates with a
 -- given signal partitioning rather than on the SubsigCT elements.
 -- addCT' :: (Num a) =>
@@ -217,12 +222,14 @@ addCT s1 s2 = applyF2 f s1' s2'
 -- addCT' step = combCT2 step f
 --     where f g1 g2 = f'
 -- 	      where f' x = (g1 x) + (g2 x)
-	      
+-}	      
 -- |'multCT' multiplies two input signals together.
 multCT :: (Num a, Show a) =>
           Signal (SubsigCT a) -- ^The first input signal
        -> Signal (SubsigCT a) -- ^The second input signal
        -> Signal (SubsigCT a) -- ^The output signal
+multCT = zipWithCT (*)
+{-
 multCT s1 s2 = applyF2 f s1' s2'
     where (s1',s2') = cutEq s1 s2
           f g1 g2 = f'
@@ -238,16 +245,18 @@ multCT s1 s2 = applyF2 f s1' s2'
 -- multCT' step = combCT2 step f
 --     where f g1 g2 = f'
 --               where f' x = (g1 x) * (g2 x)
-
+-}
 -- |'absCT' takes the absolute value of a signal.
 absCT :: (Num a,Ord a, Show a) =>
          Signal (SubsigCT a) -- ^The input signal
       -> Signal (SubsigCT a) -- ^The output signal
+absCT = mapCT abs
+{-      
 absCT = applyF1 f
     where f g = f'
 	      where f' x | (g x) <= 0 = (-1) * (g x)
                          | otherwise  = (g x)
-
+-}
 -- | 'sineWave' generates a sinus signal with the given frequency defined
 -- over  a given period. The function is defined as @f(x)=sin(2*pi*freq*x)@.
 sineWave :: (Floating a, Show a) =>
@@ -260,6 +269,8 @@ sineWave freq timeInterval
         sineFunction :: (Floating a) => Rational -> a
         --sineFunction t = sin (2*pi * freq * t)
         sineFunction t = (sin (2*pi * (fromRational (freq * t))))
+
+{-
 -- | constCT generates a constant signal for a given time duration.
 constCT :: (Num a, Show a) => 
            Rational -- ^ The time duration of the generated signal.
@@ -459,7 +470,7 @@ dropCT c (ss:-s) | (durationSS ss > c) = dropSubSig c ss :- s
 -- The interval length of a signal:
 duration :: (Num a, Show a) => Signal (SubsigCT a) -> Rational
 duration NullS = 0
-duration (ss:- s) = (durationSS ss) + (duration s)
+duration (ss:- s) = (durationSS ss) + (duration s)      
 
 -- The interval length of a sub-signal:
 durationSS :: (Num a, Show a) => (SubsigCT a) -> Rational
