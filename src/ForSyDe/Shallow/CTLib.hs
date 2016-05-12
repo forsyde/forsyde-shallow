@@ -97,7 +97,8 @@ instance (Num a, Show a) => Show (SubsigCT a) where
 -- | This constant gives the default time step for sampling and plotting.
 -- Its value is 10ns.
 timeStep :: Rational 
-timeStep = 10.0e-9
+--timeStep = 10.0e-9
+timeStep = 10.0e-2
 
 mapCT g NullS = NullS
 mapCT g (SubsigCT (f, (f_start, f_end)):-fs)
@@ -1006,3 +1007,40 @@ hence we have a factor of 12.5 longer delay with Rational compared to Double.
 
 
 -}
+
+--eulerCT :: Signal (SubsigCT a) -> Signal (SubsigCT a)
+--eulerCT = undefined
+
+s1 = signal [SubsigCT (sine', (0,6.28)), SubsigCT (\x -> 1, (6.28, 10.0))]
+
+sine' :: (Floating a) => Rational -> a
+sine' t = sin (fromRational t)
+
+s2 = mapCT (*2.0) s1
+s3 = zipWithCT (+) s1 s2
+
+s4 = delayCT 0.5 (-4.0) s1
+
+integratorCT :: Signal (SubsigCT a) -> Signal (SubsigCT a)
+integratorCT = undefined
+
+--eulerCT :: Rational -> Signal (SubsigCT a) -> Signal (SubsigCT a)
+--eulerCT step (SubsigCT (f, (t_start, t_end)) :- fs)
+--  =  undefined
+
+--eulerCT' :: Rational -> Signal (SubsigCT a) -> Signal (SubsigCT a)
+eulerCT stepsize (SubsigCT (f, (t_start, t_end))) =
+   signal (SubsigCT (\x -> stepsize * f t_start, (t_start, t_start + stepsize)) :
+   eulerCT' stepsize (SubsigCT (f, (t_start + stepsize, t_end))) (stepsize * f t_start))
+
+eulerCT' stepsize (SubsigCT (f, (t_start, t_end))) y_i
+  | t_start <= t_end - stepsize
+       = SubsigCT (\x -> y_i + stepsize * f t_start, (t_start, t_start + stepsize))
+           : eulerCT' stepsize (SubsigCT (f, (t_start + stepsize, t_end))) (y_i + stepsize * f t_start)
+  | otherwise
+       = []
+
+s6 = signal [SubsigCT (\x -> 1.0, (0.0, 5.0))]
+s5 = eulerCT 0.5 (SubsigCT (\x -> 1.0, (0.0, 5.0)))
+
+plotEuler = plotCT' 1e-1 [(s5, "s5")]
