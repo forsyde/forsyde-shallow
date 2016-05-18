@@ -1,5 +1,5 @@
 language: haskell
-ghc: 7.8 # Only used for Cabal
+ghc: 7.10 # Only used for Cabal
 
 branches:
   only:
