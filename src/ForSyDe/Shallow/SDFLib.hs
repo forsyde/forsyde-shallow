@@ -19,6 +19,9 @@ module ForSyDe.Shallow.SDFLib (
   -- * Sequential Process Constructors
   -- | Sequential process constructors are used for processes that have a state. One of the input parameters is the initial state.
   delaySDF, delaynSDF,
+  -- * Processes
+  -- | Processes to unzip a signal of tupels into a tuple of signals
+  unzipSDF, unzip3SDF, unzip4SDF,
   -- * Actors
   -- | Based on the process constructors in the SDF-MoC, the SDF-library provides SDF-actors with single or multiple inputs
   actor11SDF, actor12SDF, actor13SDF, actor14SDF,
@@ -326,20 +329,11 @@ actor44SDF :: (Int, Int, Int, Int) -> (Int, Int, Int, Int)
 actor44SDF (c1, c2, c3, c4) (p1, p2, p3, p4) f as bs cs ds 
    = unzip4SDF (p1, p2, p3, p4)$ zipWith4SDF (c1, c2, c3, c4) 1 f as bs cs ds
 
-
 ------------------------------------------------------------------------
 --
--- Helper functions (not exported!)
+-- unzipSDF Processes
 --
 ------------------------------------------------------------------------
-
-sufficient_tokens :: (Num a, Eq a, Ord a) => a -> Signal t -> Bool
-sufficient_tokens 0 _       = True
-sufficient_tokens _ NullS   = False
-sufficient_tokens n (_:-xs) = if n < 0 then
-                                 error "sufficient_tokens: n must not be negative"
-                              else
-                                 sufficient_tokens (n-1) xs
 
 unzipSDF :: (Int, Int) -> Signal ([a], [b]) 
          -> (Signal a, Signal b)
@@ -416,6 +410,19 @@ unzip4SDF (p1, p2, p3, p4) xs = (s1, s2, s3, s4)
              else  
                 error "unzip4SDF: Process does not produce correct number of tokens" 
 
+------------------------------------------------------------------------
+--
+-- Helper functions (not exported!)
+--
+------------------------------------------------------------------------
+
+sufficient_tokens :: (Num a, Eq a, Ord a) => a -> Signal t -> Bool
+sufficient_tokens 0 _       = True
+sufficient_tokens _ NullS   = False
+sufficient_tokens n (_:-xs) = if n < 0 then
+                                 error "sufficient_tokens: n must not be negative"
+                              else
+                                 sufficient_tokens (n-1) xs
 
 
 ------------------------------------------------------------------------
@@ -423,6 +430,7 @@ unzip4SDF (p1, p2, p3, p4) xs = (s1, s2, s3, s4)
 -- Test of Library (not exported)
 --
 ------------------------------------------------------------------------
+
 {-
 s1 = takeS 10 $ signal [1..]
 s2 = takeS 10 $ signal [10,20..]
