@@ -151,9 +151,9 @@ scanl3SY f mem xs ys zs = s'
 
 -- | The process constructor 'scanldSY' is used to construct a finite state machine process without output decoder. It takes an initial value and a function for the next state decoder. The process constructor behaves similar to the Haskell prelude function 'scanlSY'. In contrast to the process constructor 'scanlSY' here the output value is the current state and not the one of the next state.
 --
--- > SynchronousLib> scanlSY (+) 0 (signal [1,2,3,4])
+-- > SynchronousLib> scanldSY (+) 0 (signal [1,2,3,4])
 --
--- > {0,1,3,6} :: Signal Integer
+-- > {0,1,3,6,10} :: Signal Integer
 scanldSY ::    (a -> b -> a) -- ^Combinational function for next state decoder
             -> a -- ^Initial state
             -> Signal b -- ^ Input signal
