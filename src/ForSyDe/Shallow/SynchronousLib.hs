@@ -126,7 +126,7 @@ delaynSY e n xs | n <= 0    = xs
 
 -- | The process constructor 'scanlSY' is used to construct a finite state machine process without output decoder. It takes an initial value and a function for the next state decoder. The process constructor behaves similar to the Haskell prelude function 'scanlSY' and has the value of the new state as its output value as illustrated by the following example.  
 --
--- > SynchronousLib> scanldSY (+) 0 (signal [1,2,3,4])
+-- > SynchronousLib> scanlSY (+) 0 (signal [1,2,3,4])
 --
 -- > {1,3,6,10} :: Signal Integer
 -- 

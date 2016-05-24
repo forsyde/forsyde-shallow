@@ -1,5 +1,9 @@
 # Ignore everything in this directory
 dist/*
 *~
+.cabal-sandbox/*
+cabal.sandbox.config
+src/ForSyDe/Shallow/fig/*
+
 # Except this file
 !.gitignore
