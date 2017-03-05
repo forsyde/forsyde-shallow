@@ -40,11 +40,14 @@
 module ForSyDe.Shallow.CTLib (
 --	      module ForSyDe.Shallow.CoreLib,
               -- * The signal data type
-              SubsigCT(..), 
+              SubsigCT(..),
+              ctSignal,
+              liftCT,
               timeStep,
               -- * Primary process constructors
               mapCT, zipWithCT,
-              combCT, comb2CT, -- mooreCT, mealyCT, delayCT, initCT,
+              combCT, comb2CT,
+              -- mooreCT, mealyCT, delayCT, initCT,
               -- * Derived process constructors
               -- | These constructors instantiate very useful processes.
               -- They could be defined in terms of the basic constructors
@@ -72,7 +75,7 @@ import System.Time
 import System.Directory
 import Control.Exception
 import Data.Ratio
-import Numeric()
+--import Numeric()
 
 
        
@@ -91,6 +94,22 @@ data SubsigCT a = SubsigCT ((Rational -> a),     -- The function Time -> Value
 instance (Num a, Show a) => Show (SubsigCT a) where
     show ss = show (sampleSubsig timeStep ss)
 
+-- | The function 'liftCT' creates a CT-compliant function (using the
+-- Rationals as domain) from a normal mathematical function that uses a
+-- fractional (Double) as domain
+liftCT :: Fractional a => (a -> b) -> Rational -> b
+liftCT f = f . fromRational
+
+-- | The function 'ctSignal' creates a CT signal from a list of
+-- subsignals that are given by a function, an a time range.
+--
+-- > *ForSyDe.Shallow.CTLib> ctsig1 = ctSignal [(liftCT sin, (0, 3.14)), (\t -> 1, (3.14, 6.28))]
+-- > *ForSyDe.Shallow.CTLib> :t ctsig1
+-- > ctsig1 :: Floating a => Signal (SubsigCT a)-- ctsig1 = ctSignal [(liftCT sin, (0, 3.14)), (\t -> 1, (3.14, 6.28))]
+ctSignal :: [(Rational -> a, (Rational, Rational))] -> Signal (SubsigCT a)
+ctSignal []                       = NullS
+ctSignal ((f, (start, end)) : xs) = SubsigCT (f, (start, end)) :- ctSignal xs
+
 --unit :: String -- all time numbers are in terms of this unit.
 --unit = "sec" 
 
@@ -100,12 +119,14 @@ timeStep :: Rational
 --timeStep = 10.0e-9
 timeStep = 10.0e-2
 
-mapCT g NullS = NullS
+mapCT :: (a -> b) -> Signal (SubsigCT a) -> Signal (SubsigCT b)
+mapCT _ NullS = NullS
 mapCT g (SubsigCT (f, (f_start, f_end)):-fs)
       = (SubsigCT (\x -> g (f x), (f_start, f_end)) :- mapCT g fs)
 
-zipWithCT h NullS _ = NullS
-zipWithCT h _ NullS = NullS
+zipWithCT :: (a -> b -> c) -> Signal (SubsigCT a) -> Signal (SubsigCT b) -> Signal (SubsigCT c)
+zipWithCT _ NullS _ = NullS
+zipWithCT _ _ NullS = NullS
 zipWithCT h (SubsigCT (f, (f_start, f_end)):-fs) (SubsigCT (g, (g_start, g_end)):-gs)
     | f_start /= g_start = error "Start times not aligned"
     | f_end == g_end     = (SubsigCT (\x -> h (f x) (g x), (f_start, f_end)) :- zipWithCT h fs gs)
@@ -114,13 +135,17 @@ zipWithCT h (SubsigCT (f, (f_start, f_end)):-fs) (SubsigCT (g, (g_start, g_end))
     | f_end > g_end      = (SubsigCT (\x -> h (f x) (g x), (f_start, g_end))
                               :- zipWithCT h (SubsigCT (f, (g_end, f_end)) :- fs) gs)
 
+combCT :: (a -> b) -> Signal (SubsigCT a) -> Signal (SubsigCT b)
 combCT = mapCT
+
+comb2CT :: (a -> b -> c) -> Signal (SubsigCT a) -> Signal (SubsigCT b) -> Signal (SubsigCT c)
 comb2CT = zipWithCT
 
-    
-delayCT period value fs    = (SubsigCT (\x -> value, (0,period))) :- addTime period fs                                
+delayCT :: Rational -> a -> Signal (SubsigCT a) -> Signal (SubsigCT a)    
+delayCT period value fs    = (SubsigCT (\_ -> value, (0,period))) :- addTime period fs                                
 
-addTime delay NullS = NullS
+addTime :: Rational -> Signal (SubsigCT a) -> Signal (SubsigCT a)
+addTime _     NullS                              = NullS
 addTime delay (SubsigCT (f, (start, end)) :- fs) = (SubsigCT (f, (start+delay, end+delay)) :- addTime delay fs)
 
 {-
@@ -187,6 +212,27 @@ scaleCT :: (Num a, Show a) =>
         -> Signal (SubsigCT a) -- ^The input signal
         -> Signal (SubsigCT a) -- ^The output signal of the process
 scaleCT factor = mapCT (* factor)
+
+-- |'addCT' adds two input signals together.
+addCT :: (Num a, Show a) =>
+         Signal (SubsigCT a) -- ^The first input signal
+      -> Signal (SubsigCT a) -- ^The second input signal
+      -> Signal (SubsigCT a) -- ^The output signal
+addCT = zipWithCT (+)
+
+-- |'multCT' multiplies two input signals together.
+multCT :: (Num a, Show a) =>
+          Signal (SubsigCT a) -- ^The first input signal
+       -> Signal (SubsigCT a) -- ^The second input signal
+       -> Signal (SubsigCT a) -- ^The output signal
+multCT = zipWithCT (*)
+
+-- |'absCT' takes the absolute value of a signal.
+absCT :: (Num a,Ord a, Show a) =>
+         Signal (SubsigCT a) -- ^The input signal
+      -> Signal (SubsigCT a) -- ^The output signal
+absCT = mapCT abs
+
 --scaleCT k = applyF1 f'
 --    where f' f x = k * (f x)
 
@@ -202,12 +248,6 @@ scaleCT factor = mapCT (* factor)
 --    where f g = f'
 --	      where f' x = k * (g x)
 -}
--- |'addCT' adds two input signals together.
-addCT :: (Num a, Show a) =>
-         Signal (SubsigCT a) -- ^The first input signal
-      -> Signal (SubsigCT a) -- ^The second input signal
-      -> Signal (SubsigCT a) -- ^The output signal
-addCT = zipWithCT (+)
 --addCT s1 s2 = applyF2 f s1' s2'
 --    where (s1',s2') = cutEq s1 s2
 --          f g1 g2 = f'
@@ -223,13 +263,7 @@ addCT = zipWithCT (+)
 -- addCT' step = combCT2 step f
 --     where f g1 g2 = f'
 -- 	      where f' x = (g1 x) + (g2 x)
--}	      
--- |'multCT' multiplies two input signals together.
-multCT :: (Num a, Show a) =>
-          Signal (SubsigCT a) -- ^The first input signal
-       -> Signal (SubsigCT a) -- ^The second input signal
-       -> Signal (SubsigCT a) -- ^The output signal
-multCT = zipWithCT (*)
+-}
 {-
 multCT s1 s2 = applyF2 f s1' s2'
     where (s1',s2') = cutEq s1 s2
@@ -247,11 +281,6 @@ multCT s1 s2 = applyF2 f s1' s2'
 --     where f g1 g2 = f'
 --               where f' x = (g1 x) * (g2 x)
 -}
--- |'absCT' takes the absolute value of a signal.
-absCT :: (Num a,Ord a, Show a) =>
-         Signal (SubsigCT a) -- ^The input signal
-      -> Signal (SubsigCT a) -- ^The output signal
-absCT = mapCT abs
 {-      
 absCT = applyF1 f
     where f g = f'
@@ -1044,3 +1073,7 @@ s6 = signal [SubsigCT (\x -> 1.0, (0.0, 5.0))]
 s5 = eulerCT 0.5 (SubsigCT (\x -> 1.0, (0.0, 5.0)))
 
 plotEuler = plotCT' 1e-1 [(s5, "s5")]
+
+ctsig1 = ctSignal [(liftCT sin, (0, 3.14)), (\t -> 1, (3.14, 6.28))]
+ctsig2 = ctSignal [(liftCT cos, (0, 6.28))]
+
