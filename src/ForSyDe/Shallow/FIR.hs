@@ -32,5 +32,5 @@ sipoSY n s0 = unzipxSY . scanldSY shiftrV initState
 innerProdSY :: (Num a) => Vector a -> Vector (Signal a) -> Signal a
 innerProdSY coeffs = zipWithxSY (ipV coeffs)
    where ipV NullV   NullV   = 0
-	 ipV (h:>hv) (x:>xv) = h*x + ipV hv xv
+         ipV (h:>hv) (x:>xv) = h*x + ipV hv xv
          ipV _       _       = error "Vector of different length"

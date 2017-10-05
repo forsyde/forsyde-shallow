@@ -20,16 +20,19 @@
 -- * The library for the continuous time MoC: "ForSyDe.Shallow.CTLib"
 --
 -- * The library for the domain interfaces: "ForSyDe.Shallow.DomainInterfaces"
+--
+-- * The library for the MoC interfaces: "ForSyDe.Shallow.MoCInterfaces"
 -----------------------------------------------------------------------------
 module ForSyDe.Shallow.MoCLib(  
-	              module ForSyDe.Shallow.SynchronousLib,
+                      module ForSyDe.Shallow.SynchronousLib,
                       module ForSyDe.Shallow.SynchronousProcessLib,
                       module ForSyDe.Shallow.StochasticLib,
                       module ForSyDe.Shallow.CTLib,
-		      module ForSyDe.Shallow.UntimedLib,
+                      module ForSyDe.Shallow.UntimedLib,
                       module ForSyDe.Shallow.DataflowLib,
                       module ForSyDe.Shallow.DomainInterfaces,
-		      module ForSyDe.Shallow.SDFLib
+                      module ForSyDe.Shallow.SDFLib,
+                      module ForSyDe.Shallow.MoCInterfaces
                       ) where
 
 import ForSyDe.Shallow.StochasticLib
@@ -40,3 +43,4 @@ import ForSyDe.Shallow.DomainInterfaces
 import ForSyDe.Shallow.SynchronousProcessLib
 import ForSyDe.Shallow.DataflowLib
 import ForSyDe.Shallow.SDFLib
+import ForSyDe.Shallow.MoCInterfaces

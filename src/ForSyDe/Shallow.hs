@@ -36,7 +36,7 @@
 module ForSyDe.Shallow(module ForSyDe.Shallow.CoreLib
               , module ForSyDe.Shallow.MoCLib
               , module ForSyDe.Shallow.UtilityLib
-	      ) where
+              ) where
 
 import ForSyDe.Shallow.CoreLib
 import ForSyDe.Shallow.MoCLib
