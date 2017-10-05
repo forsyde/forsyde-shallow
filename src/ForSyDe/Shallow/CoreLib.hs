@@ -19,10 +19,10 @@
 -----------------------------------------------------------------------------
 
 module ForSyDe.Shallow.CoreLib(  
-			module ForSyDe.Shallow.Signal,
-			module ForSyDe.Shallow.Vector,
-			module ForSyDe.Shallow.AbsentExt
-		    ) where
+                        module ForSyDe.Shallow.Signal,
+                        module ForSyDe.Shallow.Vector,
+                        module ForSyDe.Shallow.AbsentExt
+                    ) where
 
 import ForSyDe.Shallow.Vector
 import ForSyDe.Shallow.Signal

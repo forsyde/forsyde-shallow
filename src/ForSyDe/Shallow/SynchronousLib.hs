@@ -33,7 +33,7 @@ module ForSyDe.Shallow.SynchronousLib(
                         zipxSY, unzipxSY, mapxSY, 
                         fstSY, sndSY
                       ) where
-       
+
 import ForSyDe.Shallow.CoreLib
 
 ----------------------------------------
@@ -43,6 +43,7 @@ import ForSyDe.Shallow.CoreLib
 ----------------------------------------
 
 -- | The process constructor 'mapSY' takes a combinational function as argument and returns a process with one input signal and one output signal.
+
 mapSY :: (a -> b) -> Signal a -> Signal b
 mapSY _ NullS   = NullS
 mapSY f (x:-xs) = f x :- (mapSY f xs)

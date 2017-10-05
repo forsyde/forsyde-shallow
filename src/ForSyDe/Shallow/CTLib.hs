@@ -363,7 +363,6 @@ d2aConverter mode c xs
                       (SubsigCT (linearRationalF c holdT x y,(holdT,holdT+c)) )
                                   :- d2aLinear c (holdT+c) (y:-xs)
 
-
 constRationalF :: (Num a) => a -> Rational -> a
 constRationalF = (\x _->x)
 
@@ -392,6 +391,9 @@ a2dConverter c s | (duration (takeCT c s)) < c = NullS
     where f :: (Num a, Show a) => Signal (SubsigCT a) -> Signal a
           f NullS = NullS
           f (SubsigCT (g,(a,_)) :- _) = signal [g a]
+
+
+
 
 --------------------------------------------------------------------
 -- Helpter functions for the CT MoC:
@@ -1040,6 +1042,7 @@ hence we have a factor of 12.5 longer delay with Rational compared to Double.
 --eulerCT :: Signal (SubsigCT a) -> Signal (SubsigCT a)
 --eulerCT = undefined
 
+{-
 s1 = signal [SubsigCT (sine', (0,6.28)), SubsigCT (\x -> 1, (6.28, 10.0))]
 
 sine' :: (Floating a) => Rational -> a
@@ -1076,4 +1079,4 @@ plotEuler = plotCT' 1e-1 [(s5, "s5")]
 
 ctsig1 = ctSignal [(liftCT sin, (0, 3.14)), (\t -> 1, (3.14, 6.28))]
 ctsig2 = ctSignal [(liftCT cos, (0, 6.28))]
-
+-}
