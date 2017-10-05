@@ -1,6 +1,6 @@
 name:           ForSyDe-Shallow
 version:        3.3.1.0
-cabal-version:  >= 1.2
+cabal-version:  >= 1.6
 build-type:     Simple
 license:        BSD3
 license-file:   LICENSE
