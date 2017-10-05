@@ -270,13 +270,8 @@ holdSY a xs = scanlSY hold a xs
 ---------------------------
 
 -- | The process constructor 'whenSY' creates a process that synchronizes a signal of absent extended values with another signal of absent extended values. The output signal has the value of the first signal whenever an event has a present value and 'Abst' when the event has an absent value.
-<<<<<<< HEAD
 whenSY ::    Signal (AbstExt a) -> Signal (AbstExt b) 
           -> Signal (AbstExt a)
-=======
-whenSY       :: Signal (AbstExt a) -> Signal (AbstExt b) 
-                -> Signal (AbstExt a)
->>>>>>> ctlib
 whenSY NullS   _            = NullS
 whenSY _       NullS        = NullS
 whenSY (_:-xs) (Abst:-ys)   = Abst :- (whenSY xs ys)
@@ -285,16 +280,11 @@ whenSY (x:-xs) (_:-ys)      = x    :- (whenSY xs ys)
 -- | The process 'zipSY' \"zips\" two incoming signals into one signal of tuples.
 zipSY        :: Signal a -> Signal b -> Signal (a,b)
 zipSY (x:-xs) (y:-ys) = (x, y) :- zipSY xs ys
-<<<<<<< HEAD
 zipSY _       _       = NullS
-=======
-zipSY _              _       = NullS
->>>>>>> ctlib
 
 -- | The process 'zip3SY' works as 'zipSY', but takes three input signals.
 zip3SY :: Signal a -> Signal b -> Signal c -> Signal (a,b,c)
 zip3SY (x:-xs) (y:-ys) (z:-zs) = (x, y, z) :- zip3SY xs ys zs
-<<<<<<< HEAD
 zip3SY _       _       _       = NullS
 
 -- | The process 'zip4SY' works as 'zipSY', but takes four input signals.
@@ -323,34 +313,6 @@ zip6SY _         _         _         _         _          _
 -- | The process 'unzipSY' \"unzips\" a signal of tuples into two signals.
 unzipSY :: Signal (a,b) -> (Signal a,Signal b)
 unzipSY NullS         = (NullS, NullS)
-=======
-zip3SY _             _  _      = NullS
-
--- | The process 'zip4SY' works as 'zipSY', but takes four input signals.
-zip4SY       :: Signal a -> Signal b -> Signal c -> Signal d 
-                -> Signal (a,b,c,d)
-zip4SY (w:-ws) (x:-xs) (y:-ys) (z:-zs) = (w, x, y, z) 
-                                         :- zip4SY ws xs ys zs
-zip4SY _        _      _        _      = NullS
-
--- | The process 'zip5SY' works as 'zipSY', but takes four input signals.
-zip5SY       :: Signal a -> Signal b -> Signal c -> Signal d -> Signal e
-                -> Signal (a,b,c,d,e)
-zip5SY (x1:-x1s) (x2:-x2s) (x3:-x3s) (x4:-x4s) (x5:-x5s) 
-    = (x1,x2,x3,x4,x5) :- zip5SY x1s x2s x3s x4s x5s
-zip5SY _         _         _         _         _ = NullS
-
--- | The process 'zip6SY' works as 'zipSY', but takes four input signals.
-zip6SY       :: Signal a -> Signal b -> Signal c -> Signal d -> Signal e
-             -> Signal f -> Signal (a,b,c,d,e,f)
-zip6SY (x1:-x1s) (x2:-x2s) (x3:-x3s) (x4:-x4s) (x5:-x5s)  (x6:-x6s) 
-    = (x1,x2,x3,x4,x5,x6) :- zip6SY x1s x2s x3s x4s x5s x6s
-zip6SY _         _         _         _         _          _ = NullS
-
--- | The process 'unzipSY' \"unzips\" a signal of tuples into two signals.
-unzipSY      :: Signal (a,b) -> (Signal a,Signal b)
-unzipSY NullS        = (NullS, NullS)
->>>>>>> ctlib
 unzipSY ((x, y):-xys) = (x:-xs, y:-ys) where (xs, ys) = unzipSY xys
 
 -- | The process 'unzip3SY' works as 'unzipSY', but has three output signals.
@@ -360,37 +322,22 @@ unzip3SY ((x, y, z):-xyzs) = (x:-xs, y:-ys, z:-zs) where
                              (xs, ys, zs) = unzip3SY xyzs
 
 -- | The process 'unzip4SY' works as 'unzipSY', but has four output signals.
-<<<<<<< HEAD
 unzip4SY ::    Signal (a,b,c,d) 
             -> (Signal a,Signal b,Signal c,Signal d)
-=======
-unzip4SY     :: Signal (a,b,c,d) 
-                -> (Signal a,Signal b,Signal c,Signal d)
->>>>>>> ctlib
 unzip4SY NullS              = (NullS, NullS, NullS, NullS)
 unzip4SY ((w,x,y,z):-wxyzs) = (w:-ws, x:-xs, y:-ys, z:-zs) where
                               (ws, xs, ys, zs) = unzip4SY wxyzs
 
 -- | The process 'unzip5SY' works as 'unzipSY', but has four output signals.
-<<<<<<< HEAD
 unzip5SY ::    Signal (a,b,c,d,e) 
             -> (Signal a,Signal b,Signal c,Signal d,Signal e)
-=======
-unzip5SY     :: Signal (a,b,c,d,e) 
-                -> (Signal a,Signal b,Signal c,Signal d,Signal e)
->>>>>>> ctlib
 unzip5SY NullS              = (NullS, NullS, NullS, NullS,NullS)
 unzip5SY ((x1,x2,x3,x4,x5):-xs) = (x1:-x1s, x2:-x2s, x3:-x3s, x4:-x4s, x5:-x5s)
     where (x1s, x2s, x3s, x4s,x5s) = unzip5SY xs
 
 -- | The process 'unzip6SY' works as 'unzipSY', but has four output signals.
-<<<<<<< HEAD
 unzip6SY :: Signal (a,b,c,d,e,f) 
             -> (Signal a,Signal b,Signal c,Signal d,Signal e,Signal f)
-=======
-unzip6SY     :: Signal (a,b,c,d,e,f) 
-                -> (Signal a,Signal b,Signal c,Signal d,Signal e,Signal f)
->>>>>>> ctlib
 unzip6SY NullS              = (NullS, NullS, NullS, NullS,NullS,NullS)
 unzip6SY ((x1,x2,x3,x4,x5,x6):-xs) 
     = (x1:-x1s, x2:-x2s, x3:-x3s, x4:-x4s, x5:-x5s, x6:-x6s)
@@ -401,11 +348,7 @@ zipxSY :: Vector (Signal a) -> Signal (Vector a)
 zipxSY NullV            = NullS
 zipxSY (NullS   :> xss) = zipxSY xss
 zipxSY ((x:-xs) :> xss) = (x :> (mapV headS xss)) 
-<<<<<<< HEAD
                           :- (zipxSY (xs :> (mapV tailS xss)))
-=======
-                             :- (zipxSY (xs :> (mapV tailS xss)))
->>>>>>> ctlib
 
 -- | The process 'unzipxSY' \"unzips\" a vector of signals into a signal of vectors.
 unzipxSY :: Signal (Vector a) -> Vector (Signal a)
@@ -415,13 +358,8 @@ unzipxSY ((v:>vs) :- vss) = (v :- (mapSY headV vss))
                             :> (unzipxSY (vs :- (mapSY tailV vss)))
 
 -- | The process 'fstSY' selects always the first value from a signal of pairs.
-<<<<<<< HEAD
 fstSY :: Signal (a,b) -> Signal a
 fstSY = mapSY fst 
-=======
-fstSY        :: Signal (a,b) -> Signal a
-fstSY = mapSY fst                 
->>>>>>> ctlib
 
 -- | The process 'sndSY' selects always the second value from a signal of pairs.
 sndSY :: Signal (a,b) -> Signal b
