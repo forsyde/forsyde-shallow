@@ -77,8 +77,7 @@ Library
                    ForSyDe.Shallow.Vector,
                    ForSyDe.Shallow.Memory,
                    ForSyDe.Shallow.DataflowLib,
-                   ForSyDe.Shallow.SDFLib,
-						 ForSyDe.Shallow.MoCInterfaces
+                   ForSyDe.Shallow.SDFLib
 
 
 
