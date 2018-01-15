@@ -80,4 +80,4 @@ Library
                    ForSyDe.Shallow.SDFLib,
                    ForSyDe.Shallow.MoCInterfaces
 
-  ghc-options:	-Wall -fno-warn-name-shadowing -Wno-unused-top-binds
+  ghc-options:	-Wall -fno-warn-name-shadowing
