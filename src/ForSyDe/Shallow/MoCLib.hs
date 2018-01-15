@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 -- |
--- Module      :  ForSyDe.Shallow.MoCLib
+-- Module  :  ForSyDe.Shallow.MoCLib
 -- Copyright   :  (c) SAM/KTH 2007
 -- License     :  BSD-style (see the file LICENSE)
 --
@@ -24,16 +24,16 @@
 -- * The library for the MoC interfaces: "ForSyDe.Shallow.MoCInterfaces"
 -----------------------------------------------------------------------------
 module ForSyDe.Shallow.MoCLib(  
-                      module ForSyDe.Shallow.SynchronousLib,
-                      module ForSyDe.Shallow.SynchronousProcessLib,
-                      module ForSyDe.Shallow.StochasticLib,
-                      module ForSyDe.Shallow.CTLib,
-                      module ForSyDe.Shallow.UntimedLib,
-                      module ForSyDe.Shallow.DataflowLib,
-                      module ForSyDe.Shallow.DomainInterfaces,
-                      module ForSyDe.Shallow.SDFLib,
-                      module ForSyDe.Shallow.MoCInterfaces
-                      ) where
+          module ForSyDe.Shallow.SynchronousLib,
+          module ForSyDe.Shallow.SynchronousProcessLib,
+          module ForSyDe.Shallow.StochasticLib,
+          module ForSyDe.Shallow.CTLib,
+          module ForSyDe.Shallow.UntimedLib,
+          module ForSyDe.Shallow.DataflowLib,
+          module ForSyDe.Shallow.DomainInterfaces,
+          module ForSyDe.Shallow.SDFLib,
+          module ForSyDe.Shallow.MoCInterfaces
+          ) where
 
 import ForSyDe.Shallow.StochasticLib
 import ForSyDe.Shallow.SynchronousLib

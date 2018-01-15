@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 -- |
--- Module      :  ForSyDe.Shallow
+-- Module  :  ForSyDe.Shallow
 -- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
 -- License     :  BSD-style (see the file LICENSE)
 -- 
@@ -34,9 +34,9 @@
 --
 -----------------------------------------------------------------------------
 module ForSyDe.Shallow(module ForSyDe.Shallow.CoreLib
-              , module ForSyDe.Shallow.MoCLib
-              , module ForSyDe.Shallow.UtilityLib
-              ) where
+      , module ForSyDe.Shallow.MoCLib
+      , module ForSyDe.Shallow.UtilityLib
+      ) where
 
 import ForSyDe.Shallow.CoreLib
 import ForSyDe.Shallow.MoCLib

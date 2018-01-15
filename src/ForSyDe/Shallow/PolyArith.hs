@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 -- |
--- Module      :  ForSyDe.Shallow.PolyArith
+-- Module  :  ForSyDe.Shallow.PolyArith
 -- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
 -- License     :  BSD-style (see the file LICENSE)
 -- 
@@ -14,18 +14,18 @@
 -- optimized by FFT algorithms later on.
 -----------------------------------------------------------------------------
 module ForSyDe.Shallow.PolyArith(
-              -- *Polynomial data type
-              Poly(..),
-              -- *Addition, DmMultiplication, division and power operations
-              addPoly, mulPoly, divPoly, powerPoly,
-              -- *Some helper functions
-              getCoef, scalePoly, addPolyCoef, subPolyCoef, scalePolyCoef
+      -- *Polynomial data type
+      Poly(..),
+      -- *Addition, DmMultiplication, division and power operations
+      addPoly, mulPoly, divPoly, powerPoly,
+      -- *Some helper functions
+      getCoef, scalePoly, addPolyCoef, subPolyCoef, scalePolyCoef
     )
     where 
 
 -- |Polynomial data type.
 data Num a => Poly a = Poly [a]
-                     | PolyPair (Poly a, Poly a) deriving (Eq)
+         | PolyPair (Poly a, Poly a) deriving (Eq)
 
 
 -- |Multiplication operation of polynomials.
@@ -57,13 +57,13 @@ addPoly :: (Num a, Eq a) => Poly a -> Poly a -> Poly a
 addPoly (Poly a) (Poly b) = Poly $ addPolyCoef a b
 addPoly (PolyPair (a, b)) (PolyPair (c, d)) =
     if b==d then  -- simplifyPolyPair $
-          PolyPair (addPoly a c, d)
+      PolyPair (addPoly a c, d)
     else  -- simplifyPolyPair $
-          PolyPair (dividedPoly, divisorPoly)
+      PolyPair (dividedPoly, divisorPoly)
   where
     divisorPoly = if b ==d then b else mulPoly b d
     dividedPoly = if b == d then addPoly a c
-                  else addPoly (mulPoly a d) (mulPoly b c)
+      else addPoly (mulPoly a d) (mulPoly b c)
 addPoly (Poly a) (PolyPair (c, d) ) =
     addPoly (PolyPair (multiPolyHelper, d)) (PolyPair (c,d) )
   where

@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 -- |
--- Module      :  ForSyDe.Shallow.Vector
+-- Module  :  ForSyDe.Shallow.Vector
 -- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
 -- License     :  BSD-style (see the file LICENSE)
 -- 
@@ -18,15 +18,15 @@
 -- vectors with the same size.
 -----------------------------------------------------------------------------
 module ForSyDe.Shallow.Vector ( 
-              Vector (..), vector, fromVector, unitV, nullV, lengthV,
-              atV, replaceV, headV, tailV, lastV, initV, takeV, dropV, 
-	      selectV, groupV, (<+>), (<:), mapV, foldlV, foldrV, 
-	      -- scanlV, scanrV, meshlV, meshrV, 
-	      zipWithV, filterV, zipV, unzipV, 
-	      concatV, reverseV, shiftlV, shiftrV, rotrV, rotlV, 
-	      generateV, iterateV, copyV --, serialV, parallelV 
-	      )
-       where
+  Vector (..), vector, fromVector, unitV, nullV, lengthV,
+  atV, replaceV, headV, tailV, lastV, initV, takeV, dropV, 
+  selectV, groupV, (<+>), (<:), mapV, foldlV, foldrV, 
+  -- scanlV, scanrV, meshlV, meshrV, 
+  zipWithV, filterV, zipV, unzipV, 
+  concatV, reverseV, shiftlV, shiftrV, rotrV, rotlV, 
+  generateV, iterateV, copyV --, serialV, parallelV 
+  )
+   where
 
 infixr 5 :>
 infixl 5 <:
@@ -54,7 +54,7 @@ nullV    :: Vector a -> Bool
 lengthV  :: Vector a -> Int
 
 -- | The function 'atV' returns the n-th element in a vector, starting from zero.
-atV      :: (Num a, Eq a) => Vector b -> a -> b
+atV  :: (Num a, Eq a) => Vector b -> a -> b
 
 -- |  The function 'replaceV' replaces an element in a vector.
 replaceV :: Vector a -> Int -> a -> Vector a
@@ -167,8 +167,8 @@ copyV     :: (Num a, Eq a) => a -> b -> Vector b
 
 --|The function \haskell{serialV} and \haskell{parallelV} can be used to construct serial and parallel networks of processes.
 \begin{code}
-serialV		:: Vector (a -> a) -> a -> a
-parallelV	:: Vector (a -> b) -> Vector a -> Vector b
+serialV    :: Vector (a -> a) -> a -> a
+parallelV  :: Vector (a -> b) -> Vector a -> Vector b
 \end{code}
 
 The functions \haskell{scanlV} and \haskell{scanrV} "scan" a function through a vector. The functions take an initial element apply a functions recursively first on the element and then on the result of the function application.
@@ -206,43 +206,43 @@ meshrV    :: (a -> b -> (c, b)) -> b -> Vector a -> (Vector c, b)
 -}
 
 instance (Show a) => Show (Vector a) where
-       showsPrec p NullV = showParen (p > 9) (
-                             showString "<>")
-       showsPrec p xs    = showParen (p > 9) (
-                             showChar '<' . showVector1 xs)
-                           where
-                              showVector1 NullV
-                                 = showChar '>'                            
-                              showVector1 (y:>NullV) 
-                                 = shows y . showChar '>'
-                              showVector1 (y:>ys)    
-                                 = shows y . showChar ',' 
-					   . showVector1 ys
+   showsPrec p NullV = showParen (p > 9) (
+             showString "<>")
+   showsPrec p xs    = showParen (p > 9) (
+             showChar '<' . showVector1 xs)
+           where
+          showVector1 NullV
+             = showChar '>'            
+          showVector1 (y:>NullV) 
+             = shows y . showChar '>'
+          showVector1 (y:>ys)    
+             = shows y . showChar ',' 
+           . showVector1 ys
 
 
 instance Read a => Read (Vector a) where
-       readsPrec _ s = readsVector s
+   readsPrec _ s = readsVector s
 
 readsVector :: (Read a) => ReadS (Vector a)
 readsVector s = [((x:>NullV), rest) | ("<", r2) <- lex s,
-                                    (x, r3)   <- reads r2,
-                                    (">", rest) <- lex r3]
-               ++
-              [(NullV, r4)        | ("<", r5) <- lex s,
-                                    (">", r4) <- lex r5]
-               ++
-              [((x:>xs), r6)      | ("<", r7) <- lex s,
-                                    (x, r8)   <- reads r7,
-                                    (",", r9) <- lex r8,
-                                    (xs, r6) <- readsValues r9]
+            (x, r3)   <- reads r2,
+            (">", rest) <- lex r3]
+       ++
+      [(NullV, r4)    | ("<", r5) <- lex s,
+            (">", r4) <- lex r5]
+       ++
+      [((x:>xs), r6)  | ("<", r7) <- lex s,
+            (x, r8)   <- reads r7,
+            (",", r9) <- lex r8,
+            (xs, r6) <- readsValues r9]
 
 readsValues :: (Read a) => ReadS (Vector a)
 readsValues s = [((x:>NullV), r1) | (x, r2)   <- reads s,
-                                  (">", r1) <- lex r2]
-              ++
-              [((x:>xs), r3)    | (x, r4)   <- reads s,
-                                  (",", r5) <- lex r4,
-                                  (xs, r3)  <- readsValues r5]
+              (">", r1) <- lex r2]
+      ++
+      [((x:>xs), r3)    | (x, r4)   <- reads s,
+              (",", r5) <- lex r4,
+              (xs, r3)  <- readsValues r5]
 
 vector []     = NullV
 vector (x:xs) = x :> (vector xs)
@@ -253,15 +253,15 @@ fromVector (x:>xs) = x : fromVector xs
 unitV x = x :> NullV
 
 nullV NullV   = True
-nullV _             = False
+nullV _     = False
 
 lengthV NullV   = 0
 lengthV (_:>xs) = 1 + lengthV xs
 
 replaceV vs n x 
     | n <= lengthV vs && n >= 0 = takeV n vs <+> unitV x 
-					     <+> dropV (n+1) vs
-    | otherwise                 =  vs
+          <+> dropV (n+1) vs
+    | otherwise         =  vs
 
 NullV   `atV` _ = error "atV: Vector has not enough elements"
 (x:>_)  `atV` 0 = x
@@ -273,46 +273,46 @@ headV (v:>_) = v
 tailV NullV   = error "tailV: Vector is empty"
 tailV (_:>vs) = vs
 
-lastV NullV      = error "lastV: Vector is empty"
+lastV NullV  = error "lastV: Vector is empty"
 lastV (v:>NullV) = v
 lastV (_:>vs)    = lastV vs
 
-initV NullV      = error "initV: Vector is empty"
+initV NullV  = error "initV: Vector is empty"
 initV (_:>NullV) = NullV
 initV (v:>vs)    = v :> initV vs
 
-takeV 0 _                   = NullV
-takeV _ NullV               = NullV
+takeV 0 _       = NullV
+takeV _ NullV       = NullV
 takeV n (v:>vs) | n <= 0    = NullV
-                | otherwise = v :> takeV (n-1) vs
+        | otherwise = v :> takeV (n-1) vs
 
-dropV 0 vs                  = vs
-dropV _ NullV               = NullV
+dropV 0 vs      = vs
+dropV _ NullV       = NullV
 dropV n (v:>vs) | n <= 0    = v :> vs
-                | otherwise = dropV (n-1) vs
+        | otherwise = dropV (n-1) vs
 
-selectV f s n vs | n <= 0               
-                     = NullV
-                 | (f+s*n-1) > lengthV vs 
-                    = error "selectV: Vector has not enough elements"
-                 | otherwise            
-                    = atV vs f :> selectV (f+s) s (n-1) vs
+selectV f s n vs | n <= 0       
+         = NullV
+         | (f+s*n-1) > lengthV vs 
+        = error "selectV: Vector has not enough elements"
+         | otherwise    
+        = atV vs f :> selectV (f+s) s (n-1) vs
 
 groupV n v 
-      | lengthV v < n = NullV
-      | otherwise     = selectV 0 1 n v 
-			:> groupV n (selectV n 1 (lengthV v-n) v)
+  | lengthV v < n = NullV
+  | otherwise     = selectV 0 1 n v 
+      :> groupV n (selectV n 1 (lengthV v-n) v)
 
 NullV <+> ys   = ys
 (x:>xs) <+> ys = x :> (xs <+> ys) 
 
-xs <: x = xs <+> unitV x         
+xs <: x = xs <+> unitV x     
 
 mapV _ NullV   = NullV
 mapV f (x:>xs) = f x :> mapV f xs
 
 zipWithV f (x:>xs) (y:>ys) = f x y :> (zipWithV f xs ys)
-zipWithV _ _       _       = NullV
+zipWithV _ _   _   = NullV
 
 foldlV _ a NullV   = a
 foldlV f a (x:>xs) = foldlV f (f a x) xs
@@ -322,16 +322,16 @@ foldrV f a (x:>xs) = f x (foldrV f a xs)
 
 filterV _ NullV   = NullV
 filterV p (v:>vs) = if (p v) then
-                     v :> filterV p vs
-                  else 
-                     filterV p vs
+         v :> filterV p vs
+      else 
+         filterV p vs
 
 zipV (x:>xs) (y:>ys) = (x, y) :> zipV xs ys
-zipV _       _       = NullV
+zipV _   _   = NullV
 
-unzipV NullV           = (NullV, NullV)
+unzipV NullV       = (NullV, NullV)
 unzipV ((x, y) :> xys) = (x:>xs, y:>ys) 
-			 where (xs, ys) = unzipV xys
+       where (xs, ys) = unzipV xys
 
 shiftlV vs v = v :> initV vs
 
@@ -350,7 +350,7 @@ reverseV (v:>vs) = reverseV vs <: v
 
 generateV 0 _ _ = NullV
 generateV n f a = x :> generateV (n-1) f x 
-                where x = f a
+        where x = f a
 
 iterateV 0 _ _ = NullV
 iterateV n f a = a :> iterateV (n-1) f (f a)
@@ -358,37 +358,37 @@ iterateV n f a = a :> iterateV (n-1) f (f a)
 copyV k x = iterateV k id x 
 
 {-
-serialV  fs      x = serialV' (reverseV fs ) x
+serialV  fs  x = serialV' (reverseV fs ) x
   where
     serialV' NullV   x = x
     serialV' (f:>fs) x = serialV fs (f x)
 
 
 parallelV NullV   NullV   = NullV
-parallelV _	  NullV   
+parallelV _  NullV   
    = error "parallelV: Vectors have not the same size!"
-parallelV NullV	  _       
+parallelV NullV  _   
    = error "parallelV: Vectors have not the same size!"
 parallelV (f:>fs) (x:>xs) = f x :> parallelV fs xs
 
 scanlV _ _ NullV   = NullV
 scanlV f a (x:>xs) = q :> scanlV f q xs 
-                   where q = f a x
+       where q = f a x
 
-scanrV _ _ NullV      = NullV
+scanrV _ _ NullV  = NullV
 scanrV f a (x:>NullV) = f x a :> NullV
 scanrV f a (x:>xs)    = f x y :> ys 
-                      where ys@(y:>_) = scanrV f a xs
+          where ys@(y:>_) = scanrV f a xs
 
 meshlV _ a NullV   = (a, NullV)
 meshlV f a (x:>xs) = (a'', y:>ys) 
-                   where (a', y)   = f a x
-                         (a'', ys) = meshlV f a' xs
+       where (a', y)   = f a x
+         (a'', ys) = meshlV f a' xs
 
 meshrV _ a NullV    = (NullV, a)
 meshrV f a (x:>xs)  = (y:>ys, a'') 
-                    where (y, a'') = f x a'
-                          (ys, a') = meshrV f a xs
+        where (y, a'') = f x a'
+          (ys, a') = meshrV f a xs
 -}
 
 

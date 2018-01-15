@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 -- |
--- Module      :  ForSyDe.Shallow.FilterLib
+-- Module  :  ForSyDe.Shallow.FilterLib
 -- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
 -- License     :  BSD-style (see the file LICENSE)
 -- 
@@ -26,21 +26,21 @@
 -- S-domain at CT-MoC.
 -----------------------------------------------------------------------------
 module ForSyDe.Shallow.FilterLib (
-              -- *FIR filter
-              firFilter,
-              -- *AR and ARMA filter trim
-              arFilterTrim, armaFilterTrim,
-              -- *The solver mode
-              SolverMode(..),
-              -- *The general linear filter in S-domain
-              sLinearFilter,
-              -- *The general linear filter in Z-domain
-              zLinearFilter,
-              -- *s2z domain coefficient tranformation
-              s2zCoef,
-              -- *The Z-domain to ARMA coefficient tranformation
-              h2ARMACoef
-             )
+      -- *FIR filter
+      firFilter,
+      -- *AR and ARMA filter trim
+      arFilterTrim, armaFilterTrim,
+      -- *The solver mode
+      SolverMode(..),
+      -- *The general linear filter in S-domain
+      sLinearFilter,
+      -- *The general linear filter in Z-domain
+      zLinearFilter,
+      -- *s2z domain coefficient tranformation
+      s2zCoef,
+      -- *The Z-domain to ARMA coefficient tranformation
+      h2ARMACoef
+     )
     where 
 
 import ForSyDe.Shallow.MoCLib
@@ -53,9 +53,9 @@ import Data.List (zipWith5)
 -- signal, and '[h_n]' the impulse response of the filter. Suppose the length of
 -- the impulse responses is M samples. The formula for '[y_n]' is 
 -- $sum_{k=0}^{M-1} h_k*x_{n-k}$.
-firFilter :: (Num a) => [a]      -- ^Coefficients of the FIR filter
-                     -> Signal a -- ^Input signal
-                     -> Signal a -- ^Output signal
+firFilter :: (Num a) => [a]  -- ^Coefficients of the FIR filter
+         -> Signal a -- ^Input signal
+         -> Signal a -- ^Output signal
 firFilter hs xs = mealySY stateF (outF hs) (repeatN (length hs) 0) xs
   where
     stateF xs0 x = fixedList xs0 x
@@ -69,10 +69,10 @@ firFilter hs xs = mealySY stateF (outF hs) (repeatN (length hs) 0) xs
 -- Although it is an IIR filter, here we only get the same length of ouput 
 -- signal as the input signal.
 arFilterTrim :: (Num a, Fractional a) => 
-                           [a]       -- ^Coefficients of the AR filter.
-                         -> a        -- ^The gain
-                         -> Signal a -- ^Input signal
-                         -> Signal a -- ^Output signal
+           [a]   -- ^Coefficients of the AR filter.
+         -> a    -- ^The gain
+         -> Signal a -- ^Input signal
+         -> Signal a -- ^Output signal
 arFilterTrim as b xs = 
     mealySY (stateF as b) (outF as b) (repeatN (length as) 0) xs
   where
@@ -87,16 +87,16 @@ arFilterTrim as b xs =
 -- coefficients '[a_1,a_2,...,a_M]' and a gain of '1'. Although it is an IIR 
 -- filter, here we only get the same length of ouput signal as the input signal.
 armaFilterTrim :: (Num a, Fractional a) => 
-                             [a]      -- ^Coefficients of the FIR filter
-                          -> [a]      -- ^Coefficients of the AR filter.
-                          -> Signal a -- ^Input signal
-                          -> Signal a -- ^Output signal
+             [a]  -- ^Coefficients of the FIR filter
+          -> [a]  -- ^Coefficients of the AR filter.
+          -> Signal a -- ^Input signal
+          -> Signal a -- ^Output signal
 armaFilterTrim bs as = arFilterTrim as 1 . firFilter bs
 
 
 -- |The solver mode.
 data SolverMode = S2Z   -- ^Tustin tranfer from s-domain to z-domain
-                | RK4   -- ^Runge Kutta 4 with fixed simulation steps
+        | RK4   -- ^Runge Kutta 4 with fixed simulation steps
   deriving (Show, Eq)
 
 -- |The general linear filter in S-domain at CT-MoC. As the kernel
@@ -104,16 +104,16 @@ data SolverMode = S2Z   -- ^Tustin tranfer from s-domain to z-domain
 -- It is used on the S-transformation with the following forms, with 
 -- coefficients for the descending powers of 's' and m < n.
 --
--- >        b_0*s^m + b_1*s^m-1 + ... + b_m-1*s^1 + b_m*s^0
--- >H(s) = ------------------------------------------------         (Eq 1)
--- >        a_0*s^n + a_1*s^n-1 + ... + a_n-1*s^1 + a_n*s^0
+-- >    b_0*s^m + b_1*s^m-1 + ... + b_m-1*s^1 + b_m*s^0
+-- >H(s) = ------------------------------------------------     (Eq 1)
+-- >    a_0*s^n + a_1*s^n-1 + ... + a_n-1*s^1 + a_n*s^0
 --
 -- If we multiply both the numerator and the denominator with s^-n, we get 
 -- another equivelent canonical form
 --
--- >        b_0*s^m-n + b_1*s^m-n-1 + ... + b_m-1*s^1-n + b_m*s^-n
+-- >    b_0*s^m-n + b_1*s^m-n-1 + ... + b_m-1*s^1-n + b_m*s^-n
 -- >H(s) = -----------------------------------------------------    (Eq 2)
--- >        a_0*s^0 + a_1*s^-1 + ... + a_n-1*s^1-n + a_n*s^-n
+-- >    a_0*s^0 + a_1*s^-1 + ... + a_n-1*s^1-n + a_n*s^-n
 --
 -- To instantiate a filter, with sampling interval 'T ', we use
 --
@@ -121,9 +121,9 @@ data SolverMode = S2Z   -- ^Tustin tranfer from s-domain to z-domain
 -- 
 -- to get a filter  with the transfer function
 -- 
--- >          1
+-- >      1
 -- >H(s) = --------
--- >       2*s + 1
+-- >   2*s + 1
 -- 
 -- and
 --
@@ -131,15 +131,15 @@ data SolverMode = S2Z   -- ^Tustin tranfer from s-domain to z-domain
 --
 -- to get another filter with the transfer function
 -- 
--- >           2*s +1
+-- >       2*s +1
 -- >H(s) = ----------------
--- >        s^2 + 2*s + 2
+-- >    s^2 + 2*s + 2
 --
 -- There are two solver modes, 'S2Z' and 'RK4'.
 -- Caused by the precision problem, the time interval in CT uses Rational data
 -- type and the digital data types in all the domains are Double.
 sLinearFilter :: (Num a, Fractional a, Show a, Eq a) =>
-        SolverMode   -- ^Specify the solver mode
+    SolverMode   -- ^Specify the solver mode
     ->  Rational     -- ^Fixed simulation interval
     -> [a]  -- ^Coefficients of the polynomial numerator in s-domain
     -> [a]  -- ^Coefficients of the polynomial denominator in s-domain
@@ -153,12 +153,12 @@ sLinearFilter filterMode step bs as inS =  outS
     outS =  d2aConverter DAhold step outSDigital
     -- Digital filter
     outSDigital | filterMode == S2Z = armaFilterTrim bs' as' inSDigital
-                | otherwise =  rk4FilterDigital step as bs inSDigital
-                      where (bs',as') = h2ARMACoef $ s2zCoef step bs as
+        | otherwise =  rk4FilterDigital step as bs inSDigital
+          where (bs',as') = h2ARMACoef $ s2zCoef step bs as
 
 -- |Digital filter using Runge Kutta 4 solver.
 rk4FilterDigital :: (Fractional a, Show a, Eq a) => 
-                    Rational -> [a] -> [a] -> Signal a -> Signal a
+        Rational -> [a] -> [a] -> Signal a -> Signal a
 rk4FilterDigital step as bs inSDigital = outSDigital
   where
     -- Below are the skeletons of the RK-4 solver, with
@@ -180,7 +180,7 @@ rk4FilterDigital step as bs inSDigital = outSDigital
     inputSteps = signal $ repeat step'
     -- The states signal
     statesSignal = rks4InSY 0.0 initialStates stateFunctions 
-                             inputSteps inSDigital --xs
+             inputSteps inSDigital --xs
     -- The ouput digital signal 
     outSDigital = mapSY (iprod bs') statesSignal
     -- The fixed simulation step
@@ -200,23 +200,23 @@ ff1 m = iprod ([0,0] ++ (repeatN m 0) ++ [1] ++ (repeat 0) )
 
 -- |RK-4 to solve the 1st-order ODEs, with input signal.
 rks4InSY :: (Num a, Fractional a) =>
-          a     -- ^The initial time
-      -> [a]               -- ^The initial state values
-      -> [([a] -> a)] -- ^List of the functions of the ODEs.
-      ->  Signal  a  -- ^Input signal of steps
-      ->  Signal  a  -- ^Input signal
-      ->  Signal [a] -- ^Next state signal
+      a     -- ^The initial time
+  -> [a]       -- ^The initial state values
+  -> [([a] -> a)] -- ^List of the functions of the ODEs.
+  ->  Signal  a  -- ^Input signal of steps
+  ->  Signal  a  -- ^Input signal
+  ->  Signal [a] -- ^Next state signal
 rks4InSY x0 ys0 fFs hs us = scanl3SY stateF ys0 xs hs us
   where
     stateF ysn xn h ut = zipWith (+) (repeatN orderODE' 0.0 ++ [ut*h]) $ --Input value
-                                      rks4 h xn fFs ysn 
+              rks4 h xn fFs ysn 
     xs = scanldSY (+) x0 hs
     -- Order -1 of the ODEs
     orderODE' = length ys0 - 1
 
 -- |One step RK-4 for the 1st-order ordinary differential equations (ODEs).
 rks4 ::  (Num a, Fractional a) =>
-         a    -- ^The step
+     a    -- ^The step
      ->  a    -- ^Initial value of time
      -> [[a] -> a] -- ^List of the funcitons of the ODEs.
      -> [a]   -- ^List of the value at the current state
@@ -229,7 +229,7 @@ rks4 h x0 fFs ys0 = ys1
     ks3 = map (h*) $ map' (x0+h_2:zipWith (\y k-> y+k/2.0) ys0 ks2) fFs 
     ks4 = map (h*) $ map' (x0+h:zipWith (\y k-> y+k) ys0 ks3) fFs 
     ys1 = zipWith5 (\y0 k1 k2 k3 k4 -> y0 + k1/6 + k2/3 + k3/3 + k4/6)
-                    ys0 ks1 ks2 ks3 ks4
+        ys0 ks1 ks2 ks3 ks4
 
 -- |The general linear filter in Z-domain.
 zLinearFilter :: Fractional a => [a] -> [a] -> Signal a -> Signal a
@@ -241,26 +241,26 @@ zLinearFilter bs as = armaFilterTrim bs' as'
 -- |s2z domain coefficient tranformation with a specified sampling rate.
 -- The Tustin transformation is used for the transfer, with
 --
--- >      2(z - 1)  
--- > s = ----------                                                 (Eq 3)
--- >      T(z + 1)
+-- >  2(z - 1)  
+-- > s = ----------                 (Eq 3)
+-- >  T(z + 1)
 --
 -- in which, 'T' is the sampling interval.
 s2zCoef :: (Num a, Fractional a, Eq a) =>
-            Rational   -- ^Sampling rate in Z-domain
-        -> [a] -- ^Coefficients of the polynomial numerator in s-domain
-        -> [a] -- ^Coefficients of the polynomial denominator in s-domain
-        -> ([a], [a]) -- ^Tuple of the numerator and denominator 
-                      --  coefficients in Z-domain
+    Rational      -- ^ Sampling rate in Z-domain
+    -> [a]        -- ^ Coefficients of the polynomial numerator in s-domain
+    -> [a]        -- ^ Coefficients of the polynomial denominator in s-domain
+    -> ([a], [a]) -- ^ Tuple of the numerator and denominator 
+                  --   coefficients in Z-domain
 s2zCoef sampleT bs as = (reverse bs', reverse as')
   where
     (bs',as') = getCoef hZ    
     bsInv = reverse bs
     asInv = reverse as
     numerator' = foldl (\x y -> addPoly x $ scalePoly (fst y) (snd y)) 
-       (Poly [0]) $ zip bsInv sList
+                 (Poly [0]) $ zip bsInv sList
     denominator' = foldl (\x y -> addPoly x $ scalePoly (fst y) (snd y)) 
-       (Poly [0]) $ zip asInv sList
+                   (Poly [0]) $ zip asInv sList
     hZ = divPoly numerator' denominator'
     -- Tustin transform
     s = PolyPair (Poly [-2,2],Poly [fromRational sampleT,fromRational sampleT])
@@ -269,28 +269,28 @@ s2zCoef sampleT bs as = (reverse bs', reverse as')
 -- |The Z-domain to ARMA coefficient tranformation. It is used on the 
 -- Z-transfer function
 --
--- >        b_0*z^m-n + b_1*z^m-n-1 + ... + b_m-1*z^1-n + b_m*z^-n
+-- >    b_0*z^m-n + b_1*z^m-n-1 + ... + b_m-1*z^1-n + b_m*z^-n
 -- >H(z) = -----------------------------------------------------    (Eq 4)
--- >        a_0*z^0 + a_1*z^-1 + ... + a_n-1*z^1-n + a_n*z^-n
+-- >    a_0*z^0 + a_1*z^-1 + ... + a_n-1*z^1-n + a_n*z^-n
 --
 -- which is normalized as
 --
--- >        b_0/a_0*z^m-n + b_1/a_0*z^m-n-1 + ... + b_m/a_0*z^-n
+-- >    b_0/a_0*z^m-n + b_1/a_0*z^m-n-1 + ... + b_m/a_0*z^-n
 -- >H(z) = -------------------------------------------------------  (Eq 5)
--- >        1 + a_1/a_0*z^-1 + ... + a_n-1/a_0*z^1-n + a_n/a_0*z^-n
+-- >    1 + a_1/a_0*z^-1 + ... + a_n-1/a_0*z^1-n + a_n/a_0*z^-n
 --
 -- The implementation coudl be
 --
 -- >y(k) = b_0/a_0*x_k+m-n + b_1/a_0*x_k+m-n-1 + ... + b_m/a_0*x_k-n
--- >                                                                (Eq 6)
--- >                       - a_1/a_0*y_k-1 - ... - a_n/a_0*y_k-n
+-- >                        (Eq 6)
+-- >           - a_1/a_0*y_k-1 - ... - a_n/a_0*y_k-n
 --
 -- Then, we could get the coefficients of the ARMA filter.
 h2ARMACoef :: (Num a, Fractional a) =>
-               ([a], [a]) -- ^Coefficients in Z-domain
-            -> ([a], [a]) -- ^Coefficients of the ARMA filter
+       ([a], [a]) -- ^Coefficients in Z-domain
+    -> ([a], [a]) -- ^Coefficients of the ARMA filter
 h2ARMACoef (bs,as) = (scalePolyCoef a0_1 bs, 
-                      scalePolyCoef (0-a0_1) $ tail as)
+          scalePolyCoef (0-a0_1) $ tail as)
   where
     a0_1 = 1.0/ head as
 

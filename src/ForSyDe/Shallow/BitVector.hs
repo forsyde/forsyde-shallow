@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 -- |
--- Module      :  ForSyDe.Shallow.BitVector
+-- Module  :  ForSyDe.Shallow.BitVector
 -- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
 -- License     :  BSD-style (see the file LICENSE)
 -- 
@@ -32,38 +32,38 @@ type BitVector = Vector Integer
 
 -- |To judge whether the input bit-vector is in a proper form.
 isBitVector :: (Num t, Eq t) =>
-          Vector t  -- ^Input bit-vector
-       -> Bool      -- ^Output boolean value
+      Vector t  -- ^Input bit-vector
+   -> Bool  -- ^Output boolean value
 isBitVector NullV = True
 isBitVector (x:>xs) = (x `elem` [0, 1]) && isBitVector xs
 
 -- |To transform the input integer to a bit-vector with specified number of
 -- bits.
 intToBitVector :: Int  -- ^Num of the bits
-               -> Integer  -- ^The input integer
-               -> BitVector -- ^The output bit-vector
+       -> Integer  -- ^The input integer
+       -> BitVector -- ^The output bit-vector
 intToBitVector bits n | n >= 0 && n < 2^(bits-1) 
-			   = intToBitVector' bits n
+       = intToBitVector' bits n
 intToBitVector bits n | n < 0 && abs n <= 2^(bits-1) 
-			   = intToBitVector' bits (n + 2^bits)
+       = intToBitVector' bits (n + 2^bits)
 intToBitVector _    _ | otherwise = 
-          error "intToBitvector : Number out of range!" 
+      error "intToBitvector : Number out of range!" 
 
 -- |Helper function of 'intToBitVector'.
 intToBitVector' :: (Num a, Ord a1, Num a1, Integral t) => 
-                   t -> a1 -> Vector a
+       t -> a1 -> Vector a
 intToBitVector' 0    _ = NullV
 intToBitVector' bits n = if n >= 2^(bits-1) then
-			     1 :> intToBitVector' (bits-1) (n - 2^(bits-1))
-			 else  
-			     0 :> intToBitVector' (bits-1) n
+         1 :> intToBitVector' (bits-1) (n - 2^(bits-1))
+       else  
+         0 :> intToBitVector' (bits-1) n
 
 -- |To transform the input bit-vecotr to an integer.
 bitVectorToInt :: BitVector -> Integer
 bitVectorToInt (1:>xv) | isBitVector xv 
-               = bitVectorToInt' xv (lengthV xv) - 2 ^ lengthV xv 
+       = bitVectorToInt' xv (lengthV xv) - 2 ^ lengthV xv 
 bitVectorToInt (0:>xv) | isBitVector xv 
-               = bitVectorToInt' xv (lengthV xv)
+       = bitVectorToInt' xv (lengthV xv)
 bitVectorToInt _ = error "bitVectorToInt: Vector is not a BitVector!"
 
 
@@ -84,8 +84,8 @@ addOddParityBit  = addParityBit Odd
 addParityBit :: (Num a, Eq a) => Parity -> Vector a -> Vector a
 addParityBit p v 
   | isBitVector v = case p of
-                     Even -> resZero even
-                     Odd -> resZero (not even)
+    Even -> resZero even
+    Odd -> resZero (not even)
   | otherwise =  error "addParity: Vector is not a BitVector"  
  where even = evenNumber v 
        resZero b = v <+> unitV (if b then 0 else 1)
@@ -114,7 +114,7 @@ evenNumber NullV   = True
 evenNumber (0:>xv) = xor False (evenNumber xv)
 evenNumber (1:>xv) = xor True (evenNumber xv)
 evenNumber (_:>_) = error "evenNumber: Vector is not a BitVector "
-                     
+         
 xor :: Bool -> Bool -> Bool
 xor True  False = True
 xor False True  = True

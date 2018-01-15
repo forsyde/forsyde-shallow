@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 -- |
--- Module      :  ForSyDe.Shallow.AbsentExt
+-- Module  :  ForSyDe.Shallow.AbsentExt
 -- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
 -- License     :  BSD-style (see the file LICENSE)
 -- 
@@ -13,27 +13,27 @@
 -- 
 -----------------------------------------------------------------------------
 module ForSyDe.Shallow.AbsentExt( 
-		  AbstExt (Abst, Prst), fromAbstExt, abstExt, psi, 
-	          isAbsent, isPresent, abstExtFunc)
-	        where
+    AbstExt (Abst, Prst), fromAbstExt, abstExt, psi, 
+      isAbsent, isPresent, abstExtFunc)
+    where
 
 
 
 
 -- |The data type 'AbstExt' has two constructors. The constructor 'Abst' is used to model the absence of a value, while the constructor 'Prst' is used to model present values.
-data AbstExt a		       =  Abst   
-			       |  Prst a deriving (Eq)
+data AbstExt a     =  Abst   
+       |  Prst a deriving (Eq)
 
 
 
 -- |The function 'fromAbstExt' converts a value from a extended value.
-fromAbstExt	       :: a -> AbstExt a -> a
+fromAbstExt   :: a -> AbstExt a -> a
 -- |The functions 'isPresent' checks for the presence of a value.
-isPresent	       :: AbstExt a -> Bool
+isPresent   :: AbstExt a -> Bool
 -- |The functions 'isAbsent' checks for the absence of a value.
-isAbsent	       :: AbstExt a -> Bool
+isAbsent   :: AbstExt a -> Bool
 -- |The function 'abstExtFunc' extends a function in order to process absent extended values. If the input is (\"bottom\"), the output will also be  (\"bottom\").
-abstExtFunc	       :: (a -> b) -> AbstExt a -> AbstExt b
+abstExtFunc   :: (a -> b) -> AbstExt a -> AbstExt b
 -- | The function 'psi' is identical to 'abstExtFunc' and should be used in future.
 psi :: (a -> b) -> AbstExt a -> AbstExt b
 -- | The function 'abstExt' converts a usual value to a present value. 
@@ -48,35 +48,35 @@ abstExt :: a -> AbstExt a
 
 -- | The data type 'AbstExt' is defined as an instance of 'Show' and 'Read'. \'_\' represents the value 'Abst' while a present value is represented with its value, e.g.  'Prst' 1 is represented as \'1\'.
 instance Show a => Show (AbstExt a) where
-	 showsPrec _	       = showsAbstExt
+   showsPrec _   = showsAbstExt
 
 showsAbstExt :: Show a => AbstExt a -> String -> String
-showsAbstExt Abst	       = (++) "_"       
-showsAbstExt (Prst x)	       = (++) (show x)
+showsAbstExt Abst   = (++) "_"   
+showsAbstExt (Prst x)   = (++) (show x)
 
 instance Read a => Read (AbstExt a) where
- 	 readsPrec _	       =  readsAbstExt 
+    readsPrec _   =  readsAbstExt 
 
-readsAbstExt		       :: (Read a) => ReadS (AbstExt a)
-readsAbstExt s		       =     [(Abst, r1)    | ("_", r1) <- lex s]
-                                  ++ [(Prst x, r2)  | (x, r2) <- reads s]
+readsAbstExt     :: (Read a) => ReadS (AbstExt a)
+readsAbstExt s     =     [(Abst, r1)    | ("_", r1) <- lex s]
+              ++ [(Prst x, r2)  | (x, r2) <- reads s]
 
-abstExt  		       =  Prst
+abstExt       =  Prst
 
-fromAbstExt x Abst	       =  x   
-fromAbstExt _ (Prst y)	       =  y   
+fromAbstExt x Abst   =  x   
+fromAbstExt _ (Prst y)   =  y   
 
-isPresent Abst		       =  False
-isPresent (Prst _)	       =  True
+isPresent Abst     =  False
+isPresent (Prst _)   =  True
 
-isAbsent		       =  not . isPresent
+isAbsent     =  not . isPresent
 
-abstExtFunc f		       = f' 
-  where f' Abst		       = Abst
-	f' (Prst x)	       = Prst (f x)
+abstExtFunc f     = f' 
+  where f' Abst     = Abst
+        f' (Prst x)   = Prst (f x)
 
 
-psi			       = abstExtFunc
+psi       = abstExtFunc
 
 
 
