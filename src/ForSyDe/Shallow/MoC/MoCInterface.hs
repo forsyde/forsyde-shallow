@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 -- |
--- Module  :  ForSyDe.Shallow.MoCInterfaces
+-- Module  :  ForSyDe.Shallow.MoC.MoCInterface
 -- Copyright   :  KTH/ICT/ELE/ESY, 2017
 -- License     :  BSD-style (see the file LICENSE)
 -- 
@@ -12,12 +12,12 @@
 -- different MOCs.
 -----------------------------------------------------------------------------
 
-module ForSyDe.Shallow.MoCInterfaces(
+module ForSyDe.Shallow.MoC.MoCInterface(
   -- * Interfaces between Synchronous MoC and Continuous Time MoC
   sy2ct, ct2sy) where
 
-import ForSyDe.Shallow.CTLib
-import ForSyDe.Shallow.Signal
+import ForSyDe.Shallow.MoC.CT
+import ForSyDe.Shallow.Core.Signal
 -- | The MoC interface 'sy2ct' converts a synchronous signal into a continuous time signal. It uses the 'd2aConverter' function, which currently is defined in the CT library.
 sy2ct :: (Fractional a, Show a) =>
      DACMode      -- ^Mode of conversion

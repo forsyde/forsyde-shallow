@@ -11,22 +11,22 @@
 -- The CoreLib is the base for all MoC libraries and is a container
 -- that includes the following libraries:
 -- 
--- * "ForSyDe.Shallow.Signal"
+-- * "ForSyDe.Shallow.Core.Signal"
 -- 
--- * "ForSyDe.Shallow.Vector"
+-- * "ForSyDe.Shallow.Core.Vector"
 -- 
--- * "ForSyDe.Shallow.AbsentExt" 
+-- * "ForSyDe.Shallow.Core.AbsentExt" 
 -----------------------------------------------------------------------------
 
-module ForSyDe.Shallow.CoreLib(  
-        module ForSyDe.Shallow.Signal,
-        module ForSyDe.Shallow.Vector,
-        module ForSyDe.Shallow.AbsentExt
+module ForSyDe.Shallow.Core(  
+        module ForSyDe.Shallow.Core.Signal,
+        module ForSyDe.Shallow.Core.Vector,
+        module ForSyDe.Shallow.Core.AbsentExt
         ) where
 
-import ForSyDe.Shallow.Vector
-import ForSyDe.Shallow.Signal
-import ForSyDe.Shallow.AbsentExt
+import ForSyDe.Shallow.Core.Vector
+import ForSyDe.Shallow.Core.Signal
+import ForSyDe.Shallow.Core.AbsentExt
 
 
 

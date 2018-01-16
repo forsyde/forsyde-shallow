@@ -14,7 +14,7 @@
 -----------------------------------------------------------------------------
 module ForSyDe.Shallow.DFT(dft, fft) where
 
-import ForSyDe.Shallow.Vector
+import ForSyDe.Shallow.Core.Vector
 import Data.Complex
 
 -- | The function 'dft' performs a standard Discrete Fourier Transformation

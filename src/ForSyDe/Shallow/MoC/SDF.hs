@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 -- |
--- Module  :  ForSyDe.Shallow.SDFLib
+-- Module  :  ForSyDe.Shallow.MoC.SDF
 -- Copyright   :  (c) Ingo Sander, KTH/ICT/ES, ForSyDe-Group
 -- License     :  BSD-style (see the file LICENSE)
 -- 
@@ -12,7 +12,7 @@
 -- 
 -----------------------------------------------------------------------------
 
-module ForSyDe.Shallow.SDFLib (
+module ForSyDe.Shallow.MoC.SDF (
   -- * Combinational Process Constructors
   -- | Combinational process constructors are used for processes that do not have a state.
   mapSDF, zipWithSDF, zipWith3SDF, zipWith4SDF,
@@ -30,7 +30,7 @@ module ForSyDe.Shallow.SDFLib (
   actor41SDF, actor42SDF, actor43SDF, actor44SDF
   ) where  
 
-import ForSyDe.Shallow.CoreLib
+import ForSyDe.Shallow.Core
 
 ------------------------------------------------------------------------
 --

@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 -- |
--- Module  :  ForSyDe.Shallow.Signal
+-- Module  :  ForSyDe.Shallow.Core.Signal
 -- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
 -- License     :  BSD-style (see the file LICENSE)
 -- 
@@ -11,11 +11,12 @@
 -- This module defines the shallow-embedded 'Signal' datatype and
 -- functions operating on it.
 -----------------------------------------------------------------------------
-module ForSyDe.Shallow.Signal( Signal (NullS, (:-)), (-:), (+-+), (!-), 
-       signal, fromSignal,
-       unitS, nullS, headS, tailS, atS, takeS, dropS,
-       lengthS, infiniteS, copyS, selectS, writeS, readS, fanS
-     ) where
+module ForSyDe.Shallow.Core.Signal(
+  Signal (NullS, (:-)), (-:), (+-+), (!-), 
+  signal, fromSignal,
+  unitS, nullS, headS, tailS, atS, takeS, dropS,
+  lengthS, infiniteS, copyS, selectS, writeS, readS, fanS
+  ) where
 
 infixr 5    :-
 infixr 5    -:
@@ -106,107 +107,104 @@ fanS :: (Signal a -> Signal b) -> (Signal a -> Signal c)
 -- Implementation
 
 instance (Show a) => Show (Signal a) where
-     showsPrec p NullS = showParen (p > 9) (
-           showString "{}")
-     showsPrec p xs    = showParen (p > 9) (
-           showChar '{' . showSignal1 xs)
-             where
-            showSignal1 NullS
-               = showChar '}'
-            showSignal1 (y:-NullS) 
-               = shows y . showChar '}'
-            showSignal1 (y:-ys)    
-               = shows y . showChar ',' 
-             . showSignal1 ys
+  showsPrec p NullS = showParen (p > 9) (showString "{}")
+  showsPrec p xs    = showParen (p > 9) (showChar '{' . showSignal1 xs)
+    where
+      showSignal1 NullS      = showChar '}'
+      showSignal1 (y:-NullS) = shows y . showChar '}'
+      showSignal1 (y:-ys)    = shows y . showChar ',' . showSignal1 ys
 
 instance Read a => Read (Signal a) where
-     readsPrec _ s = readsSignal s
+  readsPrec _ s = readsSignal s
 
 readsSignal    :: (Read a) => ReadS (Signal a)
-readsSignal s      =  [((x:-NullS), rest) 
-            | ("{", r2)   <- lex s,
-          (x, r3)     <- reads r2,
-          ("}", rest) <- lex r3]
-          ++ [(NullS, r4)       
-            | ("{", r5) <- lex s,
+readsSignal s
+  =  [((x:-NullS), rest)
+     | ("{", r2)   <- lex s,
+       (x, r3)     <- reads r2,
+       ("}", rest) <- lex r3]
+     ++ [(NullS, r4)       
+        | ("{", r5) <- lex s,
           ("}", r4) <- lex r5]
-          ++ [((x:-xs), r6)     
-            | ("{", r7) <- lex s,
+     ++ [((x:-xs), r6)     
+        | ("{", r7) <- lex s,
           (x, r8)   <- reads r7,
           (",", r9) <- lex r8,
           (xs, r6)  <- readsValues r9]
 
 readsValues    :: (Read a) => ReadS (Signal a)
-readsValues s      =  [((x:-NullS), r1) 
-            | (x, r2)   <- reads s,
-          ("}", r1) <- lex r2]
-          ++ [((x:-xs), r3)    
-            | (x, r4)   <- reads s,
+readsValues s
+  =  [((x:-NullS), r1) 
+     | (x, r2)   <- reads s,
+       ("}", r1) <- lex r2]
+     ++ [((x:-xs), r3)    
+        | (x, r4)   <- reads s,
           (",", r5) <- lex r4,
           (xs, r3)  <- readsValues r5]
 
-signal []           =  NullS
-signal (x:xs)       =  x :- signal xs 
+signal []          =  NullS
+signal (x:xs)      =  x :- signal xs 
 
-fromSignal NullS        =  []
-fromSignal (x:-xs)      =  x : fromSignal xs
+fromSignal NullS   =  []
+fromSignal (x:-xs) =  x : fromSignal xs
 
-unitS x             =  x :- NullS
+unitS x =  x :- NullS
 
-nullS NullS         =  True
-nullS _             =  False
+nullS NullS =  True
+nullS _     =  False
 
-headS NullS         =  error "headS : Signal is empty"
-headS (x:-_)        =  x
+headS NullS  = error "headS : Signal is empty"
+headS (x:-_) = x
 
-tailS NullS         =  error "tailS : Signal is empty"
-tailS (_:-xs)       =  xs
+tailS NullS   = error "tailS : Signal is empty"
+tailS (_:-xs) = xs
 
-atS _ NullS         
-  =  error "atS: Signal has not enough elements"
-atS 0 (x:-_)        =  x
-atS n (_:-xs)       =  atS (n-1) xs
+atS _ NullS   = error "atS: Signal has not enough elements"
+atS 0 (x:-_)  = x
+atS n (_:-xs) = atS (n-1) xs
 
 (!-) :: Signal a -> Int -> a
-(!-) xs n           = atS n xs
+(!-) xs n = atS n xs
 
-takeS 0 _           = NullS
-takeS _ NullS       = NullS
-takeS n (x:-xs) | n <= 0    = NullS
-        | otherwise     = x :- takeS (n-1) xs
+takeS 0 _      = NullS
+takeS _ NullS  = NullS
+takeS n (x:-xs)
+  | n <= 0     = NullS
+  | otherwise  = x :- takeS (n-1) xs
 
-dropS 0 NullS       = NullS
-dropS _ NullS       = NullS 
-dropS n (x:-xs) | n <= 0    = x:-xs
-      | otherwise       = dropS (n-1) xs
+dropS 0 NullS  = NullS
+dropS _ NullS  = NullS 
+dropS n (x:-xs)
+  | n <= 0     = x:-xs
+  | otherwise  = dropS (n-1) xs
 
 
 selectS offset step xs = select1S step (dropS offset xs) 
   where
-   select1S _  NullS   = NullS
-   select1S st (y:-ys) = y :- select1S st (dropS (st-1) ys) 
+    select1S _  NullS   = NullS
+    select1S st (y:-ys) = y :- select1S st (dropS (st-1) ys) 
 
-(-:) xs x           = xs +-+ (x :- NullS)
+(-:) xs x = xs +-+ (x :- NullS)
 
-(+-+) NullS   ys        = ys
-(+-+) (x:-xs) ys        = x :- (xs +-+ ys)
+(+-+) NullS   ys = ys
+(+-+) (x:-xs) ys = x :- (xs +-+ ys)
 
-lengthS NullS       = 0
-lengthS (_:-xs)         = 1 + lengthS xs
+lengthS NullS   = 0
+lengthS (_:-xs) = 1 + lengthS xs
 
-infiniteS f x       = x :- infiniteS f (f x)
+infiniteS f x = x :- infiniteS f (f x)
 
-copyS 0 _           = NullS
-copyS n x           = x :- copyS (n-1) x
+copyS 0 _ = NullS
+copyS n x = x :- copyS (n-1) x
 
-fanS p1 p2 xs       = (p1 xs, p2 xs)
+fanS p1 p2 xs = (p1 xs, p2 xs)
 
 writeS NullS   = []
 writeS (x:-xs) = show x ++ "\n" ++ writeS xs
 
-readS xs   = readS' (words xs)
+readS xs             = readS' (words xs)
   where
-    readS' []    = NullS
+    readS' []        = NullS
     readS' ("\n":ys) = readS' ys
     readS' (y:ys)    = read y :- readS' ys
 

@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 -- |
--- Module  :  ForSyDe.Shallow.AbsentExt
+-- Module  :  ForSyDe.Shallow.Core.AbsentExt
 -- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
 -- License     :  BSD-style (see the file LICENSE)
 -- 
@@ -12,17 +12,15 @@
 --  \'absent\', which models the absence of a value.
 -- 
 -----------------------------------------------------------------------------
-module ForSyDe.Shallow.AbsentExt( 
-    AbstExt (Abst, Prst), fromAbstExt, abstExt, psi, 
-      isAbsent, isPresent, abstExtFunc)
-    where
-
-
+module ForSyDe.Shallow.Core.AbsentExt ( 
+  AbstExt (Abst, Prst), fromAbstExt, abstExt, psi, 
+  isAbsent, isPresent, abstExtFunc
+  ) where
 
 
 -- |The data type 'AbstExt' has two constructors. The constructor 'Abst' is used to model the absence of a value, while the constructor 'Prst' is used to model present values.
-data AbstExt a     =  Abst   
-       |  Prst a deriving (Eq)
+data AbstExt a =  Abst   
+               |  Prst a deriving (Eq)
 
 
 
@@ -39,44 +37,39 @@ psi :: (a -> b) -> AbstExt a -> AbstExt b
 -- | The function 'abstExt' converts a usual value to a present value. 
 abstExt :: a -> AbstExt a
 
-
-
-
-
-
 -- Implementation of Library Functions
 
 -- | The data type 'AbstExt' is defined as an instance of 'Show' and 'Read'. \'_\' represents the value 'Abst' while a present value is represented with its value, e.g.  'Prst' 1 is represented as \'1\'.
 instance Show a => Show (AbstExt a) where
-   showsPrec _   = showsAbstExt
+  showsPrec _   = showsAbstExt
 
 showsAbstExt :: Show a => AbstExt a -> String -> String
-showsAbstExt Abst   = (++) "_"   
-showsAbstExt (Prst x)   = (++) (show x)
+showsAbstExt Abst      = (++) "_"   
+showsAbstExt (Prst x)  = (++) (show x)
 
 instance Read a => Read (AbstExt a) where
-    readsPrec _   =  readsAbstExt 
+  readsPrec _ =  readsAbstExt 
 
-readsAbstExt     :: (Read a) => ReadS (AbstExt a)
-readsAbstExt s     =     [(Abst, r1)    | ("_", r1) <- lex s]
-              ++ [(Prst x, r2)  | (x, r2) <- reads s]
+readsAbstExt :: (Read a) => ReadS (AbstExt a)
+readsAbstExt s = [(Abst, r1)    | ("_", r1) <- lex s]
+                 ++ [(Prst x, r2)  | (x, r2) <- reads s]
 
-abstExt       =  Prst
+abstExt =  Prst
 
-fromAbstExt x Abst   =  x   
-fromAbstExt _ (Prst y)   =  y   
+fromAbstExt x Abst     =  x   
+fromAbstExt _ (Prst y) =  y   
 
-isPresent Abst     =  False
-isPresent (Prst _)   =  True
+isPresent Abst     = False
+isPresent (Prst _) = True
 
-isAbsent     =  not . isPresent
+isAbsent =  not . isPresent
 
-abstExtFunc f     = f' 
+abstExtFunc f       = f' 
   where f' Abst     = Abst
-        f' (Prst x)   = Prst (f x)
+        f' (Prst x) = Prst (f x)
 
 
-psi       = abstExtFunc
+psi = abstExtFunc
 
 
 

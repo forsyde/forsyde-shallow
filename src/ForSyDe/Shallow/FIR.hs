@@ -12,8 +12,8 @@
 -----------------------------------------------------------------------------
 module ForSyDe.Shallow.FIR (firSY) where
 
-import ForSyDe.Shallow.SynchronousLib
-import ForSyDe.Shallow.CoreLib
+import ForSyDe.Shallow.MoC.Synchronous
+import ForSyDe.Shallow.Core
 
 -- | The function firSY implements a FIR-filter for the synchronous computational model. All kinds of FIR-filters can now be modeled by means of 'firSY'. The only argument needed is the list of coefficients, which is given as a vector of any size. To illustrate this, an 8-th order band pass filter is modeled as follows. 
 --

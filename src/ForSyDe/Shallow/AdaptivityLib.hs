@@ -14,9 +14,9 @@
 module ForSyDe.Shallow.AdaptivityLib (applyfSY, applyf2SY, applyf3SY, 
               applyfU) where
 
-import ForSyDe.Shallow.Signal
-import ForSyDe.Shallow.SynchronousLib
-import ForSyDe.Shallow.UntimedLib
+import ForSyDe.Shallow.Core.Signal
+import ForSyDe.Shallow.MoC.Synchronous
+import ForSyDe.Shallow.MoC.Untimed
 
 applyfSY :: Signal (a -> b) -> Signal a -> Signal b
 applyfSY = zipWithSY ($)

@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 -- |
--- Module  :  ForSyDe.Shallow.DomainInterfaces
+-- Module  :  ForSyDe.Shallow.MoC.DomainInterface
 -- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
 -- License     :  BSD-style (see the file LICENSE)
 -- 
@@ -11,12 +11,12 @@
 -- This module defines domain interface constructors for the multi-rate computational 
 -- model.
 -----------------------------------------------------------------------------
-module ForSyDe.Shallow.DomainInterfaces(downDI, upDI, par2serxDI, ser2parxDI, 
+module ForSyDe.Shallow.MoC.DomainInterface(downDI, upDI, par2serxDI, ser2parxDI, 
         par2ser2DI, par2ser3DI, par2ser4DI, 
         ser2par2DI, ser2par3DI, ser2par4DI) where
 
-import ForSyDe.Shallow.CoreLib
-import ForSyDe.Shallow.SynchronousLib
+import ForSyDe.Shallow.Core
+import ForSyDe.Shallow.MoC.Synchronous
 
 
 -- | The domain interface constructor 'downDI' takes a parameter 'k' and downsamples an input signal.

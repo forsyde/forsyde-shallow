@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 -- |
--- Module  :  ForSyDe.Shallow.BitVector
+-- Module  :  ForSyDe.Shallow.Core.BitVector
 -- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
 -- License     :  BSD-style (see the file LICENSE)
 -- 
@@ -10,7 +10,7 @@
 --
 -- It defines the bit vector operations from\/to integer.
 -----------------------------------------------------------------------------
-module ForSyDe.Shallow.BitVector(
+module ForSyDe.Shallow.Core.BitVector(
     -- *Polynomial data type
     BitVector, Parity(..),
     -- *Bit-vector and integer transformations
@@ -26,7 +26,7 @@ module ForSyDe.Shallow.BitVector(
   )
   where
 
-import ForSyDe.Shallow.Vector
+import ForSyDe.Shallow.Core.Vector
 
 type BitVector = Vector Integer
 

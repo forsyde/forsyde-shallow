@@ -15,7 +15,7 @@
 -----------------------------------------------------------------------------
 module ForSyDe.Shallow.Queue where
 
-import ForSyDe.Shallow.AbsentExt 
+import ForSyDe.Shallow.Core.AbsentExt 
 
 -- | A queue is modeled as a list. The data type 'Queue' modelles an queue of infinite size.
 data Queue a    =  Q [a] deriving (Eq, Show)

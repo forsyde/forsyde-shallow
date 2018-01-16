@@ -16,8 +16,8 @@ module ForSyDe.Shallow.Memory (
         MemSize, Adr, newMem, memState, memOutput
       ) where
 
-import ForSyDe.Shallow.Vector
-import ForSyDe.Shallow.AbsentExt
+import ForSyDe.Shallow.Core.Vector
+import ForSyDe.Shallow.Core.AbsentExt
 
 type Adr    =  Int
 type MemSize      =  Int

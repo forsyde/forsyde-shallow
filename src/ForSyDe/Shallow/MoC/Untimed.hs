@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 -- |
--- Module  :  ForSyDe.Shallow.UntimedLib
+-- Module  :  ForSyDe.Shallow.MoC.Untimed
 -- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
 -- License     :  BSD-style (see the file LICENSE)
 -- 
@@ -13,7 +13,7 @@
 -- order function which together with combinational function(s) and
 -- values as arguments constructs a process.
 -----------------------------------------------------------------------------
-module ForSyDe.Shallow.UntimedLib(  
+module ForSyDe.Shallow.MoC.Untimed(  
         -- * Combinational process constructors
         -- | Combinational process constructors are used for processes that do not have a state.
         combU, comb2U, comb2UC,
@@ -28,7 +28,7 @@ module ForSyDe.Shallow.UntimedLib(
       )
 where
 
-import ForSyDe.Shallow.CoreLib
+import ForSyDe.Shallow.Core
 
 ----------------------------------------
 --            --

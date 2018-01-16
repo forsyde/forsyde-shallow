@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 -- |
--- Module  :  ForSyDe.Shallow.CTLib
+-- Module  :  ForSyDe.Shallow.MoC.CT
 -- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
 -- License     :  BSD-style (see the file LICENSE)
 -- 
@@ -35,8 +35,7 @@
 -- The approach is described in more detail in the ANDRES deliverable D1.1a.
 -- Here we only briefly comment the main functions and constructors.
 ----------------------------------------------------------------------------
-module ForSyDe.Shallow.CTLib (
---  module ForSyDe.Shallow.CoreLib,
+module ForSyDe.Shallow.MoC.CT (
   -- * The signal data type
   SubsigCT(..),
   ctSignal,
@@ -45,7 +44,7 @@ module ForSyDe.Shallow.CTLib (
   -- * Primary process constructors
   mapCT, zipWithCT,
   combCT, comb2CT,
-  -- mooreCT, mealyCT, delayCT, initCT,
+  delayCT, addTime, -- initCT, mooreCT, mealyCT,
   -- * Derived process constructors
   -- | These constructors instantiate very useful processes.
   -- They could be defined in terms of the basic constructors
@@ -66,7 +65,7 @@ module ForSyDe.Shallow.CTLib (
   plot, plotCT, plotCT' ,showParts, vcdGen
   ) where
 
-import ForSyDe.Shallow.CoreLib
+import ForSyDe.Shallow.Core
 import System.Process
 import System.Time
 --import System.IO
@@ -99,8 +98,8 @@ liftCT f = f . fromRational
 -- | The function 'ctSignal' creates a CT signal from a list of
 -- subsignals that are given by a function, an a time range.
 --
--- > *ForSyDe.Shallow.CTLib> ctsig1 = ctSignal [(liftCT sin, (0, 3.14)), (\t -> 1, (3.14, 6.28))]
--- > *ForSyDe.Shallow.CTLib> :t ctsig1
+-- > *ForSyDe.Shallow.MoC.CT> ctsig1 = ctSignal [(liftCT sin, (0, 3.14)), (\t -> 1, (3.14, 6.28))]
+-- > *ForSyDe.Shallow.MoC.CT> :t ctsig1
 -- > ctsig1 :: Floating a => Signal (SubsigCT a)-- ctsig1 = ctSignal [(liftCT sin, (0, 3.14)), (\t -> 1, (3.14, 6.28))]
 ctSignal :: [(Rational -> a, (Rational, Rational))] -> Signal (SubsigCT a)
 ctSignal []           = NullS

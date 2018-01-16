@@ -1,5 +1,6 @@
 # Ignore everything in this directory
 dist/*
+*TAGS
 *~
 .cabal-sandbox/*
 cabal.sandbox.config

@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 -- |
--- Module  :  ForSyDe.Shallow.Vector
+-- Module  :  ForSyDe.Shallow.Core.Vector
 -- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
 -- License     :  BSD-style (see the file LICENSE)
 -- 
@@ -17,16 +17,15 @@
 -- in Haskells type system. Still most operations are defined for
 -- vectors with the same size.
 -----------------------------------------------------------------------------
-module ForSyDe.Shallow.Vector ( 
+module ForSyDe.Shallow.Core.Vector ( 
   Vector (..), vector, fromVector, unitV, nullV, lengthV,
   atV, replaceV, headV, tailV, lastV, initV, takeV, dropV, 
-  selectV, groupV, (<+>), (<:), mapV, foldlV, foldrV, 
+  selectV, groupV, (<+>), (<:), mapV, foldlV, foldrV,
+  reduceV, pipeV, zipWithV, filterV, zipV, unzipV, 
   -- scanlV, scanrV, meshlV, meshrV, 
-  zipWithV, filterV, zipV, unzipV, 
-  concatV, reverseV, shiftlV, shiftrV, rotrV, rotlV, 
+  concatV, reverseV, shiftlV, shiftrV, rotrV, rotlV, rotateV,
   generateV, iterateV, copyV --, serialV, parallelV 
-  )
-   where
+  ) where
 
 infixr 5 :>
 infixl 5 <:
@@ -45,13 +44,13 @@ vector     :: [a] -> Vector a
 fromVector :: Vector a -> [a]
 
 -- | The function 'unitV' creates a vector with one element. 
-unitV    :: a -> Vector a
+unitV :: a -> Vector a
 
 -- | The function 'nullV' returns 'True' if a vector is empty. 
-nullV    :: Vector a -> Bool
+nullV :: Vector a -> Bool
 
 -- | The function 'lengthV' returns the number of elements in a value. 
-lengthV  :: Vector a -> Int
+lengthV :: Vector a -> Int
 
 -- | The function 'atV' returns the n-th element in a vector, starting from zero.
 atV  :: (Num a, Eq a) => Vector b -> a -> b
@@ -77,11 +76,8 @@ takeV :: (Num a, Ord a) => a -> Vector b -> Vector b
 -- | The function 'dropV' drops the first n elements of a vector.
 dropV :: (Num a, Ord a) => a -> Vector b -> Vector b
 
-
-
 -- | The function 'selectV' selects elements in the vector. The first argument gives the initial element, starting from zero, the second argument gives the stepsize between elements and the last argument gives the number of elements. 
 selectV :: Int -> Int -> Int -> Vector a -> Vector a
-
 
 -- | The function 'groupV' groups a vector into a vector of vectors of size n.
 groupV :: Int -> Vector a -> Vector (Vector a)
@@ -93,21 +89,31 @@ groupV :: Int -> Vector a -> Vector (Vector a)
 (<+>) :: Vector a -> Vector a -> Vector a
 
 
-
-
 -- | The higher-order function 'mapV' applies a function on all elements of a vector.
 mapV :: (a -> b) -> Vector a -> Vector b    
 
-
 -- | The higher-order function 'zipWithV' applies a function pairwise on to vectors.
 zipWithV :: (a -> b -> c) -> Vector a -> Vector b -> Vector c
-
 
 -- | The higher-order functions 'foldlV' folds a function from the right to the left  over a vector using an initial value.
 foldlV :: (a -> b -> a) -> a -> Vector b -> a 
 
 -- | The higher-order functions 'foldrV' folds a function from the left to the right over a vector using an initial value.
 foldrV :: (b -> a -> a) -> a -> Vector b -> a
+
+-- | Reduces a vector of elements to a single element based on a binary function. 
+reduceV :: (a -> a -> a) -> Vector a -> a
+
+-- | Pipes an element through a vector of functions. For example the code
+--
+-- >>> pipeV [(*2), (+1), (/3)] 3
+-- > 2
+--
+-- is equivalent to
+--
+-- >>> ((*2) . (+1) . (/3)) 3
+-- > 2
+pipeV :: Vector (a -> a) -> a -> a
 
 -- | The higher-function 'filterV' takes a predicate function and a vector and creates a new vector with the elements for which the predicate is true. 
 filterV :: (a -> Bool) -> Vector a -> Vector a
@@ -117,8 +123,6 @@ zipV   :: Vector a -> Vector b -> Vector (a, b)
 
 -- | The function 'unzipV' unzips a vector of tuples into two vectors.
 unzipV :: Vector (a, b) -> (Vector a, Vector b)
-
-
 
 -- | The function 'shiftlV' shifts a value from the left into a vector. 
 shiftlV :: Vector a -> a-> Vector a 
@@ -132,13 +136,22 @@ rotlV   :: Vector a -> Vector a
 -- | The function 'rotrV' rotates a vector to the right. Note that this fuction does not change the size of a vector.
 rotrV   :: Vector a -> Vector a
 
+-- | The function 'rotateV' rotates a vector based on an index offset.
+--
+-- * @(> 0)@ : rotates the vector left with the corresponding number
+-- of positions.
+--
+-- * @(= 0)@ : does not modify the vector.
+--
+-- * @(< 0)@ : rotates the vector right with the corresponding number
+-- of positions.
+rotateV :: Int -> Vector a -> Vector a
 
 -- | The function 'concatV' transforms a vector of vectors to a single vector. 
 concatV   :: Vector (Vector a) -> Vector a
 
 -- | The function 'reverseV' reverses the order of elements in a vector. 
 reverseV  :: Vector a -> Vector a
-
 
 -- | The function 'iterateV' generates a vector with a given number of elements starting from an initial element using a supplied function for the generation of elements. 
 --
@@ -160,7 +173,6 @@ generateV :: (Num a, Eq a) => a -> (b -> b) -> b -> Vector b
 -- 
 -- > <5,5,5,5,5,5,5> :: Vector Integer
 copyV     :: (Num a, Eq a) => a -> b -> Vector b
-
 
 {-
 -- | The function 'serialV' can be used to construct a serial network of processes.
@@ -320,6 +332,12 @@ foldlV f a (x:>xs) = foldlV f (f a x) xs
 foldrV _ a NullV   = a 
 foldrV f a (x:>xs) = f x (foldrV f a xs)
 
+reduceV _ NullV      = error "Cannot reduce a null vector"
+reduceV _ (x:>NullV) = x
+reduceV f (x:>xs)    = foldrV f x xs
+
+pipeV = reduceV (.)
+
 filterV _ NullV   = NullV
 filterV p (v:>vs) = if (p v) then
          v :> filterV p vs
@@ -342,6 +360,12 @@ rotrV vs    = tailV vs <: headV vs
 
 rotlV NullV = NullV
 rotlV vs    = lastV vs :> initV vs
+
+rotateV n
+  | n > 0     = pipeV (copyV (abs n) rotlV)
+  | n < 0     = pipeV (copyV (abs n) rotrV)
+  | otherwise = id
+
 
 concatV = foldrV (<+>) NullV
 

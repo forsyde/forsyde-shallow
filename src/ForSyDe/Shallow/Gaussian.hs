@@ -16,8 +16,8 @@ module ForSyDe.Shallow.Gaussian (
     )
 where
 
-import ForSyDe.Shallow.UntimedLib
-import ForSyDe.Shallow.Signal
+import ForSyDe.Shallow.MoC.Untimed
+import ForSyDe.Shallow.Core.Signal
 
 import System.Random
 

@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 -- |
--- Module  :  ForSyDe.Shallow.SynchronousProcessLib
+-- Module  :  ForSyDe.Shallow.MoC.Synchronous.Process
 -- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
 -- License     :  BSD-style (see the file LICENSE)
 -- 
@@ -10,15 +10,15 @@
 --
 -- The synchronous process library defines processes for the
 -- synchronous computational model. It is based on the synchronous
--- library "ForSyDe.Shallow.SynchronousLib".
+-- library "ForSyDe.Shallow.MoC.Synchronous".
 -----------------------------------------------------------------------------
-module ForSyDe.Shallow.SynchronousProcessLib(
+module ForSyDe.Shallow.MoC.Synchronous.Process(
            fifoDelaySY, finiteFifoDelaySY,
            memorySY, mergeSY, groupSY, counterSY
              ) where
 
-import ForSyDe.Shallow.SynchronousLib
-import ForSyDe.Shallow.CoreLib
+import ForSyDe.Shallow.MoC.Synchronous
+import ForSyDe.Shallow.Core
 import ForSyDe.Shallow.Queue
 import ForSyDe.Shallow.Memory
 

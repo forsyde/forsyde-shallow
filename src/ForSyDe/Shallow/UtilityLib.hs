@@ -19,7 +19,7 @@
 -- 
 -- * "ForSyDe.Shallow.Queue"
 -- 
--- * "ForSyDe.Shallow.BitVector"
+-- * "ForSyDe.Shallow.Core.BitVector"
 --
 -- * "ForSyDe.Shallow.FilterLib"
 -- 
@@ -27,28 +27,28 @@
 -- 
 -- * "ForSyDe.Shallow.PolyArith"    
 --
--- * "ForSyDe.Shallow.StochasticLib"
+-- * "ForSyDe.Shallow.MoC.Synchronous.Stochastic"
 -----------------------------------------------------------------------------
 module ForSyDe.Shallow.UtilityLib(  
           module ForSyDe.Shallow.DFT,    
           module ForSyDe.Shallow.Memory,
           module ForSyDe.Shallow.Queue
           --module ForSyDe.Shallow.Combinators    
-      --module ForSyDe.Shallow.BitVector
+      --module ForSyDe.Shallow.Core.BitVector
           --module ForSyDe.Shallow.FilterLib,
     --module ForSyDe.Shallow.Gaussian,
     --module ForSyDe.Shallow.PolyArith,
-    --module ForSyDe.Shallow.StochasticLib
+    --module ForSyDe.Shallow.MoC.Synchronous.Stochastic
       ) where
 
 import ForSyDe.Shallow.DFT      
 import ForSyDe.Shallow.Memory
 import ForSyDe.Shallow.Queue
 --import ForSyDe.Shallow.Combinators
---import ForSyDe.Shallow.BitVector
+--import ForSyDe.Shallow.Core.BitVector
 --import ForSyDe.Shallow.FilterLib
 --import ForSyDe.Shallow.Gaussian
 --import ForSyDe.Shallow.PolyArith
---import ForSyDe.Shallow.StochasticLib
+--import ForSyDe.Shallow.MoC.Synchronous.Stochastic
 
 

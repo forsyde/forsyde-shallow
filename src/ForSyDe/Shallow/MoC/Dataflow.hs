@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 -- |
--- Module  :  ForSyDe.Shallow.DataflowLib
+-- Module  :  ForSyDe.Shallow.MoC.Dataflow
 -- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
 -- License     :  BSD-style (see the file LICENSE)
 -- 
@@ -19,7 +19,7 @@
 --
 -----------------------------------------------------------------------------
 
-module ForSyDe.Shallow.DataflowLib
+module ForSyDe.Shallow.MoC.Dataflow
     (
   -- * Data Types       
   -- | The data type @FiringToken@ defines the data type for tokens. The
@@ -146,7 +146,7 @@ module ForSyDe.Shallow.DataflowLib
   scanlDF, mooreDF, mealyDF
     ) where
 
-import ForSyDe.Shallow.CoreLib 
+import ForSyDe.Shallow.Core 
 
 
 ------------------------------------------------------------------------

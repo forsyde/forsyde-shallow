@@ -1,5 +1,5 @@
 name:           forsyde-shallow
-version:        3.3.1.0
+version:        3.3.2.0
 cabal-version:  >= 1.6
 build-type:     Simple
 license:        BSD3
@@ -54,30 +54,30 @@ Library
 
 
   hs-source-dirs:  src
-  exposed-modules: ForSyDe.Shallow,
-                   ForSyDe.Shallow.AbsentExt,
-                   ForSyDe.Shallow.MoCLib,
-                   ForSyDe.Shallow.AdaptivityLib,
-                   ForSyDe.Shallow.PolyArith,
-                   ForSyDe.Shallow.BitVector,
-                   ForSyDe.Shallow.Queue,
-                   ForSyDe.Shallow.CTLib,
-                   ForSyDe.Shallow.Signal,
-                   ForSyDe.Shallow.CoreLib,
-                   ForSyDe.Shallow.StochasticLib,
-                   ForSyDe.Shallow.DFT,
-                   ForSyDe.Shallow.SynchronousLib,
-                   ForSyDe.Shallow.DomainInterfaces,
-                   ForSyDe.Shallow.SynchronousProcessLib,
-                   ForSyDe.Shallow.FIR,
-                   ForSyDe.Shallow.UntimedLib,
-                   ForSyDe.Shallow.FilterLib,
-                   ForSyDe.Shallow.UtilityLib,
-                   ForSyDe.Shallow.Gaussian,
-                   ForSyDe.Shallow.Vector,
-                   ForSyDe.Shallow.Memory,
-                   ForSyDe.Shallow.DataflowLib,
-                   ForSyDe.Shallow.SDFLib,
-                   ForSyDe.Shallow.MoCInterfaces
+  exposed-modules: ForSyDe.Shallow
+                 , ForSyDe.Shallow.Core
+                 , ForSyDe.Shallow.Core.Signal
+                 , ForSyDe.Shallow.Core.Vector
+                 , ForSyDe.Shallow.Core.AbsentExt
+                 , ForSyDe.Shallow.Core.BitVector
+                 , ForSyDe.Shallow.MoC
+                 , ForSyDe.Shallow.MoC.CT
+                 , ForSyDe.Shallow.MoC.Synchronous
+                 , ForSyDe.Shallow.MoC.Synchronous.Process
+                 , ForSyDe.Shallow.MoC.Synchronous.Stochastic
+                 , ForSyDe.Shallow.MoC.Untimed
+                 , ForSyDe.Shallow.MoC.Dataflow
+                 , ForSyDe.Shallow.MoC.SDF
+                 , ForSyDe.Shallow.MoC.DomainInterface
+                 , ForSyDe.Shallow.MoC.MoCInterface
+                 , ForSyDe.Shallow.AdaptivityLib
+                 , ForSyDe.Shallow.PolyArith
+                 , ForSyDe.Shallow.Queue
+                 , ForSyDe.Shallow.DFT
+                 , ForSyDe.Shallow.FIR
+                 , ForSyDe.Shallow.FilterLib
+                 , ForSyDe.Shallow.UtilityLib
+                 , ForSyDe.Shallow.Gaussian
+                 , ForSyDe.Shallow.Memory
 
   ghc-options:	-Wall -fno-warn-name-shadowing

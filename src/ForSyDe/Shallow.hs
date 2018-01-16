@@ -33,11 +33,12 @@
 --   experimental.
 --
 -----------------------------------------------------------------------------
-module ForSyDe.Shallow(module ForSyDe.Shallow.CoreLib
-      , module ForSyDe.Shallow.MoCLib
-      , module ForSyDe.Shallow.UtilityLib
-      ) where
+module ForSyDe.Shallow(
+  module ForSyDe.Shallow.Core,
+  module ForSyDe.Shallow.MoC,
+  module ForSyDe.Shallow.UtilityLib
+  ) where
 
-import ForSyDe.Shallow.CoreLib
-import ForSyDe.Shallow.MoCLib
+import ForSyDe.Shallow.Core
+import ForSyDe.Shallow.MoC
 import ForSyDe.Shallow.UtilityLib

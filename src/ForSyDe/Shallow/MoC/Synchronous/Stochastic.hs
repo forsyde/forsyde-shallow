@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 -- |
--- Module  :  ForSyDe.Shallow.StochasticLib
+-- Module  :  ForSyDe.Shallow.MoC.Synchronous.Stochastic
 -- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
 -- License     :  BSD-style (see the file LICENSE)
 -- 
@@ -25,14 +25,14 @@
 -- timed MoCs are missing.
 -----------------------------------------------------------------------------
 
-module ForSyDe.Shallow.StochasticLib(
+module ForSyDe.Shallow.MoC.Synchronous.Stochastic(
          -- * Select based synchronous process constructors
          selMapSY, selScanlSY, selMealySY, selMooreSY
          -- * Elementary stochastic processes
         , sigmaUn, sigmaGe) where
 
-import ForSyDe.Shallow.SynchronousLib
-import ForSyDe.Shallow.Signal
+import ForSyDe.Shallow.MoC.Synchronous
+import ForSyDe.Shallow.Core.Signal
 import System.Random
 
 -- | The skeleton 'selMapSY' is a stochastic variant of
