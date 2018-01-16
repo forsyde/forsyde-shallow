@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.org/forsyde/forsyde-shallow.svg?branch=master)](https://travis-ci.org/forsyde/forsyde-shallow)
 
-ForSyDe's Haskell-embedded Domain Specific Language.
-====================================================
+ForSyDe's Haskell-embedded Domain Specific Language
+===================================================
 
 Description
 -----------
@@ -11,7 +11,8 @@ the objective to move system design to a higher level of abstraction
 and to bridge the abstraction gap by transformational design
 refinement.
  
-This library provides a shallow implementation of ForSyDe as a Haskell-embedded Domain Specific Language (DSL)
+This library provides a shallow implementation of ForSyDe as a
+Haskell-embedded Domain Specific Language (DSL)
 
 For more information, please see
 [ForSyDe's website](http://forsyde.ict.kth.se/).
@@ -20,10 +21,10 @@ For more information, please see
 Installation
 ------------
 
-The `forsyde-shallow` package is available through
-[HackageDB](https://hackage.haskell.org/) and the latest stable
-release can be installed via your favorite Haskell package manager,
-e.g.:
+The [`forsyde-shallow`](https://hackage.haskell.org/package/forsyde-shallow)
+package is available through [HackageDB](https://hackage.haskell.org/)
+and the latest stable release can be installed via your favorite
+Haskell package manager, e.g.:
 
     cabal update
     cabal install forsyde-shallow

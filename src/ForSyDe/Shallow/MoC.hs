@@ -1,6 +1,6 @@
 ----------------------------------------------------------------------
 -- |
--- Module  :  ForSyDe.Shallow.MoC
+-- Module      :  ForSyDe.Shallow.MoC
 -- Copyright   :  (c) SAM/KTH 2007
 -- License     :  BSD-style (see the file LICENSE)
 --

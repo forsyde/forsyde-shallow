@@ -2,7 +2,7 @@
 -----------------------------------------------------------------------------
 -- |
 -- Module  :  ForSyDe.Shallow.MoC.Synchronous.Lib
--- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
+-- Copyright   :  (c) ForSyDe Group, KTH 2007-2008
 -- License     :  BSD-style (see the file LICENSE)
 -- 
 -- Maintainer  :  forsyde-dev@ict.kth.se
