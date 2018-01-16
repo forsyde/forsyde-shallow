@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 -- |
--- Module  :  ForSyDe.Shallow.AdaptivityLib
+-- Module      :  ForSyDe.Shallow.MoC.Adaptivity
 -- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
 -- License     :  BSD-style (see the file LICENSE)
 -- 
@@ -11,11 +11,13 @@
 -- Adaptivity Library, yet to be completed.
 -- 
 -----------------------------------------------------------------------------
-module ForSyDe.Shallow.AdaptivityLib (applyfSY, applyf2SY, applyf3SY, 
-              applyfU) where
+module ForSyDe.Shallow.MoC.Adaptivity (
+  applyfSY, applyf2SY, applyf3SY, 
+    applyfU
+  ) where
 
 import ForSyDe.Shallow.Core.Signal
-import ForSyDe.Shallow.MoC.Synchronous
+import ForSyDe.Shallow.MoC.Synchronous.Lib
 import ForSyDe.Shallow.MoC.Untimed
 
 applyfSY :: Signal (a -> b) -> Signal a -> Signal b

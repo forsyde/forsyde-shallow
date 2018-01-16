@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 -- |
--- Module  :  ForSyDe.Shallow.Queue
+-- Module  :  ForSyDe.Shallow.Utility.Queue
 -- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
 -- License     :  BSD-style (see the file LICENSE)
 -- 
@@ -13,15 +13,17 @@
 -- structures, such as FIFOs. There is a data type for an queue of
 -- infinite size 'Queue' and one for finite size 'FiniteQueue'.
 -----------------------------------------------------------------------------
-module ForSyDe.Shallow.Queue where
+module ForSyDe.Shallow.Utility.Queue where
 
 import ForSyDe.Shallow.Core.AbsentExt 
 
--- | A queue is modeled as a list. The data type 'Queue' modelles an queue of infinite size.
-data Queue a    =  Q [a] deriving (Eq, Show)
+-- | A queue is modeled as a list. The data type 'Queue' modelles an
+-- queue of infinite size.
+data Queue a = Q [a] deriving (Eq, Show)
 
--- | The data type 'FiniteQueue' has an additional parameter, that determines the size of the queue.
-data FiniteQueue a  =  FQ Int [a] deriving (Eq, Show)
+-- | The data type 'FiniteQueue' has an additional parameter, that
+-- determines the size of the queue.
+data FiniteQueue a = FQ Int [a] deriving (Eq, Show)
 
 {-
 Table \ref{tab:QueueFunctions} shows the functions an the data types \haskell{Queue} and \haskell{FiniteQueue}.
@@ -44,53 +46,52 @@ infinite & finite & description \\
 -}
 
 -- | 'pushQ' pushes one element into an infinite queue.
-pushQ         :: Queue a -> a -> Queue a
+pushQ :: Queue a -> a -> Queue a
 
 -- | 'pushListQ' pushes a list of elements into an infinite queue.
-pushListQ         :: Queue a -> [a] -> Queue a
+pushListQ :: Queue a -> [a] -> Queue a
 
 -- | 'popQ' pops one element from an infinite queue.
-popQ          :: Queue a -> (Queue a, AbstExt a)
+popQ :: Queue a -> (Queue a, AbstExt a)
 
 -- | 'queue' transforms a list into an infinite queue.
-queue         :: [a] -> Queue a
+queue :: [a] -> Queue a
 
 -- | 'pushFQ' pushes one element into a finite queue.
-pushFQ        :: FiniteQueue a -> a -> FiniteQueue a
+pushFQ :: FiniteQueue a -> a -> FiniteQueue a
 
 -- | 'pushListFQ' pushes a list of elements into a finite queue.
-pushListFQ        :: FiniteQueue a -> [a] -> FiniteQueue a
+pushListFQ :: FiniteQueue a -> [a] -> FiniteQueue a
 
 -- | 'popFQ' pops one element from a finite queue.
-popFQ         :: FiniteQueue a 
-      -> (FiniteQueue a, AbstExt a)
+popFQ :: FiniteQueue a -> (FiniteQueue a, AbstExt a)
 
 -- | 'finiteQueue' transforms a list into an infinite queue.
-finiteQueue    :: Int -> [a] -> FiniteQueue a
+finiteQueue :: Int -> [a] -> FiniteQueue a
 
 
 -- Implementation
 
-pushQ (Q q) x         =  Q (q ++ [x])
+pushQ (Q q) x = Q (q ++ [x])
 
-pushListQ (Q q) xs    =  Q (q ++ xs)
+pushListQ (Q q) xs =  Q (q ++ xs)
 
-popQ (Q [])       =  (Q [], Abst)
-popQ (Q (x:xs))       =  (Q xs, Prst x)
+popQ (Q [])     =  (Q [], Abst)
+popQ (Q (x:xs)) =  (Q xs, Prst x)
 
-queue xs          =  Q xs
+queue xs =  Q xs
 
-pushFQ (FQ n q) x     =  if length q < n then
-            (FQ n (q ++ [x]))
-             else 
-            (FQ n q)
+pushFQ (FQ n q) x =  if length q < n then
+                       (FQ n (q ++ [x]))
+                     else 
+                       (FQ n q)
 
-pushListFQ (FQ n q) xs    =  FQ n (take n (q ++ xs))
+pushListFQ (FQ n q) xs =  FQ n (take n (q ++ xs))
 
-popFQ (FQ n [])       =  (FQ n [], Abst)
-popFQ (FQ n (q:qs))       =  (FQ n qs, Prst q)
+popFQ (FQ n [])     =  (FQ n [], Abst)
+popFQ (FQ n (q:qs)) =  (FQ n qs, Prst q)
                  
-finiteQueue n xs  =  FQ n (take n xs)
+finiteQueue n xs =  FQ n (take n xs)
 
 
 

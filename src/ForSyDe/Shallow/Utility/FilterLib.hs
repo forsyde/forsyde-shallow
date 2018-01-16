@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 -- |
--- Module  :  ForSyDe.Shallow.FilterLib
+-- Module  :  ForSyDe.Shallow.Utility.FilterLib
 -- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
 -- License     :  BSD-style (see the file LICENSE)
 -- 
@@ -25,7 +25,7 @@
 -- MoC, and is also the kernel digital filter for the linear filter 'sLinearFilter' in 
 -- S-domain at CT-MoC.
 -----------------------------------------------------------------------------
-module ForSyDe.Shallow.FilterLib (
+module ForSyDe.Shallow.Utility.FilterLib (
       -- *FIR filter
       firFilter,
       -- *AR and ARMA filter trim
@@ -46,7 +46,7 @@ module ForSyDe.Shallow.FilterLib (
 import ForSyDe.Shallow.MoC
 --import ForSyDe.Shallow.MoC.CT
 import ForSyDe.Shallow.Core
-import ForSyDe.Shallow.PolyArith
+import ForSyDe.Shallow.Utility.PolyArith
 import Data.List (zipWith5)
 
 -- |The FIR filter. Let '[x_n]' denote the input signal, '[y_n]' denote the ouput

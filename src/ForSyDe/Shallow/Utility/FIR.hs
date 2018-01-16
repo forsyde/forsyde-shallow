@@ -1,6 +1,6 @@
 ----------------------------------------------------------------------------
 -- |
--- Module  :  ForSyDe.Shallow.FIR
+-- Module  :  ForSyDe.Shallow.Utility.FIR
 -- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
 -- License     :  BSD-style (see the file LICENSE)
 -- 
@@ -10,7 +10,7 @@
 --
 -- This module implements a FIR filters for the synchronous computational model.
 -----------------------------------------------------------------------------
-module ForSyDe.Shallow.FIR (firSY) where
+module ForSyDe.Shallow.Utility.FIR (firSY) where
 
 import ForSyDe.Shallow.MoC.Synchronous
 import ForSyDe.Shallow.Core

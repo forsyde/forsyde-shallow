@@ -63,21 +63,22 @@ Library
                  , ForSyDe.Shallow.MoC
                  , ForSyDe.Shallow.MoC.CT
                  , ForSyDe.Shallow.MoC.Synchronous
+                 , ForSyDe.Shallow.MoC.Synchronous.Lib
                  , ForSyDe.Shallow.MoC.Synchronous.Process
                  , ForSyDe.Shallow.MoC.Synchronous.Stochastic
+                 , ForSyDe.Shallow.MoC.Adaptivity
                  , ForSyDe.Shallow.MoC.Untimed
                  , ForSyDe.Shallow.MoC.Dataflow
                  , ForSyDe.Shallow.MoC.SDF
                  , ForSyDe.Shallow.MoC.DomainInterface
                  , ForSyDe.Shallow.MoC.MoCInterface
-                 , ForSyDe.Shallow.AdaptivityLib
-                 , ForSyDe.Shallow.PolyArith
-                 , ForSyDe.Shallow.Queue
-                 , ForSyDe.Shallow.DFT
-                 , ForSyDe.Shallow.FIR
-                 , ForSyDe.Shallow.FilterLib
-                 , ForSyDe.Shallow.UtilityLib
-                 , ForSyDe.Shallow.Gaussian
-                 , ForSyDe.Shallow.Memory
+                 , ForSyDe.Shallow.Utility
+                 , ForSyDe.Shallow.Utility.PolyArith
+                 , ForSyDe.Shallow.Utility.Queue
+                 , ForSyDe.Shallow.Utility.DFT
+                 , ForSyDe.Shallow.Utility.FIR
+                 , ForSyDe.Shallow.Utility.FilterLib
+                 , ForSyDe.Shallow.Utility.Gaussian
+                 , ForSyDe.Shallow.Utility.Memory
 
   ghc-options:	-Wall -fno-warn-name-shadowing

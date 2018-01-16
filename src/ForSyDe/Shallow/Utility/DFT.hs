@@ -12,7 +12,7 @@
 -- function, and a fast Fourier transform (FFT) algorithm, for
 -- computing the DFT, when the input vectors' length is a power of 2.
 -----------------------------------------------------------------------------
-module ForSyDe.Shallow.DFT(dft, fft) where
+module ForSyDe.Shallow.Utility.DFT(dft, fft) where
 
 import ForSyDe.Shallow.Core.Vector
 import Data.Complex
@@ -20,12 +20,12 @@ import Data.Complex
 -- | The function 'dft' performs a standard Discrete Fourier Transformation
 dft :: Int -> Vector (Complex Double) -> Vector (Complex Double)
 dft bigN x | bigN == (lengthV x) = mapV (bigX_k bigN x) (nVector x)
-   | otherwise = error "DFT: Vector has not the right size!"   
-   where
-     nVector x'   = iterateV (lengthV x') (+1) 0
-     bigX_k bigN' x' k = sumV (zipWithV (*) x' (bigW' k bigN'))
-     bigW' k' bigN'     = mapV (** k') (mapV cis (fullcircle bigN'))
-     sumV    = foldlV (+) (0:+ 0)
+           | otherwise = error "DFT: Vector has not the right size!"   
+  where
+    nVector x'        = iterateV (lengthV x') (+1) 0
+    bigX_k bigN' x' k = sumV (zipWithV (*) x' (bigW' k bigN'))
+    bigW' k' bigN'    = mapV (** k') (mapV cis (fullcircle bigN'))
+    sumV              = foldlV (+) (0:+ 0)
 
 fullcircle :: Int -> Vector Double 
 fullcircle n = fullcircle1 0 (fromIntegral n) n
@@ -35,22 +35,22 @@ fullcircle n = fullcircle1 0 (fromIntegral n) n
       | otherwise = -2*pi*l/(fromIntegral n') 
                     :> fullcircle1 (l+1) m n' 
 
--- | The function 'fft' implements a fast Fourier transform (FFT) algorithm, for computing the DFT, when the size N is a power of 2.
+-- | The function 'fft' implements a fast Fourier transform (FFT)
+-- algorithm, for computing the DFT, when the size N is a power of 2.
 fft :: Int -> Vector (Complex Double) -> Vector (Complex Double)
 fft bigN xv | bigN == (lengthV xv) = mapV (bigX xv) (kVector bigN)
-    | otherwise = error "FFT: Vector has not the right size!"
+            | otherwise = error "FFT: Vector has not the right size!"
 
 kVector :: (Num b, Num a, Eq a) => a -> Vector b  
 kVector bigN = iterateV bigN (+1) 0 
 
-
 bigX :: Vector (Complex Double) -> Int -> Complex Double
 bigX (x0:>x1:>NullV) k | even k = x0 + x1 * bigW 2 0
-     | odd k  = x0 - x1 * bigW 2 0
+                       | odd k  = x0 - x1 * bigW 2 0
 bigX xv k = bigF_even k + bigF_odd k * bigW bigN (fromIntegral k)
-     where bigF_even k' = bigX (evens xv) k'
-           bigF_odd k' = bigX (odds xv) k'
-           bigN = lengthV xv
+  where bigF_even k' = bigX (evens xv) k'
+        bigF_odd k' = bigX (odds xv) k'
+        bigN = lengthV xv
 
 bigW :: Int -> Int -> Complex Double
 bigW bigN k = cis (-2 * pi * (fromIntegral k) / (fromIntegral bigN))

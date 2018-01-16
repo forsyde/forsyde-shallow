@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 -- |
--- Module  :  ForSyDe.Shallow.Gaussian
+-- Module  :  ForSyDe.Shallow.Utility.Gaussian
 -- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
 -- License     :  BSD-style (see the file LICENSE)
 -- 
@@ -11,7 +11,7 @@
 -- We follow the Box-Muller method to generate white gaussian noise, 
 -- described at: <http://www.dspguru.com/howto/tech/wgn.htm>
 -----------------------------------------------------------------------------
-module ForSyDe.Shallow.Gaussian (
+module ForSyDe.Shallow.Utility.Gaussian (
       pGaussianNoise
     )
 where

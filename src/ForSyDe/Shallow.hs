@@ -19,26 +19,17 @@
 -- ForSyDe). However, as an important tradeoff, 'ForSyDe.Shallow.Signal'
 -- is unaware of the resulting system structure, only allowing simulation 
 -- (i.e. a VHDL or GraphML backend is impossible to implement).
--- 
--- The shallow implementation of ForSyDe consists of three main libraries:
--- 
--- * "ForSyDe.Shallow.CoreLib" contains the basic definitions and
---   functions such as events and signals.
---
--- * "ForSyDe.Shallow.MoCLib" defines the models of computations
---   included in ForSyDe.
---
--- * "ForSyDe.Shallow.UtilityLib" provides several additional modules
---   that are useful and convenient in practice. Their status is
---   experimental.
---
 -----------------------------------------------------------------------------
 module ForSyDe.Shallow(
+  -- | This module contains the basic definitions and functions such
+  -- as events and signals.
   module ForSyDe.Shallow.Core,
-  module ForSyDe.Shallow.MoC,
-  module ForSyDe.Shallow.UtilityLib
+
+  -- | This module defines the models of computations included in
+  -- ForSyDe.
+  module ForSyDe.Shallow.MoC
   ) where
 
 import ForSyDe.Shallow.Core
 import ForSyDe.Shallow.MoC
-import ForSyDe.Shallow.UtilityLib
+-- import ForSyDe.Shallow.Utility

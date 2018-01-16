@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 -- |
--- Module  :  ForSyDe.Shallow.PolyArith
+-- Module  :  ForSyDe.Shallow.Utility.PolyArith
 -- Copyright   :  (c) SAM Group, KTH/ICT/ECS 2007-2008
 -- License     :  BSD-style (see the file LICENSE)
 -- 
@@ -13,7 +13,7 @@
 -- not optimized for multiplication and is O(n2), which could be considered to be 
 -- optimized by FFT algorithms later on.
 -----------------------------------------------------------------------------
-module ForSyDe.Shallow.PolyArith(
+module ForSyDe.Shallow.Utility.PolyArith(
       -- *Polynomial data type
       Poly(..),
       -- *Addition, DmMultiplication, division and power operations
