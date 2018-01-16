@@ -70,7 +70,7 @@ import System.Process
 import System.Time
 --import System.IO
 import System.Directory
-import Control.Exception
+import Control.Exception as Except
 import Data.Ratio
 --import Numeric()
 
@@ -419,12 +419,12 @@ applyF2 f (ss1 :- s1) (ss2 :- s2) = (applyF' f ss1 ss2) :- (applyF2 f s1 s2)
           | (a==c) && (b==d) 
             || (abs (a-c)< 0)
             || (abs (b-d)< 0) = SubsigCT ((f f1 f2), (a,b))
-          | otherwise    = error ("applyF2: The two subintervals are"
-                                  ++ " not identical: (a,b) = ("
-                                  ++ (show a) ++ ", "
-                                  ++ (show b) ++ "); (c,d) = ("
-                                  ++ (show c) ++ ", "
-                                  ++ (show d) ++ ").")
+          | otherwise = error ("applyF2: The two subintervals are"
+                                ++ " not identical: (a,b) = ("
+                                ++ (show a) ++ ", "
+                                ++ (show b) ++ "); (c,d) = ("
+                                ++ (show c) ++ ", "
+                                ++ (show d) ++ ").")
 
 -- | applyG1 is used to apply a next-state function. A very interesting
 -- question is, what should be an argument to the next-state function: 
@@ -720,7 +720,7 @@ plotCT' step sigs = plotSig (expandSig 1 sigs)
     tryNTimes :: Int -> (String -> IO ()) -> IO String
     tryNTimes n a | n <= 0 = error "tryNTimes: not succedded"
                   | n > 0 = 
-                      do catch (action fname a) (handler a)
+                      do Except.catch (action fname a) (handler a)
                            where handler :: (String -> IO()) -> IOError -> IO String
                                  handler a _ = tryNTimes (n-1) a
                                  fname = "./fig/ct-moc-" ++ (show n) ++ ".gnuplot"
