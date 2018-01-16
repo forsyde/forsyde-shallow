@@ -68,7 +68,7 @@ Library
   ghc-options:	-Wall -fno-warn-name-shadowing
 
 
-Test-Suite forsyde-shallow-unit
+Test-Suite unit
   type:           exitcode-stdio-1.0
   hs-source-dirs: test
   main-is:        Spec.hs

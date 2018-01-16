@@ -66,5 +66,6 @@ The example above implements a Moore finite state machine that
 calculates the running sum and multiplies the output with 2. For more
 examples and tutorials please check the
 [forsyde-shallow-examples](https://github.com/forsyde/forsyde-shallow-examples)
-repository.
+repository, and the online 
+[API documentation](https://hackage.haskell.org/package/forsyde-shallow)
 
