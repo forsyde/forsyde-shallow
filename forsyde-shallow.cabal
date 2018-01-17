@@ -18,8 +18,7 @@ description:
  .
  This package is a spin-off of the <https://hackage.haskell.org/package/ForSyDe ForSyDe> project and it follows its versioning. 
 category:       Language
-tested-with:    GHC==7.4.1
-              , GHC==7.10.3
+tested-with:    GHC==7.10.3
               , GHC==8.0.2
               , GHC==8.2.1
 
