@@ -25,7 +25,7 @@ tested-with:    GHC==7.4.1
 
 -- In order to include all this files with sdist
 extra-source-files: LICENSE,
-                    README
+                    README.md
 
 
 source-repository head
