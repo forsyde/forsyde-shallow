@@ -23,17 +23,18 @@ module ForSyDe.Shallow.MoC.CSDF (
   delayCSDF, delaynCSDF,
   -- * Processes
   -- | Processes to unzip a signal of tupels into a tuple of signals
-  --unzipCSDF, unzip3CSDF, unzip4CSDF,
+  unzipCSDF, unzip3CSDF, unzip4CSDF,
   -- * Actors
   -- | Based on the process constructors in the CSDF-MoC, the
   -- CSDF-library provides CSDF-actors with single or multiple inputs
-  actor11CSDF, --actor12CSDF, actor13CSDF, actor14CSDF,
-  actor21CSDF, --actor22CSDF, actor23CSDF, actor24CSDF,
-  actor31CSDF, --actor32CSDF, actor33CSDF, actor34CSDF,
-  actor41CSDF--, actor42CSDF, actor43CSDF, actor44CSDF
+  actor11CSDF, actor12CSDF, actor13CSDF, actor14CSDF,
+  actor21CSDF, actor22CSDF, actor23CSDF, actor24CSDF,
+  actor31CSDF, actor32CSDF, actor33CSDF, actor34CSDF,
+  actor41CSDF, actor42CSDF, actor43CSDF, actor44CSDF
   ) where
 
 import ForSyDe.Shallow.Core
+import Data.List(unzip4)
 
 ------------------------------------------------------------------------
 -- COMBINATIONAL PROCESS CONSTRUCTORS
@@ -216,6 +217,229 @@ actor41CSDF :: [(Int, Int, Int, Int)] -> [Int]
     -> [[a] -> [b] -> [c] -> [d] -> [e]]
     -> Signal a -> Signal b -> Signal c -> Signal d -> Signal e
 actor41CSDF = zipWith4CSDF
+
+-- > Actors with two outputs
+
+-- | The process constructor 'actor12CSDF' constructs an CSDF actor with
+-- one input and two output signals. For each input or output signal,
+-- the process constructor takes the number of consumed and produced
+-- tokens and the function of the actor as arguments.
+actor12CSDF :: [Int] -> [(Int, Int)] -> [[a] -> [([b], [c])]]
+           -> Signal a -> (Signal b, Signal c)
+actor12CSDF c p f xs = unzipCSDF p $ mapCSDF c (replicate (length c) 1) f xs
+
+-- | The process constructor 'actor22CSDF' constructs an CSDF actor with
+-- two input and two output signals. For each input or output signal,
+-- the process constructor takes the number of consumed and produced
+-- tokens and the function of the actor as arguments.
+actor22CSDF :: [(Int, Int)] -> [(Int, Int)] -> [[a] -> [b] -> [([c], [d])]]
+           -> Signal a -> Signal b -> (Signal c, Signal d)
+actor22CSDF c p f xs ys = unzipCSDF p $ zipWithCSDF c (replicate (length c) 1) f xs ys
+
+-- | The process constructor 'actor32CSDF' constructs an CSDF actor with
+-- three input and two output signals. For each input or output signal,
+-- the process constructor takes the number of consumed and produced
+-- tokens and the function of the actor as arguments.
+actor32CSDF :: [(Int, Int, Int)] -> [(Int, Int)]
+           -> [[a] -> [b] -> [c] -> [([d], [e])]]
+           -> Signal a -> Signal b -> Signal c -> (Signal d, Signal e)
+actor32CSDF c p f as bs cs
+  = unzipCSDF p $ zipWith3CSDF c (replicate (length c) 1) f as bs cs
+
+-- | The process constructor 'actor42CSDF' constructs an CSDF actor with
+-- four input and two output signals. For each input or output signal,
+-- the process constructor takes the number of consumed and produced
+-- tokens and the function of the actor as arguments.
+actor42CSDF :: [(Int, Int, Int, Int)] -> [(Int, Int)]
+           -> [[a] -> [b] -> [c] -> [d] -> [([e], [f])]]
+           -> Signal a -> Signal b -> Signal c -> Signal d
+           -> (Signal e, Signal f)
+actor42CSDF c p f as bs cs ds
+  = unzipCSDF p$ zipWith4CSDF c (replicate (length c) 1) f as bs cs ds
+
+-- > Actors with three outputs
+
+-- | The process constructor 'actor13CSDF' constructs an CSDF actor with
+-- one input and three output signals. For each input or output signal,
+-- the process constructor takes the number of consumed and produced
+-- tokens and the function of the actor as arguments.
+actor13CSDF :: [Int] -> [(Int, Int, Int)]
+           -> [[a] -> [([b], [c], [d])]]
+           -> Signal a -> (Signal b, Signal c, Signal d)
+actor13CSDF c p f xs = unzip3CSDF p $ mapCSDF c (replicate (length c) 1) f xs
+
+-- | The process constructor 'actor23CSDF' constructs an CSDF actor with
+-- two input and three output signals. For each input or output signal,
+-- the process constructor takes the number of consumed and produced
+-- tokens and the function of the actor as arguments.
+actor23CSDF :: [(Int, Int)] -> [(Int, Int, Int)]
+           -> [[a] -> [b] -> [([c], [d], [e])]]
+           -> Signal a -> Signal b
+           -> (Signal c, Signal d, Signal e)
+actor23CSDF c p f xs ys
+  = unzip3CSDF p $ zipWithCSDF c (replicate (length c) 1) f xs ys
+
+-- | The process constructor 'actor33CSDF' constructs an CSDF actor with
+-- three input and three output signals. For each input or output signal,
+-- the process constructor takes the number of consumed and produced
+-- tokens and the function of the actor as arguments.
+actor33CSDF :: [(Int, Int, Int)] -> [(Int, Int, Int)]
+           -> [[a] -> [b] -> [c] -> [([d], [e], [f])]]
+           -> Signal a -> Signal b -> Signal c -> (Signal d, Signal e, Signal f)
+actor33CSDF c p f as bs cs
+  = unzip3CSDF p $ zipWith3CSDF c (replicate (length c) 1) f as bs cs
+
+-- | The process constructor 'actor43CSDF' constructs an CSDF actor with
+-- four input and three output signals. For each input or output signal,
+-- the process constructor takes the number of consumed and produced
+-- tokens and the function of the actor as arguments.
+actor43CSDF :: [(Int, Int, Int, Int)] -> [(Int, Int, Int)]
+           -> [[a] -> [b] -> [c] -> [d] -> [([e], [f], [g])]]
+           -> Signal a -> Signal b -> Signal c -> Signal d
+           -> (Signal e, Signal f, Signal g)
+actor43CSDF c p f as bs cs ds
+  = unzip3CSDF p $ zipWith4CSDF c (replicate (length c) 1) f as bs cs ds
+
+-- > Actors with four outputs
+
+-- | The process constructor 'actor14CSDF' constructs an CSDF actor with
+-- one input and four output signals. For each input or output signal,
+-- the process constructor takes the number of consumed and produced
+-- tokens and the function of the actor as arguments.
+actor14CSDF :: [Int] -> [(Int, Int, Int, Int)]
+           -> [[a] -> [([b], [c], [d], [e])]]
+           -> Signal a -> (Signal b, Signal c, Signal d, Signal e)
+actor14CSDF c p f xs = unzip4CSDF p $ mapCSDF c (replicate (length c) 1) f xs
+
+-- | The process constructor 'actor24CSDF' constructs an CSDF actor with
+-- two input and four output signals. For each input or output signal,
+-- the process constructor takes the number of consumed and produced
+-- tokens and the function of the actor as arguments.
+actor24CSDF :: [(Int, Int)] -> [(Int, Int, Int, Int)]
+       -> [[a] -> [b] -> [([c], [d], [e], [f])]]
+       -> Signal a -> Signal b
+       -> (Signal c, Signal d, Signal e, Signal f)
+actor24CSDF c p f xs ys
+  = unzip4CSDF p $ zipWithCSDF c (replicate (length c) 1) f xs ys
+
+-- | The process constructor 'actor34CSDF' constructs an CSDF actor with
+-- three input and four output signals. For each input or output signal,
+-- the process constructor takes the number of consumed and produced
+-- tokens and the function of the actor as arguments.
+actor34CSDF :: [(Int, Int, Int)] -> [(Int, Int, Int, Int)]
+           -> [[a] -> [b] -> [c] -> [([d], [e], [f], [g])]]
+           -> Signal a -> Signal b -> Signal c
+           -> (Signal d, Signal e, Signal f, Signal g)
+actor34CSDF c p f as bs cs
+  = unzip4CSDF p $ zipWith3CSDF c (replicate (length c) 1) f as bs cs
+
+-- | The process constructor 'actor14CSDF' constructs an CSDF actor with
+-- four input and four output signals. For each input or output signal,
+-- the process constructor takes the number of consumed and produced
+-- tokens and the function of the actor as arguments.
+actor44CSDF :: [(Int, Int, Int, Int)] -> [(Int, Int, Int, Int)]
+           -> [[a] -> [b] -> [c] -> [d] -> [([e], [f], [g], [h])]]
+           -> Signal a -> Signal b -> Signal c -> Signal d
+           -> (Signal e, Signal f, Signal g, Signal h)
+actor44CSDF c p f as bs cs ds
+  = unzip4CSDF p $ zipWith4CSDF c (replicate (length c) 1) f as bs cs ds
+
+------------------------------------------------------------------------
+-- unzipCSDF Processes
+------------------------------------------------------------------------
+
+unzipCSDF :: [(Int, Int)] -> Signal ([a], [b])
+         -> (Signal a, Signal b)
+unzipCSDF p xs = (s1, s2)
+  where
+    (p1, p2) = unzip p
+    s1 = signal $ f1 p1 xs
+    s2 = signal $ f2 p2 xs
+    f1 [] _ = error "unzipCSDF: Token rate list cannot be empty"
+    f1 _ NullS     = []
+    f1 (t:ts) ((as, _):-xs)
+      = if length as == t then
+          as ++ f1 (ts++[t]) xs
+        else
+          error "unzipCSDF: Process does not produce correct number of tokens"
+    f2 [] _ = error "unzipCSDF: Token rate list cannot be empty"
+    f2 _ NullS     = []
+    f2 (t:ts) ((_, bs):-xs)
+      = if length bs == t then
+          bs ++ f2 (ts++[t]) xs
+        else
+          error "unzipCSDF: Process does not produce correct number of tokens"
+
+
+unzip3CSDF :: [(Int, Int, Int)] -> Signal ([a], [b], [c])
+      -> (Signal a, Signal b, Signal c)
+unzip3CSDF p xs = (s1, s2, s3)
+  where
+    (p1, p2, p3) = unzip3 p
+    s1 = signal $ f1 p1 xs
+    s2 = signal $ f2 p2 xs
+    s3 = signal $ f3 p3 xs
+    f1 [] _ = error "unzip3CSDF: Token rate list cannot be empty"
+    f1 _ NullS      = []
+    f1 (t:ts) ((as, _, _):-xs)
+      = if length as == t then
+          as ++ f1 (ts++[t]) xs
+        else
+          error "unzip3CSDF: Process does not produce correct number of tokens"
+    f2 [] _ = error "unzip3CSDF: Token rate list cannot be empty"
+    f2 _ NullS      = []
+    f2 (t:ts) ((_, bs, _):-xs)
+      = if length bs == t then
+          bs ++ f2 (ts++[t]) xs
+        else
+          error "unzip3CSDF: Process does not produce correct number of tokens"
+    f3 [] _ = error "unzip3CSDF: Token rate list cannot be empty"
+    f3 _ NullS      = []
+    f3 (t:ts) ((_, _, cs):-xs)
+      = if length cs == t then
+          cs ++ f3 (ts++[t]) xs
+        else
+          error "unzip3CSDF: Process does not produce correct number of tokens"
+
+
+unzip4CSDF :: [(Int, Int, Int, Int)] -> Signal ([a], [b], [c], [d])
+          -> (Signal a, Signal b, Signal c, Signal d)
+unzip4CSDF p xs = (s1, s2, s3, s4)
+  where
+    (p1, p2, p3, p4) = unzip4 p
+    s1 = signal $ f1 p1 xs
+    s2 = signal $ f2 p2 xs
+    s3 = signal $ f3 p3 xs
+    s4 = signal $ f4 p4 xs
+    f1 [] _ = error "unzip4CSDF: Token rate list cannot be empty"
+    f1 _ NullS      = []
+    f1 (t:ts) ((as, _, _, _):-xs)
+      = if length as == t then
+          as ++ f1 (ts++[t]) xs
+        else
+          error "unzip4CSDF: Process does not produce correct number of tokens"
+    f2 [] _ = error "unzip4CSDF: Token rate list cannot be empty"
+    f2 _ NullS      = []
+    f2 (t:ts) ((_, bs, _, _):-xs)
+      = if length bs == t then
+          bs ++ f2 (ts++[t]) xs
+        else
+          error "unzip4CSDF: Process does not produce correct number of tokens"
+    f3 [] _ = error "unzip4CSDF: Token rate list cannot be empty"
+    f3 _ NullS      = []
+    f3 (t:ts) ((_, _, cs, _):-xs)
+      = if length cs == t then
+          cs ++ f3 (ts++[t]) xs
+        else
+          error "unzip4CSDF: Process does not produce correct number of tokens"
+    f4 [] _ = error "unzip4CSDF: Token rate list cannot be empty"
+    f4 _ NullS      = []
+    f4 (t:ts) ((_, _, _, ds):-xs)
+      = if length ds == t then
+          ds ++ f4 (ts++[t]) xs
+        else
+          error "unzip4CSDF: Process does not produce correct number of tokens"
+
 
 ------------------------------------------------------------------------
 --
