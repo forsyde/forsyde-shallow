@@ -7,5 +7,11 @@ cabal.sandbox.config
 src/ForSyDe/Shallow/fig/*
 .#*
 
+# Test file for the CSDF Library
+TestCSDF.hs
+
+# Crap from MacOS X
+**/.DS_Store
+
 # Except this file
 !.gitignore

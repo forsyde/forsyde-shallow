@@ -233,9 +233,13 @@ sufficient_tokens n (_:-xs)
      sufficient_tokens (n-1) xs
 
 
--- Basic Test
--------------------------
+------------------------------------------------------------------------
+--
+-- Test of Library (not exported)
+--
+------------------------------------------------------------------------
 
+{-
 test :: Num a => Signal a
 test = s3
   where s3 = delaynCSDF [1,1] s2
@@ -251,3 +255,8 @@ v2 = actor11CSDF [1,1] [0,2] [\[a] -> [], \[a] -> [a, 2*a]]
 
 v3 :: Num a => Signal a -> Signal a
 v3 = actor11CSDF [1] [3] [\[a] -> [a, 2*a, 3*a]]
+
+output = takeS 10 test
+
+-- Expected answer: {1,1,1,2,2,4,4,8,8,16}
+-}
