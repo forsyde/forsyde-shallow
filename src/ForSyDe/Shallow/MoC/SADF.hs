@@ -166,32 +166,28 @@ delaynSADF initial_tokens xs = signal initial_tokens +-+ xs
 -- > Kernals with one output
 
 -- | The process constructor 'kernel11SADF' constructs an SADF kernel with
--- one input and one output signals. For each input or output signal,
--- the process constructor takes the number of consumed and produced
--- tokens and the function of the kernel as arguments.
+-- one data input and one data output signals. The scenario (token rates and
+-- function) is determined by the control signal.
 kernel11SADF :: Signal (Int, Int, [a] -> [b]) -> Signal a -> Signal b
 kernel11SADF = mapSADF
 
 -- | The process constructor 'kernel21SADF' constructs an SADF kernel with
--- two input and one output signals. For each input or output signal,
--- the process constructor takes the number of consumed and produced
--- tokens and the function of the kernel as arguments.
+-- two data input and one data output signals. The scenario (token rates and
+-- function) is determined by the control signal.
 kernel21SADF :: Signal ((Int, Int), Int, [a] -> [b] -> [c])
              -> Signal a -> Signal b -> Signal c
 kernel21SADF = zipWithSADF
 
 -- | The process constructor 'kernel31SADF' constructs an SADF kernel with
--- three input and one output signals. For each input or output signal,
--- the process constructor takes the number of consumed and produced
--- tokens and the function of the kernel as arguments.
+-- three data input and one data output signals. The scenario (token rates and
+-- function) is determined by the control signal.
 kernel31SADF :: Signal ((Int, Int, Int), Int, [a] -> [b] -> [c] -> [d])
              -> Signal a -> Signal b -> Signal c -> Signal d
 kernel31SADF = zipWith3SADF
 
 -- | The process constructor 'kernel41SADF' constructs an SADF kernel with
--- four input and one output signals. For each input or output signal,
--- the process constructor takes the number of consumed and produced
--- tokens and the function of the kernel as arguments.
+-- four data input and one data output signals. The scenario (token rates and
+-- function) is determined by the control signal.
 kernel41SADF :: Signal ((Int, Int, Int, Int), Int, [a] -> [b] -> [c] -> [d] -> [e])
              -> Signal a -> Signal b -> Signal c -> Signal d -> Signal e
 kernel41SADF = zipWith4SADF
@@ -200,46 +196,30 @@ kernel41SADF = zipWith4SADF
 -- > Kernals with two outputs
 
 -- | The process constructor 'kernel12SADF' constructs an SADF kernel with
--- one input and two output signals. For each input or output signal,
--- the process constructor takes the number of consumed and produced
--- tokens and the function of the kernel as arguments. These three arguments
--- must be lists with the same lenght (equivalent to the cycle period) where
--- each element corresponds to the token rate and the function of each firing
--- over a cycle.
+-- one data input and two data output signals. The scenario (token rates and
+-- function) is determined by the control signal.
 kernel12SADF :: Signal (Int, (Int, Int), [a] -> [([b], [c])])
              -> Signal a -> (Signal b, Signal c)
 kernel12SADF ct xs = unzipSADF (get_prodToken ct) $ mapSADF (switch_prodToken ct) xs
 
 -- | The process constructor 'kernel22SADF' constructs an SADF kernel with
--- two input and two output signals. For each input or output signal,
--- the process constructor takes the number of consumed and produced
--- tokens and the function of the kernel as arguments. These three arguments
--- must be lists with the same lenght (equivalent to the cycle period) where
--- each element corresponds to the token rate and the function of each firing
--- over a cycle.
+-- two data input and two data output signals. The scenario (token rates and
+-- function) is determined by the control signal.
 kernel22SADF :: Signal ((Int, Int), (Int, Int), [a] -> [b] -> [([c], [d])])
              -> Signal a -> Signal b -> (Signal c, Signal d)
 kernel22SADF ct xs ys = unzipSADF (get_prodToken ct) $ zipWithSADF (switch_prodToken ct) xs ys
 
 -- | The process constructor 'kernel32SADF' constructs an SADF kernel with
--- three input and two output signals. For each input or output signal,
--- the process constructor takes the number of consumed and produced
--- tokens and the function of the kernel as arguments. These three arguments
--- must be lists with the same lenght (equivalent to the cycle period) where
--- each element corresponds to the token rate and the function of each firing
--- over a cycle.
+-- three data input and two data output signals. The scenario (token rates and
+-- function) is determined by the control signal.
 kernel32SADF :: Signal ((Int, Int, Int), (Int, Int), [a] -> [b] -> [c] -> [([d], [e])])
              -> Signal a -> Signal b -> Signal c -> (Signal d, Signal e)
 kernel32SADF ct as bs cs
   = unzipSADF (get_prodToken ct) $ zipWith3SADF (switch_prodToken ct) as bs cs
 
 -- | The process constructor 'kernel42SADF' constructs an SADF kernel with
--- four input and two output signals. For each input or output signal,
--- the process constructor takes the number of consumed and produced
--- tokens and the function of the kernel as arguments. These three arguments
--- must be lists with the same lenght (equivalent to the cycle period) where
--- each element corresponds to the token rate and the function of each firing
--- over a cycle.
+-- four data input and two data output signals. The scenario (token rates and
+-- function) is determined by the control signal.
 kernel42SADF :: Signal ((Int, Int, Int, Int), (Int, Int), [a] -> [b] -> [c] -> [d] -> [([e], [f])])
              -> Signal a -> Signal b -> Signal c -> Signal d
              -> (Signal e, Signal f)
@@ -250,46 +230,30 @@ kernel42SADF ct as bs cs ds
 -- > Kernals with three outputs
 
 -- | The process constructor 'kernel13SADF' constructs an SADF kernel with
--- one input and two output signals. For each input or output signal,
--- the process constructor takes the number of consumed and produced
--- tokens and the function of the kernel as arguments. These three arguments
--- must be lists with the same lenght (equivalent to the cycle period) where
--- each element corresponds to the token rate and the function of each firing
--- over a cycle.
+-- one data input and three data output signals. The scenario (token rates and
+-- function) is determined by the control signal.
 kernel13SADF :: Signal (Int, (Int, Int, Int), [a] -> [([b], [c], [d])])
              -> Signal a -> (Signal b, Signal c, Signal d)
 kernel13SADF ct xs = unzip3SADF (get_prodToken ct) $ mapSADF (switch_prodToken ct) xs
 
 -- | The process constructor 'kernel23SADF' constructs an SADF kernel with
--- two input and two output signals. For each input or output signal,
--- the process constructor takes the number of consumed and produced
--- tokens and the function of the kernel as arguments. These three arguments
--- must be lists with the same lenght (equivalent to the cycle period) where
--- each element corresponds to the token rate and the function of each firing
--- over a cycle.
+-- two data input and three data output signals. The scenario (token rates and
+-- function) is determined by the control signal.
 kernel23SADF :: Signal ((Int, Int), (Int, Int, Int), [a] -> [b] -> [([c], [d], [e])])
              -> Signal a -> Signal b -> (Signal c, Signal d, Signal e)
 kernel23SADF ct xs ys = unzip3SADF (get_prodToken ct) $ zipWithSADF (switch_prodToken ct) xs ys
 
 -- | The process constructor 'kernel33SADF' constructs an SADF kernel with
--- three input and two output signals. For each input or output signal,
--- the process constructor takes the number of consumed and produced
--- tokens and the function of the kernel as arguments. These three arguments
--- must be lists with the same lenght (equivalent to the cycle period) where
--- each element corresponds to the token rate and the function of each firing
--- over a cycle.
+-- three data input and three data output signals. The scenario (token rates and
+-- function) is determined by the control signal.
 kernel33SADF :: Signal ((Int, Int, Int), (Int, Int, Int), [a] -> [b] -> [c] -> [([d], [e], [f])])
              -> Signal a -> Signal b -> Signal c -> (Signal d, Signal e, Signal f)
 kernel33SADF ct as bs cs
   = unzip3SADF (get_prodToken ct) $ zipWith3SADF (switch_prodToken ct) as bs cs
 
 -- | The process constructor 'kernel43SADF' constructs an SADF kernel with
--- four input and two output signals. For each input or output signal,
--- the process constructor takes the number of consumed and produced
--- tokens and the function of the kernel as arguments. These three arguments
--- must be lists with the same lenght (equivalent to the cycle period) where
--- each element corresponds to the token rate and the function of each firing
--- over a cycle.
+-- four data input and three data output signals. The scenario (token rates and
+-- function) is determined by the control signal.
 kernel43SADF :: Signal ((Int, Int, Int, Int), (Int, Int, Int),
              [a] -> [b] -> [c] -> [d] -> [([e], [f], [g])])
              -> Signal a -> Signal b -> Signal c -> Signal d
@@ -301,34 +265,22 @@ kernel43SADF ct as bs cs ds
 -- > Kernals with four outputs
 
 -- | The process constructor 'kernel14SADF' constructs an SADF kernel with
--- one input and two output signals. For each input or output signal,
--- the process constructor takes the number of consumed and produced
--- tokens and the function of the kernel as arguments. These three arguments
--- must be lists with the same lenght (equivalent to the cycle period) where
--- each element corresponds to the token rate and the function of each firing
--- over a cycle.
+-- one data input and four data output signals. The scenario (token rates and
+-- function) is determined by the control signal.
 kernel14SADF :: Signal (Int, (Int, Int, Int, Int), [a] -> [([b], [c], [d], [e])])
              -> Signal a -> (Signal b, Signal c, Signal d, Signal e)
 kernel14SADF ct xs = unzip4SADF (get_prodToken ct) $ mapSADF (switch_prodToken ct) xs
 
 -- | The process constructor 'kernel24SADF' constructs an SADF kernel with
--- two input and two output signals. For each input or output signal,
--- the process constructor takes the number of consumed and produced
--- tokens and the function of the kernel as arguments. These three arguments
--- must be lists with the same lenght (equivalent to the cycle period) where
--- each element corresponds to the token rate and the function of each firing
--- over a cycle.
+-- two data input and four data output signals. The scenario (token rates and
+-- function) is determined by the control signal.
 kernel24SADF :: Signal ((Int, Int), (Int, Int, Int, Int), [a] -> [b] -> [([c], [d], [e], [f])])
              -> Signal a -> Signal b -> (Signal c, Signal d, Signal e, Signal f)
 kernel24SADF ct xs ys = unzip4SADF (get_prodToken ct) $ zipWithSADF (switch_prodToken ct) xs ys
 
 -- | The process constructor 'kernel34SADF' constructs an SADF kernel with
--- three input and two output signals. For each input or output signal,
--- the process constructor takes the number of consumed and produced
--- tokens and the function of the kernel as arguments. These three arguments
--- must be lists with the same lenght (equivalent to the cycle period) where
--- each element corresponds to the token rate and the function of each firing
--- over a cycle.
+-- three data input and four data output signals. The scenario (token rates and
+-- function) is determined by the control signal.
 kernel34SADF :: Signal ((Int, Int, Int), (Int, Int, Int, Int),
              [a] -> [b] -> [c] -> [([d], [e], [f], [g])])
              -> Signal a -> Signal b -> Signal c -> (Signal d, Signal e, Signal f, Signal g)
@@ -336,12 +288,8 @@ kernel34SADF ct as bs cs
   = unzip4SADF (get_prodToken ct) $ zipWith3SADF (switch_prodToken ct) as bs cs
 
 -- | The process constructor 'kernel44SADF' constructs an SADF kernel with
--- four input and two output signals. For each input or output signal,
--- the process constructor takes the number of consumed and produced
--- tokens and the function of the kernel as arguments. These three arguments
--- must be lists with the same lenght (equivalent to the cycle period) where
--- each element corresponds to the token rate and the function of each firing
--- over a cycle.
+-- four data input and four data output signals. The scenario (token rates and
+-- function) is determined by the control signal.
 kernel44SADF :: Signal ((Int, Int, Int, Int), (Int, Int, Int, Int),
              [a] -> [b] -> [c] -> [d] -> [([e], [f], [g], [h])])
              -> Signal a -> Signal b -> Signal c -> Signal d
@@ -360,14 +308,14 @@ unzipSADF p xs = (s1, s2)
     (p1, p2) = unzip p
     s1 = signal $ f1 p1 xs
     s2 = signal $ f2 p2 xs
-    f1 [] _ = error "unzipSADF: Token rate list cannot be empty"
+    f1 [] _ = []
     f1 _ NullS     = []
     f1 (t:ts) ((as, _):-xs)
       = if length as == t then
           as ++ f1 ts xs
         else
           error "unzipSADF: Process does not produce correct number of tokens"
-    f2 [] _ = error "unzipSADF: Token rate list cannot be empty"
+    f2 [] _ = []
     f2 _ NullS     = []
     f2 (t:ts) ((_, bs):-xs)
       = if length bs == t then
@@ -384,21 +332,21 @@ unzip3SADF p xs = (s1, s2, s3)
     s1 = signal $ f1 p1 xs
     s2 = signal $ f2 p2 xs
     s3 = signal $ f3 p3 xs
-    f1 [] _ = error "unzip3SADF: Token rate list cannot be empty"
+    f1 [] _ = []
     f1 _ NullS      = []
     f1 (t:ts) ((as, _, _):-xs)
       = if length as == t then
           as ++ f1 ts xs
         else
           error "unzip3SADF: Process does not produce correct number of tokens"
-    f2 [] _ = error "unzip3SADF: Token rate list cannot be empty"
+    f2 [] _ = []
     f2 _ NullS      = []
     f2 (t:ts) ((_, bs, _):-xs)
       = if length bs == t then
           bs ++ f2 ts xs
         else
           error "unzip3SADF: Process does not produce correct number of tokens"
-    f3 [] _ = error "unzip3SADF: Token rate list cannot be empty"
+    f3 [] _ = []
     f3 _ NullS      = []
     f3 (t:ts) ((_, _, cs):-xs)
       = if length cs == t then
@@ -416,28 +364,28 @@ unzip4SADF p xs = (s1, s2, s3, s4)
     s2 = signal $ f2 p2 xs
     s3 = signal $ f3 p3 xs
     s4 = signal $ f4 p4 xs
-    f1 [] _ = error "unzip4SADF: Token rate list cannot be empty"
+    f1 [] _ = []
     f1 _ NullS      = []
     f1 (t:ts) ((as, _, _, _):-xs)
       = if length as == t then
           as ++ f1 (ts++[t]) xs
         else
           error "unzip4SADF: Process does not produce correct number of tokens"
-    f2 [] _ = error "unzip4SADF: Token rate list cannot be empty"
+    f2 [] _ = []
     f2 _ NullS      = []
     f2 (t:ts) ((_, bs, _, _):-xs)
       = if length bs == t then
           bs ++ f2 ts xs
         else
           error "unzip4SADF: Process does not produce correct number of tokens"
-    f3 [] _ = error "unzip4SADF: Token rate list cannot be empty"
+    f3 [] _ = []
     f3 _ NullS      = []
     f3 (t:ts) ((_, _, cs, _):-xs)
       = if length cs == t then
           cs ++ f3 ts xs
         else
           error "unzip4SADF: Process does not produce correct number of tokens"
-    f4 [] _ = error "unzip4SADF: Token rate list cannot be empty"
+    f4 [] _ = []
     f4 _ NullS      = []
     f4 (t:ts) ((_, _, _, ds):-xs)
       = if length ds == t then

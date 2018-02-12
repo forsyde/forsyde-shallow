@@ -7,8 +7,9 @@ cabal.sandbox.config
 src/ForSyDe/Shallow/fig/*
 .#*
 
-# Test file for the CSDF Library
+# Test file for the CSDF and SADF Library
 TestCSDF.hs
+TestSADF.hs
 
 # Crap from MacOS X
 **/.DS_Store
