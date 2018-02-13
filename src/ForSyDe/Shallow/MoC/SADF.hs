@@ -34,10 +34,10 @@ module ForSyDe.Shallow.MoC.SADF (
   -- * Detectors
   -- | Based on the process constructors in the SADF-MoC, the
   -- SADF-library provides SADF-detectors with single or multiple inputs
-  detector11SADF, detector12SADF,
-  detector21SADF, detector22SADF,
-  detector31SADF, detector32SADF,
-  detector41SADF, detector42SADF
+  detector11SADF, detector12SADF, detector13SADF, detector14SADF,
+  detector21SADF, detector22SADF, detector23SADF, detector24SADF,
+  detector31SADF, detector32SADF, detector33SADF, detector34SADF,
+  detector41SADF, detector42SADF, detector43SADF, detector44SADF
   ) where
 
 import ForSyDe.Shallow.Core
@@ -405,6 +405,108 @@ detector42SADF c f g e0 as bs cs ds = unzipSADF p outs
         current_state = delaySADF e0 next_state
 
 
+-- > Detectors with three output
+
+-- | The process constructor 'detector13SADF' takes the number of consumed
+-- (@c@) tokens, the state transition function (@f@), the output function (@g@)
+-- and the initial state (@e0@), and constructs an SADF detector with a single
+-- data input and three control output signals.
+detector13SADF :: Int -> (e -> [a] -> e) -> (e -> ([y1], [y2], [y3]))
+               -> e -> Signal a -> (Signal y1, Signal y2, Signal y3)
+detector13SADF c f g e0 as = unzip3SADF p outs
+  where (p, outs) = outputFSM3 g next_state
+        next_state = nextStateFSM c f current_state as
+        current_state = delaySADF e0 next_state
+
+
+-- | The process constructor 'detector23SADF' takes the number of consumed
+-- (@c@) tokens, the state transition function (@f@), the output function (@g@)
+-- and the initial state (@e0@), and constructs an SADF detector with two
+-- data input and three control output signals.
+detector23SADF :: (Int, Int) -> (e -> [a] -> [b] -> e) -> (e -> ([y1], [y2], [y3]))
+               -> e -> Signal a -> Signal b -> (Signal y1, Signal y2, Signal y3)
+detector23SADF c f g e0 as bs = unzip3SADF p outs
+  where (p, outs) = outputFSM3 g next_state
+        next_state = nextStateFSM2 c f current_state as bs
+        current_state = delaySADF e0 next_state
+
+
+-- | The process constructor 'detector33SADF' takes the number of consumed
+-- (@c@) tokens, the state transition function (@f@), the output function (@g@)
+-- and the initial state (@e0@), and constructs an SADF detector with three
+-- data input and three control output signals.
+detector33SADF :: (Int, Int, Int) -> (e -> [a] -> [b] -> [c] -> e) -> (e -> ([y1], [y2], [y3]))
+               -> e -> Signal a -> Signal b -> Signal c -> (Signal y1, Signal y2, Signal y3)
+detector33SADF c f g e0 as bs cs = unzip3SADF p outs
+  where (p, outs) = outputFSM3 g next_state
+        next_state = nextStateFSM3 c f current_state as bs cs
+        current_state = delaySADF e0 next_state
+
+
+-- | The process constructor 'detector43SADF' takes the number of consumed
+-- (@c@) tokens, the state transition function (@f@), the output function (@g@)
+-- and the initial state (@e0@), and constructs an SADF detector with four
+-- data input and three control output signals.
+detector43SADF :: (Int, Int, Int, Int) -> (e -> [a] -> [b] -> [c] -> [d] -> e)
+               -> (e -> ([y1], [y2], [y3])) -> e -> Signal a -> Signal b -> Signal c
+               -> Signal d -> (Signal y1, Signal y2, Signal y3)
+detector43SADF c f g e0 as bs cs ds = unzip3SADF p outs
+  where (p, outs) = outputFSM3 g next_state
+        next_state = nextStateFSM4 c f current_state as bs cs ds
+        current_state = delaySADF e0 next_state
+
+
+-- > Detectors with four output
+
+-- | The process constructor 'detector14SADF' takes the number of consumed
+-- (@c@) tokens, the state transition function (@f@), the output function (@g@)
+-- and the initial state (@e0@), and constructs an SADF detector with a single
+-- data input and four control output signals.
+detector14SADF :: Int -> (e -> [a] -> e) -> (e -> ([y1], [y2], [y3], [y4]))
+               -> e -> Signal a -> (Signal y1, Signal y2, Signal y3, Signal y4)
+detector14SADF c f g e0 as = unzip4SADF p outs
+  where (p, outs) = outputFSM4 g next_state
+        next_state = nextStateFSM c f current_state as
+        current_state = delaySADF e0 next_state
+
+
+-- | The process constructor 'detector24SADF' takes the number of consumed
+-- (@c@) tokens, the state transition function (@f@), the output function (@g@)
+-- and the initial state (@e0@), and constructs an SADF detector with two
+-- data input and four control output signals.
+detector24SADF :: (Int, Int) -> (e -> [a] -> [b] -> e) -> (e -> ([y1], [y2], [y3], [y4]))
+               -> e -> Signal a -> Signal b -> (Signal y1, Signal y2, Signal y3, Signal y4)
+detector24SADF c f g e0 as bs = unzip4SADF p outs
+  where (p, outs) = outputFSM4 g next_state
+        next_state = nextStateFSM2 c f current_state as bs
+        current_state = delaySADF e0 next_state
+
+
+-- | The process constructor 'detector34SADF' takes the number of consumed
+-- (@c@) tokens, the state transition function (@f@), the output function (@g@)
+-- and the initial state (@e0@), and constructs an SADF detector with three
+-- data input and four control output signals.
+detector34SADF :: (Int, Int, Int) -> (e -> [a] -> [b] -> [c] -> e)
+               -> (e -> ([y1], [y2], [y3], [y4])) -> e -> Signal a -> Signal b
+               -> Signal c -> (Signal y1, Signal y2, Signal y3, Signal y4)
+detector34SADF c f g e0 as bs cs = unzip4SADF p outs
+  where (p, outs) = outputFSM4 g next_state
+        next_state = nextStateFSM3 c f current_state as bs cs
+        current_state = delaySADF e0 next_state
+
+
+-- | The process constructor 'detector44SADF' takes the number of consumed
+-- (@c@) tokens, the state transition function (@f@), the output function (@g@)
+-- and the initial state (@e0@), and constructs an SADF detector with four
+-- data input and four control output signals.
+detector44SADF :: (Int, Int, Int, Int) -> (e -> [a] -> [b] -> [c] -> [d] -> e)
+               -> (e -> ([y1], [y2], [y3], [y4])) -> e -> Signal a -> Signal b -> Signal c
+               -> Signal d -> (Signal y1, Signal y2, Signal y3, Signal y4)
+detector44SADF c f g e0 as bs cs ds = unzip4SADF p outs
+  where (p, outs) = outputFSM4 g next_state
+        next_state = nextStateFSM4 c f current_state as bs cs ds
+        current_state = delaySADF e0 next_state
+
 ------------------------------------------------------------------------
 -- unzipSADF Processes
 ------------------------------------------------------------------------
@@ -623,6 +725,31 @@ outputFSM2 f e = (p, outs)
           where (as, bs) = f x
 
 
+outputFSM3 :: (e -> ([a], [b], [c])) -> Signal e -> ([(Int, Int, Int)] , Signal ([a], [b], [c]))
+outputFSM3 _ NullS = ([], NullS)
+outputFSM3 f e = (p, outs)
+  where outs = f1 e
+        p = f2 e
+        f1 NullS = NullS
+        f1 (x:-xs) = signal [f x] +-+ f1 xs
+        f2 NullS = []
+        f2 (x:-xs) = (length as, length bs, length cs) : f2 xs
+          where (as, bs, cs) = f x
+
+
+outputFSM4 :: (e -> ([a], [b], [c], [d])) -> Signal e
+           -> ([(Int, Int, Int, Int)] , Signal ([a], [b], [c], [d]))
+outputFSM4 _ NullS = ([], NullS)
+outputFSM4 f e = (p, outs)
+  where outs = f1 e
+        p = f2 e
+        f1 NullS = NullS
+        f1 (x:-xs) = signal [f x] +-+ f1 xs
+        f2 NullS = []
+        f2 (x:-xs) = (length as, length bs, length cs, length ds) : f2 xs
+          where (as, bs, cs, ds) = f x
+
+
 
 ------------------------------------------------------------------------
 --
@@ -648,5 +775,19 @@ x = signal [1..20]
 y = signal [21 .. 40]
 
 test1out = test1 ct x y
+
+---------------------------------------------------------
+-- test2: detector22SADF test
+---------------------------------------------------------
+
+test2 = detector22SADF (1,2) f g 1
+  where f 1 [a] [b1,b2] = 2
+        f 2 [a] [b1,b2] = 3
+        f 3 [a] [b1,b2] = 1
+        g 1 = ([1], [1,2])
+        g 2 = ([2], [1])
+        g 3 = ([3], [1,2,3])
+
+test2out = test2 x y
 
 -}
