@@ -24,13 +24,20 @@ module ForSyDe.Shallow.MoC.SADF (
   -- * Processes
   -- | Processes to unzip a signal of tupels into a tuple of signals
   unzipSADF, unzip3SADF, unzip4SADF,
-  -- * Actors
+  -- * Kernels
   -- | Based on the process constructors in the SADF-MoC, the
   -- SADF-library provides SADF-kernels with single or multiple inputs
   kernel11SADF, kernel12SADF, kernel13SADF, kernel14SADF,
   kernel21SADF, kernel22SADF, kernel23SADF, kernel24SADF,
   kernel31SADF, kernel32SADF, kernel33SADF, kernel34SADF,
-  kernel41SADF, kernel42SADF, kernel43SADF, kernel44SADF
+  kernel41SADF, kernel42SADF, kernel43SADF, kernel44SADF,
+  -- * Detectors
+  -- | Based on the process constructors in the SADF-MoC, the
+  -- SADF-library provides SADF-detectors with single or multiple inputs
+  detector11SADF, detector12SADF,
+  detector21SADF, detector22SADF,
+  detector31SADF, detector32SADF,
+  detector41SADF, detector42SADF
   ) where
 
 import ForSyDe.Shallow.Core
@@ -159,7 +166,7 @@ delaynSADF initial_tokens xs = signal initial_tokens +-+ xs
 
 ------------------------------------------------------------------------
 --
--- SADF ACTORS
+-- SADF KERNELS
 --
 ------------------------------------------------------------------------
 
@@ -297,6 +304,107 @@ kernel44SADF :: Signal ((Int, Int, Int, Int), (Int, Int, Int, Int),
 kernel44SADF ct as bs cs ds
   = unzip4SADF (get_prodToken ct) $ zipWith4SADF (switch_prodToken ct) as bs cs ds
 
+
+------------------------------------------------------------------------
+--
+-- SADF DETECTORS
+--
+------------------------------------------------------------------------
+
+-- > Detectors with one output
+
+-- | The process constructor 'detector11SADF' takes the number of consumed
+-- (@c@) tokens, the state transition function (@f@), the output function (@g@)
+-- and the initial state (@e0@), and constructs an SADF detector with a single
+-- data input and a single control output signals.
+detector11SADF :: Int -> (e -> [a] -> e) -> (e -> [y]) -> e -> Signal a -> Signal y
+detector11SADF c f g e0 as = outputFSM g next_state
+  where next_state = nextStateFSM c f current_state as
+        current_state = delaySADF e0 next_state
+
+
+-- | The process constructor 'detector21SADF' takes the number of consumed
+-- (@c@) tokens, the state transition function (@f@), the output function (@g@)
+-- and the initial state (@e0@), and constructs an SADF detector with two
+-- data input and a single control output signals.
+detector21SADF :: (Int, Int) -> (e -> [a] -> [b] -> e) -> (e -> [y])
+               -> e -> Signal a -> Signal b -> Signal y
+detector21SADF c f g e0 as bs = outputFSM g next_state
+  where next_state = nextStateFSM2 c f current_state as bs
+        current_state = delaySADF e0 next_state
+
+
+-- | The process constructor 'detector31SADF' takes the number of consumed
+-- (@c@) tokens, the state transition function (@f@), the output function (@g@)
+-- and the initial state (@e0@), and constructs an SADF detector with three
+-- data input and a single control output signals.
+detector31SADF :: (Int, Int, Int) -> (e -> [a] -> [b] -> [c] -> e) -> (e -> [y])
+               -> e -> Signal a -> Signal b -> Signal c -> Signal y
+detector31SADF c f g e0 as bs cs = outputFSM g next_state
+  where next_state = nextStateFSM3 c f current_state as bs cs
+        current_state = delaySADF e0 next_state
+
+
+-- | The process constructor 'detector41SADF' takes the number of consumed
+-- (@c@) tokens, the state transition function (@f@), the output function (@g@)
+-- and the initial state (@e0@), and constructs an SADF detector with four
+-- data input and a single control output signals.
+detector41SADF :: (Int, Int, Int, Int) -> (e -> [a] -> [b] -> [c] -> [d] -> e) -> (e -> [y])
+               -> e -> Signal a -> Signal b -> Signal c -> Signal d -> Signal y
+detector41SADF c f g e0 as bs cs ds = outputFSM g next_state
+  where next_state = nextStateFSM4 c f current_state as bs cs ds
+        current_state = delaySADF e0 next_state
+
+
+-- > Detectors with two output
+
+-- | The process constructor 'detector12SADF' takes the number of consumed
+-- (@c@) tokens, the state transition function (@f@), the output function (@g@)
+-- and the initial state (@e0@), and constructs an SADF detector with a single
+-- data input and two control output signals.
+detector12SADF :: Int -> (e -> [a] -> e) -> (e -> ([y1], [y2])) -> e -> Signal a -> (Signal y1, Signal y2)
+detector12SADF c f g e0 as = unzipSADF p outs
+  where (p, outs) = outputFSM2 g next_state
+        next_state = nextStateFSM c f current_state as
+        current_state = delaySADF e0 next_state
+
+
+-- | The process constructor 'detector22SADF' takes the number of consumed
+-- (@c@) tokens, the state transition function (@f@), the output function (@g@)
+-- and the initial state (@e0@), and constructs an SADF detector with two
+-- data input and two control output signals.
+detector22SADF :: (Int, Int) -> (e -> [a] -> [b] -> e) -> (e -> ([y1], [y2]))
+               -> e -> Signal a -> Signal b -> (Signal y1, Signal y2)
+detector22SADF c f g e0 as bs = unzipSADF p outs
+  where (p, outs) = outputFSM2 g next_state
+        next_state = nextStateFSM2 c f current_state as bs
+        current_state = delaySADF e0 next_state
+
+
+-- | The process constructor 'detector32SADF' takes the number of consumed
+-- (@c@) tokens, the state transition function (@f@), the output function (@g@)
+-- and the initial state (@e0@), and constructs an SADF detector with three
+-- data input and two control output signals.
+detector32SADF :: (Int, Int, Int) -> (e -> [a] -> [b] -> [c] -> e) -> (e -> ([y1], [y2]))
+               -> e -> Signal a -> Signal b -> Signal c -> (Signal y1, Signal y2)
+detector32SADF c f g e0 as bs cs = unzipSADF p outs
+  where (p, outs) = outputFSM2 g next_state
+        next_state = nextStateFSM3 c f current_state as bs cs
+        current_state = delaySADF e0 next_state
+
+
+-- | The process constructor 'detector42SADF' takes the number of consumed
+-- (@c@) tokens, the state transition function (@f@), the output function (@g@)
+-- and the initial state (@e0@), and constructs an SADF detector with four
+-- data input and two control output signals.
+detector42SADF :: (Int, Int, Int, Int) -> (e -> [a] -> [b] -> [c] -> [d] -> e) -> (e -> ([y1], [y2]))
+               -> e -> Signal a -> Signal b -> Signal c -> Signal d -> (Signal y1, Signal y2)
+detector42SADF c f g e0 as bs cs ds = unzipSADF p outs
+  where (p, outs) = outputFSM2 g next_state
+        next_state = nextStateFSM4 c f current_state as bs cs ds
+        current_state = delaySADF e0 next_state
+
+
 ------------------------------------------------------------------------
 -- unzipSADF Processes
 ------------------------------------------------------------------------
@@ -417,3 +525,128 @@ get_prodToken ((_, x, _):-xs) = x : get_prodToken xs
 switch_prodToken :: Signal (a,b,c) -> Signal (a,Int,c)
 switch_prodToken NullS = NullS
 switch_prodToken ((a, _, c):-xs) = signal [(a, 1, c)] +-+ switch_prodToken xs
+
+
+---------------------------------------------------------
+-- Helper functios to the detector's Moore FSM
+---------------------------------------------------------
+nextStateFSM :: Int -> (e -> [a] -> e)
+             -> Signal e -> Signal a -> Signal e
+nextStateFSM _ _ NullS _ = NullS
+nextStateFSM _ _ _ NullS = NullS
+nextStateFSM c f es as
+  | c <= 0 = error "nextStateFSM: Number of consumed tokens must be positive integer"
+  | not $ sufficient_tokens c as = NullS
+  | otherwise = signal [next_state] +-+ nextStateFSM c f (tailS es) (dropS c as)
+  where consumed_tokens_as = fromSignal $ takeS c as
+        current_state = headS es
+        next_state = f current_state consumed_tokens_as
+
+
+nextStateFSM2 :: (Int, Int) -> (e -> [a] -> [b] -> e)
+              -> Signal e -> Signal a -> Signal b -> Signal e
+nextStateFSM2 _ _ NullS _ _ = NullS
+nextStateFSM2 _ _ _ NullS _ = NullS
+nextStateFSM2 _ _ _ _ NullS = NullS
+nextStateFSM2 (c1, c2) f es as bs
+  | c1 <= 0 || c2 <= 0 = error "nextStateFSM2: Number of consumed tokens must be positive integer"
+  | (not $ sufficient_tokens c1 as)
+    || (not $ sufficient_tokens c2 bs) = NullS
+  | otherwise = signal [next_state] +-+ nextStateFSM2 (c1, c2) f (tailS es) (dropS c1 as) (dropS c2 bs)
+  where consumed_tokens_as = fromSignal $ takeS c1 as
+        consumed_tokens_bs = fromSignal $ takeS c2 bs
+        current_state = headS es
+        next_state = f current_state consumed_tokens_as consumed_tokens_bs
+
+
+nextStateFSM3 :: (Int, Int, Int) -> (e -> [a] -> [b] -> [c] -> e)
+              -> Signal e -> Signal a -> Signal b -> Signal c -> Signal e
+nextStateFSM3 _ _ NullS _ _ _ = NullS
+nextStateFSM3 _ _ _ NullS _ _ = NullS
+nextStateFSM3 _ _ _ _ NullS _ = NullS
+nextStateFSM3 _ _ _ _ _ NullS = NullS
+nextStateFSM3 (c1, c2, c3) f es as bs cs
+  | c1 <= 0 || c2 <= 0 || c3 <= 0
+    = error "nextStateFSM3: Number of consumed tokens must be positive integer"
+  | (not $ sufficient_tokens c1 as)
+    || (not $ sufficient_tokens c2 bs)
+    || (not $ sufficient_tokens c3 cs) = NullS
+  | otherwise = signal [next_state] +-+ nextStateFSM3 (c1, c2, c3) f (tailS es)
+                                        (dropS c1 as) (dropS c2 bs) (dropS c3 cs)
+  where consumed_tokens_as = fromSignal $ takeS c1 as
+        consumed_tokens_bs = fromSignal $ takeS c2 bs
+        consumed_tokens_cs = fromSignal $ takeS c3 cs
+        current_state = headS es
+        next_state = f current_state consumed_tokens_as
+                       consumed_tokens_bs consumed_tokens_cs
+
+
+nextStateFSM4 :: (Int, Int, Int, Int) -> (e -> [a] -> [b] -> [c] -> [d] -> e)
+              -> Signal e -> Signal a -> Signal b -> Signal c -> Signal d -> Signal e
+nextStateFSM4 _ _ NullS _ _ _ _ = NullS
+nextStateFSM4 _ _ _ NullS _ _ _ = NullS
+nextStateFSM4 _ _ _ _ NullS _ _ = NullS
+nextStateFSM4 _ _ _ _ _ NullS _ = NullS
+nextStateFSM4 _ _ _ _ _ _ NullS = NullS
+nextStateFSM4 (c1, c2, c3, c4) f es as bs cs ds
+  | c1 <= 0 || c2 <= 0 || c3 <= 0 || c4 <= 0
+    = error "nextStateFSM4: Number of consumed tokens must be positive integer"
+  | (not $ sufficient_tokens c1 as)
+    || (not $ sufficient_tokens c2 bs)
+    || (not $ sufficient_tokens c3 cs)
+    || (not $ sufficient_tokens c4 ds) = NullS
+  | otherwise = signal [next_state] +-+ nextStateFSM4 (c1, c2, c3, c4) f (tailS es)
+                                        (dropS c1 as) (dropS c2 bs) (dropS c3 cs) (dropS c4 ds)
+  where consumed_tokens_as = fromSignal $ takeS c1 as
+        consumed_tokens_bs = fromSignal $ takeS c2 bs
+        consumed_tokens_cs = fromSignal $ takeS c3 cs
+        consumed_tokens_ds = fromSignal $ takeS c4 ds
+        current_state = headS es
+        next_state = f current_state consumed_tokens_as
+                       consumed_tokens_bs consumed_tokens_cs consumed_tokens_ds
+
+
+outputFSM :: (e -> [a]) -> Signal e -> Signal a
+outputFSM _ NullS = NullS
+outputFSM f (e:-es) = signal (f e) +-+ outputFSM f es
+
+
+outputFSM2 :: (e -> ([a], [b])) -> Signal e -> ([(Int, Int)] , Signal ([a], [b]))
+outputFSM2 _ NullS = ([], NullS)
+outputFSM2 f e = (p, outs)
+  where outs = f1 e
+        p = f2 e
+        f1 NullS = NullS
+        f1 (x:-xs) = signal [f x] +-+ f1 xs
+        f2 NullS = []
+        f2 (x:-xs) = (length as, length bs) : f2 xs
+          where (as, bs) = f x
+
+
+
+------------------------------------------------------------------------
+--
+-- Test of Library (not exported)
+--
+------------------------------------------------------------------------
+
+{-
+
+---------------------------------------------------------
+-- test1: kernel22SADF test
+---------------------------------------------------------
+
+test1 :: Signal ((Int, Int), (Int, Int), [a] -> [b] -> [([c], [d])])
+      -> Signal a -> Signal b -> (Signal c, Signal d)
+test1 = kernel22SADF
+
+ct = signal [((1,1), (1,1), \[a] [b] -> [([2*a], [2*b])]),
+             ((2,2), (1,1), \[a,b] [c,d] -> [([a+b], [c+d])]),
+             ((1,2), (2,1), \[a] [b,c] -> [([b,c], [a])])]
+
+x = signal [1..20]
+y = signal [21 .. 40]
+
+test1out = test1 ct x y
+
+-}
