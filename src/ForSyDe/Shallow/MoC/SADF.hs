@@ -35,10 +35,10 @@ module ForSyDe.Shallow.MoC.SADF (
   -- * Detectors
   -- | Based on the process constructors in the SADF-MoC, the
   -- SADF-library provides SADF-detectors with single or multiple inputs
-  detector11SADF, detector12SADF, detector13SADF, detector14SADF,
-  detector21SADF, detector22SADF, detector23SADF, detector24SADF,
-  detector31SADF, detector32SADF, detector33SADF, detector34SADF,
-  detector41SADF, detector42SADF, detector43SADF, detector44SADF
+  detector11SADF, detector12SADF, detector13SADF, detector14SADF, detector15SADF,
+  detector21SADF, detector22SADF, detector23SADF, detector24SADF, detector25SADF,
+  detector31SADF, detector32SADF, detector33SADF, detector34SADF, detector35SADF,
+  detector41SADF, detector42SADF, detector43SADF, detector44SADF, detector45SADF
   ) where
 
 import ForSyDe.Shallow.Core
@@ -273,7 +273,8 @@ kernel42SADF ct as bs cs ds
 -- | The process constructor 'kernel52SADF' constructs an SADF kernel with
 -- five data input and two data output signals. The scenario (token rates and
 -- function) is determined by the control signal.
-kernel52SADF :: Signal ((Int, Int, Int, Int, Int), (Int, Int), [a] -> [b] -> [c] -> [d] -> [e] -> [([f], [g])])
+kernel52SADF :: Signal ((Int, Int, Int, Int, Int), (Int, Int), [a]
+             -> [b] -> [c] -> [d] -> [e] -> [([f], [g])])
              -> Signal a -> Signal b -> Signal c -> Signal d -> Signal e
              -> (Signal f, Signal g)
 kernel52SADF ct as bs cs ds es
@@ -475,7 +476,8 @@ detector41SADF c f g e0 as bs cs ds = outputFSM g next_state
 -- (@c@) tokens, the state transition function (@f@), the output function (@g@)
 -- and the initial state (@e0@), and constructs an SADF detector with a single
 -- data input and two control output signals.
-detector12SADF :: Int -> (e -> [a] -> e) -> (e -> ([y1], [y2])) -> e -> Signal a -> (Signal y1, Signal y2)
+detector12SADF :: Int -> (e -> [a] -> e) -> (e -> ([y1], [y2]))
+               -> e -> Signal a -> (Signal y1, Signal y2)
 detector12SADF c f g e0 as = unzipSADF p outs
   where (p, outs) = outputFSM2 g next_state
         next_state = nextStateFSM c f current_state as
@@ -619,6 +621,61 @@ detector44SADF c f g e0 as bs cs ds = unzip4SADF p outs
   where (p, outs) = outputFSM4 g next_state
         next_state = nextStateFSM4 c f current_state as bs cs ds
         current_state = delaySADF e0 next_state
+
+
+-- > Detectors with five output
+
+-- | The process constructor 'detector15SADF' takes the number of consumed
+-- (@c@) tokens, the state transition function (@f@), the output function (@g@)
+-- and the initial state (@e0@), and constructs an SADF detector with a single
+-- data input and five control output signals.
+detector15SADF :: Int -> (e -> [a] -> e) -> (e -> ([y1], [y2], [y3], [y4], [y5]))
+               -> e -> Signal a -> (Signal y1, Signal y2, Signal y3, Signal y4, Signal y5)
+detector15SADF c f g e0 as = unzip5SADF p outs
+  where (p, outs) = outputFSM5 g next_state
+        next_state = nextStateFSM c f current_state as
+        current_state = delaySADF e0 next_state
+
+
+-- | The process constructor 'detector25SADF' takes the number of consumed
+-- (@c@) tokens, the state transition function (@f@), the output function (@g@)
+-- and the initial state (@e0@), and constructs an SADF detector with two
+-- data input and five control output signals.
+detector25SADF :: (Int, Int) -> (e -> [a] -> [b] -> e)
+               -> (e -> ([y1], [y2], [y3], [y4], [y5]))
+               -> e -> Signal a -> Signal b
+               -> (Signal y1, Signal y2, Signal y3, Signal y4, Signal y5)
+detector25SADF c f g e0 as bs = unzip5SADF p outs
+  where (p, outs) = outputFSM5 g next_state
+        next_state = nextStateFSM2 c f current_state as bs
+        current_state = delaySADF e0 next_state
+
+
+-- | The process constructor 'detector35SADF' takes the number of consumed
+-- (@c@) tokens, the state transition function (@f@), the output function (@g@)
+-- and the initial state (@e0@), and constructs an SADF detector with three
+-- data input and five control output signals.
+detector35SADF :: (Int, Int, Int) -> (e -> [a] -> [b] -> [c] -> e)
+               -> (e -> ([y1], [y2], [y3], [y4], [y5])) -> e -> Signal a -> Signal b
+               -> Signal c -> (Signal y1, Signal y2, Signal y3, Signal y4, Signal y5)
+detector35SADF c f g e0 as bs cs = unzip5SADF p outs
+  where (p, outs) = outputFSM5 g next_state
+        next_state = nextStateFSM3 c f current_state as bs cs
+        current_state = delaySADF e0 next_state
+
+
+-- | The process constructor 'detector45SADF' takes the number of consumed
+-- (@c@) tokens, the state transition function (@f@), the output function (@g@)
+-- and the initial state (@e0@), and constructs an SADF detector with four
+-- data input and five control output signals.
+detector45SADF :: (Int, Int, Int, Int) -> (e -> [a] -> [b] -> [c] -> [d] -> e)
+               -> (e -> ([y1], [y2], [y3], [y4], [y5])) -> e -> Signal a -> Signal b -> Signal c
+               -> Signal d -> (Signal y1, Signal y2, Signal y3, Signal y4, Signal y5)
+detector45SADF c f g e0 as bs cs ds = unzip5SADF p outs
+  where (p, outs) = outputFSM5 g next_state
+        next_state = nextStateFSM4 c f current_state as bs cs ds
+        current_state = delaySADF e0 next_state
+
 
 ------------------------------------------------------------------------
 -- unzipSADF Processes
@@ -956,23 +1013,21 @@ f 1 [y] [v] = if (y > 100 && v > 0 || y < (-100) && v < 0) then 2 else 1
 f 2 [y] [v] = if (y > 100 && v > 0 || y < (-100) && v < 0) then 2 else 1
 
 -- Output function for the detector
-g :: Num a => Int -> ([((Int, Int), Int, [a] -> [a] -> [a])], [(Int, (Int, Int), [a] -> [([a], [a])])])
-g 1 = ([((1,1), 1, \[a] [b] -> [a+b])], [(1, (1,1), \[a] -> [([a], [a])])])
-g 2 = ([((0,1), 1, \_ [b] -> [b])], [(1, (0,1), \[a] -> [([], [a])])])
+g :: Num a => Int -> ([((Int, Int), Int, [a] -> [a] -> [a])], [(Int, Int, [a] -> [a])])
+g 1 = ([((1,1), 1, \[a] [b] -> [a+b])], [(1, 1, \[a] -> [a])])
+g 2 = ([((0,1), 1, \_ [b] -> [b])], [(1, 0, \[a] -> [])])
 
 -- Detector
 detector :: (Num a, Ord a) => Signal a -> Signal a
-         -> (Signal ((Int, Int), Int, [a] -> [a] -> [a]), Signal (Int, (Int, Int), [a] -> [([a], [a])]))
+         -> (Signal ((Int, Int), Int, [a] -> [a] -> [a]), Signal (Int, Int, [a] -> [a]))
 detector = detector22SADF (1,1) f g 1
 
 syst :: (Num a, Ord a) => Signal a -> Signal a
 syst input = output
   where output = integrator c1 s1 s3
         s3 = delaySADF 0 output
-        (s1, s5) = fork c2 input
-        s2 = delaySADF 0 s5
-        (c1, c2) = detector s3 s2
-        fork = kernel12SADF
+        s1 = kernel11SADF c2 input
+        (c1, c2) = detector s3 input
         integrator = kernel21SADF
 
 

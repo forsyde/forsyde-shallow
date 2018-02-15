@@ -7,12 +7,20 @@ cabal.sandbox.config
 src/ForSyDe/Shallow/fig/*
 .#*
 
-# Test file for the CSDF and SADF Library
-TestCSDF.hs
-TestSADF.hs
+
+########### Craps added by Ricardo ###############
+# Crap from sharing sandbox using --sandbox option
+lib/*
+logs/*
+packages/*
+share/*
+x86_64-osx-ghc-8.0.1-packages.conf.d/*
+add-source-timestamps
 
 # Crap from MacOS X
 **/.DS_Store
+##################################################
+
 
 # Except this file
 !.gitignore
