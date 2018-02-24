@@ -217,9 +217,9 @@ actor41CSDF = zipWith4CSDF
 -- produced tokens and the function) defined in the list of tuples, given as
 -- argument, in a cyclic fashion. The length of the list of scenarios gives the
 -- actor's cycle period.
-actor12CSDF :: [(Int, (Int, Int), [a] -> [([b], [c])])]
+actor12CSDF :: [(Int, (Int, Int), [a] -> ([b], [c]))]
             -> Signal a -> (Signal b, Signal c)
-actor12CSDF s xs = unzipCSDF (outputTokens s) $ mapCSDF (oneOutput s) xs
+actor12CSDF s xs = unzipCSDF (outputTokens s) $ mapCSDF (inpOut1n s) xs
 
 -- | The process constructor 'actor22CSDF' constructs an CSDF actor with
 -- two input and two output signals. For each firing, the actor behaves
@@ -227,9 +227,9 @@ actor12CSDF s xs = unzipCSDF (outputTokens s) $ mapCSDF (oneOutput s) xs
 -- produced tokens and the function) defined in the list of tuples, given as
 -- argument, in a cyclic fashion. The length of the list of scenarios gives the
 -- actor's cycle period.
-actor22CSDF :: [((Int, Int), (Int, Int), [a] -> [b] -> [([c], [d])])]
+actor22CSDF :: [((Int, Int), (Int, Int), [a] -> [b] -> ([c], [d]))]
             -> Signal a -> Signal b -> (Signal c, Signal d)
-actor22CSDF s xs ys = unzipCSDF (outputTokens s) $ zipWithCSDF (oneOutput s) xs ys
+actor22CSDF s xs ys = unzipCSDF (outputTokens s) $ zipWithCSDF (inpOut2n s) xs ys
 
 -- | The process constructor 'actor32CSDF' constructs an CSDF actor with
 -- three input and two output signals. For each firing, the actor behaves
@@ -237,10 +237,10 @@ actor22CSDF s xs ys = unzipCSDF (outputTokens s) $ zipWithCSDF (oneOutput s) xs 
 -- produced tokens and the function) defined in the list of tuples, given as
 -- argument, in a cyclic fashion. The length of the list of scenarios gives the
 -- actor's cycle period.
-actor32CSDF :: [((Int, Int, Int), (Int, Int), [a] -> [b] -> [c] -> [([d], [e])])]
+actor32CSDF :: [((Int, Int, Int), (Int, Int), [a] -> [b] -> [c] -> ([d], [e]))]
             -> Signal a -> Signal b -> Signal c -> (Signal d, Signal e)
 actor32CSDF s as bs cs
-  = unzipCSDF (outputTokens s) $ zipWith3CSDF (oneOutput s) as bs cs
+  = unzipCSDF (outputTokens s) $ zipWith3CSDF (inpOut3n s) as bs cs
 
 -- | The process constructor 'actor42CSDF' constructs an CSDF actor with
 -- four input and two output signals. For each firing, the actor behaves
@@ -248,11 +248,11 @@ actor32CSDF s as bs cs
 -- produced tokens and the function) defined in the list of tuples, given as
 -- argument, in a cyclic fashion. The length of the list of scenarios gives the
 -- actor's cycle period.
-actor42CSDF :: [((Int, Int, Int, Int), (Int, Int), [a] -> [b] -> [c] -> [d] -> [([e], [f])])]
+actor42CSDF :: [((Int, Int, Int, Int), (Int, Int), [a] -> [b] -> [c] -> [d] -> ([e], [f]))]
             -> Signal a -> Signal b -> Signal c -> Signal d
             -> (Signal e, Signal f)
 actor42CSDF s as bs cs ds
-  = unzipCSDF (outputTokens s) $ zipWith4CSDF (oneOutput s) as bs cs ds
+  = unzipCSDF (outputTokens s) $ zipWith4CSDF (inpOut4n s) as bs cs ds
 
 -- > Actors with three outputs
 
@@ -262,9 +262,9 @@ actor42CSDF s as bs cs ds
 -- produced tokens and the function) defined in the list of tuples, given as
 -- argument, in a cyclic fashion. The length of the list of scenarios gives the
 -- actor's cycle period.
-actor13CSDF :: [(Int, (Int, Int, Int), [a] -> [([b], [c], [d])])]
+actor13CSDF :: [(Int, (Int, Int, Int), [a] -> ([b], [c], [d]))]
             -> Signal a -> (Signal b, Signal c, Signal d)
-actor13CSDF s xs = unzip3CSDF (outputTokens s) $ mapCSDF (oneOutput s) xs
+actor13CSDF s xs = unzip3CSDF (outputTokens s) $ mapCSDF (inpOut1n s) xs
 
 -- | The process constructor 'actor23CSDF' constructs an CSDF actor with
 -- two input and three output signals. For each firing, the actor behaves
@@ -272,10 +272,10 @@ actor13CSDF s xs = unzip3CSDF (outputTokens s) $ mapCSDF (oneOutput s) xs
 -- produced tokens and the function) defined in the list of tuples, given as
 -- argument, in a cyclic fashion. The length of the list of scenarios gives the
 -- actor's cycle period.
-actor23CSDF :: [((Int, Int), (Int, Int, Int), [a] -> [b] -> [([c], [d], [e])])]
+actor23CSDF :: [((Int, Int), (Int, Int, Int), [a] -> [b] -> ([c], [d], [e]))]
             -> Signal a -> Signal b -> (Signal c, Signal d, Signal e)
 actor23CSDF s xs ys
-  = unzip3CSDF (outputTokens s) $ zipWithCSDF (oneOutput s) xs ys
+  = unzip3CSDF (outputTokens s) $ zipWithCSDF (inpOut2n s) xs ys
 
 -- | The process constructor 'actor33CSDF' constructs an CSDF actor with
 -- three input and three output signals. For each firing, the actor behaves
@@ -283,10 +283,10 @@ actor23CSDF s xs ys
 -- produced tokens and the function) defined in the list of tuples, given as
 -- argument, in a cyclic fashion. The length of the list of scenarios gives the
 -- actor's cycle period.
-actor33CSDF :: [((Int, Int, Int), (Int, Int, Int), [a] -> [b] -> [c] -> [([d], [e], [f])])]
+actor33CSDF :: [((Int, Int, Int), (Int, Int, Int), [a] -> [b] -> [c] -> ([d], [e], [f]))]
             -> Signal a -> Signal b -> Signal c -> (Signal d, Signal e, Signal f)
 actor33CSDF s as bs cs
-  = unzip3CSDF (outputTokens s) $ zipWith3CSDF (oneOutput s) as bs cs
+  = unzip3CSDF (outputTokens s) $ zipWith3CSDF (inpOut3n s) as bs cs
 
 -- | The process constructor 'actor43CSDF' constructs an CSDF actor with
 -- four input and three output signals. For each firing, the actor behaves
@@ -295,11 +295,11 @@ actor33CSDF s as bs cs
 -- argument, in a cyclic fashion. The length of the list of scenarios gives the
 -- actor's cycle period.
 actor43CSDF :: [((Int, Int, Int, Int), (Int, Int, Int),
-            [a] -> [b] -> [c] -> [d] -> [([e], [f], [g])])]
+            [a] -> [b] -> [c] -> [d] -> ([e], [f], [g]))]
             -> Signal a -> Signal b -> Signal c -> Signal d
             -> (Signal e, Signal f, Signal g)
 actor43CSDF s as bs cs ds
-  = unzip3CSDF (outputTokens s) $ zipWith4CSDF (oneOutput s) as bs cs ds
+  = unzip3CSDF (outputTokens s) $ zipWith4CSDF (inpOut4n s) as bs cs ds
 
 -- > Actors with four outputs
 
@@ -309,9 +309,9 @@ actor43CSDF s as bs cs ds
 -- produced tokens and the function) defined in the list of tuples, given as
 -- argument, in a cyclic fashion. The length of the list of scenarios gives the
 -- actor's cycle period.
-actor14CSDF :: [(Int, (Int, Int, Int, Int), [a] -> [([b], [c], [d], [e])])]
+actor14CSDF :: [(Int, (Int, Int, Int, Int), [a] -> ([b], [c], [d], [e]))]
             -> Signal a -> (Signal b, Signal c, Signal d, Signal e)
-actor14CSDF s xs = unzip4CSDF (outputTokens s) $ mapCSDF (oneOutput s) xs
+actor14CSDF s xs = unzip4CSDF (outputTokens s) $ mapCSDF (inpOut1n s) xs
 
 -- | The process constructor 'actor24CSDF' constructs an CSDF actor with
 -- two input and four output signals. For each firing, the actor behaves
@@ -319,11 +319,11 @@ actor14CSDF s xs = unzip4CSDF (outputTokens s) $ mapCSDF (oneOutput s) xs
 -- produced tokens and the function) defined in the list of tuples, given as
 -- argument, in a cyclic fashion. The length of the list of scenarios gives the
 -- actor's cycle period.
-actor24CSDF :: [((Int, Int), (Int, Int, Int, Int), [a] -> [b] -> [([c], [d], [e], [f])])]
+actor24CSDF :: [((Int, Int), (Int, Int, Int, Int), [a] -> [b] -> ([c], [d], [e], [f]))]
             -> Signal a -> Signal b
             -> (Signal c, Signal d, Signal e, Signal f)
 actor24CSDF s xs ys
-  = unzip4CSDF (outputTokens s) $ zipWithCSDF (oneOutput s) xs ys
+  = unzip4CSDF (outputTokens s) $ zipWithCSDF (inpOut2n s) xs ys
 
 -- | The process constructor 'actor34CSDF' constructs an CSDF actor with
 -- three input and four output signals. For each firing, the actor behaves
@@ -332,11 +332,11 @@ actor24CSDF s xs ys
 -- argument, in a cyclic fashion. The length of the list of scenarios gives the
 -- actor's cycle period.
 actor34CSDF :: [((Int, Int, Int), (Int, Int, Int, Int),
-            [a] -> [b] -> [c] -> [([d], [e], [f], [g])])]
+            [a] -> [b] -> [c] -> ([d], [e], [f], [g]))]
             -> Signal a -> Signal b -> Signal c
             -> (Signal d, Signal e, Signal f, Signal g)
 actor34CSDF s as bs cs
-  = unzip4CSDF (outputTokens s) $ zipWith3CSDF (oneOutput s) as bs cs
+  = unzip4CSDF (outputTokens s) $ zipWith3CSDF (inpOut3n s) as bs cs
 
 -- | The process constructor 'actor44CSDF' constructs an CSDF actor with
 -- four input and four output signals. For each firing, the actor behaves
@@ -345,11 +345,11 @@ actor34CSDF s as bs cs
 -- argument, in a cyclic fashion. The length of the list of scenarios gives the
 -- actor's cycle period.
 actor44CSDF :: [((Int, Int, Int, Int), (Int, Int, Int, Int),
-            [a] -> [b] -> [c] -> [d] -> [([e], [f], [g], [h])])]
+            [a] -> [b] -> [c] -> [d] -> ([e], [f], [g], [h]))]
             -> Signal a -> Signal b -> Signal c -> Signal d
             -> (Signal e, Signal f, Signal g, Signal h)
 actor44CSDF s as bs cs ds
-  = unzip4CSDF (outputTokens s) $ zipWith4CSDF (oneOutput s) as bs cs ds
+  = unzip4CSDF (outputTokens s) $ zipWith4CSDF (inpOut4n s) as bs cs ds
 
 ------------------------------------------------------------------------
 -- unzipCSDF Processes
@@ -469,10 +469,21 @@ outputTokens [] = []
 outputTokens ((_, b, _):xs) = b : outputTokens xs
 
 
-oneOutput :: [(a, b, c)] -> [(a, Int, c)]
-oneOutput [] = []
-oneOutput ((a, _, c):xs) = (a, 1, c) : oneOutput xs
+inpOut1n :: [(it, ot, [a] -> y)] -> [(it, Int, [a] -> [y])]
+inpOut1n [] = []
+inpOut1n ((it, _, f):xs) = (it, 1, \a -> [f a]) : inpOut1n xs
 
+inpOut2n :: [(it, ot, [a] -> [b] -> y)] -> [(it, Int, [a] -> [b] -> [y])]
+inpOut2n [] = []
+inpOut2n ((it, _, f):xs) = (it, 1, \a b -> [f a b]) : inpOut2n xs
+
+inpOut3n :: [(it, ot, [a] -> [b] -> [c] -> y)] -> [(it, Int, [a] -> [b] -> [c] -> [y])]
+inpOut3n [] = []
+inpOut3n ((it, _, f):xs) = (it, 1, \a b c -> [f a b c]) : inpOut3n xs
+
+inpOut4n :: [(it, ot, [a] -> [b] -> [c] -> [d] -> y)] -> [(it, Int, [a] -> [b] -> [c] -> [d] -> [y])]
+inpOut4n [] = []
+inpOut4n ((it, _, f):xs) = (it, 1, \a b c d -> [f a b c d]) : inpOut4n xs
 
 ------------------------------------------------------------------------
 --
@@ -506,8 +517,8 @@ test1out = takeS 10 test1
 
 test2 :: Num a => Signal a -> Signal a -> (Signal a, Signal a)
 test2 = actor22CSDF s
-  where s = [((2,1), (0,1), \[a,b] [c] -> [([], [a+b+c])]),
-             ((1,3), (2,3), \[a] [b,c,d] -> [([a,b], [b, c, d])])]
+  where s = [((2,1), (0,1), \[a,b] [c] -> ([], [a+b+c])),
+             ((1,3), (2,3), \[a] [b,c,d] -> ([a,b], [b, c, d]))]
 
 -- Shows the output for the given inputs
 test2out = test2 (signal [1..10]) (signal [11..20])
@@ -520,11 +531,11 @@ test2out = test2 (signal [1..10]) (signal [11..20])
 
 test3 :: (Num a, Enum b) => Signal a -> Signal a -> Signal b -> (Signal b, Signal b, Signal a, Signal a)
 test3 = actor34CSDF s
-  where s = [((1,0,1), (1,1,3,0), \[a] _ [b] -> [([b], [succ b], [a, 2*a, 3*a], [])]),
-             ((2,1,1), (0,2,1,1), \[a,b] [c] [d] -> [([], [d, succ d], [a+b], [c])])]
+  where s = [((1,0,1), (1,1,3,0), \[a] _ [b] -> ([b], [succ b], [a, 2*a, 3*a], [])),
+             ((2,1,1), (0,2,1,1), \[a,b] [c] [d] -> ([], [d, succ d], [a+b], [c]))]
 
 test3out = test3 (signal [1..10]) (signal [11..20]) (signal ['a'..'k'])
 
 -- Expected answer: ({'a','c','e','g'},{'b','b','c','d','d','e','f','f','g','h'},
-{1,2,3,5,4,8,12,11,7,14,21,17,10,20,30},{11,12,13})
+-- {1,2,3,5,4,8,12,11,7,14,21,17,10,20,30},{11,12,13})
 -}

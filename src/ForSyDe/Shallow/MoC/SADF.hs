@@ -242,43 +242,43 @@ kernel51SADF = zipWith5SADF
 -- | The process constructor 'kernel12SADF' constructs an SADF kernel with
 -- one data input and two data output signals. The scenario (token rates and
 -- function) is determined by the control signal.
-kernel12SADF :: Signal (Int, (Int, Int), [a] -> [([b], [c])])
+kernel12SADF :: Signal (Int, (Int, Int), [a] -> ([b], [c]))
              -> Signal a -> (Signal b, Signal c)
-kernel12SADF ct xs = unzipSADF (get_prodToken ct) $ mapSADF (switch_prodToken ct) xs
+kernel12SADF ct xs = unzipSADF (get_prodToken ct) $ mapSADF (inpOut1n ct) xs
 
 -- | The process constructor 'kernel22SADF' constructs an SADF kernel with
 -- two data input and two data output signals. The scenario (token rates and
 -- function) is determined by the control signal.
-kernel22SADF :: Signal ((Int, Int), (Int, Int), [a] -> [b] -> [([c], [d])])
+kernel22SADF :: Signal ((Int, Int), (Int, Int), [a] -> [b] -> ([c], [d]))
              -> Signal a -> Signal b -> (Signal c, Signal d)
-kernel22SADF ct xs ys = unzipSADF (get_prodToken ct) $ zipWithSADF (switch_prodToken ct) xs ys
+kernel22SADF ct xs ys = unzipSADF (get_prodToken ct) $ zipWithSADF (inpOut2n ct) xs ys
 
 -- | The process constructor 'kernel32SADF' constructs an SADF kernel with
 -- three data input and two data output signals. The scenario (token rates and
 -- function) is determined by the control signal.
-kernel32SADF :: Signal ((Int, Int, Int), (Int, Int), [a] -> [b] -> [c] -> [([d], [e])])
+kernel32SADF :: Signal ((Int, Int, Int), (Int, Int), [a] -> [b] -> [c] -> ([d], [e]))
              -> Signal a -> Signal b -> Signal c -> (Signal d, Signal e)
 kernel32SADF ct as bs cs
-  = unzipSADF (get_prodToken ct) $ zipWith3SADF (switch_prodToken ct) as bs cs
+  = unzipSADF (get_prodToken ct) $ zipWith3SADF (inpOut3n ct) as bs cs
 
 -- | The process constructor 'kernel42SADF' constructs an SADF kernel with
 -- four data input and two data output signals. The scenario (token rates and
 -- function) is determined by the control signal.
-kernel42SADF :: Signal ((Int, Int, Int, Int), (Int, Int), [a] -> [b] -> [c] -> [d] -> [([e], [f])])
+kernel42SADF :: Signal ((Int, Int, Int, Int), (Int, Int), [a] -> [b] -> [c] -> [d] -> ([e], [f]))
              -> Signal a -> Signal b -> Signal c -> Signal d
              -> (Signal e, Signal f)
 kernel42SADF ct as bs cs ds
-  = unzipSADF (get_prodToken ct) $ zipWith4SADF (switch_prodToken ct) as bs cs ds
+  = unzipSADF (get_prodToken ct) $ zipWith4SADF (inpOut4n ct) as bs cs ds
 
 -- | The process constructor 'kernel52SADF' constructs an SADF kernel with
 -- five data input and two data output signals. The scenario (token rates and
 -- function) is determined by the control signal.
 kernel52SADF :: Signal ((Int, Int, Int, Int, Int), (Int, Int), [a]
-             -> [b] -> [c] -> [d] -> [e] -> [([f], [g])])
+             -> [b] -> [c] -> [d] -> [e] -> ([f], [g]))
              -> Signal a -> Signal b -> Signal c -> Signal d -> Signal e
              -> (Signal f, Signal g)
 kernel52SADF ct as bs cs ds es
-  = unzipSADF (get_prodToken ct) $ zipWith5SADF (switch_prodToken ct) as bs cs ds es
+  = unzipSADF (get_prodToken ct) $ zipWith5SADF (inpOut5n ct) as bs cs ds es
 
 
 -- > Kernals with three outputs
@@ -286,44 +286,44 @@ kernel52SADF ct as bs cs ds es
 -- | The process constructor 'kernel13SADF' constructs an SADF kernel with
 -- one data input and three data output signals. The scenario (token rates and
 -- function) is determined by the control signal.
-kernel13SADF :: Signal (Int, (Int, Int, Int), [a] -> [([b], [c], [d])])
+kernel13SADF :: Signal (Int, (Int, Int, Int), [a] -> ([b], [c], [d]))
              -> Signal a -> (Signal b, Signal c, Signal d)
-kernel13SADF ct xs = unzip3SADF (get_prodToken ct) $ mapSADF (switch_prodToken ct) xs
+kernel13SADF ct xs = unzip3SADF (get_prodToken ct) $ mapSADF (inpOut1n ct) xs
 
 -- | The process constructor 'kernel23SADF' constructs an SADF kernel with
 -- two data input and three data output signals. The scenario (token rates and
 -- function) is determined by the control signal.
-kernel23SADF :: Signal ((Int, Int), (Int, Int, Int), [a] -> [b] -> [([c], [d], [e])])
+kernel23SADF :: Signal ((Int, Int), (Int, Int, Int), [a] -> [b] -> ([c], [d], [e]))
              -> Signal a -> Signal b -> (Signal c, Signal d, Signal e)
-kernel23SADF ct xs ys = unzip3SADF (get_prodToken ct) $ zipWithSADF (switch_prodToken ct) xs ys
+kernel23SADF ct xs ys = unzip3SADF (get_prodToken ct) $ zipWithSADF (inpOut2n ct) xs ys
 
 -- | The process constructor 'kernel33SADF' constructs an SADF kernel with
 -- three data input and three data output signals. The scenario (token rates and
 -- function) is determined by the control signal.
-kernel33SADF :: Signal ((Int, Int, Int), (Int, Int, Int), [a] -> [b] -> [c] -> [([d], [e], [f])])
+kernel33SADF :: Signal ((Int, Int, Int), (Int, Int, Int), [a] -> [b] -> [c] -> ([d], [e], [f]))
              -> Signal a -> Signal b -> Signal c -> (Signal d, Signal e, Signal f)
 kernel33SADF ct as bs cs
-  = unzip3SADF (get_prodToken ct) $ zipWith3SADF (switch_prodToken ct) as bs cs
+  = unzip3SADF (get_prodToken ct) $ zipWith3SADF (inpOut3n ct) as bs cs
 
 -- | The process constructor 'kernel43SADF' constructs an SADF kernel with
 -- four data input and three data output signals. The scenario (token rates and
 -- function) is determined by the control signal.
 kernel43SADF :: Signal ((Int, Int, Int, Int), (Int, Int, Int),
-             [a] -> [b] -> [c] -> [d] -> [([e], [f], [g])])
+             [a] -> [b] -> [c] -> [d] -> ([e], [f], [g]))
              -> Signal a -> Signal b -> Signal c -> Signal d
              -> (Signal e, Signal f, Signal g)
 kernel43SADF ct as bs cs ds
-  = unzip3SADF (get_prodToken ct) $ zipWith4SADF (switch_prodToken ct) as bs cs ds
+  = unzip3SADF (get_prodToken ct) $ zipWith4SADF (inpOut4n ct) as bs cs ds
 
 -- | The process constructor 'kernel53SADF' constructs an SADF kernel with
 -- five data input and three data output signals. The scenario (token rates and
 -- function) is determined by the control signal.
 kernel53SADF :: Signal ((Int, Int, Int, Int, Int), (Int, Int, Int),
-             [a] -> [b] -> [c] -> [d] -> [e] -> [([f], [g], [h])])
+             [a] -> [b] -> [c] -> [d] -> [e] -> ([f], [g], [h]))
              -> Signal a -> Signal b -> Signal c -> Signal d -> Signal e
              -> (Signal f, Signal g, Signal h)
 kernel53SADF ct as bs cs ds es
-  = unzip3SADF (get_prodToken ct) $ zipWith5SADF (switch_prodToken ct) as bs cs ds es
+  = unzip3SADF (get_prodToken ct) $ zipWith5SADF (inpOut5n ct) as bs cs ds es
 
 
 -- > Kernals with four outputs
@@ -331,45 +331,45 @@ kernel53SADF ct as bs cs ds es
 -- | The process constructor 'kernel14SADF' constructs an SADF kernel with
 -- one data input and four data output signals. The scenario (token rates and
 -- function) is determined by the control signal.
-kernel14SADF :: Signal (Int, (Int, Int, Int, Int), [a] -> [([b], [c], [d], [e])])
+kernel14SADF :: Signal (Int, (Int, Int, Int, Int), [a] -> ([b], [c], [d], [e]))
              -> Signal a -> (Signal b, Signal c, Signal d, Signal e)
-kernel14SADF ct xs = unzip4SADF (get_prodToken ct) $ mapSADF (switch_prodToken ct) xs
+kernel14SADF ct xs = unzip4SADF (get_prodToken ct) $ mapSADF (inpOut1n ct) xs
 
 -- | The process constructor 'kernel24SADF' constructs an SADF kernel with
 -- two data input and four data output signals. The scenario (token rates and
 -- function) is determined by the control signal.
-kernel24SADF :: Signal ((Int, Int), (Int, Int, Int, Int), [a] -> [b] -> [([c], [d], [e], [f])])
+kernel24SADF :: Signal ((Int, Int), (Int, Int, Int, Int), [a] -> [b] -> ([c], [d], [e], [f]))
              -> Signal a -> Signal b -> (Signal c, Signal d, Signal e, Signal f)
-kernel24SADF ct xs ys = unzip4SADF (get_prodToken ct) $ zipWithSADF (switch_prodToken ct) xs ys
+kernel24SADF ct xs ys = unzip4SADF (get_prodToken ct) $ zipWithSADF (inpOut2n ct) xs ys
 
 -- | The process constructor 'kernel34SADF' constructs an SADF kernel with
 -- three data input and four data output signals. The scenario (token rates and
 -- function) is determined by the control signal.
 kernel34SADF :: Signal ((Int, Int, Int), (Int, Int, Int, Int),
-             [a] -> [b] -> [c] -> [([d], [e], [f], [g])])
+             [a] -> [b] -> [c] -> ([d], [e], [f], [g]))
              -> Signal a -> Signal b -> Signal c -> (Signal d, Signal e, Signal f, Signal g)
 kernel34SADF ct as bs cs
-  = unzip4SADF (get_prodToken ct) $ zipWith3SADF (switch_prodToken ct) as bs cs
+  = unzip4SADF (get_prodToken ct) $ zipWith3SADF (inpOut3n ct) as bs cs
 
 -- | The process constructor 'kernel44SADF' constructs an SADF kernel with
 -- four data input and four data output signals. The scenario (token rates and
 -- function) is determined by the control signal.
 kernel44SADF :: Signal ((Int, Int, Int, Int), (Int, Int, Int, Int),
-             [a] -> [b] -> [c] -> [d] -> [([e], [f], [g], [h])])
+             [a] -> [b] -> [c] -> [d] -> ([e], [f], [g], [h]))
              -> Signal a -> Signal b -> Signal c -> Signal d
              -> (Signal e, Signal f, Signal g, Signal h)
 kernel44SADF ct as bs cs ds
-  = unzip4SADF (get_prodToken ct) $ zipWith4SADF (switch_prodToken ct) as bs cs ds
+  = unzip4SADF (get_prodToken ct) $ zipWith4SADF (inpOut4n ct) as bs cs ds
 
 -- | The process constructor 'kernel54SADF' constructs an SADF kernel with
 -- five data input and four data output signals. The scenario (token rates and
 -- function) is determined by the control signal.
 kernel54SADF :: Signal ((Int, Int, Int, Int, Int), (Int, Int, Int, Int),
-             [a] -> [b] -> [c] -> [d] -> [e] -> [([f], [g], [h], [i])])
+             [a] -> [b] -> [c] -> [d] -> [e] -> ([f], [g], [h], [i]))
              -> Signal a -> Signal b -> Signal c -> Signal d -> Signal e
              -> (Signal f, Signal g, Signal h, Signal i)
 kernel54SADF ct as bs cs ds es
-  = unzip4SADF (get_prodToken ct) $ zipWith5SADF (switch_prodToken ct) as bs cs ds es
+  = unzip4SADF (get_prodToken ct) $ zipWith5SADF (inpOut5n ct) as bs cs ds es
 
 
 -- > Kernals with five outputs
@@ -377,46 +377,46 @@ kernel54SADF ct as bs cs ds es
 -- | The process constructor 'kernel15SADF' constructs an SADF kernel with
 -- one data input and five data output signals. The scenario (token rates and
 -- function) is determined by the control signal.
-kernel15SADF :: Signal (Int, (Int, Int, Int, Int, Int), [a] -> [([b], [c], [d], [e], [f])])
+kernel15SADF :: Signal (Int, (Int, Int, Int, Int, Int), [a] -> ([b], [c], [d], [e], [f]))
              -> Signal a -> (Signal b, Signal c, Signal d, Signal e, Signal f)
-kernel15SADF ct xs = unzip5SADF (get_prodToken ct) $ mapSADF (switch_prodToken ct) xs
+kernel15SADF ct xs = unzip5SADF (get_prodToken ct) $ mapSADF (inpOut1n ct) xs
 
 -- | The process constructor 'kernel25SADF' constructs an SADF kernel with
 -- two data input and five data output signals. The scenario (token rates and
 -- function) is determined by the control signal.
-kernel25SADF :: Signal ((Int, Int), (Int, Int, Int, Int, Int), [a] -> [b] -> [([c], [d], [e], [f], [g])])
+kernel25SADF :: Signal ((Int, Int), (Int, Int, Int, Int, Int), [a] -> [b] -> ([c], [d], [e], [f], [g]))
              -> Signal a -> Signal b -> (Signal c, Signal d, Signal e, Signal f, Signal g)
-kernel25SADF ct xs ys = unzip5SADF (get_prodToken ct) $ zipWithSADF (switch_prodToken ct) xs ys
+kernel25SADF ct xs ys = unzip5SADF (get_prodToken ct) $ zipWithSADF (inpOut2n ct) xs ys
 
 -- | The process constructor 'kernel35SADF' constructs an SADF kernel with
 -- three data input and five data output signals. The scenario (token rates and
 -- function) is determined by the control signal.
 kernel35SADF :: Signal ((Int, Int, Int), (Int, Int, Int, Int, Int),
-             [a] -> [b] -> [c] -> [([d], [e], [f], [g], [h])])
+             [a] -> [b] -> [c] -> ([d], [e], [f], [g], [h]))
              -> Signal a -> Signal b -> Signal c
              -> (Signal d, Signal e, Signal f, Signal g, Signal h)
 kernel35SADF ct as bs cs
-  = unzip5SADF (get_prodToken ct) $ zipWith3SADF (switch_prodToken ct) as bs cs
+  = unzip5SADF (get_prodToken ct) $ zipWith3SADF (inpOut3n ct) as bs cs
 
 -- | The process constructor 'kernel45SADF' constructs an SADF kernel with
 -- four data input and five data output signals. The scenario (token rates and
 -- function) is determined by the control signal.
 kernel45SADF :: Signal ((Int, Int, Int, Int), (Int, Int, Int, Int, Int),
-             [a] -> [b] -> [c] -> [d] -> [([e], [f], [g], [h], [i])])
+             [a] -> [b] -> [c] -> [d] -> ([e], [f], [g], [h], [i]))
              -> Signal a -> Signal b -> Signal c -> Signal d
              -> (Signal e, Signal f, Signal g, Signal h, Signal i)
 kernel45SADF ct as bs cs ds
-  = unzip5SADF (get_prodToken ct) $ zipWith4SADF (switch_prodToken ct) as bs cs ds
+  = unzip5SADF (get_prodToken ct) $ zipWith4SADF (inpOut4n ct) as bs cs ds
 
 -- | The process constructor 'kernel55SADF' constructs an SADF kernel with
 -- five data input and five data output signals. The scenario (token rates and
 -- function) is determined by the control signal.
 kernel55SADF :: Signal ((Int, Int, Int, Int, Int), (Int, Int, Int, Int, Int),
-             [a] -> [b] -> [c] -> [d] -> [e] -> [([f], [g], [h], [i], [j])])
+             [a] -> [b] -> [c] -> [d] -> [e] -> ([f], [g], [h], [i], [j]))
              -> Signal a -> Signal b -> Signal c -> Signal d -> Signal e
              -> (Signal f, Signal g, Signal h, Signal i, Signal j)
 kernel55SADF ct as bs cs ds es
-  = unzip5SADF (get_prodToken ct) $ zipWith5SADF (switch_prodToken ct) as bs cs ds es
+  = unzip5SADF (get_prodToken ct) $ zipWith5SADF (inpOut5n ct) as bs cs ds es
 
 
 ------------------------------------------------------------------------
@@ -884,10 +884,28 @@ get_prodToken NullS = []
 get_prodToken ((_, x, _):-xs) = x : get_prodToken xs
 
 
-switch_prodToken :: Signal (a,b,c) -> Signal (a,Int,c)
-switch_prodToken NullS = NullS
-switch_prodToken ((a, _, c):-xs) = signal [(a, 1, c)] +-+ switch_prodToken xs
+inpOut1n :: Signal (it, ot, [a] -> y) -> Signal (it, Int, [a] -> [y])
+inpOut1n NullS = NullS
+inpOut1n ((it, _, f):-xs) = (it, 1, \a -> [f a]) :- inpOut1n xs
 
+inpOut2n :: Signal (it, ot, [a] -> [b] -> y) -> Signal (it, Int, [a] -> [b] -> [y])
+inpOut2n NullS = NullS
+inpOut2n ((it, _, f):-xs) = (it, 1, \a b -> [f a b]) :- inpOut2n xs
+
+inpOut3n :: Signal (it, ot, [a] -> [b] -> [c] -> y)
+         -> Signal (it, Int, [a] -> [b] -> [c] -> [y])
+inpOut3n NullS = NullS
+inpOut3n ((it, _, f):-xs) = (it, 1, \a b c -> [f a b c]) :- inpOut3n xs
+
+inpOut4n :: Signal (it, ot, [a] -> [b] -> [c] -> [d] -> y)
+         -> Signal (it, Int, [a] -> [b] -> [c] -> [d] -> [y])
+inpOut4n NullS = NullS
+inpOut4n ((it, _, f):-xs) = (it, 1, \a b c d -> [f a b c d]) :- inpOut4n xs
+
+inpOut5n :: Signal (it, ot, [a] -> [b] -> [c] -> [d] -> [e] -> y)
+         -> Signal (it, Int, [a] -> [b] -> [c] -> [d] -> [e] -> [y])
+inpOut5n NullS = NullS
+inpOut5n ((it, _, f):-xs) = (it, 1, \a b c d e -> [f a b c d e]) :- inpOut5n xs
 
 ---------------------------------------------------------
 -- Helper functios to the detector's Moore FSM
@@ -1065,13 +1083,13 @@ outputFSM5 f s = (p, outs)
 -- test1: kernel22SADF test
 ---------------------------------------------------------
 
-test1 :: Signal ((Int, Int), (Int, Int), [a] -> [b] -> [([c], [d])])
+test1 :: Signal ((Int, Int), (Int, Int), [a] -> [b] -> ([c], [d]))
       -> Signal a -> Signal b -> (Signal c, Signal d)
 test1 = kernel22SADF
 
-ct = signal [((1,1), (1,1), \[a] [b] -> [([2*a], [2*b])]),
-             ((2,2), (1,1), \[a,b] [c,d] -> [([a+b], [c+d])]),
-             ((1,2), (2,1), \[a] [b,c] -> [([b,c], [a])])]
+ct = signal [((1,1), (1,1), \[a] [b] -> ([2*a], [2*b])),
+             ((2,2), (1,1), \[a,b] [c,d] -> ([a+b], [c+d])),
+             ((1,2), (2,1), \[a] [b,c] -> ([b,c], [a]))]
 
 x = signal [1..20]
 y = signal [21 .. 40]
@@ -1112,14 +1130,14 @@ syst input = output
 
 -- Scenarios list
 scenarios :: Int -> ((Int, Int, Int, Int), (Int, Int, Int, Int),
-             [a] -> [a] -> [a] -> [a] -> [([a], [a], [a], [a])])
-scenarios 0 = ((0,0,0,0), (0,0,0,0), \_ _ _ _ -> [([], [], [], [])])
-scenarios 1 = ((0,1,0,0), (1,1,0,0), \_ [r1] _ _ -> [([r1], [r1], [], [])])
-scenarios 2 = ((0,0,1,0), (1,0,1,0), \_ _ [r2] _ -> [([r2], [], [r2], [])])
-scenarios 3 = ((0,0,0,1), (1,0,0,1), \_ _ _ [r3] -> [([r3], [], [], [r3])])
-scenarios 4 = ((1,1,0,0), (0,1,0,0), \[r1] _ _ _ -> [([], [r1], [], [])])
-scenarios 5 = ((1,0,1,0), (0,0,1,0), \[r2] _ _ _ -> [([], [], [r2], [])])
-scenarios 6 = ((1,0,0,1), (0,0,0,1), \[r3] _ _ _ -> [([], [], [], [r3])])
+             [a] -> [a] -> [a] -> [a] -> ([a], [a], [a], [a]))
+scenarios 0 = ((0,0,0,0), (0,0,0,0), \_ _ _ _ -> ([], [], [], []))
+scenarios 1 = ((0,1,0,0), (1,1,0,0), \_ [r1] _ _ -> ([r1], [r1], [], []))
+scenarios 2 = ((0,0,1,0), (1,0,1,0), \_ _ [r2] _ -> ([r2], [], [r2], []))
+scenarios 3 = ((0,0,0,1), (1,0,0,1), \_ _ _ [r3] -> ([r3], [], [], [r3]))
+scenarios 4 = ((1,1,0,0), (0,1,0,0), \[r1] _ _ _ -> ([], [r1], [], []))
+scenarios 5 = ((1,0,1,0), (0,0,1,0), \[r2] _ _ _ -> ([], [], [r2], []))
+scenarios 6 = ((1,0,0,1), (0,0,0,1), \[r3] _ _ _ -> ([], [], [], [r3]))
 scenarios _ = error "scenarios: outside the state list"
 
 switchState :: Int -> [String] -> Int
@@ -1147,6 +1165,5 @@ dInput = signal [1..10]
 
 regOutput = registerBank cInput dInput
 -- Expected output {0,0,0,1,2,3,1,2,3}
-
 
 -}
