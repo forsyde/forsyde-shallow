@@ -427,297 +427,324 @@ kernel55SADF ct as bs cs ds es
 
 -- > Detectors with one output
 
--- | The process constructor 'detector11SADF' takes the number of consumed
--- (@c@) tokens, the state transition function (@f@), the output function (@g@)
--- and the initial state (@s0@), and constructs an SADF detector with a single
--- data input and a single control output signals.
-detector11SADF :: Int -> (s -> [a] -> s) -> (s -> [y]) -> s -> Signal a -> Signal y
-detector11SADF c f g s0 as = outputFSM g next_state
+-- | The process constructor 'detector11SADF' takes the consumption token rate
+-- (@c@), the production token rate (@p@) (function of the state), the state
+-- transition function (@f@), the output function (@g@) and the initial state
+-- (@s0@), and constructs an SADF detector with a single data input and a
+-- single control output signals.
+detector11SADF :: Int             -- ^ consumption rates (@c@)
+               -> (s -> Int)      -- ^ production rates (@p@)
+               -> (s -> [a] -> s) -- ^ next state function (@f@)
+               -> (s -> [y])      -- ^ output function (@g@)
+               -> s               -- ^ initial state (@s0@)
+               -> Signal a -> Signal y
+detector11SADF c p f g s0 as = outputFSM p g next_state
   where next_state = nextStateFSM c f current_state as
         current_state = delaySADF s0 next_state
 
--- | The process constructor 'detector21SADF' takes the number of consumed
--- (@c@) tokens, the state transition function (@f@), the output function (@g@)
--- and the initial state (@s0@), and constructs an SADF detector with two
--- data input and a single control output signals.
-detector21SADF :: (Int, Int) -> (s -> [a] -> [b] -> s) -> (s -> [y])
+-- | The process constructor 'detector21SADF' takes the consumption token rate
+-- (@c@), the production token rate (@p@) (function of the state), the state
+-- transition function (@f@), the output function (@g@) and the initial state
+-- (@s0@), and constructs an SADF detector with two data input and a
+-- single control output signals.
+detector21SADF :: (Int, Int) -> (s -> Int) -> (s -> [a] -> [b] -> s) -> (s -> [y])
                -> s -> Signal a -> Signal b -> Signal y
-detector21SADF c f g s0 as bs = outputFSM g next_state
+detector21SADF c p f g s0 as bs = outputFSM p g next_state
   where next_state = nextStateFSM2 c f current_state as bs
         current_state = delaySADF s0 next_state
 
--- | The process constructor 'detector31SADF' takes the number of consumed
--- (@c@) tokens, the state transition function (@f@), the output function (@g@)
--- and the initial state (@s0@), and constructs an SADF detector with three
--- data input and a single control output signals.
-detector31SADF :: (Int, Int, Int) -> (s -> [a] -> [b] -> [c] -> s) -> (s -> [y])
-               -> s -> Signal a -> Signal b -> Signal c -> Signal y
-detector31SADF c f g s0 as bs cs = outputFSM g next_state
+-- | The process constructor 'detector31SADF' takes the consumption token rate
+-- (@c@), the production token rate (@p@) (function of the state), the state
+-- transition function (@f@), the output function (@g@) and the initial state
+-- (@s0@), and constructs an SADF detector with three data input and a
+-- single control output signals.
+detector31SADF :: (Int, Int, Int) -> (s -> Int) -> (s -> [a] -> [b] -> [c] -> s)
+               -> (s -> [y]) -> s -> Signal a -> Signal b -> Signal c -> Signal y
+detector31SADF c p f g s0 as bs cs = outputFSM p g next_state
   where next_state = nextStateFSM3 c f current_state as bs cs
         current_state = delaySADF s0 next_state
 
--- | The process constructor 'detector41SADF' takes the number of consumed
--- (@c@) tokens, the state transition function (@f@), the output function (@g@)
--- and the initial state (@s0@), and constructs an SADF detector with four
--- data input and a single control output signals.
-detector41SADF :: (Int, Int, Int, Int) -> (s -> [a] -> [b] -> [c] -> [d] -> s) -> (s -> [y])
+-- | The process constructor 'detector41SADF' takes the consumption token rate
+-- (@c@), the production token rate (@p@) (function of the state), the state
+-- transition function (@f@), the output function (@g@) and the initial state
+-- (@s0@), and constructs an SADF detector with four data input and a
+-- single control output signals.
+detector41SADF :: (Int, Int, Int, Int) -> (s -> Int)
+               -> (s -> [a] -> [b] -> [c] -> [d] -> s) -> (s -> [y])
                -> s -> Signal a -> Signal b -> Signal c -> Signal d -> Signal y
-detector41SADF c f g s0 as bs cs ds = outputFSM g next_state
+detector41SADF c p f g s0 as bs cs ds = outputFSM p g next_state
   where next_state = nextStateFSM4 c f current_state as bs cs ds
         current_state = delaySADF s0 next_state
 
--- | The process constructor 'detector51SADF' takes the number of consumed
--- (@c@) tokens, the state transition function (@f@), the output function (@g@)
--- and the initial state (@s0@), and constructs an SADF detector with five
--- data input and a single control output signals.
-detector51SADF :: (Int, Int, Int, Int, Int) -> (s -> [a] -> [b] -> [c] -> [d] -> [e] -> s)
-               -> (s -> [y]) -> s -> Signal a -> Signal b -> Signal c -> Signal d
-               -> Signal e -> Signal y
-detector51SADF c f g s0 as bs cs ds es = outputFSM g next_state
+-- | The process constructor 'detector51SADF' takes the consumption token rate
+-- (@c@), the production token rate (@p@) (function of the state), the state
+-- transition function (@f@), the output function (@g@) and the initial state
+-- (@s0@), and constructs an SADF detector with five data input and a
+-- single control output signals.
+detector51SADF :: (Int, Int, Int, Int, Int) -> (s -> Int)
+               -> (s -> [a] -> [b] -> [c] -> [d] -> [e] -> s)
+               -> (s -> [y]) -> s -> Signal a -> Signal b -> Signal c
+               -> Signal d -> Signal e -> Signal y
+detector51SADF c p f g s0 as bs cs ds es = outputFSM p g next_state
   where next_state = nextStateFSM5 c f current_state as bs cs ds es
         current_state = delaySADF s0 next_state
 
 
 -- > Detectors with two output
 
--- | The process constructor 'detector12SADF' takes the number of consumed
--- (@c@) tokens, the state transition function (@f@), the output function (@g@)
--- and the initial state (@s0@), and constructs an SADF detector with a single
--- data input and two control output signals.
-detector12SADF :: Int -> (s -> [a] -> s) -> (s -> ([y1], [y2]))
+-- | The process constructor 'detector12SADF' takes the consumption token rate
+-- (@c@), the production token rate (@p@) (function of the state), the state
+-- transition function (@f@), the output function (@g@) and the initial state
+-- (@s0@), and constructs an SADF detector with a single data input and two
+-- control output signals.
+detector12SADF :: Int -> (s -> (Int, Int)) -> (s -> [a] -> s) -> (s -> ([y1], [y2]))
                -> s -> Signal a -> (Signal y1, Signal y2)
-detector12SADF c f g s0 as = unzipSADF p outs
-  where (p, outs) = outputFSM2 g next_state
-        next_state = nextStateFSM c f current_state as
+detector12SADF c p f g s0 as = outputFSM2 p g next_state
+  where next_state = nextStateFSM c f current_state as
         current_state = delaySADF s0 next_state
 
--- | The process constructor 'detector22SADF' takes the number of consumed
--- (@c@) tokens, the state transition function (@f@), the output function (@g@)
--- and the initial state (@s0@), and constructs an SADF detector with two
--- data input and two control output signals.
-detector22SADF :: (Int, Int) -> (s -> [a] -> [b] -> s) -> (s -> ([y1], [y2]))
-               -> s -> Signal a -> Signal b -> (Signal y1, Signal y2)
-detector22SADF c f g s0 as bs = unzipSADF p outs
-  where (p, outs) = outputFSM2 g next_state
-        next_state = nextStateFSM2 c f current_state as bs
+-- | The process constructor 'detector22SADF' takes the consumption token rate
+-- (@c@), the production token rate (@p@) (function of the state), the state
+-- transition function (@f@), the output function (@g@) and the initial state
+-- (@s0@), and constructs an SADF detector with two data input and two
+-- control output signals.
+detector22SADF :: (Int, Int) -> (s -> (Int, Int)) -> (s -> [a] -> [b] -> s)
+               -> (s -> ([y1], [y2])) -> s -> Signal a -> Signal b -> (Signal y1, Signal y2)
+detector22SADF c p f g s0 as bs = outputFSM2 p g next_state
+  where next_state = nextStateFSM2 c f current_state as bs
         current_state = delaySADF s0 next_state
 
--- | The process constructor 'detector32SADF' takes the number of consumed
--- (@c@) tokens, the state transition function (@f@), the output function (@g@)
--- and the initial state (@s0@), and constructs an SADF detector with three
--- data input and two control output signals.
-detector32SADF :: (Int, Int, Int) -> (s -> [a] -> [b] -> [c] -> s) -> (s -> ([y1], [y2]))
-               -> s -> Signal a -> Signal b -> Signal c -> (Signal y1, Signal y2)
-detector32SADF c f g s0 as bs cs = unzipSADF p outs
-  where (p, outs) = outputFSM2 g next_state
-        next_state = nextStateFSM3 c f current_state as bs cs
+-- | The process constructor 'detector32SADF' takes the consumption token rate
+-- (@c@), the production token rate (@p@) (function of the state), the state
+-- transition function (@f@), the output function (@g@) and the initial state
+-- (@s0@), and constructs an SADF detector with three data input and two
+-- control output signals.
+detector32SADF :: (Int, Int, Int) -> (s -> (Int, Int)) -> (s -> [a] -> [b] -> [c] -> s)
+               -> (s -> ([y1], [y2])) -> s -> Signal a -> Signal b -> Signal c
+               -> (Signal y1, Signal y2)
+detector32SADF c p f g s0 as bs cs = outputFSM2 p g next_state
+  where next_state = nextStateFSM3 c f current_state as bs cs
         current_state = delaySADF s0 next_state
 
--- | The process constructor 'detector42SADF' takes the number of consumed
--- (@c@) tokens, the state transition function (@f@), the output function (@g@)
--- and the initial state (@s0@), and constructs an SADF detector with four
--- data input and two control output signals.
-detector42SADF :: (Int, Int, Int, Int) -> (s -> [a] -> [b] -> [c] -> [d] -> s) -> (s -> ([y1], [y2]))
+-- | The process constructor 'detector42SADF' takes the consumption token rate
+-- (@c@), the production token rate (@p@) (function of the state), the state
+-- transition function (@f@), the output function (@g@) and the initial state
+-- (@s0@), and constructs an SADF detector with four data input and two
+-- control output signals.
+detector42SADF :: (Int, Int, Int, Int) -> (s -> (Int, Int))
+               -> (s -> [a] -> [b] -> [c] -> [d] -> s) -> (s -> ([y1], [y2]))
                -> s -> Signal a -> Signal b -> Signal c -> Signal d -> (Signal y1, Signal y2)
-detector42SADF c f g s0 as bs cs ds = unzipSADF p outs
-  where (p, outs) = outputFSM2 g next_state
-        next_state = nextStateFSM4 c f current_state as bs cs ds
+detector42SADF c p f g s0 as bs cs ds = outputFSM2 p g next_state
+  where next_state = nextStateFSM4 c f current_state as bs cs ds
         current_state = delaySADF s0 next_state
 
--- | The process constructor 'detector52SADF' takes the number of consumed
--- (@c@) tokens, the state transition function (@f@), the output function (@g@)
--- and the initial state (@s0@), and constructs an SADF detector with five
--- data input and two control output signals.
-detector52SADF :: (Int, Int, Int, Int, Int) -> (s -> [a] -> [b] -> [c] -> [d] -> [e] -> s)
+-- | The process constructor 'detector52SADF' takes the consumption token rate
+-- (@c@), the production token rate (@p@) (function of the state), the state
+-- transition function (@f@), the output function (@g@) and the initial state
+-- (@s0@), and constructs an SADF detector with five data input and two
+-- control output signals.
+detector52SADF :: (Int, Int, Int, Int, Int) -> (s -> (Int, Int))
+               -> (s -> [a] -> [b] -> [c] -> [d] -> [e] -> s)
                -> (s -> ([y1], [y2])) -> s -> Signal a -> Signal b -> Signal c
                -> Signal d -> Signal e -> (Signal y1, Signal y2)
-detector52SADF c f g s0 as bs cs ds es = unzipSADF p outs
-  where (p, outs) = outputFSM2 g next_state
-        next_state = nextStateFSM5 c f current_state as bs cs ds es
+detector52SADF c p f g s0 as bs cs ds es = outputFSM2 p g next_state
+  where next_state = nextStateFSM5 c f current_state as bs cs ds es
         current_state = delaySADF s0 next_state
 
 
 -- > Detectors with three output
 
--- | The process constructor 'detector13SADF' takes the number of consumed
--- (@c@) tokens, the state transition function (@f@), the output function (@g@)
--- and the initial state (@s0@), and constructs an SADF detector with a single
--- data input and three control output signals.
-detector13SADF :: Int -> (s -> [a] -> s) -> (s -> ([y1], [y2], [y3]))
+-- | The process constructor 'detector13SADF' takes the consumption token rate
+-- (@c@), the production token rate (@p@) (function of the state), the state
+-- transition function (@f@), the output function (@g@) and the initial state
+-- (@s0@), and constructs an SADF detector with a single data input and three
+-- control output signals.
+detector13SADF :: Int -> (s -> (Int, Int, Int)) -> (s -> [a] -> s) -> (s -> ([y1], [y2], [y3]))
                -> s -> Signal a -> (Signal y1, Signal y2, Signal y3)
-detector13SADF c f g s0 as = unzip3SADF p outs
-  where (p, outs) = outputFSM3 g next_state
-        next_state = nextStateFSM c f current_state as
+detector13SADF c p f g s0 as = outputFSM3 p g next_state
+  where next_state = nextStateFSM c f current_state as
         current_state = delaySADF s0 next_state
 
--- | The process constructor 'detector23SADF' takes the number of consumed
--- (@c@) tokens, the state transition function (@f@), the output function (@g@)
--- and the initial state (@s0@), and constructs an SADF detector with two
--- data input and three control output signals.
-detector23SADF :: (Int, Int) -> (s -> [a] -> [b] -> s) -> (s -> ([y1], [y2], [y3]))
-               -> s -> Signal a -> Signal b -> (Signal y1, Signal y2, Signal y3)
-detector23SADF c f g s0 as bs = unzip3SADF p outs
-  where (p, outs) = outputFSM3 g next_state
-        next_state = nextStateFSM2 c f current_state as bs
+-- | The process constructor 'detector23SADF' takes the consumption token rate
+-- (@c@), the production token rate (@p@) (function of the state), the state
+-- transition function (@f@), the output function (@g@) and the initial state
+-- (@s0@), and constructs an SADF detector with two data input and three
+-- control output signals.
+detector23SADF :: (Int, Int) -> (s -> (Int, Int, Int)) -> (s -> [a] -> [b] -> s)
+               -> (s -> ([y1], [y2], [y3])) -> s -> Signal a -> Signal b
+               -> (Signal y1, Signal y2, Signal y3)
+detector23SADF c p f g s0 as bs = outputFSM3 p g next_state
+  where next_state = nextStateFSM2 c f current_state as bs
         current_state = delaySADF s0 next_state
 
--- | The process constructor 'detector33SADF' takes the number of consumed
--- (@c@) tokens, the state transition function (@f@), the output function (@g@)
--- and the initial state (@s0@), and constructs an SADF detector with three
--- data input and three control output signals.
-detector33SADF :: (Int, Int, Int) -> (s -> [a] -> [b] -> [c] -> s) -> (s -> ([y1], [y2], [y3]))
+-- | The process constructor 'detector33SADF' takes the consumption token rate
+-- (@c@), the production token rate (@p@) (function of the state), the state
+-- transition function (@f@), the output function (@g@) and the initial state
+-- (@s0@), and constructs an SADF detector with three data input and three
+-- control output signals.
+detector33SADF :: (Int, Int, Int) -> (s -> (Int, Int, Int))
+               -> (s -> [a] -> [b] -> [c] -> s) -> (s -> ([y1], [y2], [y3]))
                -> s -> Signal a -> Signal b -> Signal c -> (Signal y1, Signal y2, Signal y3)
-detector33SADF c f g s0 as bs cs = unzip3SADF p outs
-  where (p, outs) = outputFSM3 g next_state
-        next_state = nextStateFSM3 c f current_state as bs cs
+detector33SADF c p f g s0 as bs cs = outputFSM3 p g next_state
+  where next_state = nextStateFSM3 c f current_state as bs cs
         current_state = delaySADF s0 next_state
 
--- | The process constructor 'detector43SADF' takes the number of consumed
--- (@c@) tokens, the state transition function (@f@), the output function (@g@)
--- and the initial state (@s0@), and constructs an SADF detector with four
--- data input and three control output signals.
-detector43SADF :: (Int, Int, Int, Int) -> (s -> [a] -> [b] -> [c] -> [d] -> s)
+-- | The process constructor 'detector43SADF' takes the consumption token rate
+-- (@c@), the production token rate (@p@) (function of the state), the state
+-- transition function (@f@), the output function (@g@) and the initial state
+-- (@s0@), and constructs an SADF detector with four data input and three
+-- control output signals.
+detector43SADF :: (Int, Int, Int, Int) -> (s -> (Int, Int, Int))
+               -> (s -> [a] -> [b] -> [c] -> [d] -> s)
                -> (s -> ([y1], [y2], [y3])) -> s -> Signal a -> Signal b -> Signal c
                -> Signal d -> (Signal y1, Signal y2, Signal y3)
-detector43SADF c f g s0 as bs cs ds = unzip3SADF p outs
-  where (p, outs) = outputFSM3 g next_state
-        next_state = nextStateFSM4 c f current_state as bs cs ds
+detector43SADF c p f g s0 as bs cs ds = outputFSM3 p g next_state
+  where next_state = nextStateFSM4 c f current_state as bs cs ds
         current_state = delaySADF s0 next_state
 
--- | The process constructor 'detector53SADF' takes the number of consumed
--- (@c@) tokens, the state transition function (@f@), the output function (@g@)
--- and the initial state (@s0@), and constructs an SADF detector with five
--- data input and three control output signals.
-detector53SADF :: (Int, Int, Int, Int, Int) -> (s -> [a] -> [b] -> [c] -> [d] -> [e] -> s)
+-- | The process constructor 'detector53SADF' takes the consumption token rate
+-- (@c@), the production token rate (@p@) (function of the state), the state
+-- transition function (@f@), the output function (@g@) and the initial state
+-- (@s0@), and constructs an SADF detector with five data input and three
+-- control output signals.
+detector53SADF :: (Int, Int, Int, Int, Int) -> (s -> (Int, Int, Int))
+               -> (s -> [a] -> [b] -> [c] -> [d] -> [e] -> s)
                -> (s -> ([y1], [y2], [y3])) -> s -> Signal a -> Signal b -> Signal c
                -> Signal d -> Signal e -> (Signal y1, Signal y2, Signal y3)
-detector53SADF c f g s0 as bs cs ds es = unzip3SADF p outs
-  where (p, outs) = outputFSM3 g next_state
-        next_state = nextStateFSM5 c f current_state as bs cs ds es
+detector53SADF c p f g s0 as bs cs ds es = outputFSM3 p g next_state
+  where next_state = nextStateFSM5 c f current_state as bs cs ds es
         current_state = delaySADF s0 next_state
 
 
 -- > Detectors with four output
 
--- | The process constructor 'detector14SADF' takes the number of consumed
--- (@c@) tokens, the state transition function (@f@), the output function (@g@)
--- and the initial state (@s0@), and constructs an SADF detector with a single
--- data input and four control output signals.
-detector14SADF :: Int -> (s -> [a] -> s) -> (s -> ([y1], [y2], [y3], [y4]))
-               -> s -> Signal a -> (Signal y1, Signal y2, Signal y3, Signal y4)
-detector14SADF c f g s0 as = unzip4SADF p outs
-  where (p, outs) = outputFSM4 g next_state
-        next_state = nextStateFSM c f current_state as
+-- | The process constructor 'detector14SADF' takes the consumption token rate
+-- (@c@), the production token rate (@p@) (function of the state), the state
+-- transition function (@f@), the output function (@g@) and the initial state
+-- (@s0@), and constructs an SADF detector with a single data input and four
+-- control output signals.
+detector14SADF :: Int -> (s -> (Int, Int, Int, Int)) -> (s -> [a] -> s)
+               -> (s -> ([y1], [y2], [y3], [y4])) -> s -> Signal a
+               -> (Signal y1, Signal y2, Signal y3, Signal y4)
+detector14SADF c p f g s0 as = outputFSM4 p g next_state
+  where next_state = nextStateFSM c f current_state as
         current_state = delaySADF s0 next_state
 
--- | The process constructor 'detector24SADF' takes the number of consumed
--- (@c@) tokens, the state transition function (@f@), the output function (@g@)
--- and the initial state (@s0@), and constructs an SADF detector with two
--- data input and four control output signals.
-detector24SADF :: (Int, Int) -> (s -> [a] -> [b] -> s) -> (s -> ([y1], [y2], [y3], [y4]))
+-- | The process constructor 'detector24SADF' takes the consumption token rate
+-- (@c@), the production token rate (@p@) (function of the state), the state
+-- transition function (@f@), the output function (@g@) and the initial state
+-- (@s0@), and constructs an SADF detector with two data input and four
+-- control output signals.
+detector24SADF :: (Int, Int)-> (s -> (Int, Int, Int, Int))
+               -> (s -> [a] -> [b] -> s) -> (s -> ([y1], [y2], [y3], [y4]))
                -> s -> Signal a -> Signal b -> (Signal y1, Signal y2, Signal y3, Signal y4)
-detector24SADF c f g s0 as bs = unzip4SADF p outs
-  where (p, outs) = outputFSM4 g next_state
-        next_state = nextStateFSM2 c f current_state as bs
+detector24SADF c p f g s0 as bs = outputFSM4 p g next_state
+  where next_state = nextStateFSM2 c f current_state as bs
         current_state = delaySADF s0 next_state
 
--- | The process constructor 'detector34SADF' takes the number of consumed
--- (@c@) tokens, the state transition function (@f@), the output function (@g@)
--- and the initial state (@s0@), and constructs an SADF detector with three
--- data input and four control output signals.
-detector34SADF :: (Int, Int, Int) -> (s -> [a] -> [b] -> [c] -> s)
+-- | The process constructor 'detector34SADF' takes the consumption token rate
+-- (@c@), the production token rate (@p@) (function of the state), the state
+-- transition function (@f@), the output function (@g@) and the initial state
+-- (@s0@), and constructs an SADF detector with three data input and four
+-- control output signals.
+detector34SADF :: (Int, Int, Int) -> (s -> (Int, Int, Int, Int)) -> (s -> [a] -> [b] -> [c] -> s)
                -> (s -> ([y1], [y2], [y3], [y4])) -> s -> Signal a -> Signal b
                -> Signal c -> (Signal y1, Signal y2, Signal y3, Signal y4)
-detector34SADF c f g s0 as bs cs = unzip4SADF p outs
-  where (p, outs) = outputFSM4 g next_state
-        next_state = nextStateFSM3 c f current_state as bs cs
+detector34SADF c p f g s0 as bs cs = outputFSM4 p g next_state
+  where next_state = nextStateFSM3 c f current_state as bs cs
         current_state = delaySADF s0 next_state
 
--- | The process constructor 'detector44SADF' takes the number of consumed
--- (@c@) tokens, the state transition function (@f@), the output function (@g@)
--- and the initial state (@s0@), and constructs an SADF detector with four
--- data input and four control output signals.
-detector44SADF :: (Int, Int, Int, Int) -> (s -> [a] -> [b] -> [c] -> [d] -> s)
+-- | The process constructor 'detector44SADF' takes the consumption token rate
+-- (@c@), the production token rate (@p@) (function of the state), the state
+-- transition function (@f@), the output function (@g@) and the initial state
+-- (@s0@), and constructs an SADF detector with four data input and four
+-- control output signals.
+detector44SADF :: (Int, Int, Int, Int) -> (s -> (Int, Int, Int, Int))
+               -> (s -> [a] -> [b] -> [c] -> [d] -> s)
                -> (s -> ([y1], [y2], [y3], [y4])) -> s -> Signal a -> Signal b -> Signal c
                -> Signal d -> (Signal y1, Signal y2, Signal y3, Signal y4)
-detector44SADF c f g s0 as bs cs ds = unzip4SADF p outs
-  where (p, outs) = outputFSM4 g next_state
-        next_state = nextStateFSM4 c f current_state as bs cs ds
+detector44SADF c p f g s0 as bs cs ds = outputFSM4 p g next_state
+  where next_state = nextStateFSM4 c f current_state as bs cs ds
         current_state = delaySADF s0 next_state
 
--- | The process constructor 'detector54SADF' takes the number of consumed
--- (@c@) tokens, the state transition function (@f@), the output function (@g@)
--- and the initial state (@s0@), and constructs an SADF detector with five
--- data input and four control output signals.
-detector54SADF :: (Int, Int, Int, Int, Int) -> (s -> [a] -> [b] -> [c] -> [d] -> [e] -> s)
+-- | The process constructor 'detector54SADF' takes the consumption token rate
+-- (@c@), the production token rate (@p@) (function of the state), the state
+-- transition function (@f@), the output function (@g@) and the initial state
+-- (@s0@), and constructs an SADF detector with five data input and four
+-- control output signals.
+detector54SADF :: (Int, Int, Int, Int, Int) -> (s -> (Int, Int, Int, Int))
+               -> (s -> [a] -> [b] -> [c] -> [d] -> [e] -> s)
                -> (s -> ([y1], [y2], [y3], [y4])) -> s -> Signal a -> Signal b -> Signal c
                -> Signal d -> Signal e -> (Signal y1, Signal y2, Signal y3, Signal y4)
-detector54SADF c f g s0 as bs cs ds es = unzip4SADF p outs
-  where (p, outs) = outputFSM4 g next_state
-        next_state = nextStateFSM5 c f current_state as bs cs ds es
+detector54SADF c p f g s0 as bs cs ds es = outputFSM4 p g next_state
+  where next_state = nextStateFSM5 c f current_state as bs cs ds es
         current_state = delaySADF s0 next_state
 
 
 -- > Detectors with five output
 
--- | The process constructor 'detector15SADF' takes the number of consumed
--- (@c@) tokens, the state transition function (@f@), the output function (@g@)
--- and the initial state (@s0@), and constructs an SADF detector with a single
--- data input and five control output signals.
-detector15SADF :: Int -> (s -> [a] -> s) -> (s -> ([y1], [y2], [y3], [y4], [y5]))
-               -> s -> Signal a -> (Signal y1, Signal y2, Signal y3, Signal y4, Signal y5)
-detector15SADF c f g s0 as = unzip5SADF p outs
-  where (p, outs) = outputFSM5 g next_state
-        next_state = nextStateFSM c f current_state as
+-- | The process constructor 'detector15SADF' takes the consumption token rate
+-- (@c@), the production token rate (@p@) (function of the state), the state
+-- transition function (@f@), the output function (@g@) and the initial state
+-- (@s0@), and constructs an SADF detector with a single data input and five
+-- control output signals.
+detector15SADF :: Int -> (s -> (Int, Int, Int, Int, Int)) -> (s -> [a] -> s)
+               -> (s -> ([y1], [y2], [y3], [y4], [y5])) -> s -> Signal a
+               -> (Signal y1, Signal y2, Signal y3, Signal y4, Signal y5)
+detector15SADF c p f g s0 as = outputFSM5 p g next_state
+  where next_state = nextStateFSM c f current_state as
         current_state = delaySADF s0 next_state
 
--- | The process constructor 'detector25SADF' takes the number of consumed
--- (@c@) tokens, the state transition function (@f@), the output function (@g@)
--- and the initial state (@s0@), and constructs an SADF detector with two
--- data input and five control output signals.
-detector25SADF :: (Int, Int) -> (s -> [a] -> [b] -> s)
-               -> (s -> ([y1], [y2], [y3], [y4], [y5]))
+-- | The process constructor 'detector25SADF' takes the consumption token rate
+-- (@c@), the production token rate (@p@) (function of the state), the state
+-- transition function (@f@), the output function (@g@) and the initial state
+-- (@s0@), and constructs an SADF detector with two data input and five
+-- control output signals.
+detector25SADF :: (Int, Int) -> (s -> (Int, Int, Int, Int, Int))
+               -> (s -> [a] -> [b] -> s) -> (s -> ([y1], [y2], [y3], [y4], [y5]))
                -> s -> Signal a -> Signal b
                -> (Signal y1, Signal y2, Signal y3, Signal y4, Signal y5)
-detector25SADF c f g s0 as bs = unzip5SADF p outs
-  where (p, outs) = outputFSM5 g next_state
-        next_state = nextStateFSM2 c f current_state as bs
+detector25SADF c p f g s0 as bs = outputFSM5 p g next_state
+  where next_state = nextStateFSM2 c f current_state as bs
         current_state = delaySADF s0 next_state
 
--- | The process constructor 'detector35SADF' takes the number of consumed
--- (@c@) tokens, the state transition function (@f@), the output function (@g@)
--- and the initial state (@s0@), and constructs an SADF detector with three
--- data input and five control output signals.
-detector35SADF :: (Int, Int, Int) -> (s -> [a] -> [b] -> [c] -> s)
+-- | The process constructor 'detector35SADF' takes the consumption token rate
+-- (@c@), the production token rate (@p@) (function of the state), the state
+-- transition function (@f@), the output function (@g@) and the initial state
+-- (@s0@), and constructs an SADF detector with three data input and five
+-- control output signals.
+detector35SADF :: (Int, Int, Int) -> (s -> (Int, Int, Int, Int, Int))
+               -> (s -> [a] -> [b] -> [c] -> s)
                -> (s -> ([y1], [y2], [y3], [y4], [y5])) -> s -> Signal a -> Signal b
                -> Signal c -> (Signal y1, Signal y2, Signal y3, Signal y4, Signal y5)
-detector35SADF c f g s0 as bs cs = unzip5SADF p outs
-  where (p, outs) = outputFSM5 g next_state
-        next_state = nextStateFSM3 c f current_state as bs cs
+detector35SADF c p f g s0 as bs cs = outputFSM5 p g next_state
+  where next_state = nextStateFSM3 c f current_state as bs cs
         current_state = delaySADF s0 next_state
 
--- | The process constructor 'detector45SADF' takes the number of consumed
--- (@c@) tokens, the state transition function (@f@), the output function (@g@)
--- and the initial state (@s0@), and constructs an SADF detector with four
--- data input and five control output signals.
-detector45SADF :: (Int, Int, Int, Int) -> (s -> [a] -> [b] -> [c] -> [d] -> s)
+-- | The process constructor 'detector45SADF' takes the consumption token rate
+-- (@c@), the production token rate (@p@) (function of the state), the state
+-- transition function (@f@), the output function (@g@) and the initial state
+-- (@s0@), and constructs an SADF detector with four data input and five
+-- control output signals.
+detector45SADF :: (Int, Int, Int, Int) -> (s -> (Int, Int, Int, Int, Int))
+               -> (s -> [a] -> [b] -> [c] -> [d] -> s)
                -> (s -> ([y1], [y2], [y3], [y4], [y5])) -> s -> Signal a -> Signal b -> Signal c
                -> Signal d -> (Signal y1, Signal y2, Signal y3, Signal y4, Signal y5)
-detector45SADF c f g s0 as bs cs ds = unzip5SADF p outs
-  where (p, outs) = outputFSM5 g next_state
-        next_state = nextStateFSM4 c f current_state as bs cs ds
+detector45SADF c p f g s0 as bs cs ds = outputFSM5 p g next_state
+  where next_state = nextStateFSM4 c f current_state as bs cs ds
         current_state = delaySADF s0 next_state
 
--- | The process constructor 'detector55SADF' takes the number of consumed
--- (@c@) tokens, the state transition function (@f@), the output function (@g@)
--- and the initial state (@s0@), and constructs an SADF detector with five
--- data input and five control output signals.
-detector55SADF :: (Int, Int, Int, Int, Int) -> (s -> [a] -> [b] -> [c] -> [d] -> [e] -> s)
+-- | The process constructor 'detector55SADF' takes the consumption token rate
+-- (@c@), the production token rate (@p@) (function of the state), the state
+-- transition function (@f@), the output function (@g@) and the initial state
+-- (@s0@), and constructs an SADF detector with five data input and five
+-- control output signals.
+detector55SADF :: (Int, Int, Int, Int, Int) -> (s -> (Int, Int, Int, Int, Int))
+               -> (s -> [a] -> [b] -> [c] -> [d] -> [e] -> s)
                -> (s -> ([y1], [y2], [y3], [y4], [y5])) -> s -> Signal a -> Signal b -> Signal c
                -> Signal d -> Signal e -> (Signal y1, Signal y2, Signal y3, Signal y4, Signal y5)
-detector55SADF c f g s0 as bs cs ds es = unzip5SADF p outs
-  where (p, outs) = outputFSM5 g next_state
-        next_state = nextStateFSM5 c f current_state as bs cs ds es
+detector55SADF c p f g s0 as bs cs ds es = outputFSM5 p g next_state
+  where next_state = nextStateFSM5 c f current_state as bs cs ds es
         current_state = delaySADF s0 next_state
 
 
@@ -1017,59 +1044,77 @@ nextStateFSM5 (c1, c2, c3, c4, c5) f ss as bs cs ds es
                        consumed_tokens_ds consumed_tokens_es
 
 
-outputFSM :: (s -> [a]) -> Signal s -> Signal a
-outputFSM _ NullS = NullS
-outputFSM f (s:-es) = signal (f s) +-+ outputFSM f es
+outputFSM :: (s -> Int) -> (s -> [a]) -> Signal s -> Signal a
+outputFSM _ _ NullS = NullS
+outputFSM p g (s:-ss)
+  | length y1 /= p s = error "outputFSM: Incorrect number of produced tokens."
+  | otherwise = signal y1 +-+ outputFSM p g ss
+  where y1 = g s
 
 
-outputFSM2 :: (s -> ([a], [b])) -> Signal s -> ([(Int, Int)] , Signal ([a], [b]))
-outputFSM2 _ NullS = ([], NullS)
-outputFSM2 f s = (p, outs)
-  where outs = f1 s
-        p = f2 s
-        f1 NullS = NullS
-        f1 (x:-xs) = signal [f x] +-+ f1 xs
-        f2 NullS = []
-        f2 (x:-xs) = (length as, length bs) : f2 xs
-          where (as, bs) = f x
+outputFSM2 :: (s -> (Int, Int)) -> (s -> ([a], [b])) -> Signal s -> (Signal a, Signal b)
+outputFSM2 _ _ NullS = (NullS, NullS)
+outputFSM2 p g (s:-ss)
+  | length y1 /= p1 || length y2 /= p2 = error "outputFSM2: Incorrect number of produced tokens."
+  | otherwise = sigAppend2 (signal y1, signal y2) (outputFSM2 p g ss)
+    where (y1, y2) = g s
+          (p1, p2) = p s
+
+sigAppend2 :: (Signal a, Signal b) -> (Signal a, Signal b) -> (Signal a, Signal b)
+sigAppend2 (a1, b1) (a2, b2) = (a1 +-+ a2, b1 +-+ b2)
 
 
-outputFSM3 :: (s -> ([a], [b], [c])) -> Signal s -> ([(Int, Int, Int)] , Signal ([a], [b], [c]))
-outputFSM3 _ NullS = ([], NullS)
-outputFSM3 f s = (p, outs)
-  where outs = f1 s
-        p = f2 s
-        f1 NullS = NullS
-        f1 (x:-xs) = signal [f x] +-+ f1 xs
-        f2 NullS = []
-        f2 (x:-xs) = (length as, length bs, length cs) : f2 xs
-          where (as, bs, cs) = f x
+outputFSM3 :: (s -> (Int, Int, Int)) -> (s -> ([a], [b], [c]))
+           -> Signal s -> (Signal a, Signal b, Signal c)
+outputFSM3 _ _ NullS = (NullS, NullS, NullS)
+outputFSM3 p g (s:-ss)
+  | length y1 /= p1
+    || length y2 /= p2
+    || length y3 /= p3 = error "outputFSM3: Incorrect number of produced tokens."
+  | otherwise = sigAppend3 (signal y1, signal y2, signal y3) (outputFSM3 p g ss)
+    where (y1, y2, y3) = g s
+          (p1, p2, p3) = p s
+
+sigAppend3 :: (Signal a, Signal b, Signal c) -> (Signal a, Signal b, Signal c)
+           -> (Signal a, Signal b, Signal c)
+sigAppend3 (a1, b1, c1) (a2, b2, c2) = (a1 +-+ a2, b1 +-+ b2, c1 +-+ c2)
 
 
-outputFSM4 :: (s -> ([a], [b], [c], [d])) -> Signal s
-           -> ([(Int, Int, Int, Int)] , Signal ([a], [b], [c], [d]))
-outputFSM4 _ NullS = ([], NullS)
-outputFSM4 f s = (p, outs)
-  where outs = f1 s
-        p = f2 s
-        f1 NullS = NullS
-        f1 (x:-xs) = signal [f x] +-+ f1 xs
-        f2 NullS = []
-        f2 (x:-xs) = (length as, length bs, length cs, length ds) : f2 xs
-          where (as, bs, cs, ds) = f x
+outputFSM4 :: (s -> (Int, Int, Int, Int)) -> (s -> ([a], [b], [c], [d]))
+           -> Signal s -> (Signal a, Signal b, Signal c, Signal d)
+outputFSM4 _ _ NullS = (NullS, NullS, NullS, NullS)
+outputFSM4 p g (s:-ss)
+  | length y1 /= p1
+    || length y2 /= p2
+    || length y3 /= p3
+    || length y4 /= p4 = error "outputFSM4: Incorrect number of produced tokens."
+  | otherwise = sigAppend4 (signal y1, signal y2, signal y3, signal y4) (outputFSM4 p g ss)
+    where (y1, y2, y3, y4) = g s
+          (p1, p2, p3, p4) = p s
+
+sigAppend4 :: (Signal a, Signal b, Signal c, Signal d)
+           -> (Signal a, Signal b, Signal c, Signal d)
+           -> (Signal a, Signal b, Signal c, Signal d)
+sigAppend4 (a1, b1, c1, d1) (a2, b2, c2, d2) = (a1 +-+ a2, b1 +-+ b2, c1 +-+ c2, d1 +-+ d2)
 
 
-outputFSM5 :: (s -> ([a], [b], [c], [d], [e])) -> Signal s
-           -> ([(Int, Int, Int, Int, Int)] , Signal ([a], [b], [c], [d], [e]))
-outputFSM5 _ NullS = ([], NullS)
-outputFSM5 f s = (p, outs)
-  where outs = f1 s
-        p = f2 s
-        f1 NullS = NullS
-        f1 (x:-xs) = signal [f x] +-+ f1 xs
-        f2 NullS = []
-        f2 (x:-xs) = (length as, length bs, length cs, length ds, length es) : f2 xs
-          where (as, bs, cs, ds, es) = f x
+outputFSM5 :: (s -> (Int, Int, Int, Int, Int)) -> (s -> ([a], [b], [c], [d], [e]))
+           -> Signal s -> (Signal a, Signal b, Signal c, Signal d, Signal e)
+outputFSM5 _ _ NullS = (NullS, NullS, NullS, NullS, NullS)
+outputFSM5 p g (s:-ss)
+  | length y1 /= p1
+    || length y2 /= p2 || length y3 /= p3
+    || length y4 /= p4 || length y3 /= p5 = error "outputFSM5: Incorrect number of produced tokens."
+  | otherwise = sigAppend5 (signal y1, signal y2, signal y3, signal y4, signal y5) (outputFSM5 p g ss)
+    where (y1, y2, y3, y4, y5) = g s
+          (p1, p2, p3, p4, p5) = p s
+
+sigAppend5 :: (Signal a, Signal b, Signal c, Signal d, Signal e)
+           -> (Signal a, Signal b, Signal c, Signal d, Signal e)
+           -> (Signal a, Signal b, Signal c, Signal d, Signal e)
+sigAppend5 (a1, b1, c1, d1, e1) (a2, b2, c2, d2, e2)
+          = (a1 +-+ a2, b1 +-+ b2, c1 +-+ c2, d1 +-+ d2, e1 +-+ e2)
+
 
 ------------------------------------------------------------------------
 --
@@ -1110,10 +1155,14 @@ g :: Num a => Int -> ([((Int, Int), Int, [a] -> [a] -> [a])], [(Int, Int, [a] ->
 g 1 = ([((1,1), 1, \[a] [b] -> [a+b])], [(1, 1, \[a] -> [a])])
 g 2 = ([((0,1), 1, \_ [b] -> [b])], [(1, 0, \[a] -> [])])
 
+p :: Int -> (Int, Int)
+p 1 = (1,1)
+p 2 = (1,1)
+
 -- Detector
 detector :: (Num a, Ord a) => Signal a -> Signal a
          -> (Signal ((Int, Int), Int, [a] -> [a] -> [a]), Signal (Int, Int, [a] -> [a]))
-detector = detector22SADF (1,1) f g 1
+detector = detector22SADF (1,1) p f g 1
 
 syst :: (Num a, Ord a) => Signal a -> Signal a
 syst input = output
@@ -1150,7 +1199,10 @@ switchState _ ["sr2"] = 5     -- Store r2
 switchState _ ["sr3"] = 6     -- Store r3
 switchState _ _ = error "switchState: Input not recognized"
 
-regDetector = detector11SADF 1 switchState (\e -> [scenarios e]) 0
+tokenProd :: Int -> Int
+tokenProd _ = 1
+
+regDetector = detector11SADF 1 tokenProd switchState (\e -> [scenarios e]) 0
 regKernel = kernel44SADF
 
 registerBank inputControl inputData = output
