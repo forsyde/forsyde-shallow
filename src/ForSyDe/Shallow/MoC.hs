@@ -6,10 +6,10 @@
 --
 -- Maintainer  :  forsyde-dev@ict.kth.se
 -- Stability   :  experimental
--- Portability :  portable 
--- 
+-- Portability :  portable
+--
 -- The corrent module is a container including all MoC libraries and
--- their domain interfaces. 
+-- their domain interfaces.
 ----------------------------------------------------------------------
 
 module ForSyDe.Shallow.MoC (
@@ -24,7 +24,7 @@ module ForSyDe.Shallow.MoC (
 
   -- | The library for the Synchronous Dataflow MoC
   module ForSyDe.Shallow.MoC.SDF,
-  
+
   -- | The library for the continuous time MoC
   module ForSyDe.Shallow.MoC.CT,
 
@@ -32,7 +32,13 @@ module ForSyDe.Shallow.MoC (
   module ForSyDe.Shallow.MoC.DomainInterface,
 
   -- | The library for the MoC interfaces
-  module ForSyDe.Shallow.MoC.MoCInterface
+  module ForSyDe.Shallow.MoC.MoCInterface,
+
+  -- | The library for the Cyclo-Static Dataflow MoC
+  module ForSyDe.Shallow.MoC.CSDF,
+
+  -- | The library for the Scenario Aware Dataflow MoC
+  module ForSyDe.Shallow.MoC.SADF
   ) where
 
 import ForSyDe.Shallow.MoC.Dataflow
@@ -42,3 +48,5 @@ import ForSyDe.Shallow.MoC.MoCInterface
 import ForSyDe.Shallow.MoC.SDF
 import ForSyDe.Shallow.MoC.Synchronous
 import ForSyDe.Shallow.MoC.Untimed
+import ForSyDe.Shallow.MoC.CSDF
+import ForSyDe.Shallow.MoC.SADF
