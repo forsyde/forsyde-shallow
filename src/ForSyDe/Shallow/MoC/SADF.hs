@@ -43,7 +43,6 @@ module ForSyDe.Shallow.MoC.SADF (
   ) where
 
 import ForSyDe.Shallow.Core
-import Data.List(unzip4, unzip5)
 
 ------------------------------------------------------------------------
 -- COMBINATIONAL PROCESS CONSTRUCTORS
@@ -752,144 +751,48 @@ detector55SADF c p f g s0 as bs cs ds es = outputFSM5 p g next_state
 -- unzipSADF Processes
 ------------------------------------------------------------------------
 
-unzipSADF :: [(Int, Int)] -> Signal ([a], [b])
-          -> (Signal a, Signal b)
-unzipSADF p xs = (s1, s2)
-  where
-    (p1, p2) = unzip p
-    s1 = signal $ f1 p1 xs
-    s2 = signal $ f2 p2 xs
-    f1 [] _ = []
-    f1 _ NullS     = []
-    f1 (t:ts) ((as, _):-xs)
-      = if length as == t then
-          as ++ f1 ts xs
-        else
-          error "unzipSADF: Process does not produce correct number of tokens"
-    f2 [] _ = []
-    f2 _ NullS     = []
-    f2 (t:ts) ((_, bs):-xs)
-      = if length bs == t then
-          bs ++ f2 ts xs
-        else
-          error "unzipSADF: Process does not produce correct number of tokens"
+unzipSADF :: [(Int, Int)] -> Signal ([a], [b]) -> (Signal a, Signal b)
+unzipSADF [] _ = (NullS, NullS)
+unzipSADF _ NullS = (NullS, NullS)
+unzipSADF ((p1, p2) : ps) ((s1, s2) :- ss)
+  | length s1 /= p1 || length s2 /= p2 = error "unzipSADF: Process does not produce correct number of tokens"
+  | otherwise = (signal s1 +-+ sr1, signal s2 +-+ sr2)
+  where (sr1, sr2) = unzipSADF ps ss
 
 
 unzip3SADF :: [(Int, Int, Int)] -> Signal ([a], [b], [c])
            -> (Signal a, Signal b, Signal c)
-unzip3SADF p xs = (s1, s2, s3)
-  where
-    (p1, p2, p3) = unzip3 p
-    s1 = signal $ f1 p1 xs
-    s2 = signal $ f2 p2 xs
-    s3 = signal $ f3 p3 xs
-    f1 [] _ = []
-    f1 _ NullS      = []
-    f1 (t:ts) ((as, _, _):-xs)
-      = if length as == t then
-          as ++ f1 ts xs
-        else
-          error "unzip3SADF: Process does not produce correct number of tokens"
-    f2 [] _ = []
-    f2 _ NullS      = []
-    f2 (t:ts) ((_, bs, _):-xs)
-      = if length bs == t then
-          bs ++ f2 ts xs
-        else
-          error "unzip3SADF: Process does not produce correct number of tokens"
-    f3 [] _ = []
-    f3 _ NullS      = []
-    f3 (t:ts) ((_, _, cs):-xs)
-      = if length cs == t then
-          cs ++ f3 ts xs
-        else
-          error "unzip3SADF: Process does not produce correct number of tokens"
+unzip3SADF [] _ = (NullS, NullS, NullS)
+unzip3SADF _ NullS = (NullS, NullS, NullS)
+unzip3SADF ((p1, p2, p3) : ps) ((s1, s2, s3) :- ss)
+  | length s1 /= p1 || length s2 /= p2
+    || length s3 /= p3 = error "unzip3SADF: Process does not produce correct number of tokens"
+  | otherwise = (signal s1 +-+ sr1, signal s2 +-+ sr2, signal s3 +-+ sr3)
+  where (sr1, sr2, sr3) = unzip3SADF ps ss
 
 
 unzip4SADF :: [(Int, Int, Int, Int)] -> Signal ([a], [b], [c], [d])
            -> (Signal a, Signal b, Signal c, Signal d)
-unzip4SADF p xs = (s1, s2, s3, s4)
-  where
-    (p1, p2, p3, p4) = unzip4 p
-    s1 = signal $ f1 p1 xs
-    s2 = signal $ f2 p2 xs
-    s3 = signal $ f3 p3 xs
-    s4 = signal $ f4 p4 xs
-    f1 [] _ = []
-    f1 _ NullS      = []
-    f1 (t:ts) ((as, _, _, _):-xs)
-      = if length as == t then
-          as ++ f1 (ts++[t]) xs
-        else
-          error "unzip4SADF: Process does not produce correct number of tokens"
-    f2 [] _ = []
-    f2 _ NullS      = []
-    f2 (t:ts) ((_, bs, _, _):-xs)
-      = if length bs == t then
-          bs ++ f2 ts xs
-        else
-          error "unzip4SADF: Process does not produce correct number of tokens"
-    f3 [] _ = []
-    f3 _ NullS      = []
-    f3 (t:ts) ((_, _, cs, _):-xs)
-      = if length cs == t then
-          cs ++ f3 ts xs
-        else
-          error "unzip4SADF: Process does not produce correct number of tokens"
-    f4 [] _ = []
-    f4 _ NullS      = []
-    f4 (t:ts) ((_, _, _, ds):-xs)
-      = if length ds == t then
-          ds ++ f4 ts xs
-        else
-          error "unzip4SADF: Process does not produce correct number of tokens"
+unzip4SADF [] _ = (NullS, NullS, NullS, NullS)
+unzip4SADF _ NullS = (NullS, NullS, NullS, NullS)
+unzip4SADF ((p1, p2, p3, p4) : ps) ((s1, s2, s3, s4) :- ss)
+  | length s1 /= p1 || length s2 /= p2
+    || length s3 /= p3 || length s4 /= p4 = error "unzip4SADF: Process does not produce correct number of tokens"
+  | otherwise = (signal s1 +-+ sr1, signal s2 +-+ sr2, signal s3 +-+ sr3, signal s4 +-+ sr4)
+  where (sr1, sr2, sr3, sr4) = unzip4SADF ps ss
 
 
 unzip5SADF :: [(Int, Int, Int, Int, Int)] -> Signal ([a], [b], [c], [d], [e])
            -> (Signal a, Signal b, Signal c, Signal d, Signal e)
-unzip5SADF p xs = (s1, s2, s3, s4, s5)
-  where
-    (p1, p2, p3, p4, p5) = unzip5 p
-    s1 = signal $ f1 p1 xs
-    s2 = signal $ f2 p2 xs
-    s3 = signal $ f3 p3 xs
-    s4 = signal $ f4 p4 xs
-    s5 = signal $ f5 p5 xs
-    f1 [] _ = []
-    f1 _ NullS      = []
-    f1 (t:ts) ((as, _, _, _, _):-xs)
-      = if length as == t then
-          as ++ f1 (ts++[t]) xs
-        else
-          error "unzip5SADF: Process does not produce correct number of tokens"
-    f2 [] _ = []
-    f2 _ NullS      = []
-    f2 (t:ts) ((_, bs, _, _, _):-xs)
-      = if length bs == t then
-          bs ++ f2 ts xs
-        else
-          error "unzip5SADF: Process does not produce correct number of tokens"
-    f3 [] _ = []
-    f3 _ NullS      = []
-    f3 (t:ts) ((_, _, cs, _, _):-xs)
-      = if length cs == t then
-          cs ++ f3 ts xs
-        else
-          error "unzip5SADF: Process does not produce correct number of tokens"
-    f4 [] _ = []
-    f4 _ NullS      = []
-    f4 (t:ts) ((_, _, _, ds, _):-xs)
-      = if length ds == t then
-          ds ++ f4 ts xs
-        else
-          error "unzip5SADF: Process does not produce correct number of tokens"
-    f5 [] _ = []
-    f5 _ NullS      = []
-    f5 (t:ts) ((_, _, _, _, es):-xs)
-      = if length es == t then
-          es ++ f5 ts xs
-        else
-          error "unzip5SADF: Process does not produce correct number of tokens"
+unzip5SADF [] _ = (NullS, NullS, NullS, NullS, NullS)
+unzip5SADF _ NullS = (NullS, NullS, NullS, NullS, NullS)
+unzip5SADF ((p1, p2, p3, p4, p5) : ps) ((s1, s2, s3, s4, s5) :- ss)
+  | length s1 /= p1 || length s2 /= p2
+    || length s3 /= p3 || length s4 /= p4
+    || length s5 /= p5 = error "unzip5SADF: Process does not produce correct number of tokens"
+  | otherwise = (signal s1 +-+ sr1, signal s2 +-+ sr2, signal s3 +-+ sr3,
+                 signal s4 +-+ sr4, signal s5 +-+ sr5)
+  where (sr1, sr2, sr3, sr4, sr5) = unzip5SADF ps ss
 
 ------------------------------------------------------------------------
 --

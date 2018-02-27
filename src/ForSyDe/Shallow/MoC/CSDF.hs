@@ -34,7 +34,6 @@ module ForSyDe.Shallow.MoC.CSDF (
   ) where
 
 import ForSyDe.Shallow.Core
-import Data.List(unzip4)
 
 ------------------------------------------------------------------------
 -- COMBINATIONAL PROCESS CONSTRUCTORS
@@ -355,97 +354,35 @@ actor44CSDF s as bs cs ds
 -- unzipCSDF Processes
 ------------------------------------------------------------------------
 
-unzipCSDF :: [(Int, Int)] -> Signal ([a], [b])
-          -> (Signal a, Signal b)
-unzipCSDF p xs = (s1, s2)
-  where
-    (p1, p2) = unzip p
-    s1 = signal $ f1 p1 xs
-    s2 = signal $ f2 p2 xs
-    f1 [] _ = error "unzipCSDF: Token rate list cannot be empty"
-    f1 _ NullS     = []
-    f1 (t:ts) ((as, _):-xs)
-      = if length as == t then
-          as ++ f1 (ts++[t]) xs
-        else
-          error "unzipCSDF: Process does not produce correct number of tokens"
-    f2 [] _ = error "unzipCSDF: Token rate list cannot be empty"
-    f2 _ NullS     = []
-    f2 (t:ts) ((_, bs):-xs)
-      = if length bs == t then
-          bs ++ f2 (ts++[t]) xs
-        else
-          error "unzipCSDF: Process does not produce correct number of tokens"
+unzipCSDF :: [(Int, Int)] -> Signal ([a], [b]) -> (Signal a, Signal b)
+unzipCSDF [] _ = (NullS, NullS)
+unzipCSDF _ NullS = (NullS, NullS)
+unzipCSDF ((p1, p2) : ps) ((s1, s2) :- ss)
+  | length s1 /= p1 || length s2 /= p2 = error "unzipCSDF: Process does not produce correct number of tokens"
+  | otherwise = (signal s1 +-+ sr1, signal s2 +-+ sr2)
+  where (sr1, sr2) = unzipCSDF (ps ++ [(p1, p2)]) ss
 
 
 unzip3CSDF :: [(Int, Int, Int)] -> Signal ([a], [b], [c])
            -> (Signal a, Signal b, Signal c)
-unzip3CSDF p xs = (s1, s2, s3)
-  where
-    (p1, p2, p3) = unzip3 p
-    s1 = signal $ f1 p1 xs
-    s2 = signal $ f2 p2 xs
-    s3 = signal $ f3 p3 xs
-    f1 [] _ = error "unzip3CSDF: Token rate list cannot be empty"
-    f1 _ NullS      = []
-    f1 (t:ts) ((as, _, _):-xs)
-      = if length as == t then
-          as ++ f1 (ts++[t]) xs
-        else
-          error "unzip3CSDF: Process does not produce correct number of tokens"
-    f2 [] _ = error "unzip3CSDF: Token rate list cannot be empty"
-    f2 _ NullS      = []
-    f2 (t:ts) ((_, bs, _):-xs)
-      = if length bs == t then
-          bs ++ f2 (ts++[t]) xs
-        else
-          error "unzip3CSDF: Process does not produce correct number of tokens"
-    f3 [] _ = error "unzip3CSDF: Token rate list cannot be empty"
-    f3 _ NullS      = []
-    f3 (t:ts) ((_, _, cs):-xs)
-      = if length cs == t then
-          cs ++ f3 (ts++[t]) xs
-        else
-          error "unzip3CSDF: Process does not produce correct number of tokens"
+unzip3CSDF [] _ = (NullS, NullS, NullS)
+unzip3CSDF _ NullS = (NullS, NullS, NullS)
+unzip3CSDF ((p1, p2, p3) : ps) ((s1, s2, s3) :- ss)
+  | length s1 /= p1 || length s2 /= p2
+    || length s3 /= p3 = error "unzip3CSDF: Process does not produce correct number of tokens"
+  | otherwise = (signal s1 +-+ sr1, signal s2 +-+ sr2, signal s3 +-+ sr3)
+  where (sr1, sr2, sr3) = unzip3CSDF (ps ++ [(p1, p2, p3)]) ss
 
 
 unzip4CSDF :: [(Int, Int, Int, Int)] -> Signal ([a], [b], [c], [d])
            -> (Signal a, Signal b, Signal c, Signal d)
-unzip4CSDF p xs = (s1, s2, s3, s4)
-  where
-    (p1, p2, p3, p4) = unzip4 p
-    s1 = signal $ f1 p1 xs
-    s2 = signal $ f2 p2 xs
-    s3 = signal $ f3 p3 xs
-    s4 = signal $ f4 p4 xs
-    f1 [] _ = error "unzip4CSDF: Token rate list cannot be empty"
-    f1 _ NullS      = []
-    f1 (t:ts) ((as, _, _, _):-xs)
-      = if length as == t then
-          as ++ f1 (ts++[t]) xs
-        else
-          error "unzip4CSDF: Process does not produce correct number of tokens"
-    f2 [] _ = error "unzip4CSDF: Token rate list cannot be empty"
-    f2 _ NullS      = []
-    f2 (t:ts) ((_, bs, _, _):-xs)
-      = if length bs == t then
-          bs ++ f2 (ts++[t]) xs
-        else
-          error "unzip4CSDF: Process does not produce correct number of tokens"
-    f3 [] _ = error "unzip4CSDF: Token rate list cannot be empty"
-    f3 _ NullS      = []
-    f3 (t:ts) ((_, _, cs, _):-xs)
-      = if length cs == t then
-          cs ++ f3 (ts++[t]) xs
-        else
-          error "unzip4CSDF: Process does not produce correct number of tokens"
-    f4 [] _ = error "unzip4CSDF: Token rate list cannot be empty"
-    f4 _ NullS      = []
-    f4 (t:ts) ((_, _, _, ds):-xs)
-      = if length ds == t then
-          ds ++ f4 (ts++[t]) xs
-        else
-          error "unzip4CSDF: Process does not produce correct number of tokens"
+unzip4CSDF [] _ = (NullS, NullS, NullS, NullS)
+unzip4CSDF _ NullS = (NullS, NullS, NullS, NullS)
+unzip4CSDF ((p1, p2, p3, p4) : ps) ((s1, s2, s3, s4) :- ss)
+  | length s1 /= p1 || length s2 /= p2
+    || length s3 /= p3 || length s4 /= p4 = error "unzip4CSDF: Process does not produce correct number of tokens"
+  | otherwise = (signal s1 +-+ sr1, signal s2 +-+ sr2, signal s3 +-+ sr3, signal s4 +-+ sr4)
+  where (sr1, sr2, sr3, sr4) = unzip4CSDF (ps ++ [(p1, p2, p3, p4)]) ss
 
 
 ------------------------------------------------------------------------
