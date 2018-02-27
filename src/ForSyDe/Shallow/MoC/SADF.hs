@@ -890,7 +890,7 @@ unzip5SADF p xs = (s1, s2, s3, s4, s5)
           es ++ f5 ts xs
         else
           error "unzip5SADF: Process does not produce correct number of tokens"
-          
+
 ------------------------------------------------------------------------
 --
 -- Helper functions (not exported!)
@@ -1052,37 +1052,17 @@ outputFSM p g (s:-ss)
   | otherwise = signal y1 +-+ outputFSM p g ss
   where y1 = g s
 
-{-
+
 outputFSM2 :: (s -> (Int, Int)) -> (s -> ([a], [b])) -> Signal s -> (Signal a, Signal b)
 outputFSM2 _ _ NullS = (NullS, NullS)
 outputFSM2 p g (s:-ss)
   | length y1 /= p1 || length y2 /= p2 = error "outputFSM2: Incorrect number of produced tokens."
-  | otherwise = sigAppend2 (signal y1, signal y2) (outputFSM2 p g ss)
+  | otherwise = (signal y1 +-+ yr1, signal y2 +-+ yr2)
   where (y1, y2) = g s
         (p1, p2) = p s
+        (yr1, yr2) = outputFSM2 p g ss
 
-sigAppend2 :: (Signal a, Signal b) -> (Signal a, Signal b) -> (Signal a, Signal b)
-sigAppend2 (a1, b1) (a2, b2) = (a1 +-+ a2, b1 +-+ b2)
--}
-outputFSM2 :: (s -> (Int, Int)) -> (s -> ([a], [b])) -> Signal s -> (Signal a, Signal b)
-outputFSM2 _ _ NullS = (NullS, NullS)
-outputFSM2 p g s = (s1, s2)
-  where s1 = signal $ f1 s
-        s2 = signal $ f2 s
-        f1 NullS = []
-        f1 (x:-xs)
-          | length  y1 /= (\(i, _) -> i) (p x)
-            = error "outputFSM2: Incorrect number of produced tokens."
-          | otherwise = y1 ++ f1 xs
-          where y1 = (\(i, _) -> i) (g x)
-        f2 NullS = []
-        f2 (x:-xs)
-          | length  y2 /= (\(_, i) -> i) (p x)
-            = error "outputFSM2: Incorrect number of produced tokens."
-          |otherwise  = y2 ++ f2 xs
-          where y2 = (\(_, i) -> i) (g x)
 
-{-
 outputFSM3 :: (s -> (Int, Int, Int)) -> (s -> ([a], [b], [c]))
            -> Signal s -> (Signal a, Signal b, Signal c)
 outputFSM3 _ _ NullS = (NullS, NullS, NullS)
@@ -1090,41 +1070,12 @@ outputFSM3 p g (s:-ss)
   | length y1 /= p1
     || length y2 /= p2
     || length y3 /= p3 = error "outputFSM3: Incorrect number of produced tokens."
-  | otherwise = sigAppend3 (signal y1, signal y2, signal y3) (outputFSM3 p g ss)
+  | otherwise = (signal y1 +-+ yr1, signal y2 +-+ yr2, signal y3 +-+ yr3)
   where (y1, y2, y3) = g s
         (p1, p2, p3) = p s
+        (yr1, yr2, yr3) = outputFSM3 p g ss
 
-sigAppend3 :: (Signal a, Signal b, Signal c) -> (Signal a, Signal b, Signal c)
-           -> (Signal a, Signal b, Signal c)
-sigAppend3 (a1, b1, c1) (a2, b2, c2) = (a1 +-+ a2, b1 +-+ b2, c1 +-+ c2)
--}
-outputFSM3 :: (s -> (Int, Int, Int)) -> (s -> ([a], [b], [c]))
-           -> Signal s -> (Signal a, Signal b, Signal c)
-outputFSM3 _ _ NullS = (NullS, NullS, NullS)
-outputFSM3 p g s = (s1, s2, s3)
-  where s1 = signal $ f1 s
-        s2 = signal $ f2 s
-        s3 = signal $ f3 s
-        f1 NullS = []
-        f1 (x:-xs)
-          | length  y1 /= (\(i, _, _) -> i) (p x)
-            = error "outputFSM3: Incorrect number of produced tokens."
-          | otherwise = y1 ++ f1 xs
-          where y1 = (\(i, _, _) -> i) (g x)
-        f2 NullS = []
-        f2 (x:-xs)
-          | length  y2 /= (\(_, i, _) -> i) (p x)
-            = error "outputFSM3: Incorrect number of produced tokens."
-          |otherwise  = y2 ++ f2 xs
-          where y2 = (\(_, i, _) -> i) (g x)
-        f3 NullS = []
-        f3 (x:-xs)
-          | length  y3 /= (\(_, _, i) -> i) (p x)
-            = error "outputFSM3: Incorrect number of produced tokens."
-          |otherwise  = y3 ++ f3 xs
-          where y3 = (\(_, _, i) -> i) (g x)
 
-{-
 outputFSM4 :: (s -> (Int, Int, Int, Int)) -> (s -> ([a], [b], [c], [d]))
            -> Signal s -> (Signal a, Signal b, Signal c, Signal d)
 outputFSM4 _ _ NullS = (NullS, NullS, NullS, NullS)
@@ -1133,105 +1084,24 @@ outputFSM4 p g (s:-ss)
     || length y2 /= p2
     || length y3 /= p3
     || length y4 /= p4 = error "outputFSM4: Incorrect number of produced tokens."
-  | otherwise = sigAppend4 (signal y1, signal y2, signal y3, signal y4) (outputFSM4 p g ss)
+  | otherwise = (signal y1 +-+ yr1, signal y2 +-+ yr2, signal y3 +-+ yr3, signal y4 +-+ yr4)
   where (y1, y2, y3, y4) = g s
         (p1, p2, p3, p4) = p s
+        (yr1, yr2, yr3, yr4) = outputFSM4 p g ss
 
-sigAppend4 :: (Signal a, Signal b, Signal c, Signal d)
-           -> (Signal a, Signal b, Signal c, Signal d)
-           -> (Signal a, Signal b, Signal c, Signal d)
-sigAppend4 (a1, b1, c1, d1) (a2, b2, c2, d2) = (a1 +-+ a2, b1 +-+ b2, c1 +-+ c2, d1 +-+ d2)
--}
-outputFSM4 :: (s -> (Int, Int, Int, Int)) -> (s -> ([a], [b], [c], [d]))
-           -> Signal s -> (Signal a, Signal b, Signal c, Signal d)
-outputFSM4 _ _ NullS = (NullS, NullS, NullS, NullS)
-outputFSM4 p g s = (s1, s2, s3, s4)
-  where s1 = signal $ f1 s
-        s2 = signal $ f2 s
-        s3 = signal $ f3 s
-        s4 = signal $ f4 s
-        f1 NullS = []
-        f1 (x:-xs)
-          | length  y1 /= (\(i, _, _, _) -> i) (p x)
-            = error "outputFSM4: Incorrect number of produced tokens."
-          | otherwise = y1 ++ f1 xs
-          where y1 = (\(i, _, _, _) -> i) (g x)
-        f2 NullS = []
-        f2 (x:-xs)
-          | length  y2 /= (\(_, i, _, _) -> i) (p x)
-            = error "outputFSM4: Incorrect number of produced tokens."
-          |otherwise  = y2 ++ f2 xs
-          where y2 = (\(_, i, _, _) -> i) (g x)
-        f3 NullS = []
-        f3 (x:-xs)
-          | length  y3 /= (\(_, _, i, _) -> i) (p x)
-            = error "outputFSM4: Incorrect number of produced tokens."
-          |otherwise  = y3 ++ f3 xs
-          where y3 = (\(_, _, i, _) -> i) (g x)
-        f4 NullS = []
-        f4 (x:-xs)
-          | length  y4 /= (\(_, _, _, i) -> i) (p x)
-            = error "outputFSM4: Incorrect number of produced tokens."
-          |otherwise  = y4 ++ f4 xs
-          where y4 = (\(_, _, _, i) -> i) (g x)
 
-{-
 outputFSM5 :: (s -> (Int, Int, Int, Int, Int)) -> (s -> ([a], [b], [c], [d], [e]))
            -> Signal s -> (Signal a, Signal b, Signal c, Signal d, Signal e)
 outputFSM5 _ _ NullS = (NullS, NullS, NullS, NullS, NullS)
 outputFSM5 p g (s:-ss)
   | length y1 /= p1
     || length y2 /= p2 || length y3 /= p3
-    || length y4 /= p4 || length y3 /= p5 = error "outputFSM5: Incorrect number of produced tokens."
-  | otherwise = sigAppend5 (signal y1, signal y2, signal y3, signal y4, signal y5) (outputFSM5 p g ss)
+    || length y4 /= p4 || length y5 /= p5 = error "outputFSM5: Incorrect number of produced tokens."
+  | otherwise = (signal y1 +-+ yr1, signal y2 +-+ yr2, signal y3 +-+ yr3,
+                 signal y4 +-+ yr4, signal y5 +-+ yr5)
   where (y1, y2, y3, y4, y5) = g s
         (p1, p2, p3, p4, p5) = p s
-
-sigAppend5 :: (Signal a, Signal b, Signal c, Signal d, Signal e)
-           -> (Signal a, Signal b, Signal c, Signal d, Signal e)
-           -> (Signal a, Signal b, Signal c, Signal d, Signal e)
-sigAppend5 (a1, b1, c1, d1, e1) (a2, b2, c2, d2, e2)
-          = (a1 +-+ a2, b1 +-+ b2, c1 +-+ c2, d1 +-+ d2, e1 +-+ e2)
--}
-outputFSM5 :: (s -> (Int, Int, Int, Int, Int)) -> (s -> ([a], [b], [c], [d], [e]))
-           -> Signal s -> (Signal a, Signal b, Signal c, Signal d, Signal e)
-outputFSM5 _ _ NullS = (NullS, NullS, NullS, NullS, NullS)
-outputFSM5 p g s = (s1, s2, s3, s4, s5)
-  where s1 = signal $ f1 s
-        s2 = signal $ f2 s
-        s3 = signal $ f3 s
-        s4 = signal $ f4 s
-        s5 = signal $ f5 s
-        f1 NullS = []
-        f1 (x:-xs)
-          | length  y1 /= (\(i, _, _, _, _) -> i) (p x)
-            = error "outputFSM5: Incorrect number of produced tokens."
-          | otherwise = y1 ++ f1 xs
-          where y1 = (\(i, _, _, _, _) -> i) (g x)
-        f2 NullS = []
-        f2 (x:-xs)
-          | length  y2 /= (\(_, i, _, _, _) -> i) (p x)
-            = error "outputFSM5: Incorrect number of produced tokens."
-          |otherwise  = y2 ++ f2 xs
-          where y2 = (\(_, i, _, _, _) -> i) (g x)
-        f3 NullS = []
-        f3 (x:-xs)
-          | length  y3 /= (\(_, _, i, _, _) -> i) (p x)
-            = error "outputFSM5: Incorrect number of produced tokens."
-          |otherwise  = y3 ++ f3 xs
-          where y3 = (\(_, _, i, _, _) -> i) (g x)
-        f4 NullS = []
-        f4 (x:-xs)
-          | length  y4 /= (\(_, _, _, i, _) -> i) (p x)
-            = error "outputFSM5: Incorrect number of produced tokens."
-          |otherwise  = y4 ++ f4 xs
-          where y4 = (\(_, _, _, i, _) -> i) (g x)
-        f5 NullS = []
-        f5 (x:-xs)
-          | length  y5 /= (\(_, _, _, _, i) -> i) (p x)
-            = error "outputFSM5: Incorrect number of produced tokens."
-          |otherwise  = y5 ++ f5 xs
-          where y5 = (\(_, _, _, _, i) -> i) (g x)
+        (yr1, yr2, yr3, yr4, yr5) = outputFSM5 p g ss
 
 
 ------------------------------------------------------------------------
