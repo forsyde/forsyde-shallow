@@ -15,7 +15,8 @@ module ForSyDe.Shallow.Core.Signal(
   Signal (NullS, (:-)), (-:), (+-+), (!-), 
   signal, fromSignal,
   unitS, nullS, headS, tailS, atS, takeS, dropS,
-  lengthS, infiniteS, copyS, selectS, writeS, readS, fanS
+  lengthS, infiniteS, copyS, selectS, writeS, readS, fanS,
+  foldrS, allS
   ) where
 
 infixr 5    :-
@@ -103,6 +104,14 @@ copyS :: (Num a, Eq a) => a -> b -> Signal b
 -- | The combinator 'fanS' takes two processes 'p1' and 'p2' and and generates a process network, where a signal is split and processed by the processes 'p1' and 'p2'.
 fanS :: (Signal a -> Signal b) -> (Signal a -> Signal c) 
       -> Signal a -> (Signal b, Signal c)
+
+-- | Folds all events in a signal to one value based on a reduction
+-- function.
+foldrS :: (t -> p -> p) -> p -> Signal t -> p
+
+-- | Checks if all events in a signal are satisfying a predicate
+-- function.
+allS :: (a -> Bool) -> Signal a -> Bool
 
 -- Implementation
 
@@ -208,9 +217,12 @@ readS xs             = readS' (words xs)
     readS' ("\n":ys) = readS' ys
     readS' (y:ys)    = read y :- readS' ys
 
+foldrS k z = go
+  where
+    go NullS   = z
+    go (y:-ys) = y `k` go ys
 
-
-
+allS p = foldrS (\a prev -> p a && prev) True
 
 
 
