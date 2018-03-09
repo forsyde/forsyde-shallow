@@ -13,17 +13,17 @@
 -----------------------------------------------------------------------------
 
 module ForSyDe.Shallow.MoC.CSDF (
-  -- * Combinational Process Constructors
-  -- | Combinational process constructors are used for processes that
-  -- do not have a state.
-  mapCSDF, zipWithCSDF, zipWith3CSDF, zipWith4CSDF,
+  -- -- * Combinational Process Constructors
+  -- -- | Combinational process constructors are used for processes that
+  -- -- do not have a state.
+  -- mapCSDF, zipWithCSDF, zipWith3CSDF, zipWith4CSDF,
   -- * Sequential Process Constructors
   -- | Sequential process constructors are used for processes that
   -- have a state. One of the input parameters is the initial state.
   delayCSDF, delaynCSDF,
-  -- * Processes
-  -- | Processes to unzip a signal of tupels into a tuple of signals
-  unzipCSDF, unzip3CSDF, unzip4CSDF,
+  -- -- * Processes
+  -- -- | Processes to unzip a signal of tupels into a tuple of signals
+  -- unzipCSDF, unzip3CSDF, unzip4CSDF,
   -- * Actors
   -- | Based on the process constructors in the CSDF-MoC, the
   -- CSDF-library provides CSDF-actors with single or multiple inputs
@@ -34,106 +34,6 @@ module ForSyDe.Shallow.MoC.CSDF (
   ) where
 
 import ForSyDe.Shallow.Core
-
-------------------------------------------------------------------------
--- COMBINATIONAL PROCESS CONSTRUCTORS
-------------------------------------------------------------------------
-
--- | The process constructor 'mapCSDF' takes a list of scenarios, where each
--- scenario is a tuple @(c, p, f)@ containing the number of consumed tokens (@c@),
--- produced tokens (@p@) and corresponding functions (@f@) that operates on
--- a list, and results in an CSDF-process that takes an input signal
--- and results in an output signal
-mapCSDF :: [(Int, Int, [a] -> [b])] -> Signal a -> Signal b
-mapCSDF [] _ = error "mapCSDF: List of functions must not be empty"
-mapCSDF (s:ss) xs
-  | c < 0 = error "mapCSDF: Number of consumed tokens must be a non-negative integer"
-  | not $ sufficient_tokens c xs  = NullS
-  | otherwise = if length produced_tokens == p then
-                  signal produced_tokens +-+ mapCSDF (ss++[s]) (dropS c xs)
-                else
-                  error "mapCSDF: Function does not produce correct number of tokens"
-  where (c, p, f) = s
-        consumed_tokens = fromSignal $ takeS c xs
-        produced_tokens = f consumed_tokens
-
-
--- | The process constructor 'zipWithCSDF' takes a list of scenarios, where each
--- scenario is a tuple @(c, p, f)@ containing the number of consumed tokens (@c@),
--- produced tokens (@p@) and corresponding functions (@f@)
--- that operates on two lists, and results in an CSDF-process that takes two
--- input signals and results in an output signal
-zipWithCSDF :: [((Int, Int), Int, [a] -> [b] -> [c])]
-            -> Signal a -> Signal b -> Signal c
-zipWithCSDF [] _ _ = error "zipWithCSDF: List of functions must not be empty"
-zipWithCSDF (s:ss) as bs
-  | c1 < 0 || c2 < 0  = error "zipWithCSDF: Number of consumed tokens must be a non-negative integer"
-  | (not $ sufficient_tokens c1 as) || (not $ sufficient_tokens c2 bs) = NullS
-  | otherwise = if length produced_tokens == p then
-                  signal produced_tokens +-+ zipWithCSDF (ss++[s]) (dropS c1 as) (dropS c2 bs)
-                else
-                  error "zipWithCSDF: Function does not produce correct number of tokens"
-  where (c, p, f) = s
-        (c1, c2) = c
-        consumed_tokens_as = fromSignal $ takeS c1 as
-        consumed_tokens_bs = fromSignal $ takeS c2 bs
-        produced_tokens = f consumed_tokens_as consumed_tokens_bs
-
-
--- | The process constructor 'zipWith3CSDF' takes a list of scenarios, where each
--- scenario is a tuple @(c, p, f)@ containing the number of consumed tokens (@c@),
--- produced tokens (@p@) and corresponding functions (@f@)
--- that operates on three lists, and results in an SDF-process that takes three
--- input signals and results in an output signal
-zipWith3CSDF :: [((Int, Int, Int), Int, [a] -> [b] -> [c] -> [d])]
-             -> Signal a -> Signal b -> Signal c -> Signal d
-zipWith3CSDF [] _ _ _ = error "zipWith3CSDF: List of functions must not be empty"
-zipWith3CSDF (s:ss) as bs cs
-  | c1 < 0 || c2 < 0 || c3 < 0
-  = error "zipWith3CSDF: Number of consumed tokens must be a non-negative integer"
-  | (not $ sufficient_tokens c1 as)
-    || (not $ sufficient_tokens c2 bs)
-    || (not $ sufficient_tokens c3 cs) = NullS
-  | otherwise = if length produced_tokens == p then
-      signal produced_tokens +-+ zipWith3CSDF (ss++[s]) (dropS c1 as) (dropS c2 bs) (dropS c3 cs)
-    else
-      error "zipWith3CSDF: Function does not produce correct number of tokens"
-  where (c, p, f) = s
-        (c1, c2, c3) = c
-        consumed_tokens_as = fromSignal $ takeS c1 as
-        consumed_tokens_bs = fromSignal $ takeS c2 bs
-        consumed_tokens_cs = fromSignal $ takeS c3 cs
-        produced_tokens = f consumed_tokens_as consumed_tokens_bs consumed_tokens_cs
-
-
--- | The process constructor 'zipWith4CSDF' takes a list of scenarios, where each
--- scenario is a tuple @(c, p, f)@ containing the number of consumed tokens (@c@),
--- produced tokens (@p@) and corresponding functions (@f@) that
--- operates on three lists, and results in an CSDF-process that takes
--- three input signals and results in an output signal
-zipWith4CSDF :: [((Int, Int, Int, Int), Int, [a] -> [b] -> [c] -> [d] -> [e])]
-             -> Signal a -> Signal b -> Signal c -> Signal d -> Signal e
-zipWith4CSDF [] _ _ _ _ = error "zipWith4CSDF: List of functions must not be empty"
-zipWith4CSDF (s:ss) as bs cs ds
-  | c1 < 0 || c2 < 0 || c3 < 0 || c4 < 0
-    = error "zipWith4CSDF: Number of consumed tokens must be a non-negative integer"
-  | (not $ sufficient_tokens c1 as)
-    || (not $ sufficient_tokens c2 bs)
-    || (not $ sufficient_tokens c3 cs)
-    || (not $ sufficient_tokens c4 ds) = NullS
-  | otherwise = if length produced_tokens == p then
-      signal produced_tokens +-+ zipWith4CSDF (ss++[s])
-             (dropS c1 as) (dropS c2 bs) (dropS c3 cs) (dropS c4 ds)
-    else
-      error "zipWith4CSDF: Function does not produce correct number of tokens"
-  where (c, p, f) = s
-        (c1, c2, c3, c4) = c
-        consumed_tokens_as = fromSignal $ takeS c1 as
-        consumed_tokens_bs = fromSignal $ takeS c2 bs
-        consumed_tokens_cs = fromSignal $ takeS c3 cs
-        consumed_tokens_ds = fromSignal $ takeS c4 ds
-        produced_tokens = f consumed_tokens_as consumed_tokens_bs
-                            consumed_tokens_cs consumed_tokens_ds
 
 
 -------------------------------------
@@ -349,6 +249,109 @@ actor44CSDF :: [((Int, Int, Int, Int), (Int, Int, Int, Int),
             -> (Signal e, Signal f, Signal g, Signal h)
 actor44CSDF s as bs cs ds
   = unzip4CSDF (outputTokens s) $ zipWith4CSDF (inpOut4n s) as bs cs ds
+
+
+------------------------------------------------------------------------
+-- COMBINATIONAL PROCESS CONSTRUCTORS
+------------------------------------------------------------------------
+
+-- | The process constructor 'mapCSDF' takes a list of scenarios, where each
+-- scenario is a tuple @(c, p, f)@ containing the number of consumed tokens (@c@),
+-- produced tokens (@p@) and corresponding functions (@f@) that operates on
+-- a list, and results in an CSDF-process that takes an input signal
+-- and results in an output signal
+mapCSDF :: [(Int, Int, [a] -> [b])] -> Signal a -> Signal b
+mapCSDF [] _ = error "mapCSDF: List of functions must not be empty"
+mapCSDF (s:ss) xs
+  | c < 0 = error "mapCSDF: Number of consumed tokens must be a non-negative integer"
+  | not $ sufficient_tokens c xs  = NullS
+  | otherwise = if length produced_tokens == p then
+                  signal produced_tokens +-+ mapCSDF (ss++[s]) (dropS c xs)
+                else
+                  error "mapCSDF: Function does not produce correct number of tokens"
+  where (c, p, f) = s
+        consumed_tokens = fromSignal $ takeS c xs
+        produced_tokens = f consumed_tokens
+
+
+-- | The process constructor 'zipWithCSDF' takes a list of scenarios, where each
+-- scenario is a tuple @(c, p, f)@ containing the number of consumed tokens (@c@),
+-- produced tokens (@p@) and corresponding functions (@f@)
+-- that operates on two lists, and results in an CSDF-process that takes two
+-- input signals and results in an output signal
+zipWithCSDF :: [((Int, Int), Int, [a] -> [b] -> [c])]
+            -> Signal a -> Signal b -> Signal c
+zipWithCSDF [] _ _ = error "zipWithCSDF: List of functions must not be empty"
+zipWithCSDF (s:ss) as bs
+  | c1 < 0 || c2 < 0  = error "zipWithCSDF: Number of consumed tokens must be a non-negative integer"
+  | (not $ sufficient_tokens c1 as) || (not $ sufficient_tokens c2 bs) = NullS
+  | otherwise = if length produced_tokens == p then
+                  signal produced_tokens +-+ zipWithCSDF (ss++[s]) (dropS c1 as) (dropS c2 bs)
+                else
+                  error "zipWithCSDF: Function does not produce correct number of tokens"
+  where (c, p, f) = s
+        (c1, c2) = c
+        consumed_tokens_as = fromSignal $ takeS c1 as
+        consumed_tokens_bs = fromSignal $ takeS c2 bs
+        produced_tokens = f consumed_tokens_as consumed_tokens_bs
+
+
+-- | The process constructor 'zipWith3CSDF' takes a list of scenarios, where each
+-- scenario is a tuple @(c, p, f)@ containing the number of consumed tokens (@c@),
+-- produced tokens (@p@) and corresponding functions (@f@)
+-- that operates on three lists, and results in an SDF-process that takes three
+-- input signals and results in an output signal
+zipWith3CSDF :: [((Int, Int, Int), Int, [a] -> [b] -> [c] -> [d])]
+             -> Signal a -> Signal b -> Signal c -> Signal d
+zipWith3CSDF [] _ _ _ = error "zipWith3CSDF: List of functions must not be empty"
+zipWith3CSDF (s:ss) as bs cs
+  | c1 < 0 || c2 < 0 || c3 < 0
+  = error "zipWith3CSDF: Number of consumed tokens must be a non-negative integer"
+  | (not $ sufficient_tokens c1 as)
+    || (not $ sufficient_tokens c2 bs)
+    || (not $ sufficient_tokens c3 cs) = NullS
+  | otherwise = if length produced_tokens == p then
+      signal produced_tokens +-+ zipWith3CSDF (ss++[s]) (dropS c1 as) (dropS c2 bs) (dropS c3 cs)
+    else
+      error "zipWith3CSDF: Function does not produce correct number of tokens"
+  where (c, p, f) = s
+        (c1, c2, c3) = c
+        consumed_tokens_as = fromSignal $ takeS c1 as
+        consumed_tokens_bs = fromSignal $ takeS c2 bs
+        consumed_tokens_cs = fromSignal $ takeS c3 cs
+        produced_tokens = f consumed_tokens_as consumed_tokens_bs consumed_tokens_cs
+
+
+-- | The process constructor 'zipWith4CSDF' takes a list of scenarios, where each
+-- scenario is a tuple @(c, p, f)@ containing the number of consumed tokens (@c@),
+-- produced tokens (@p@) and corresponding functions (@f@) that
+-- operates on three lists, and results in an CSDF-process that takes
+-- three input signals and results in an output signal
+zipWith4CSDF :: [((Int, Int, Int, Int), Int, [a] -> [b] -> [c] -> [d] -> [e])]
+             -> Signal a -> Signal b -> Signal c -> Signal d -> Signal e
+zipWith4CSDF [] _ _ _ _ = error "zipWith4CSDF: List of functions must not be empty"
+zipWith4CSDF (s:ss) as bs cs ds
+  | c1 < 0 || c2 < 0 || c3 < 0 || c4 < 0
+    = error "zipWith4CSDF: Number of consumed tokens must be a non-negative integer"
+  | (not $ sufficient_tokens c1 as)
+    || (not $ sufficient_tokens c2 bs)
+    || (not $ sufficient_tokens c3 cs)
+    || (not $ sufficient_tokens c4 ds) = NullS
+  | otherwise = if length produced_tokens == p then
+      signal produced_tokens +-+ zipWith4CSDF (ss++[s])
+             (dropS c1 as) (dropS c2 bs) (dropS c3 cs) (dropS c4 ds)
+    else
+      error "zipWith4CSDF: Function does not produce correct number of tokens"
+  where (c, p, f) = s
+        (c1, c2, c3, c4) = c
+        consumed_tokens_as = fromSignal $ takeS c1 as
+        consumed_tokens_bs = fromSignal $ takeS c2 bs
+        consumed_tokens_cs = fromSignal $ takeS c3 cs
+        consumed_tokens_ds = fromSignal $ takeS c4 ds
+        produced_tokens = f consumed_tokens_as consumed_tokens_bs
+                            consumed_tokens_cs consumed_tokens_ds
+
+
 
 ------------------------------------------------------------------------
 -- unzipCSDF Processes

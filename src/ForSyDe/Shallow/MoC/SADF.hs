@@ -13,17 +13,17 @@
 -----------------------------------------------------------------------------
 
 module ForSyDe.Shallow.MoC.SADF (
-  -- * Combinational Process Constructors
-  -- | Combinational process constructors are used for processes that
-  -- do not have a state.
-  mapSADF, zipWithSADF, zipWith3SADF, zipWith4SADF, zipWith5SADF,
+  -- -- * Combinational Process Constructors
+  -- -- | Combinational process constructors are used for processes that
+  -- -- do not have a state.
+  -- mapSADF, zipWithSADF, zipWith3SADF, zipWith4SADF, zipWith5SADF,
   -- * Sequential Process Constructors
   -- | Sequential process constructors are used for processes that
   -- have a state. One of the input parameters is the initial state.
   delaySADF, delaynSADF,
-  -- * Processes
-  -- | Processes to unzip a signal of tupels into a tuple of signals
-  unzipSADF, unzip3SADF, unzip4SADF, unzip5SADF,
+  -- -- * Processes
+  -- -- | Processes to unzip a signal of tupels into a tuple of signals
+  -- unzipSADF, unzip3SADF, unzip4SADF, unzip5SADF,
   -- * Kernels
   -- | Based on the process constructors in the SADF-MoC, the
   -- SADF-library provides SADF-kernels with single or multiple inputs
@@ -44,130 +44,6 @@ module ForSyDe.Shallow.MoC.SADF (
 
 import ForSyDe.Shallow.Core
 
-------------------------------------------------------------------------
--- COMBINATIONAL PROCESS CONSTRUCTORS
-------------------------------------------------------------------------
-
--- | The process constructor 'mapSADF' takes a signal of scenarios
--- (tuples with the consumed and produced tokens as well as a function operating
--- on lists), and results in an SADF-process that takes an input signal and results
--- in an output signal
-mapSADF :: Signal (Int, Int, [a] -> [b]) -> Signal a -> Signal b
-mapSADF NullS _ = NullS
-mapSADF ct xs
-  | c < 0 = error "mapSADF: Number of consumed tokens must be a non-negative integer"
-  | not $ sufficient_tokens c xs  = NullS
-  | otherwise = if length produced_tokens == p then
-                  signal produced_tokens +-+ mapSADF (tailS ct) (dropS c xs)
-                else
-                  error "mapSADF: Function does not produce correct number of tokens"
-  where (c, p, f) = headS ct
-        consumed_tokens = fromSignal $ takeS c xs
-        produced_tokens = f consumed_tokens
-
-
--- | The process constructor 'zipWithSADF' takes a signal of scenarios
--- (tuples with the consumed and produced tokens as well as a function operating
--- on lists), and results in an SADF-process that takes two input signals and
--- results in an output signal
-zipWithSADF :: Signal ((Int, Int), Int, [a] -> [b] -> [c])
-            -> Signal a -> Signal b -> Signal c
-zipWithSADF NullS _ _ = NullS
-zipWithSADF ct as bs
-  | c1 < 0 || c2 < 0  = error "zipWithSADF: Number of consumed tokens must be a non-negative integer"
-  | (not $ sufficient_tokens c1 as)
-    || (not $ sufficient_tokens c2 bs) = NullS
-  | otherwise = if length produced_tokens == p then
-                  signal produced_tokens +-+ zipWithSADF (tailS ct) (dropS c1 as) (dropS c2 bs)
-                else
-                  error "zipWithSADF: Function does not produce correct number of tokens"
-  where ((c1,c2), p, f) = headS ct
-        consumed_tokens_as = fromSignal $ takeS c1 as
-        consumed_tokens_bs = fromSignal $ takeS c2 bs
-        produced_tokens = f consumed_tokens_as consumed_tokens_bs
-
-
--- | The process constructor 'zipWith3SADF' takes a signal of scenarios
--- (tuples with the consumed and produced tokens as well as a function operating
--- on lists), and results in an SADF-process that takes three input signals and
--- results in an output signal
-zipWith3SADF :: Signal ((Int, Int, Int), Int, [a] -> [b] -> [c] -> [d])
-             -> Signal a -> Signal b -> Signal c -> Signal d
-zipWith3SADF NullS _ _ _ = NullS
-zipWith3SADF ct as bs cs
-  | c1 < 0 || c2 < 0 || c3 < 0
-    = error "zipWith3SADF: Number of consumed tokens must be a non-negative integer"
-  | (not $ sufficient_tokens c1 as)
-    || (not $ sufficient_tokens c2 bs)
-    || (not $ sufficient_tokens c3 cs) = NullS
-  | otherwise = if length produced_tokens == p then
-                  signal produced_tokens +-+ zipWith3SADF (tailS ct) (dropS c1 as)
-                                                        (dropS c2 bs) (dropS c3 cs)
-                else
-                  error "zipWith3SADF: Function does not produce correct number of tokens"
-  where ((c1, c2, c3), p, f) = headS ct
-        consumed_tokens_as = fromSignal $ takeS c1 as
-        consumed_tokens_bs = fromSignal $ takeS c2 bs
-        consumed_tokens_cs = fromSignal $ takeS c3 cs
-        produced_tokens = f consumed_tokens_as consumed_tokens_bs consumed_tokens_cs
-
-
--- | The process constructor 'zipWith4SADF' takes a signal of scenarios
--- (tuples with the consumed and produced tokens as well as a function operating
--- on lists), and results in an SADF-process that takes four input signals and
--- results in an output signal
-zipWith4SADF :: Signal ((Int, Int, Int, Int), Int, [a] -> [b] -> [c] -> [d] -> [e])
-             -> Signal a -> Signal b -> Signal c -> Signal d -> Signal e
-zipWith4SADF NullS _ _ _ _ = NullS
-zipWith4SADF ct as bs cs ds
-  | c1 < 0 || c2 < 0 || c3 < 0 || c4 < 0
-    = error "zipWith4SADF: Number of consumed tokens must be a non-negative integer"
-  | (not $ sufficient_tokens c1 as)
-    || (not $ sufficient_tokens c2 bs)
-    || (not $ sufficient_tokens c3 cs)
-    || (not $ sufficient_tokens c4 ds) = NullS
-  | otherwise = if length produced_tokens == p then
-                  signal produced_tokens +-+ zipWith4SADF (tailS ct) (dropS c1 as)
-                                              (dropS c2 bs) (dropS c3 cs) (dropS c4 ds)
-                else
-                  error "zipWith4SADF: Function does not produce correct number of tokens"
-  where ((c1, c2, c3, c4), p, f) = headS ct
-        consumed_tokens_as = fromSignal $ takeS c1 as
-        consumed_tokens_bs = fromSignal $ takeS c2 bs
-        consumed_tokens_cs = fromSignal $ takeS c3 cs
-        consumed_tokens_ds = fromSignal $ takeS c4 ds
-        produced_tokens = f consumed_tokens_as consumed_tokens_bs
-                            consumed_tokens_cs consumed_tokens_ds
-
-
--- | The process constructor 'zipWith5SADF' takes a signal of scenarios
--- (tuples with the consumed and produced tokens as well as a function operating
--- on lists), and results in an SADF-process that takes five input signals and
--- results in an output signal
-zipWith5SADF :: Signal ((Int, Int, Int, Int, Int), Int, [a] -> [b] -> [c] -> [d] -> [e] -> [f])
-             -> Signal a -> Signal b -> Signal c -> Signal d -> Signal e -> Signal f
-zipWith5SADF NullS _ _ _ _ _ = NullS
-zipWith5SADF ct as bs cs ds es
-  | c1 < 0 || c2 < 0 || c3 < 0 || c4 < 0 || c5 < 0
-    = error "zipWith5SADF: Number of consumed tokens must be a non-negative integer"
-  | (not $ sufficient_tokens c1 as)
-    || (not $ sufficient_tokens c2 bs)
-    || (not $ sufficient_tokens c3 cs)
-    || (not $ sufficient_tokens c4 ds)
-    || (not $ sufficient_tokens c5 es) = NullS
-  | otherwise = if length produced_tokens == p then
-                  signal produced_tokens +-+ zipWith5SADF (tailS ct) (dropS c1 as)
-                                              (dropS c2 bs) (dropS c3 cs) (dropS c4 ds) (dropS c5 es)
-                else
-                  error "zipWith5SADF: Function does not produce correct number of tokens"
-  where ((c1, c2, c3, c4, c5), p, f) = headS ct
-        consumed_tokens_as = fromSignal $ takeS c1 as
-        consumed_tokens_bs = fromSignal $ takeS c2 bs
-        consumed_tokens_cs = fromSignal $ takeS c3 cs
-        consumed_tokens_ds = fromSignal $ takeS c4 ds
-        consumed_tokens_es = fromSignal $ takeS c5 es
-        produced_tokens = f consumed_tokens_as consumed_tokens_bs
-                            consumed_tokens_cs consumed_tokens_ds consumed_tokens_es
 
 -------------------------------------
 --             --
@@ -804,6 +680,132 @@ detector55SADF :: (Int, Int, Int, Int, Int)
 detector55SADF c f g s0 as bs cs ds es = outputFSM5 g next_state
   where next_state = nextStateFSM5 c f current_state as bs cs ds es
         current_state = delaySADF s0 next_state
+
+
+------------------------------------------------------------------------
+-- COMBINATIONAL PROCESS CONSTRUCTORS
+------------------------------------------------------------------------
+
+-- | The process constructor 'mapSADF' takes a signal of scenarios
+-- (tuples with the consumed and produced tokens as well as a function operating
+-- on lists), and results in an SADF-process that takes an input signal and results
+-- in an output signal
+mapSADF :: Signal (Int, Int, [a] -> [b]) -> Signal a -> Signal b
+mapSADF NullS _ = NullS
+mapSADF ct xs
+  | c < 0 = error "mapSADF: Number of consumed tokens must be a non-negative integer"
+  | not $ sufficient_tokens c xs  = NullS
+  | otherwise = if length produced_tokens == p then
+                  signal produced_tokens +-+ mapSADF (tailS ct) (dropS c xs)
+                else
+                  error "mapSADF: Function does not produce correct number of tokens"
+  where (c, p, f) = headS ct
+        consumed_tokens = fromSignal $ takeS c xs
+        produced_tokens = f consumed_tokens
+
+
+-- | The process constructor 'zipWithSADF' takes a signal of scenarios
+-- (tuples with the consumed and produced tokens as well as a function operating
+-- on lists), and results in an SADF-process that takes two input signals and
+-- results in an output signal
+zipWithSADF :: Signal ((Int, Int), Int, [a] -> [b] -> [c])
+            -> Signal a -> Signal b -> Signal c
+zipWithSADF NullS _ _ = NullS
+zipWithSADF ct as bs
+  | c1 < 0 || c2 < 0  = error "zipWithSADF: Number of consumed tokens must be a non-negative integer"
+  | (not $ sufficient_tokens c1 as)
+    || (not $ sufficient_tokens c2 bs) = NullS
+  | otherwise = if length produced_tokens == p then
+                  signal produced_tokens +-+ zipWithSADF (tailS ct) (dropS c1 as) (dropS c2 bs)
+                else
+                  error "zipWithSADF: Function does not produce correct number of tokens"
+  where ((c1,c2), p, f) = headS ct
+        consumed_tokens_as = fromSignal $ takeS c1 as
+        consumed_tokens_bs = fromSignal $ takeS c2 bs
+        produced_tokens = f consumed_tokens_as consumed_tokens_bs
+
+
+-- | The process constructor 'zipWith3SADF' takes a signal of scenarios
+-- (tuples with the consumed and produced tokens as well as a function operating
+-- on lists), and results in an SADF-process that takes three input signals and
+-- results in an output signal
+zipWith3SADF :: Signal ((Int, Int, Int), Int, [a] -> [b] -> [c] -> [d])
+             -> Signal a -> Signal b -> Signal c -> Signal d
+zipWith3SADF NullS _ _ _ = NullS
+zipWith3SADF ct as bs cs
+  | c1 < 0 || c2 < 0 || c3 < 0
+    = error "zipWith3SADF: Number of consumed tokens must be a non-negative integer"
+  | (not $ sufficient_tokens c1 as)
+    || (not $ sufficient_tokens c2 bs)
+    || (not $ sufficient_tokens c3 cs) = NullS
+  | otherwise = if length produced_tokens == p then
+                  signal produced_tokens +-+ zipWith3SADF (tailS ct) (dropS c1 as)
+                                                        (dropS c2 bs) (dropS c3 cs)
+                else
+                  error "zipWith3SADF: Function does not produce correct number of tokens"
+  where ((c1, c2, c3), p, f) = headS ct
+        consumed_tokens_as = fromSignal $ takeS c1 as
+        consumed_tokens_bs = fromSignal $ takeS c2 bs
+        consumed_tokens_cs = fromSignal $ takeS c3 cs
+        produced_tokens = f consumed_tokens_as consumed_tokens_bs consumed_tokens_cs
+
+
+-- | The process constructor 'zipWith4SADF' takes a signal of scenarios
+-- (tuples with the consumed and produced tokens as well as a function operating
+-- on lists), and results in an SADF-process that takes four input signals and
+-- results in an output signal
+zipWith4SADF :: Signal ((Int, Int, Int, Int), Int, [a] -> [b] -> [c] -> [d] -> [e])
+             -> Signal a -> Signal b -> Signal c -> Signal d -> Signal e
+zipWith4SADF NullS _ _ _ _ = NullS
+zipWith4SADF ct as bs cs ds
+  | c1 < 0 || c2 < 0 || c3 < 0 || c4 < 0
+    = error "zipWith4SADF: Number of consumed tokens must be a non-negative integer"
+  | (not $ sufficient_tokens c1 as)
+    || (not $ sufficient_tokens c2 bs)
+    || (not $ sufficient_tokens c3 cs)
+    || (not $ sufficient_tokens c4 ds) = NullS
+  | otherwise = if length produced_tokens == p then
+                  signal produced_tokens +-+ zipWith4SADF (tailS ct) (dropS c1 as)
+                                              (dropS c2 bs) (dropS c3 cs) (dropS c4 ds)
+                else
+                  error "zipWith4SADF: Function does not produce correct number of tokens"
+  where ((c1, c2, c3, c4), p, f) = headS ct
+        consumed_tokens_as = fromSignal $ takeS c1 as
+        consumed_tokens_bs = fromSignal $ takeS c2 bs
+        consumed_tokens_cs = fromSignal $ takeS c3 cs
+        consumed_tokens_ds = fromSignal $ takeS c4 ds
+        produced_tokens = f consumed_tokens_as consumed_tokens_bs
+                            consumed_tokens_cs consumed_tokens_ds
+
+
+-- | The process constructor 'zipWith5SADF' takes a signal of scenarios
+-- (tuples with the consumed and produced tokens as well as a function operating
+-- on lists), and results in an SADF-process that takes five input signals and
+-- results in an output signal
+zipWith5SADF :: Signal ((Int, Int, Int, Int, Int), Int, [a] -> [b] -> [c] -> [d] -> [e] -> [f])
+             -> Signal a -> Signal b -> Signal c -> Signal d -> Signal e -> Signal f
+zipWith5SADF NullS _ _ _ _ _ = NullS
+zipWith5SADF ct as bs cs ds es
+  | c1 < 0 || c2 < 0 || c3 < 0 || c4 < 0 || c5 < 0
+    = error "zipWith5SADF: Number of consumed tokens must be a non-negative integer"
+  | (not $ sufficient_tokens c1 as)
+    || (not $ sufficient_tokens c2 bs)
+    || (not $ sufficient_tokens c3 cs)
+    || (not $ sufficient_tokens c4 ds)
+    || (not $ sufficient_tokens c5 es) = NullS
+  | otherwise = if length produced_tokens == p then
+                  signal produced_tokens +-+ zipWith5SADF (tailS ct) (dropS c1 as)
+                                              (dropS c2 bs) (dropS c3 cs) (dropS c4 ds) (dropS c5 es)
+                else
+                  error "zipWith5SADF: Function does not produce correct number of tokens"
+  where ((c1, c2, c3, c4, c5), p, f) = headS ct
+        consumed_tokens_as = fromSignal $ takeS c1 as
+        consumed_tokens_bs = fromSignal $ takeS c2 bs
+        consumed_tokens_cs = fromSignal $ takeS c3 cs
+        consumed_tokens_ds = fromSignal $ takeS c4 ds
+        consumed_tokens_es = fromSignal $ takeS c5 es
+        produced_tokens = f consumed_tokens_as consumed_tokens_bs
+                            consumed_tokens_cs consumed_tokens_ds consumed_tokens_es
 
 
 ------------------------------------------------------------------------
