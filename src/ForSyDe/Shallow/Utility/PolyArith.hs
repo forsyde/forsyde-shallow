@@ -3,16 +3,21 @@
 -- Module  :  ForSyDe.Shallow.Utility.PolyArith
 -- Copyright   :  (c) ForSyDe Group, KTH 2007-2008
 -- License     :  BSD-style (see the file LICENSE)
--- 
+--
 -- Maintainer  :  forsyde-dev@ict.kth.se
 -- Stability   :  experimental
 -- Portability :  portable
 --
--- This is the polynomial arithematic library. The arithematic operations include 
--- addition, multiplication, division and power. However, the computation time is 
--- not optimized for multiplication and is O(n2), which could be considered to be 
+-- This is the polynomial arithematic library. The arithematic operations include
+-- addition, multiplication, division and power. However, the computation time is
+-- not optimized for multiplication and is O(n2), which could be considered to be
 -- optimized by FFT algorithms later on.
 -----------------------------------------------------------------------------
+
+-- The DatatypeContexts fix a bug on the polynomial datatype, but is a
+-- deprecated extension. This should be reviewed later.
+{-# LANGUAGE DatatypeContexts #-}
+
 module ForSyDe.Shallow.Utility.PolyArith(
       -- *Polynomial data type
       Poly(..),
@@ -21,10 +26,10 @@ module ForSyDe.Shallow.Utility.PolyArith(
       -- *Some helper functions
       getCoef, scalePoly, addPolyCoef, subPolyCoef, scalePolyCoef
     )
-    where 
+    where
 
 -- |Polynomial data type.
-data Num a => Poly a = Poly [a]
+data (Num a) => Poly a = Poly [a]
          | PolyPair (Poly a, Poly a) deriving (Eq)
 
 
@@ -69,7 +74,7 @@ addPoly (Poly a) (PolyPair (c, d) ) =
   where
     multiPolyHelper = mulPoly (Poly a) d
 addPoly  abPoly@(PolyPair _) cPoly@(Poly _) = addPoly cPoly abPoly
- 
+
 -- |Power operation of polynomials.
 powerPoly :: Num a => Poly a -> Int -> Poly a
 powerPoly p n = powerX' (Poly [1]) p n
@@ -103,4 +108,3 @@ zipWithExt _ _ [] [] = []
 zipWithExt (x0,y0) f (x:xs) [] = f x y0 : (zipWithExt (x0,y0) f xs [])
 zipWithExt (x0,y0) f [] (y:ys)  = f x0 y : (zipWithExt (x0,y0) f [] ys)
 zipWithExt (x0,y0) f (x:xs) (y:ys)  = f x y : (zipWithExt (x0,y0) f xs ys)
-
