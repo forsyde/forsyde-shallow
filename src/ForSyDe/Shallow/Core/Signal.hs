@@ -3,7 +3,7 @@
 -- Module  :  ForSyDe.Shallow.Core.Signal
 -- Copyright   :  (c) ForSyDe Group, KTH 2007-2008
 -- License     :  BSD-style (see the file LICENSE)
--- 
+--
 -- Maintainer  :  forsyde-dev@ict.kth.se
 -- Stability   :  experimental
 -- Portability :  portable
@@ -12,7 +12,7 @@
 -- functions operating on it.
 -----------------------------------------------------------------------------
 module ForSyDe.Shallow.Core.Signal(
-  Signal (NullS, (:-)), (-:), (+-+), (!-), 
+  Signal (NullS, (:-)), (-:), (+-+), (!-),
   signal, fromSignal,
   unitS, nullS, headS, tailS, atS, takeS, dropS,
   lengthS, infiniteS, copyS, selectS, writeS, readS, fanS
@@ -29,7 +29,7 @@ data Signal a = NullS
       | a :- Signal a deriving (Eq)
 
 -- | The function 'signal' converts a list into a signal.
-signal     :: [a] -> Signal a 
+signal     :: [a] -> Signal a
 
 -- | The function 'fromSignal' converts a signal into a list.
 fromSignal     :: Signal a -> [a]
@@ -75,7 +75,7 @@ infiniteS      :: (a -> a) -> a -> Signal a
 
 -- | The function 'writeS' transforms a signal into a string of the following format:
 --
--- @ 
+-- @
 -- Signal> writeS (signal[1,2,3,4,5])
 -- "1\n2\n3\n4\n5\n" :: [Char]
 -- @
@@ -92,8 +92,8 @@ readS      :: Read a => [Char] -> Signal a
 -- | The operator '-:' adds at an element to a signal at the tail.
 (-:)       :: Signal a -> a -> Signal a
 
--- | The operator '+-+' concatinates two signals into one signal.  
-(+-+)      :: Signal a -> Signal a -> Signal a 
+-- | The operator '+-+' concatinates two signals into one signal.
+(+-+)      :: Signal a -> Signal a -> Signal a
 
 
 -- | The function 'copyS' creates a signal with n values 'x'.
@@ -101,7 +101,7 @@ copyS :: (Num a, Eq a) => a -> b -> Signal b
 
 
 -- | The combinator 'fanS' takes two processes 'p1' and 'p2' and and generates a process network, where a signal is split and processed by the processes 'p1' and 'p2'.
-fanS :: (Signal a -> Signal b) -> (Signal a -> Signal c) 
+fanS :: (Signal a -> Signal b) -> (Signal a -> Signal c)
       -> Signal a -> (Signal b, Signal c)
 
 -- Implementation
@@ -123,10 +123,10 @@ readsSignal s
      | ("{", r2)   <- lex s,
        (x, r3)     <- reads r2,
        ("}", rest) <- lex r3]
-     ++ [(NullS, r4)       
+     ++ [(NullS, r4)
         | ("{", r5) <- lex s,
           ("}", r4) <- lex r5]
-     ++ [((x:-xs), r6)     
+     ++ [((x:-xs), r6)
         | ("{", r7) <- lex s,
           (x, r8)   <- reads r7,
           (",", r9) <- lex r8,
@@ -134,16 +134,16 @@ readsSignal s
 
 readsValues    :: (Read a) => ReadS (Signal a)
 readsValues s
-  =  [((x:-NullS), r1) 
+  =  [((x:-NullS), r1)
      | (x, r2)   <- reads s,
        ("}", r1) <- lex r2]
-     ++ [((x:-xs), r3)    
+     ++ [((x:-xs), r3)
         | (x, r4)   <- reads s,
           (",", r5) <- lex r4,
           (xs, r3)  <- readsValues r5]
 
 signal []          =  NullS
-signal (x:xs)      =  x :- signal xs 
+signal (x:xs)      =  x :- signal xs
 
 fromSignal NullS   =  []
 fromSignal (x:-xs) =  x : fromSignal xs
@@ -173,16 +173,16 @@ takeS n (x:-xs)
   | otherwise  = x :- takeS (n-1) xs
 
 dropS 0 NullS  = NullS
-dropS _ NullS  = NullS 
+dropS _ NullS  = NullS
 dropS n (x:-xs)
   | n <= 0     = x:-xs
   | otherwise  = dropS (n-1) xs
 
 
-selectS offset step xs = select1S step (dropS offset xs) 
+selectS offset step xs = select1S step (dropS offset xs)
   where
     select1S _  NullS   = NullS
-    select1S st (y:-ys) = y :- select1S st (dropS (st-1) ys) 
+    select1S st (y:-ys) = y :- select1S st (dropS (st-1) ys)
 
 (-:) xs x = xs +-+ (x :- NullS)
 
@@ -207,16 +207,3 @@ readS xs             = readS' (words xs)
     readS' []        = NullS
     readS' ("\n":ys) = readS' ys
     readS' (y:ys)    = read y :- readS' ys
-
-
-
-
-
-
-
-
-
-
-
-
-

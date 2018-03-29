@@ -3,7 +3,7 @@
 -- Module      :  ForSyDe.Shallow.MoC.Synchronous.Process
 -- Copyright   :  (c) ForSyDe Group, KTH 2007-2008
 -- License     :  BSD-style (see the file LICENSE)
--- 
+--
 -- Maintainer  :  forsyde-dev@ict.kth.se
 -- Stability   :  experimental
 -- Portability :  portable
@@ -34,14 +34,14 @@ finiteFifoDelaySY   :: Int -> Signal [a] -> Signal (AbstExt a)
 
 -- | The process 'memorySY' implements a synchronous memory. It uses
 -- access functions of the type 'Read adr' and 'Write adr value'.
-memorySY        :: Int -> Signal (Access a) -> Signal (AbstExt a) 
+memorySY        :: Int -> Signal (Access a) -> Signal (AbstExt a)
 
 -- | The process 'mergeSY' merges two input signals into a single
 -- signal. The process has an internal buffer in order to prevent loss
 -- of data. The process is deterministic and outputs events according
 -- to their time tag. If there are two valid values at on both
 -- signals. The value of the first signal is output first.
-mergeSY         :: Signal (AbstExt a) -> Signal (AbstExt a) 
+mergeSY         :: Signal (AbstExt a) -> Signal (AbstExt a)
            -> Signal (AbstExt a)
 
 -- | The process 'counterSY' implements a counter, that counts from
@@ -64,7 +64,7 @@ fifoOutput :: Queue a -> AbstExt a
 fifoOutput (Q [])    = Abst
 fifoOutput (Q (x:_)) = Prst x
 
-finiteFifoDelaySY n xs 
+finiteFifoDelaySY n xs
   = mooreSY fifoStateFQ fifoOutputFQ (finiteQueue n []) xs
 
 fifoStateFQ :: FiniteQueue a -> [a] -> FiniteQueue a
@@ -76,7 +76,7 @@ fifoOutputFQ (FQ _ [])    = Abst
 fifoOutputFQ (FQ _ (x:_)) = Prst x
 
 memorySY size xs       = mealySY ns o (newMem size) xs
-  where 
+  where
     ns mem (Read x)    = memState mem (Read x)
     ns mem (Write x v) = memState mem (Write x v)
     o  mem (Read x)    = memOutput mem (Read x)
@@ -84,7 +84,7 @@ memorySY size xs       = mealySY ns o (newMem size) xs
 
 
 mergeSY xs ys                           = moore2SY mergeState mergeOutput [] xs ys
-  where 
+  where
     mergeState []     Abst     Abst     = []
     mergeState []     Abst     (Prst y) = [y]
     mergeState []     (Prst x) Abst     = [x]
@@ -94,21 +94,19 @@ mergeSY xs ys                           = moore2SY mergeState mergeOutput [] xs 
     mergeState (_:us) (Prst x) Abst     = us ++ [x]
     mergeState (_:us) (Prst x) (Prst y) = us ++ [x, y]
     mergeOutput []    = Abst
-    mergeOutput (u:_) = Prst u 
+    mergeOutput (u:_) = Prst u
 
-groupSY k                      = mealySY f g s0 
+groupSY k                      = mealySY f g s0
   where
     s0                         = NullV
     f v x | (lengthV v) == 0   = unitV x
-          | (lengthV v) == k   = unitV x 
+          | (lengthV v) == k   = unitV x
           | otherwise          = v <: x
     g v _ | (lengthV v) == 0   = Abst
     g v x | (lengthV v) == k-1 = Prst (v<:x)
     g _ _ | otherwise          = Abst
- 
+
 counterSY m n = sourceSY f m
-  where 
+  where
     f x | x >= n    = m
         | otherwise = succ x
-
-
