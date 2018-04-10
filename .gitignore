@@ -7,20 +7,16 @@ cabal.sandbox.config
 src/ForSyDe/Shallow/fig/*
 .#*
 
-
-########### Craps added by Ricardo ###############
-# Crap from sharing sandbox using --sandbox option
+# Ignore these directories from sharing sandbox using --sandbox option
 lib/*
 logs/*
 packages/*
 share/*
-x86_64-osx-ghc-8.0.1-packages.conf.d/*
-x86_64-linux-ghc-8.0.2-packages.conf.d/*
+*.conf.d/*
 add-source-timestamps
 
-# Crap from MacOS X
+# Ignore this file from MacOS X
 **/.DS_Store
-##################################################
 
 
 # Except this file

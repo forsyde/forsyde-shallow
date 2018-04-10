@@ -13,17 +13,10 @@
 -----------------------------------------------------------------------------
 
 module ForSyDe.Shallow.MoC.CSDF (
-  -- -- * Combinational Process Constructors
-  -- -- | Combinational process constructors are used for processes that
-  -- -- do not have a state.
-  -- mapCSDF, zipWithCSDF, zipWith3CSDF, zipWith4CSDF,
   -- * Sequential Process Constructors
   -- | Sequential process constructors are used for processes that
   -- have a state. One of the input parameters is the initial state.
-  delayCSDF, delaynCSDF,
-  -- -- * Processes
-  -- -- | Processes to unzip a signal of tupels into a tuple of signals
-  -- unzipCSDF, unzip3CSDF, unzip4CSDF,
+  delayCSDF,
   -- * Actors
   -- | Based on the process constructors in the CSDF-MoC, the
   -- CSDF-library provides CSDF-actors with single or multiple inputs
@@ -42,23 +35,11 @@ import ForSyDe.Shallow.Core
 --             --
 -------------------------------------
 
--- | The process constructor 'delayCSDF' delays the signal one event
---   cycle by introducing an initial value at the beginning of the
---   output signal. Note, that this implies that there is one event
---   (the first) at the output signal that has no corresponding event at
---   the input signal. One could argue that input and output signals
---   are not fully synchronized, even though all input events are
---   synchronous with a corresponding output event. However, this is
---   necessary to initialize feed-back loops.
-delayCSDF :: a -> Signal a -> Signal a
-delayCSDF x xs = x :- xs
-
-
 -- | The process constructor 'delaynCSDF' delays the signal n event
 --   cycles by introducing n initial values at the beginning of the
 --   output signal.
-delaynCSDF :: [a] -> Signal a -> Signal a
-delaynCSDF initial_tokens xs = signal initial_tokens +-+ xs
+delayCSDF :: [a] -> Signal a -> Signal a
+delayCSDF initial_tokens xs = signal initial_tokens +-+ xs
 
 
 ------------------------------------------------------------------------
@@ -438,7 +419,7 @@ inpOut4n ((it, _, f):xs) = (it, 1, \a b c d -> [f a b c d]) : inpOut4n xs
 
 test1 :: Num a => Signal a
 test1 = s3
-  where s3 = delaynCSDF [1,1] s2
+  where s3 = delayCSDF [1,1] s2
         s2 = v2 s1
         s1 = v1 s4
         s4 = v3 s3
