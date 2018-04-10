@@ -36,9 +36,6 @@ module ForSyDe.Shallow.MoC (
 
   -- | The library for the Cyclo-Static Dataflow MoC
   module ForSyDe.Shallow.MoC.CSDF,
-
-  -- | The library for the Scenario Aware Dataflow MoC
-  module ForSyDe.Shallow.MoC.SADF
   ) where
 
 import ForSyDe.Shallow.MoC.Dataflow
@@ -49,4 +46,3 @@ import ForSyDe.Shallow.MoC.SDF
 import ForSyDe.Shallow.MoC.Synchronous
 import ForSyDe.Shallow.MoC.Untimed
 import ForSyDe.Shallow.MoC.CSDF
-import ForSyDe.Shallow.MoC.SADF
