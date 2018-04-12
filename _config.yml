@@ -1,1 +1,21 @@
-theme: jekyll-theme-slate
+name: ForSyDe-Shallow
+description: A Framework for Modeling Cyber-Physical Systems
+remote_theme: forsyde/forsyde-web-theme@0.1.2
+
+parent-url: https://forsyde.github.io
+
+maintainer:
+  name: ugeorge
+  url: https://github.com/ugeorge
+
+github-releases:
+  zip_url: https://api.github.com/repos/forsyde/forsyde-shallow/zipball/master
+  tar_url: https://api.github.com/repos/forsyde/forsyde-shallow/tarball/master
+
+## paths to exclude from the site generation
+exclude: [script, Gemfile, Gemfile.lock, dist,  examples,  forsyde-shallow.cabal,  LICENSE,  README.md,  Setup.hs,  src,  test]
+
+plugins:
+- jekyll-seo-tag
+- jekyll-remote-theme
+- jekyll-sitemap

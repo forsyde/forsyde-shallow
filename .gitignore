@@ -6,6 +6,9 @@ dist/*
 cabal.sandbox.config
 src/ForSyDe/Shallow/fig/*
 .#*
+_site*
+Gemfile.lock
+.sass-cache*
 
 # Except this file
 !.gitignore
