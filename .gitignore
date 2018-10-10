@@ -6,6 +6,7 @@ dist/*
 cabal.sandbox.config
 src/ForSyDe/Shallow/fig/*
 .#*
+.stack-work/*
 
 # Ignore these directories from sharing sandbox using --sandbox option
 lib/*

@@ -24,10 +24,41 @@ Installation
 The [`forsyde-shallow`](https://hackage.haskell.org/package/forsyde-shallow)
 package is available through [HackageDB](https://hackage.haskell.org/)
 and the latest stable release can be installed via your favorite
-Haskell package manager, e.g.:
+Haskell package manager.
+
+### Using Stack
+
+The easiest way to getting started is by using the
+[Stack](https://docs.haskellstack.org/en/stable/README/) package
+manager, which takes care of fetching and installing an appropriate
+version of the Haskell compiler, the dependent packages, and sets
+everything up in a sandboxed environment.
+
+    stack update
+    stack upgrade
+    stack install forsyde-shallow
+    stack ghci      # starts an interpreter session
+	
+To install the latest updates and nightly builds you need clone
+[this repository](https://github.com/forsyde/forsyde-shallow). To
+install and use the contents of this repository globally, some useful
+commands are:
+
+    stack install
+	stack test                        # runs the test suites
+	stack haddock                     # generates the API documentation
+	stack ghci --no-load              # starts an interpreter session, option given to avoid pre-loading all modules
+
+### Using Cabal
+
+You can use the [Cabal](https://www.haskell.org/cabal/) package
+manager, but then you need to take care of acquiring an appropriate
+Haskell tool suite which includes the GHC compiler and the
+`cabal-install` package.
 
     cabal update
     cabal install forsyde-shallow
+    ghci
 	
 To install the latest updates and nightly builds you need clone
 [this repository](https://github.com/forsyde/forsyde-shallow). To

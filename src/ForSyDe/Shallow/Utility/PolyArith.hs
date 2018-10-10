@@ -24,8 +24,8 @@ module ForSyDe.Shallow.Utility.PolyArith(
     where 
 
 -- |Polynomial data type.
-data Num a => Poly a = Poly [a]
-         | PolyPair (Poly a, Poly a) deriving (Eq)
+data Poly a = Poly [a]
+            | PolyPair (Poly a, Poly a) deriving (Eq)
 
 
 -- |Multiplication operation of polynomials.
