@@ -1,5 +1,5 @@
 name: ForSyDe-Shallow
-description: A Framework for Modeling Cyber-Physical Systems
+description: A Framework for Modeling Heterogeneous Systems
 remote_theme: forsyde/forsyde-web-theme@0.1.2
 
 parent-url: https://forsyde.github.io

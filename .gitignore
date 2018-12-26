@@ -9,6 +9,18 @@ src/ForSyDe/Shallow/fig/*
 _site*
 Gemfile.lock
 .sass-cache*
+.stack-work/*
+
+# Ignore these directories from sharing sandbox using --sandbox option
+lib/*
+logs/*
+packages/*
+share/*
+*.conf.d/*
+add-source-timestamps
+
+# Ignore this file from MacOS X
+**/.DS_Store
 
 # Except this file
 !.gitignore
