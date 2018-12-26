@@ -17,7 +17,7 @@ ForSyDe-Shallow is the first and most long-lived incarnation of the ForSyDe mode
 * Processes of different MoCs communicate via *domain interfaces*.
 
 <p align="center">
-	<img src="/assets/images/forsyde-system-model.svg">
+	<img src="{{ site.url }}/assets/images/forsyde-system-model.svg">
 </p>
 
 #### Process
@@ -28,7 +28,7 @@ A process takes /m/ input signals as argument and produces /n/ output signals. F
  * The process constructor defines the **model of computation** and the **communication interface** of the process
  * The process constructor takes side-effect free **functions** and **variables** as arguments and returns a process
 
-<p align="center"><img src="/assets/images/forsyde-process-constructor.svg"></p>
+<p align="center"><img src="{{ site.url }}/assets/images/forsyde-process-constructor.svg"></p>
 <p align="center"><small>The process constructor <it>mooreSY</it> constructs a Moore FSM process belonging to the synchronous MoC.</small></p>
 
 #### Process Constructor
