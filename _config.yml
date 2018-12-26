@@ -2,6 +2,7 @@ name: ForSyDe-Shallow
 description: A Framework for Modeling Heterogeneous Systems
 remote_theme: forsyde/forsyde-web-theme@0.1.2
 
+url: https://forsyde.github.io/forsyde-shallow
 parent-url: https://forsyde.github.io
 
 maintainer:
