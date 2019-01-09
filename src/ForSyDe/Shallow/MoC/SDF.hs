@@ -286,7 +286,6 @@ zipWith3SDF (c1, c2, c3) f as bs cs
         consumed_tokens_cs = fromSignal $ takeS c3 cs
         produced_tokens = f consumed_tokens_as consumed_tokens_bs consumed_tokens_cs
   
-
 -- | The process constructor 'zipWith4SDF' takes a tuple @(c1, c2, c3,c4)@
 -- denoting the number of consumed tokens and an integer @p@
 -- denoting the number of produced tokens and a function @f@ that
@@ -317,7 +316,6 @@ zipWith4SDF (c1, c2, c3, c4) f as bs cs ds
         produced_tokens = f consumed_tokens_as consumed_tokens_bs
                             consumed_tokens_cs consumed_tokens_ds
         
-
 ---------------------------------------------------------------------
 -- unzipSDF Processes
 ---------------------------------------------------------------------

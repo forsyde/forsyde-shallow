@@ -1,5 +1,5 @@
 name:           forsyde-shallow
-version:        3.3.3.0
+version:        3.3.4.0
 cabal-version:  >= 1.8
 build-type:     Simple
 license:        BSD3
@@ -42,6 +42,7 @@ Library
                  , ForSyDe.Shallow.Core
                  , ForSyDe.Shallow.Core.Signal
                  , ForSyDe.Shallow.Core.Vector
+                 , ForSyDe.Shallow.Core.Matrix
                  , ForSyDe.Shallow.Core.AbsentExt
                  , ForSyDe.Shallow.Core.BitVector
                  , ForSyDe.Shallow.MoC
@@ -66,6 +67,8 @@ Library
                  , ForSyDe.Shallow.Utility.FilterLib
                  , ForSyDe.Shallow.Utility.Gaussian
                  , ForSyDe.Shallow.Utility.Memory
+  other-modules:
+      Paths_forsyde_shallow
   ghc-options:	-Wall -fno-warn-name-shadowing
 
 
