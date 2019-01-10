@@ -32,7 +32,7 @@ module ForSyDe.Shallow.Core.Vector (
   -- * Functional skeletons
   mapV, zipWithV, zipWith3V,
   reduceV, pipeV, foldlV, foldrV, 
-  -- scanlV, scanrV, meshlV, meshrV,,
+  scanlV, scanrV, -- meshlV, meshrV,
   -- * Selectors
   atV, headV, tailV, lastV, initV, headsV, tailsV,
   takeV, dropV, selectV, groupV, filterV, stencilV,
@@ -237,10 +237,10 @@ reduceV f (x:>xs)    = foldrV f x xs
 
 -- | Pipes an element through a vector of functions.
 --
--- >>> pipeV [(*2), (+1), (/3)] 3      -- is the same as ((*2) . (+1) . (/3)) 3
--- 2
+-- >>> vector [(*2), (+1), (/3)] `pipeV` 3      -- is the same as ((*2) . (+1) . (/3)) 3
+-- 4.0
 pipeV :: Vector (a -> a) -> a -> a
-pipeV = reduceV (.)
+pipeV vf = foldrV (.) id vf
 
 -----------------------------------------------------------------------------
 -- SELECTORS
@@ -472,6 +472,31 @@ reverseV  :: Vector a -> Vector a
 reverseV NullV   = NullV
 reverseV (v:>vs) = reverseV vs <: v
 
+-- | Performs the parallel prefix operation on a vector.
+--
+-- >>> scanlV (+) 0 $ vector [1,1,1,1,1,1]
+-- <1,2,3,4,5,6>
+scanlV    :: (a -> b -> a)  -- ^ funtion to generate next element
+          -> a              -- ^ initial element
+          -> Vector b       -- ^ input vector; /length/ = @l@
+          -> Vector a       -- ^ output vector; /length/ = @l@ 
+scanlV _ _ NullV   = NullV
+scanlV f a (x:>xs) = q :> scanlV f q xs 
+       where q = f a x
+             
+-- | Performs the parallel suffix operation on a vector.
+--
+-- >>> scanrV (+) 0 $ vector [1,1,1,1,1,1]
+-- <6,5,4,3,2,1>
+scanrV    :: (b -> a -> a)   -- ^ funtion to generate next element
+          -> a               -- ^ initial element       
+          -> Vector b        -- ^ input vector; /length/ = @l@
+          -> Vector a        -- ^ output vector; /length/ = @l@ 
+scanrV _ _ NullV  = NullV
+scanrV f a (x:>NullV) = f x a :> NullV
+scanrV f a (x:>xs)    = f x y :> ys 
+          where ys@(y:>_) = scanrV f a xs
+
 {-
 -- | The function 'serialV' can be used to construct a serial network of processes.
 
@@ -529,15 +554,6 @@ parallelV _  NullV
 parallelV NullV  _   
    = error "parallelV: Vectors have not the same size!"
 parallelV (f:>fs) (x:>xs) = f x :> parallelV fs xs
-
-scanlV _ _ NullV   = NullV
-scanlV f a (x:>xs) = q :> scanlV f q xs 
-       where q = f a x
-
-scanrV _ _ NullV  = NullV
-scanrV f a (x:>NullV) = f x a :> NullV
-scanrV f a (x:>xs)    = f x y :> ys 
-          where ys@(y:>_) = scanrV f a xs
 
 meshlV _ a NullV   = (a, NullV)
 meshlV f a (x:>xs) = (a'', y:>ys) 

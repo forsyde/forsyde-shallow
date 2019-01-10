@@ -16,7 +16,9 @@
 module ForSyDe.Shallow.Utility (  
   module ForSyDe.Shallow.Utility.DFT,    
   module ForSyDe.Shallow.Utility.Memory,
-  module ForSyDe.Shallow.Utility.Queue
+  module ForSyDe.Shallow.Utility.Queue,
+  module ForSyDe.Shallow.Utility.Matrix
+  --module ForSyDe.Shallow.Utility.BitVector,
   --module ForSyDe.Shallow.Utility.FilterLib,
   --module ForSyDe.Shallow.Utility.Gaussian,
   --module ForSyDe.Shallow.Utility.PolyArith,
@@ -26,6 +28,8 @@ module ForSyDe.Shallow.Utility (
 import ForSyDe.Shallow.Utility.DFT      
 import ForSyDe.Shallow.Utility.Memory
 import ForSyDe.Shallow.Utility.Queue
+import ForSyDe.Shallow.Utility.Matrix
+--import ForSyDe.Shallow.Utility.BitVector
 --import ForSyDe.Shallow.Utility.FilterLib
 --import ForSyDe.Shallow.Utility.Gaussian
 --import ForSyDe.Shallow.Utility.PolyArith
