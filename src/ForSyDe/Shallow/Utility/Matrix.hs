@@ -33,6 +33,7 @@ module ForSyDe.Shallow.Utility.Matrix (
   -- * Selectors
   atMat, takeMat, dropMat, cropMat, groupMat, stencilMat,
   -- * Permutators
+  zipMat, unzipMat,
   rotateMat, reverseMat, transposeMat, replaceMat
   ) where
 
@@ -333,3 +334,12 @@ replaceMat x y mask = replace y h (zipWithV (\m o -> replace x w (\_ -> m) o) ma
             middle = replaceF $ dropV start $ takeV (start + size) vec
             end    = dropV (start + size) vec
         in begin <+> middle <+> end
+
+zipMat :: Matrix a     -- ^ /size/ = @(xa,ya)@
+       -> Matrix b     -- ^ /size/ = @(xb,yb)@
+       -> Matrix (a,b) -- ^ /size/ = @(minimum [xa,xb], minimum [ya,yb])@
+zipMat = zipWithMat (,)
+
+unzipMat :: Matrix (a,b)         -- ^ /size/ = @(x,y)@
+         -> (Matrix a, Matrix b) -- ^ /size/ = @(x,y)@ and @(x,y)@
+unzipMat = unzipV . mapV unzipV
