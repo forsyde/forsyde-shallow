@@ -88,12 +88,18 @@ wellFormedMat m@(x:>xs)
   | reduceV (&&) (mapV (\r -> lengthV r == lengthV x) xs) = m
   | otherwise = error "matrix ill-formed: rows are of unequal lengths"
 
+groupEvery n [] = []
+groupEvery n l
+  | n < 0        = error $ "cannot group list by negative n: " ++ show n
+  | length l < n = error "input list cannot be split into all-equal parts"
+  | otherwise    = take n l : groupEvery n (drop n l)
+
 -- | Converts a list into a 'Matrix'. See example from 'prettyMat'.
 matrix :: Int      -- ^ number of columns (X dimension) @= x@
        -> Int      -- ^ number of rows (Y dimension) @= y@
        -> [a]      -- ^ list of values; /length/ = @x * y@
        -> Matrix a -- ^ 'Matrix' of values; /size/ = @(x,y)@
-matrix x y = groupV x . vector . check
+matrix x y = vector . map vector . groupEvery x . check
   where
     check l | length l == x * y = l
             | otherwise
@@ -104,7 +110,7 @@ matrix x y = groupV x . vector . check
 -- | Converts a matrix back to a list.
 fromMatrix :: Matrix a -- ^ /size/ = @(x,y)@
            -> [a]      -- ^ /length/ = @x * y@
-fromMatrix = fromVector . concatV
+fromMatrix = concatMap fromVector . fromVector
 
 -- | Creates a unit (i.e. singleton) matrix, which is a matrix with
 -- only one element.
