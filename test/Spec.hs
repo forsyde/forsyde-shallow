@@ -50,6 +50,64 @@ test_adaptiveAmp n = sout
                     | otherwise         = state
           p4 = initU [10] 
 
+-- | Testing feedback loops in in SDF library
+test_toySDF :: Signal Double -> Signal Double
+test_toySDF s_in = s_out where
+    s_1   = p_add s_in s_2
+    s_2   = p_delay s_1
+    s_out = p_average s_2   
+  -- Process specification
+    p_add s1 s2 = actor21SDF (1,1) 1 add s1 s2
+    p_delay s   = delaySDF 0 s
+    p_average s = actor11SDF 3 1 average s
+  -- Function definition
+    add [x] [y] = [x + y]
+    average [x1,x2,x3] = [(x1 + x2 + x3) / 3.0]
+s_test = signal [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]
+
+-- test1: CSDF graph from the paper Cyclo-Static Dataflow
+test_toyCSDF :: Num a => Signal a
+test_toyCSDF = s3
+  where s3 = delayCSDF [1,1] s2
+        s2 = v2 s1
+        s1 = v1 s4
+        s4 = v3 s3
+        v1 = actor11CSDF [(1, 1, \[a] -> [a]), (1, 0, \_ -> []), (1, 0, \_ -> [])]
+        v2 = actor11CSDF [(1, 0, \_ -> []), (1, 2, \[a] -> [a, 2*a])]
+        v3 = actor11CSDF [(1, 3, \[a] -> [a, 2*a, 3*a])]
+
+test_antiWindUpSADF :: (Num a, Ord a) => Signal a -> Signal a
+test_antiWindUpSADF input = output
+  where
+    output = integrator c1 s1 s3
+    s3 = delaySADF [0] output
+    s1 = kernel11SADF c2 input
+    (c1, c2) = detector s3 input
+    integrator = kernel21SADF
+    -- Detector
+    detector :: (Num a, Ord a) => Signal a -> Signal a
+             -> (Signal ((Int, Int), Int, [a] -> [a] -> [a]),
+                 Signal (Int, Int, [a] -> [a]))
+    detector = detector22SADF (1,1) f g 1
+    -- State transition function for the detector
+    f :: (Num a, Ord a) => Int -> [a] -> [a] -> Int
+    f 1 [y] [v] = if (y > 100 && v > 0 || y < (-100) && v < 0)
+                  then 2
+                  else 1
+    f 2 [y] [v] = if (y > 100 && v > 0 || y < (-100) && v < 0)
+                  then 2
+                  else 1
+    -- Output function for the detector
+    g :: Num a => Int -> ((Int, Int), ([((Int, Int), Int, [a] -> [a] -> [a])], [(Int, Int, [a] -> [a])]))
+    g 1 = ((1,1),
+           ([((1,1), 1, \[a] [b] -> [a+b])],
+            [(1, 1, \[a] -> [a])]))
+    g 2 = ((1,1),
+           ([((0,1), 1, \_ [b] -> [b])],
+            [(1, 0, \[a] -> [])]))
+s2_test = signal $ [10..110]
+
+                 
 main :: IO ()
 main = hspec $ do describe "ForSyDe.Shallow : " $ lab2tests
   where
@@ -60,3 +118,9 @@ main = hspec $ do describe "ForSyDe.Shallow : " $ lab2tests
         `shouldBe`(read "{1,1,2,3,4,8,12,20,32,52}" :: Signal Integer)
       it "U Adaptive Amplifier" $ test_adaptiveAmp 20
         `shouldBe`(read "{100,110,120,130,140,135,144,153,162,171}" :: Signal Integer)
+      it "SDF Feedback Loop" $ test_toySDF s_test
+        `shouldBe`(read "{1.3333333333333333,10.333333333333334}" :: Signal Double)
+      it "CSDF Feedback Loop" $ takeS 10 test_toyCSDF
+        `shouldBe`(read "{1,1,1,2,2,4,4,8,8,16}" :: Signal Integer)
+      it "SADF Anti Wind-up System" $ takeS 10 (test_antiWindUpSADF s2_test)
+        `shouldBe`(read "{10,21,33,46,60,75,91,108,108,108}" :: Signal Integer)

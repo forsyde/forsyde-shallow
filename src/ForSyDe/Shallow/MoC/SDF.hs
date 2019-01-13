@@ -50,13 +50,18 @@ import ForSyDe.Shallow.Core
 --   are not fully synchronized, even though all input events are
 --   synchronous with a corresponding output event. However, this is
 --   necessary to initialize feed-back loops.
+--
+-- >>> delaySDF 3 $ signal [1,2,3,4]
+-- {3,1,2,3,4}
 delaySDF :: a -> Signal a -> Signal a
 delaySDF x xs = x :- xs
 
 
 -- | The process constructor 'delaynSDF' delays the signal n event
 --   cycles by introducing n initial values at the beginning of the
---   output signal.  
+--   output signal.
+-- >>> delaynSDF [0,0,0] $ signal [1,2,3,4]
+-- {0,0,0,1,2,3,4}
 delaynSDF :: [a] -> Signal a -> Signal a 
 delaynSDF initial_tokens xs = signal initial_tokens +-+ xs 
 
@@ -72,6 +77,10 @@ delaynSDF initial_tokens xs = signal initial_tokens +-+ xs
 -- one input and one output signals. For each input or output signal,
 -- the process constructor takes the number of consumed and produced
 -- tokens and the function of the actor as arguments.
+--
+-- >>> let f [a,b] = [a+b,a-b,a*b]
+-- >>> actor11SDF 2 3 f $ signal [1,2,3,4,5]
+-- {3,-1,2,7,-1,12}
 actor11SDF :: Int -> Int -> ([a] -> [b]) -> Signal a -> Signal b
 actor11SDF = mapSDF 
 
@@ -79,6 +88,12 @@ actor11SDF = mapSDF
 -- two input and one output signals. For each input or output signal,
 -- the process constructor takes the number of consumed and produced
 -- tokens and the function of the actor as arguments.
+--
+-- >>> let f [a,b] [c] = [a+b+c,b-c]
+-- >>> let s1 = signal [1..6]
+-- >>> let s2 = signal [1..]
+-- >>> actor21SDF (2,1) 2 f s1 s2
+-- {4,1,9,2,14,3}
 actor21SDF :: (Int, Int) -> Int -> ([a] -> [b] -> [c]) -> Signal a -> Signal b -> Signal c    
 actor21SDF = zipWithSDF
 

@@ -88,7 +88,8 @@ wellFormedMat m@(x:>xs)
   | reduceV (&&) (mapV (\r -> lengthV r == lengthV x) xs) = m
   | otherwise = error "matrix ill-formed: rows are of unequal lengths"
 
-groupEvery n [] = []
+groupEvery :: Int -> [a] -> [[a]]
+groupEvery _ [] = []
 groupEvery n l
   | n < 0        = error $ "cannot group list by negative n: " ++ show n
   | length l < n = error "input list cannot be split into all-equal parts"

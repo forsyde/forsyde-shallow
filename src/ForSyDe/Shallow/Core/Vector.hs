@@ -233,7 +233,7 @@ foldrV f a (x:>xs) = f x (foldrV f a xs)
 reduceV :: (a -> a -> a) -> Vector a -> a
 reduceV _ NullV      = error "Cannot reduce a null vector"
 reduceV _ (x:>NullV) = x
-reduceV f (x:>xs)    = foldrV f x xs
+reduceV f (x:>xs)    = foldlV f x xs
 
 -- | Pipes an element through a vector of functions.
 --

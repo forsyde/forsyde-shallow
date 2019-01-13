@@ -38,6 +38,9 @@ import ForSyDe.Shallow.Core
 -- | The process constructor 'delaynCSDF' delays the signal n event
 --   cycles by introducing n initial values at the beginning of the
 --   output signal.
+--
+-- >>> delayCSDF [3,2,1,0] $ signal [1..5]
+-- {3,2,1,0,1,2,3,4,5}
 delayCSDF :: [a] -> Signal a -> Signal a
 delayCSDF initial_tokens xs = signal initial_tokens +-+ xs
 
@@ -56,6 +59,15 @@ delayCSDF initial_tokens xs = signal initial_tokens +-+ xs
 -- produced tokens and the function) defined in the list of tuples, given as
 -- argument, in a cyclic fashion. The length of the list of scenarios gives the
 -- actor's cycle period.
+--
+-- >>> let c1 = (2,1,\[a,b] -> [a + b])
+-- >>> let c2 = (2,2,\[a,b] -> [max a b, min a b])
+-- >>> let c3 = (2,1,\[a,b] -> [a - b])
+-- >>> let s = signal [1..20]
+-- >>> s
+-- {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20}
+-- >>> actor11CSDF [c1,c2,c3] s
+-- {3,4,3,-1,15,10,9,-1,27,16,15,-1,39}
 actor11CSDF :: [(Int, Int, [a] -> [b])] -> Signal a -> Signal b
 actor11CSDF = mapCSDF
 
@@ -65,6 +77,14 @@ actor11CSDF = mapCSDF
 -- produced tokens and the function) defined in the list of tuples, given as
 -- argument, in a cyclic fashion. The length of the list of scenarios gives the
 -- actor's cycle period.
+--
+-- >>> let c1 = ((2,2),1,\[a,b] [c,d]   -> [a+b+c+d])
+-- >>> let c2 = ((1,1),2,\  [a] [b]     -> [max a b, min a b])
+-- >>> let c3 = ((1,3),1,\  [a] [b,c,d] -> [a-b+c-d])
+-- >>> let s1 = signal [1..10]
+-- >>> let s2 = signal [10..] 
+-- >>> actor21CSDF [c1,c2,c3] s1 s2
+-- {24,12,3,-10,44,18,7,-12,64}
 actor21CSDF :: [((Int, Int), Int, [a] -> [b] -> [c])]
             -> Signal a -> Signal b -> Signal c
 actor21CSDF = zipWithCSDF
@@ -107,6 +127,11 @@ actor12CSDF s xs = unzipCSDF (outputTokens s) $ mapCSDF (inpOut1n s) xs
 -- produced tokens and the function) defined in the list of tuples, given as
 -- argument, in a cyclic fashion. The length of the list of scenarios gives the
 -- actor's cycle period.
+--
+-- >>> let c1 = ((2,1), (0,1), \[a,b] [c] -> ([], [a+b+c]))
+-- >>> let c2 = ((1,3), (2,3), \[a] [b,c,d] -> ([a,b], [b, c, d]))
+-- >>> actor22CSDF [c1,c2] (signal [1..10]) (signal [11..20])
+-- ({3,12,6,16},{14,12,13,14,24,16,17,18,34})
 actor22CSDF :: [((Int, Int), (Int, Int), [a] -> [b] -> ([c], [d]))]
             -> Signal a -> Signal b -> (Signal c, Signal d)
 actor22CSDF s xs ys = unzipCSDF (outputTokens s) $ zipWithCSDF (inpOut2n s) xs ys
@@ -211,6 +236,11 @@ actor24CSDF s xs ys
 -- produced tokens and the function) defined in the list of tuples, given as
 -- argument, in a cyclic fashion. The length of the list of scenarios gives the
 -- actor's cycle period.
+--
+-- >>> let c1 = ((1,0,1), (1,1,3,0), \[a] _ [b] -> ([b], [succ b], [a, 2*a, 3*a], []))
+-- >>> let c2 = ((2,1,1), (0,2,1,1), \[a,b] [c] [d] -> ([], [d, succ d], [a+b], [c]))
+-- >>> actor34CSDF [c1,c2] (signal [1..10]) (signal [11..20]) (signal ['a'..'k'])
+-- ({'a','c','e','g'},{'b','b','c','d','d','e','f','f','g','h'},{1,2,3,5,4,8,12,11,7,14,21,17,10,20,30},{11,12,13})
 actor34CSDF :: [((Int, Int, Int), (Int, Int, Int, Int),
             [a] -> [b] -> [c] -> ([d], [e], [f], [g]))]
             -> Signal a -> Signal b -> Signal c
