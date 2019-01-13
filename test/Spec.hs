@@ -58,7 +58,7 @@ test_toySDF s_in = s_out where
     s_out = p_average s_2   
   -- Process specification
     p_add s1 s2 = actor21SDF (1,1) 1 add s1 s2
-    p_delay s   = delaySDF 0 s
+    p_delay s   = delaySDF [0] s
     p_average s = actor11SDF 3 1 average s
   -- Function definition
     add [x] [y] = [x + y]

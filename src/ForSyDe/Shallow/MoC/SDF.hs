@@ -20,7 +20,7 @@ module ForSyDe.Shallow.MoC.SDF (
   -- * Sequential Process Constructors
   -- | Sequential process constructors are used for processes that
   -- have a state. One of the input parameters is the initial state.
-  delaySDF, delaynSDF,
+  delaySDF,
   -- -- * Processes
   -- -- | Processes to unzip a signal of tupels into a tuple of signals
   -- unzipSDF, unzip3SDF, unzip4SDF,
@@ -43,27 +43,16 @@ import ForSyDe.Shallow.Core
 -------------------------------------
 
 -- | The process constructor 'delaySDF' delays the signal one event
---   cycle by introducing an initial value at the beginning of the
---   output signal.  Note, that this implies that there is one event
---   (the first) at the output signal that has no corresponding event at
---   the input signal.  One could argue that input and output signals
---   are not fully synchronized, even though all input events are
---   synchronous with a corresponding output event. However, this is
---   necessary to initialize feed-back loops.
+--   cycle by introducing a set of initial values at the beginning of
+--   the output signal.  Note, that this implies that there is a
+--   prefix at the output signal (the first n events) that has no
+--   corresponding event at the input signal. This is necessary to
+--   initialize feedback loops.
 --
--- >>> delaySDF 3 $ signal [1,2,3,4]
--- {3,1,2,3,4}
-delaySDF :: a -> Signal a -> Signal a
-delaySDF x xs = x :- xs
-
-
--- | The process constructor 'delaynSDF' delays the signal n event
---   cycles by introducing n initial values at the beginning of the
---   output signal.
--- >>> delaynSDF [0,0,0] $ signal [1,2,3,4]
+-- >>> delaySDF [0,0,0] $ signal [1,2,3,4]
 -- {0,0,0,1,2,3,4}
-delaynSDF :: [a] -> Signal a -> Signal a 
-delaynSDF initial_tokens xs = signal initial_tokens +-+ xs 
+delaySDF :: [a] -> Signal a -> Signal a 
+delaySDF initial_tokens xs = signal initial_tokens +-+ xs 
 
 ------------------------------------------------------------------------
 --
