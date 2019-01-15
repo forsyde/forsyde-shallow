@@ -1,5 +1,5 @@
 name:           forsyde-shallow
-version:        3.3.3.0
+version:        3.4.0.0
 cabal-version:  >= 1.8
 build-type:     Simple
 license:        BSD3
@@ -21,6 +21,7 @@ category:       Language
 tested-with:    GHC==7.10.3
               , GHC==8.0.2
               , GHC==8.2.1
+              , GHC==8.4.4
 
 -- In order to include all this files with sdist
 extra-source-files: LICENSE,
@@ -43,7 +44,6 @@ Library
                  , ForSyDe.Shallow.Core.Signal
                  , ForSyDe.Shallow.Core.Vector
                  , ForSyDe.Shallow.Core.AbsentExt
-                 , ForSyDe.Shallow.Core.BitVector
                  , ForSyDe.Shallow.MoC
                  , ForSyDe.Shallow.MoC.CT
                  , ForSyDe.Shallow.MoC.Synchronous
@@ -66,14 +66,46 @@ Library
                  , ForSyDe.Shallow.Utility.FilterLib
                  , ForSyDe.Shallow.Utility.Gaussian
                  , ForSyDe.Shallow.Utility.Memory
+                 , ForSyDe.Shallow.Utility.Matrix
+                 , ForSyDe.Shallow.Utility.BitVector
+  other-modules:
+      Paths_forsyde_shallow
   ghc-options:	-Wall -fno-warn-name-shadowing
 
 
 Test-Suite unit
   type:           exitcode-stdio-1.0
   hs-source-dirs: test
-  main-is:        Spec.hs
-  build-depends:  base>=4 && <6
+  main-is:        Unit.hs
+  build-depends:  base>=4.6 && <6
                 , forsyde-shallow
                 , hspec >= 2.2.4
   ghc-options:  -threaded -rtsopts -with-rtsopts=-N
+  other-modules:
+      Paths_forsyde_shallow
+
+test-suite doctests
+  type:             exitcode-stdio-1.0
+  hs-source-dirs:   test
+  main-is:          TestDocs.hs
+  ghc-options:      -threaded -isrc
+  build-depends:    base>=4.6 && <6
+                  , doctest >= 0.8
+                  , forsyde-shallow
+  other-modules:
+      Paths_forsyde_shallow
+
+test-suite properties
+  type:             exitcode-stdio-1.0
+  hs-source-dirs:   test
+  main-is:          Props.hs
+  ghc-options:      -threaded 
+  build-depends:    base>=4.6 && <6
+                  , QuickCheck
+                  , forsyde-shallow  
+                  , old-time
+                  , directory >= 1.2.2             
+                  , process >= 1.2.3   
+                  , random
+  other-modules:
+      Paths_forsyde_shallow

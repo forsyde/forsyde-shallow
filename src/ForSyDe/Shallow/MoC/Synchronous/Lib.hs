@@ -16,7 +16,7 @@ module ForSyDe.Shallow.MoC.Synchronous.Lib (
   -- | Combinational process constructors are used for processes that
   --   do not have a state.
   mapSY, zipWithSY, zipWith3SY, 
-  zipWith4SY, zipWithxSY,
+  zipWith4SY, mapxSY, zipWithxSY,
   combSY, comb2SY, comb3SY, comb4SY,
   -- ** Sequential process constructors
   -- | Sequential process constructors are used for processes that
@@ -31,7 +31,7 @@ module ForSyDe.Shallow.MoC.Synchronous.Lib (
   --   to many cases.
   whenSY, zipSY, zip3SY, zip4SY, zip5SY, zip6SY, 
   unzipSY, unzip3SY, unzip4SY, unzip5SY, unzip6SY,
-  zipxSY, unzipxSY, mapxSY, 
+  zipxSY, unzipxSY, 
   fstSY, sndSY
   ) where
 
@@ -44,7 +44,9 @@ import ForSyDe.Shallow.Core
 -- | The process constructor 'mapSY' takes a combinational function as
 -- argument and returns a process with one input signal and one output
 -- signal.
-
+--
+-- >>> mapSY (+1) $ signal [1,2,3,4]
+-- {2,3,4,5}
 mapSY :: (a -> b) -> Signal a -> Signal b
 mapSY _ NullS   = NullS
 mapSY f (x:-xs) = f x :- (mapSY f xs)
@@ -52,6 +54,9 @@ mapSY f (x:-xs) = f x :- (mapSY f xs)
 -- | The process constructor 'zipWithSY' takes a combinational
 -- function as argument and returns a process with two input signals
 -- and one output signal.
+--
+-- >>> zipWithSY (+) (signal [1,2,3,4]) (signal [11,12,13,14,15,16,17])
+-- {12,14,16,18}
 zipWithSY :: (a -> b -> c) -> Signal a -> Signal b -> Signal c
 zipWithSY _ NullS   _   = NullS
 zipWithSY _ _   NullS   = NullS
@@ -101,12 +106,24 @@ comb4SY :: (a -> b -> c -> d -> e) -> Signal a -> Signal b
 comb4SY = zipWith4SY
    
 -- | The process constructor 'mapxSY' creates a process network that
--- maps a function onto all signals in a vector of signals.
+-- maps a function onto all signals in a vector of signals. See 'mapV'.
+--
+-- >>> let s1 = signal [1,2,3,4]
+-- >>> let s2 = signal [10,20,30,40]
+-- >>> let s3 = signal [100,200,300]
+-- >>> mapxSY (+1) $ vector [s1,s2,s3]
+-- <{2,3,4,5},{11,21,31,41},{101,201,301}> 
 mapxSY :: (a -> b) -> Vector (Signal a) -> Vector (Signal b)
 mapxSY f = mapV (mapSY f)
 
 -- | The process constructor 'zipWithxSY' works as 'zipWithSY', but
 -- takes a vector of signals as input.
+--
+-- >>> let s1 = signal [1,2,3,4]
+-- >>> let s2 = signal [10,20,30,40]
+-- >>> let s3 = signal [100,200,300]
+-- >>> zipWithxSY (reduceV (+)) $ vector [s1,s2,s3]
+-- {111,222,333}
 zipWithxSY :: (Vector a -> b) -> Vector (Signal a) -> Signal b
 zipWithxSY f = mapSY f . zipxSY
 
@@ -122,6 +139,9 @@ zipWithxSY f = mapSY f . zipxSY
 -- are not fully synchronized, even though all input events are
 -- synchronous with a corresponding output event. However, this is
 -- necessary to initialize feed-back loops.
+--
+-- >>> delaySY 1 $ signal [1,2,3,4]
+-- {1,1,2,3,4}
 delaySY :: a        -- ^Initial state
         -> Signal a -- ^Input signal
         -> Signal a -- ^Output signal
@@ -129,6 +149,9 @@ delaySY e es = e:-es
 
 -- | The process constructor 'delaynSY' delays the signal n events by
 -- introducing n identical default values.
+--
+-- >>> delaynSY 0 3 $ signal [1,2,3,4]
+-- {0,0,0,1,2,3,4}
 delaynSY :: a        -- ^Initial state
          -> Int      -- ^ Delay cycles 
          -> Signal a -- ^Input signal
@@ -143,9 +166,8 @@ delaynSY e n xs | n <= 0 = xs
 -- 'scanlSY' and has the value of the new state as its output value as
 -- illustrated by the following example.
 --
--- > SynchronousLib> scanlSY (+) 0 (signal [1,2,3,4])
---
--- > {1,3,6,10} :: Signal Integer
+-- >>> scanlSY (+) 0 (signal [1,2,3,4])
+-- {1,3,6,10}
 -- 
 -- This is in contrast to the function 'scanldSY', which has its
 -- current state as its output value.
@@ -178,9 +200,8 @@ scanl3SY f mem xs ys zs = s'
 -- the output value is the current state and not the one of the next
 -- state.
 --
--- > SynchronousLib> scanldSY (+) 0 (signal [1,2,3,4])
---
--- > {0,1,3,6,10} :: Signal Integer
+-- >>> scanldSY (+) 0 (signal [1,2,3,4])
+-- {0,1,3,6,10}
 scanldSY :: (a -> b -> a) -- ^Combinational function for next state
                           -- decoder
     -> a                  -- ^Initial state
@@ -212,6 +233,9 @@ scanld3SY f mem xs ys zs = s'
 -- for the initial state.
 --
 -- In contrast the output of a process created by the process constructor 'mealySY' depends not only on the state, but also on the input values.
+--
+-- >>> mooreSY (+) (*2) 0 $ signal [1,2,3,4,5]
+-- {0,2,6,12,20,30}
 mooreSY :: (a -> b -> a) -- ^Combinational function for next state
                          -- decoder
         -> (a -> c)      -- ^Combinational function for output decoder
@@ -247,6 +271,9 @@ moore3SY nextState output initial inp1 inp2 inp3 =
 -- In contrast the output of a process created by the process
 -- constructor 'mooreSY' depends only on the state, but not on the
 -- input values.
+--
+-- >>> mealySY (+) (+) 0 $ signal [1,2,3,4,5]
+-- {1,3,6,10,15}
 mealySY :: (a -> b -> a) -- ^Combinational function for next state
                          -- decoder
        -> (a -> b -> c)  -- ^Combinational function for output decoder
@@ -291,9 +318,8 @@ filterSY p (x:-xs) = if (p x == True) then
 -- The process that has the infinite signal of natural numbers as
 -- output is constructed by
 --
--- > SynchronousLib> takeS 5 (sourceSY (+1) 0)
---
--- > {0,1,2,3,4} :: Signal Integer
+-- >>> takeS 5 $ sourceSY (+1) 0
+-- {0,1,2,3,4}
 sourceSY :: (a -> a) -> a -> Signal a
 sourceSY f s0 = o
    where o = delaySY s0 s
@@ -302,6 +328,10 @@ sourceSY f s0 = o
 -- | The process constructor 'fillSY' creates a process that 'fills' a
 -- signal with present values by replacing absent values with a given
 -- value. The output signal is not any more of the type 'AbstExt'.
+--
+-- >>> let s = signal [Abst, Prst 1, Prst 2, Abst, Abst, Prst 4, Abst]
+-- >>> fillSY 3 s
+-- {3,1,2,3,3,4,3}
 fillSY :: a                  -- ^Default value
        -> Signal (AbstExt a) -- ^Absent extended input signal
        -> Signal a           -- ^Output signal
@@ -310,6 +340,10 @@ fillSY a xs = mapSY (replaceAbst a) xs
             replaceAbst _  (Prst x) = x
 
 -- | The process constructor 'holdSY' creates a process that 'fills' a signal with values by replacing absent values by the preceding present value. Only in cases, where no preceding value exists, the absent value is replaced by a default value. The output signal is not any more of the type 'AbstExt'.
+--
+-- >>> let s = signal [Abst, Prst 1, Prst 2, Abst, Abst, Prst 4, Abst]
+-- >>> holdSY 3 s
+-- {3,1,2,2,2,4,4}
 holdSY :: a                  -- ^Default value
        -> Signal (AbstExt a) -- ^Absent extended input signal
        -> Signal a           -- ^Output signal
@@ -326,6 +360,11 @@ holdSY a xs = scanlSY hold a xs
 -- of absent extended values. The output signal has the value of the
 -- first signal whenever an event has a present value and 'Abst' when
 -- the event has an absent value.
+--
+-- >>> let clk = signal [Abst,    Prst (), Prst (), Abst,    Abst,    Prst (), Abst]
+-- >>> let sig = signal [Prst 10, Prst 11, Prst 12, Prst 13, Prst 14, Prst 15]
+-- >>> sig `whenSY` clk
+-- {_,11,12,_,_,15}
 whenSY :: Signal (AbstExt a) -> Signal (AbstExt b) 
        -> Signal (AbstExt a)
 whenSY NullS   _          = NullS
@@ -335,12 +374,16 @@ whenSY (x:-xs) (_:-ys)    = x    :- (whenSY xs ys)
 
 -- | The process 'zipSY' \"zips\" two incoming signals into one signal
 -- of tuples.
+--
+-- >>> zipSY (signal [1,2,3,4]) (signal [10,11,12,13,14])
+-- {(1,10),(2,11),(3,12),(4,13)}
 zipSY :: Signal a -> Signal b -> Signal (a,b)
 zipSY (x:-xs) (y:-ys) = (x, y) :- zipSY xs ys
 zipSY _       _       = NullS
 
 -- | The process 'zip3SY' works as 'zipSY', but takes three input
 -- signals.
+-- 
 zip3SY :: Signal a -> Signal b -> Signal c -> Signal (a,b,c)
 zip3SY (x:-xs) (y:-ys) (z:-zs) = (x, y, z) :- zip3SY xs ys zs
 zip3SY _       _       _       = NullS
@@ -408,13 +451,23 @@ unzip6SY ((x1,x2,x3,x4,x5,x6):-xs)
   = (x1:-x1s, x2:-x2s, x3:-x3s, x4:-x4s, x5:-x5s, x6:-x6s)
   where (x1s, x2s, x3s, x4s, x5s, x6s) = unzip6SY xs
 
--- | The process 'zipxSY' \"zips\" a signal of vectors into a vector
--- of signals.
+-- | The process 'zipxSY' transposes a signal of vectors into a vector
+-- of signals. All the events carried by the output signal are synchronized values from all input signals.
+--
+-- >>> let s1 = signal [1,2,3,4]
+-- >>> let s2 = signal [10,20,30,40]
+-- >>> let s3 = signal [100,200,300]
+-- >>> zipxSY $ vector [s1,s2,s3]
+-- {<1,10,100>,<2,20,200>,<3,30,300>}
 zipxSY :: Vector (Signal a) -> Signal (Vector a)
-zipxSY NullV            = NullS
-zipxSY (NullS   :> xss) = zipxSY xss
-zipxSY ((x:-xs) :> xss) = (x :> (mapV headS xss)) 
-                          :- (zipxSY (xs :> (mapV tailS xss)))
+zipxSY = reduceV (zipWithSY (<+>)) . mapV (mapSY unitV)
+  
+-- unsafe implementation! 
+-- zipxSY :: Vector (Signal a) -> Signal (Vector a)
+-- zipxSY NullV            = NullS
+-- zipxSY (NullS   :> xss) = zipxSY xss
+-- zipxSY ((x:-xs) :> xss) = (x :> (mapV headS xss)) 
+--                           :- (zipxSY (xs :> (mapV tailS xss)))
 
 -- | The process 'unzipxSY' \"unzips\" a vector of signals into a
 -- signal of vectors.

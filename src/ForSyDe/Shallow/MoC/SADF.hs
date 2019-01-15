@@ -113,6 +113,13 @@ kernel12SADF ct xs = unzipSADF (get_prodToken ct) $ mapSADF (inpOut1n ct) xs
 -- | The process constructor 'kernel22SADF' constructs an SADF kernel with
 -- two data input and two data output signals. The scenario (token rates and
 -- function) is determined by the control signal.
+--
+-- >>> let scen1 = ((1,1), (1,1), \[a] [b] -> ([2*a], [2*b]))
+-- >>> let scen2 = ((2,2), (1,1), \[a,b] [c,d] -> ([a+b], [c+d]))
+-- >>> let scen3 = ((1,2), (2,1), \[a] [b,c] -> ([b,c], [a]))
+-- >>> let sc = signal [scen1, scen2, scen3]
+-- >>> kernel22SADF sc (signal [1..20]) (signal [21 .. 40])
+-- ({2,5,24,25},{42,45,4}) 
 kernel22SADF :: Signal ((Int, Int), (Int, Int), [a] -> [b] -> ([c], [d]))
              -> Signal a -> Signal b
              -> (Signal c, Signal d)
