@@ -71,9 +71,8 @@ abstExtFunc f       = f'
 
 psi = abstExtFunc
 
-
-
-
+instance Functor AbstExt where
+  fmap = abstExtFunc
 
 
 
