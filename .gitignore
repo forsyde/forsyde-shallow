@@ -22,3 +22,7 @@ add-source-timestamps
 
 # Except this file
 !.gitignore
+.sass-cache
+/Gemfile.lock
+_site
+dist-newstyle
