@@ -33,6 +33,10 @@ If you have installed ForSyDe, start the GHC interpreter `ghci` and add the modu
 	Loading package ffi-1.0 ... linking ... done.
 	Prelude> :m +ForSyDe.Shallow
 	Prelude ForSyDe.Shallow>
+	
+In case you want to change the prompt, you can do it by the following command, where you can have your own definition of the prompt. The following code would give the prompt "λ> ".
+
+	:set prompt "\x03BB> "
 
 ### Signals
 
@@ -43,8 +47,10 @@ Systems are modeled in ForSyDe by concurrent processes that interact via signals
 
 Signals are represented with curly brackets.
 
-	Prelude ForSyDe.Shallow> s1 {1,2,3}
-	Prelude ForSyDe.Shallow> s2 {2,3,4}
+	Prelude ForSyDe.Shallow> s1 
+	{1,2,3}
+	Prelude ForSyDe.Shallow> s2 
+	{2,3,4}
 
 ### Combinational Processes
 
