@@ -43,6 +43,8 @@ manager, which takes care of fetching and installing an appropriate
 version of the Haskell compiler, the dependent packages, and sets
 everything up in a sandboxed environment.
 
+To be sure you have the right Stack version, install it as recommended on their [web page](https://docs.haskellstack.org/en/stable/README/#how-to-install), i.e. via `wget` or `curl`. After it is properly installed, type in:
+
     stack update
     stack upgrade
     stack install forsyde-shallow
@@ -65,8 +67,20 @@ package manager, but then you need to take care of acquiring an
 appropriate Haskell tool suite which includes the GHC compiler and the
 `cabal-install` package.
 
-    cabal update
-    cabal install forsyde-shallow
+Depending on which version of Cabal you have, the installation of ForSyDe-Shallow differs slightly:
+
+* prior to `Cabal-3.0.0.0`:
+
+		cabal update
+		cabal install forsyde-shallow
+	
+* newer than `Cabal-3.0.0.0`:
+
+		cabal update
+		cabal install forsyde-shallow --lib
+		
+To start an interpreter session, just call:
+
     ghci
 	
 To install the latest updates and nightly builds you need clone

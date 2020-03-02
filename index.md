@@ -50,7 +50,7 @@ This concept also forces the designer to develop a structured formal model that 
 There are [several ways](setup) to acquire the [ForSyDe-Shallow]({{ site.github.baseurl }}) libraries, however the easiest one is to use a Haskell package manager to grab directly from [HackageDB](https://hackage.haskell.org/). Make sure you have the [Haskell Platform](https://www.haskell.org/platform/) installed on your machine type in the command
 
 	cabal update
-    cabal install forsyde-shallow
+    cabal v2-install forsyde-shallow --lib
 
 After the installation succeeds, you can test the libraries by starting an interpreter session with 
 
