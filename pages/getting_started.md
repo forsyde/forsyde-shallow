@@ -123,7 +123,7 @@ zipWith4SY :: (a -> b -> c -> d -> e) -> Signal a -> Signal b -> Signal c -> Sig
 {% endhighlight %}
 	
 	
-So far we have in an interactive way provided the input for ghci, but the natural way is to specify the models using files. The file [`GettingStarted.hs`](/assets/GettingStarted.hs) provides the code for the adder and some input signals. Observe that you
+So far we have in an interactive way provided the input for ghci, but the natural way is to specify the models using files. The file [`GettingStarted.hs`]({{site.url}}/assets/GettingStarted.hs) provides the code for the adder and some input signals. Observe that you
 * should have a module name that is identical to the file name
 * need to import the module `ForSyDe.Shallow`
 * shall not have the let statement before function and signal declaration.
