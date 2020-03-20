@@ -37,28 +37,47 @@ Haskell package manager.
 
 ### Using Stack
 
-The easiest way to getting started is by using the
-[Stack](https://docs.haskellstack.org/en/stable/README/) package
-manager, which takes care of fetching and installing an appropriate
-version of the Haskell compiler, the dependent packages, and sets
-everything up in a sandboxed environment.
+The easiest way to getting started is by using the [Stack](https://docs.haskellstack.org/en/stable/README/) sandboxing tool, which takes care of fetching and installing an appropriate version of the Haskell compiler, the dependent packages, and sets everything up in a sandboxed environment.
 
-To be sure you have the right Stack version, install it as recommended on their [web page](https://docs.haskellstack.org/en/stable/README/#how-to-install), i.e. via `wget` or `curl`. After it is properly installed, type in:
+To be sure you have the right Stack version, install it _as recommended on their [web page](https://docs.haskellstack.org/en/stable/README/#how-to-install)_, i.e. via `wget` or `curl`, e.g. 
+
+	wget -qO- https://get.haskellstack.org/ | sh
+
+#### Install ForSyDe-Shallow from HackageDB
+
+After Stack is properly installed, type in:
 
     stack update
     stack upgrade
     stack install forsyde-shallow
-    stack ghci      # starts an interpreter session
+    stack ghci --package=forsyde-shallow  # starts an interpreter session and loads the package 'forsyde-shallow'
 	
+**OBS:** it is really important that you load the globally installed `forsyde-shallow` package with the `--package=forsyde-shallow` option after `ghci`, otherwise the interpreter will not be able to load the ForSyDe libraries. The interpreter greeter message gives you tips on how to modify the global configuration file so that it loads an arbitrary package by default (optional). After running the interpreter you still need to load whatever module you need explicitly, e.g.
+
+    > :m +ForSyDe.Shallow
+	
+To load an arbitrary Haskell source file into the interpreter, run 
+
+    stack ghci --package=forsyde-shallow path/to/a/SourceFile.hs
+
+#### Install latest ForSyDe-Shallow from GitHub in a local sandbox
+
 To install the latest updates and nightly builds you need clone
 [this repository](https://github.com/forsyde/forsyde-shallow). To
-install and use the contents of this repository globally, some useful
-commands are:
+install and use the contents of this repository _in a local sandbox_, you can use these commands _under the cloned folder_, e.g. `cd path/to/forsyde-shallow`:
 
     stack install
 	stack test                        # runs the test suites
 	stack haddock                     # generates the API documentation
-	stack ghci --no-load              # starts an interpreter session, option given to avoid pre-loading all modules
+	stack ghci --no-load              # starts an interpreter session, option given to avoid pre-loading all modules in the package
+
+The last line loads the interpreter, then you can start loading whatever modules you need in the interpreter, e.g.
+
+    > :m +ForSyDe.Shallow
+
+Alternatively, you can start the interpreter for a chosen source file (which loads whatever module is imported in that source), while the prompt is still somewhere _under the cloned folder_:
+
+	stack ghci relative/path/to/a/SourceFile.hs
 
 ### Using Cabal
 
