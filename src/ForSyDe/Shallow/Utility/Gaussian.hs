@@ -33,9 +33,9 @@ pGaussianNoise mean variance = mapU 2 gaussianXY . pUnitNormXY
     gaussianXY _  = error "gaussianXY: unexpected pattern."
 
 -- |To get a uniform random variable in the range [0, 1]
-uniform :: (Fractional a, RandomGen g, Random a) => 
+forSyDeuniform :: (Fractional a, RandomGen g, Random a) => 
   g -> (a, g)
-uniform rGen = randomR (0.0,1.0) rGen
+forSyDeuniform rGen = randomR (0.0,1.0) rGen
 
 -- |To generate an infinite signal of unit normal random variables,
 -- with the specified seed
@@ -61,8 +61,8 @@ svGenerator s
     svHelper :: StdGen -> ([Double], StdGen)
     svHelper stdG = ([s, v1, v2], sNew2)
       where
-        (u1, sNew1) = uniform stdG
-        (u2, sNew2) = uniform sNew1
+        (u1, sNew1) = forSyDeuniform stdG
+        (u2, sNew2) = forSyDeuniform sNew1
         v1=2 * u1 -1
         v2=2 * u2 -1
         s = v1*v1 + v2*v2
