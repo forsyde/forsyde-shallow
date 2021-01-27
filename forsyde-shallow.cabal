@@ -1,11 +1,11 @@
 name:           forsyde-shallow
-version:        3.4.0.0
+version:        3.4.0.1
 cabal-version:  >= 1.8
 build-type:     Simple
 license:        BSD3
 license-file:   LICENSE
 author:         ForSyDe Group, KTH/EECS/ELE
-copyright:      Copyright (c) 2003-2018 ForSyDe Group, KTH/EECS/ELE
+copyright:      Copyright (c) 2003-2021 ForSyDe Group, KTH/EECS/ELE
 maintainer:     ForSyDe Group <forsyde-dev@eecs.kth.se>
 homepage:       http://forsyde.ict.kth.se/
 stability:      alpha
@@ -22,6 +22,7 @@ tested-with:    GHC==7.10.3
               , GHC==8.0.2
               , GHC==8.2.1
               , GHC==8.4.4
+              , GHC==8.10.3
 
 -- In order to include all this files with sdist
 extra-source-files: LICENSE,
