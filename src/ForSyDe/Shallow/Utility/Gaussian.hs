@@ -19,7 +19,7 @@ where
 import ForSyDe.Shallow.MoC.Untimed
 import ForSyDe.Shallow.Core.Signal
 
-import System.Random
+import qualified System.Random
 
 -- |To generate an infinite Signal of Gaussian values
 pGaussianNoise:: Double -- Mean value of the Gaussian noise
@@ -33,15 +33,15 @@ pGaussianNoise mean variance = mapU 2 gaussianXY . pUnitNormXY
     gaussianXY _  = error "gaussianXY: unexpected pattern."
 
 -- |To get a uniform random variable in the range [0, 1]
-uniform :: (Fractional a, RandomGen g, Random a) => 
+uniform :: (Fractional a, System.Random.RandomGen g, System.Random.Random a) => 
   g -> (a, g)
-uniform rGen = randomR (0.0,1.0) rGen
+uniform rGen = System.Random.randomR (0.0,1.0) rGen
 
 -- |To generate an infinite signal of unit normal random variables,
 -- with the specified seed
 pUnitNormXY :: Int     -- The seed
      -> Signal Double  -- The infinite ouput signal
-pUnitNormXY = mapU 3 unitNormXY . signal . svGenerator . mkStdGen
+pUnitNormXY = mapU 3 unitNormXY . signal . svGenerator . System.Random.mkStdGen
   where
     unitNormXY [s, v1, v2] = [sqrt(-2 * log(s) / s) * v1,
           sqrt(-2 * log(s) / s) * v2]
@@ -49,7 +49,7 @@ pUnitNormXY = mapU 3 unitNormXY . signal . svGenerator . mkStdGen
 
 
 -- |To generate the s, v1, v2 value
-svGenerator :: StdGen -> [Double]
+svGenerator :: System.Random.StdGen -> [Double]
 svGenerator s
     | sVal >=1 = []++ svGenerator newStdG
     | otherwise = svVal ++ svGenerator newStdG
@@ -58,7 +58,7 @@ svGenerator s
     svVal = fst svGen1
     sVal = head svVal
     newStdG = snd svGen1
-    svHelper :: StdGen -> ([Double], StdGen)
+    svHelper :: System.Random.StdGen -> ([Double], System.Random.StdGen)
     svHelper stdG = ([s, v1, v2], sNew2)
       where
         (u1, sNew1) = uniform stdG
