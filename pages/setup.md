@@ -98,6 +98,11 @@ Depending on which version of Cabal you have, the installation of ForSyDe-Shallo
 		cabal update
 		cabal install forsyde-shallow --lib
 		
+> Also, you might need to install some Non-Haskell library so `Cabal` succeeds in compiling and
+> linking `forsyde-shallow`. The steps for installing these libraries depend on your OS and
+> can be usually found easily in the web. The current know libraries required are
+>  * Numa (`libnuma` in Debian-based distros)
+
 To start an interpreter session, just call:
 
     ghci
