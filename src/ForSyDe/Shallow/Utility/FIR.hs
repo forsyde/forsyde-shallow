@@ -34,18 +34,8 @@ sipoSY :: Int -> b -> Signal b -> Vector (Signal b)
 sipoSY n s0 = iterateV n tap 
     where tap = delaySY s0
 
--- | Multiply an entire numeric signal by a constant.
-gainSY :: (Num a) => a -> Signal a -> Signal a
-gainSY h = zipWithSY (*) (infiniteS id h)
-
--- | Multiply a vector of signals so that every signal is amplified by one
--- entry of the given numeric vector.
-gainParallelSYV :: (Num a) => Vector a -> Vector (Signal a) -> Vector (Signal a)
-gainParallelSYV = zipWithV (gainSY)
-
--- | Perform an inner product with the heads of a vector of signals.
 innerProdSY :: (Num a) => Vector a -> Vector (Signal a) -> Signal a
-innerProdSY coeffs sigs = mapSY (sumV) $ zipxSY amplifiedSignals
-   where amplifiedSignals = gainParallelSYV coeffs sigs
-         sumV = foldlV (+) 0
-
+innerProdSY coeffs = zipWithxSY (ipV coeffs)
+   where ipV NullV   NullV   = 0
+         ipV (h:>hv) (x:>xv) = h*x + ipV hv xv
+         ipV _   _   = error "Vector of different length"
