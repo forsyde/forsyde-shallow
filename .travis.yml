@@ -1,41 +1,50 @@
-# NB: don't set `language: haskell` here
+sudo: true
+language: haskell
 
-# explicitly request legacy non-sudo based build environment
-sudo: required
+git:
+  depth: 5
 
-# The following enables several GHC versions to be tested; often it's enough to test only against the last release in a major GHC version. Feel free to omit lines listings versions you don't need/want testing for.
-env:
- - CABALVER=1.22 GHCVER=7.10.3
- - CABALVER=1.24 GHCVER=8.0.2
- - CABALVER=2.0  GHCVER=8.2.1
- - CABALVER=2.2  GHCVER=8.4.4
- - CABALVER=3.2  GHCVER=8.10.3
-# - CABALVER=head GHCVER=head   # see section about GHC HEAD snapshots
+cabal: "3.2"
 
-# Note: the distinction between `before_install` and `install` is not important.
-before_install:
- - travis_retry sudo add-apt-repository -y ppa:hvr/ghc
- - travis_retry sudo apt-get update
- - travis_retry sudo apt-get install cabal-install-$CABALVER ghc-$GHCVER # see note about happy/alex
- - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$PATH
+cache:
+  directories:
+  - "$HOME/.cabal/store"
+  - "$HOME/.stack"
+  - "$TRAVIS_BUILD_DIR/.stack-work"
+
+matrix:
+  include:
+
+  # Cabal
+  - ghc: 8.10.4
+
+  # Stack
+  - ghc: 8.10.4
+    env: STACK_YAML="$TRAVIS_BUILD_DIR/stack.yaml"
 
 install:
- - cabal --version
- - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
- - travis_retry cabal update
- - cabal install --only-dependencies --enable-tests --enable-benchmarks
+  - |
+    if [ -z "$STACK_YAML" ]; then
+      ghc --version
+      cabal --version
+      cabal new-update
+      cabal new-build --enable-tests --enable-benchmarks
+    else
+      # install stack
+      curl -sSL https://get.haskellstack.org/ | sh
 
-# Here starts the actual work to be performed for the package under test; any command which exits with a non-zero exit code causes the build to fail.
+      # build project with stack
+      stack --version
+      stack build --system-ghc --test --bench --no-run-tests --no-run-benchmarks
+    fi
+
 script:
- - if [ -f configure.ac ]; then autoreconf -i; fi
- - cabal configure --enable-tests --enable-benchmarks -v2  
- - cabal build   # this builds all libraries and executables (including tests/benchmarks)
- - cabal test
- - cabal check
- - cabal sdist   # tests that a source-distribution can be generated
+  - |
+    if [ -z "$STACK_YAML" ]; then
+      cabal new-test --enable-tests
+    else
+      stack test --system-ghc
+    fi
 
-# Check that the resulting source distribution can be built & installed.
-# If there are no other `.tar.gz` files in `dist`, this can be even simpler:
-# `cabal install --force-reinstalls dist/*-*.tar.gz`
- - SRC_TGZ=$(cabal info . | awk '{print $2;exit}').tar.gz &&
-   (cd dist && cabal install --force-reinstalls "$SRC_TGZ")
+notifications:
+  email: false
