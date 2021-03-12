@@ -1,10 +1,7 @@
-sudo: true
 language: haskell
 
 git:
   depth: 5
-
-cabal: "3.2"
 
 cache:
   directories:
@@ -16,7 +13,10 @@ matrix:
   include:
 
   # Cabal
+  - ghc: 9.0.1
   - ghc: 8.10.4
+  - ghc: 8.6.5
+  - ghc: 8.0.2
 
   # Stack
   - ghc: 8.10.4
