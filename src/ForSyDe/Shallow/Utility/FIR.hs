@@ -25,9 +25,14 @@ firSY :: Fractional a => Vector a -> Signal a -> Signal a
 firSY h = innerProdSY h . sipoSY k 0.0
     where k = lengthV h
 
+-- sipoSY :: Int -> b -> Signal b -> Vector (Signal b) 
+-- sipoSY n s0 = unzipxSY . scanlSY shiftrV initState
+--     where initState = copyV n s0
+
+-- | Create the tapped, or delayed signals for later consumption.
 sipoSY :: Int -> b -> Signal b -> Vector (Signal b) 
-sipoSY n s0 = unzipxSY . scanldSY shiftrV initState
-    where initState = copyV n s0
+sipoSY n s0 = iterateV n tap 
+    where tap = delaySY s0
 
 innerProdSY :: (Num a) => Vector a -> Vector (Signal a) -> Signal a
 innerProdSY coeffs = zipWithxSY (ipV coeffs)
