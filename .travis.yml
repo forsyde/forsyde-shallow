@@ -15,12 +15,23 @@ matrix:
   # Cabal
   - ghc: 9.0.1
     cabal: 3.4
+  - ghc: 8.10.4
+    cabal: 3.2
+  - ghc: 8.6.5
+    cabal: 2.4
+  - ghc: 8.0.2
+    cabal: 1.24
+  - ghc: 7.10.3
+    cabal: 1.22
 
   # Stack
-  - ghc: 9.0.1
+  # Stack version in .yaml-file
+  - ghc: 8.4.3
     env: STACK_YAML="$TRAVIS_BUILD_DIR/stack.yaml"
-  - ghc: 8.10.4
-    env: STACK_YAML="$TRAVIS_BUILD_DIR/stack.yaml"
+
+  allow_failures:
+  - ghc: head
+    cabal: head
 
 install:
   - |
