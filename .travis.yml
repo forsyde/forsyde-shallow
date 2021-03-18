@@ -13,11 +13,19 @@ matrix:
   include:
 
   # Cabal
+  - ghc: 9.0.1
+    env: CABALVER=3.4
+  - ghc: 8.10.4
+    env: CABALVER=3.2
   - ghc: 8.6.5
+    env: CABALVER=2.4
   - ghc: 8.0.2
+    env: CABALVER=1.24
+
 
   # Stack
   - ghc: 9.0.1
+    env: STACK_YAML="$TRAVIS_BUILD_DIR/stack.yaml"
   - ghc: 8.10.4
     env: STACK_YAML="$TRAVIS_BUILD_DIR/stack.yaml"
 
