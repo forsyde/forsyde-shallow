@@ -1,4 +1,5 @@
 import ForSyDe.Shallow
+import ForSyDe.Shallow.Utility.FIR
 import Test.Hspec
 
 -- | Taken from <https://github.com/forsyde/forsyde-shallow-examples>
@@ -107,7 +108,10 @@ test_antiWindUpSADF input = output
             [(1, 0, \[a] -> [])]))
 s2_test = signal $ [10..110]
 
-                 
+-- Test of FIR-filter
+test_firSY :: Signal Double
+test_firSY = firSY (vector [1.0, 0.75, 0.5, 0.25]) $ signal [1.0, 0.0, 0.0, 0.0, 0.0]
+
 main :: IO ()
 main = hspec $ do describe "ForSyDe.Shallow : " $ lab2tests
   where
@@ -124,3 +128,5 @@ main = hspec $ do describe "ForSyDe.Shallow : " $ lab2tests
         `shouldBe`(read "{1,1,1,2,2,4,4,8,8,16}" :: Signal Integer)
       it "SADF Anti Wind-up System" $ takeS 10 (test_antiWindUpSADF s2_test)
         `shouldBe`(read "{10,21,33,46,60,75,91,108,108,108}" :: Signal Integer)
+      it "SY FIR Filter" $ test_firSY
+        `shouldBe`(read "{1.0,0.75,0.5,0.25,0.0}" :: Signal Double)
