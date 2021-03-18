@@ -26,12 +26,18 @@ matrix:
 
   # Stack
   # Stack version in .yaml-file
+  - ghc: 8.10.4
+    env: STACK_YAML="$TRAVIS_BUILD_DIR/stack-8.10.4.yaml"
+  - ghc: 8.8.4
+    env: STACK_YAML="$TRAVIS_BUILD_DIR/stack-8.4.4.yaml"
+  - ghc: 8.6.5
+    env: STACK_YAML="$TRAVIS_BUILD_DIR/stack-8.6.5.yaml"
+  - ghc: 8.4.4
+    env: STACK_YAML="$TRAVIS_BUILD_DIR/stack-8.4.4.yaml"
   - ghc: 8.4.3
     env: STACK_YAML="$TRAVIS_BUILD_DIR/stack.yaml"
 
-  allow_failures:
-  - ghc: head
-    cabal: head
+
 
 install:
   - |
