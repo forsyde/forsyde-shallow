@@ -3,8 +3,6 @@ language: haskell
 git:
   depth: 5
 
-cabal: "3.4"
-
 cache:
   directories:
   - "$HOME/.cabal/store"
