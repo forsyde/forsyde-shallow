@@ -16,10 +16,10 @@ matrix:
     # Cabal
     - ghc: 9.0.1
       cabal: 3.4
-    # - ghc: 8.10.4
-    #   cabal: 3.2
-    # - ghc: 8.6.5
-    #   cabal: 2.4
+    - ghc: 8.10.4
+      cabal: 3.2
+    - ghc: 8.6.5
+      cabal: 2.4
     - ghc: 8.0.2
       cabal: 2.4
     - ghc: 7.10.3
@@ -29,26 +29,21 @@ matrix:
     # Stack version in .yaml-file
     - ghc: 8.10.4
       env: STACK_YAML="$TRAVIS_BUILD_DIR/stack-8.10.4.yaml"
-    # - ghc: 8.8.4
-    #   env: STACK_YAML="$TRAVIS_BUILD_DIR/stack-8.8.4.yaml"
-    # - ghc: 8.6.5
-    #   env: STACK_YAML="$TRAVIS_BUILD_DIR/stack-8.6.5.yaml"
+    - ghc: 8.8.4
+      env: STACK_YAML="$TRAVIS_BUILD_DIR/stack-8.8.4.yaml"
+    - ghc: 8.6.5
+      env: STACK_YAML="$TRAVIS_BUILD_DIR/stack-8.6.5.yaml"
     # - ghc: 8.4.4
     #   env: STACK_YAML="$TRAVIS_BUILD_DIR/stack-8.4.4.yaml"
-    # - ghc: 8.4.3
-    #   env: STACK_YAML="$TRAVIS_BUILD_DIR/stack.yaml"
+    - ghc: 8.4.3
+      env: STACK_YAML="$TRAVIS_BUILD_DIR/stack.yaml"
 
 install:
   - |
-    echo 'Install'
     if [ -z "$STACK_YAML" ]; then
-      echo 'Command: ghc --version'
       ghc --version
-      echo 'Command: cabal --version'
       cabal --version
-      echo 'Command: cabal new-update'
       cabal new-update
-      echo 'Command: cabal new-build --enable-tests --enable-benchmarks'
       cabal new-build --enable-tests --enable-benchmarks
     else
       # install stack
@@ -61,11 +56,8 @@ install:
 
 script:
   - |
-    echo 'Script'
     if [ -z "$STACK_YAML" ]; then
-      echo 'Command: cabal  new-test --enable-tests'
       cabal new-test --enable-tests
-      echo 'Command: cabal new-sdist'
       cabal new-sdist
     else
       stack test --system-ghc
