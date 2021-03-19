@@ -1,3 +1,4 @@
+---
 language: haskell
 
 git:
@@ -5,37 +6,37 @@ git:
 
 cache:
   directories:
-  - "$HOME/.cabal/store"
-  - "$HOME/.stack"
-  - "$TRAVIS_BUILD_DIR/.stack-work"
+    - "$HOME/.cabal/store"
+    - "$HOME/.stack"
+    - "$TRAVIS_BUILD_DIR/.stack-work"
 
 matrix:
   include:
 
-  # Cabal
-  - ghc: 9.0.1
-    cabal: 3.4
-  - ghc: 8.10.4
-    cabal: 3.2
-  - ghc: 8.6.5
-    cabal: 2.4
-  - ghc: 8.0.2
-    cabal: 2.0
-  - ghc: 7.10.3
-    cabal: 2.0
+    # Cabal
+    - ghc: 9.0.1
+      cabal: 3.4
+    - ghc: 8.10.4
+      cabal: 3.2
+    - ghc: 8.6.5
+      cabal: 2.4
+    - ghc: 8.0.2
+      cabal: 2.0
+    - ghc: 7.10.3
+      cabal: 2.0
 
-  # Stack
-  # Stack version in .yaml-file
-  - ghc: 8.10.4
-    env: STACK_YAML="$TRAVIS_BUILD_DIR/stack-8.10.4.yaml"
-  - ghc: 8.8.4
-    env: STACK_YAML="$TRAVIS_BUILD_DIR/stack-8.8.4.yaml"
-  - ghc: 8.6.5
-    env: STACK_YAML="$TRAVIS_BUILD_DIR/stack-8.6.5.yaml"
-  - ghc: 8.4.4
-    env: STACK_YAML="$TRAVIS_BUILD_DIR/stack-8.4.4.yaml"
-  - ghc: 8.4.3
-    env: STACK_YAML="$TRAVIS_BUILD_DIR/stack.yaml"
+    # Stack
+    # Stack version in .yaml-file
+    - ghc: 8.10.4
+      env: STACK_YAML="$TRAVIS_BUILD_DIR/stack-8.10.4.yaml"
+    - ghc: 8.8.4
+      env: STACK_YAML="$TRAVIS_BUILD_DIR/stack-8.8.4.yaml"
+    - ghc: 8.6.5
+      env: STACK_YAML="$TRAVIS_BUILD_DIR/stack-8.6.5.yaml"
+    - ghc: 8.4.4
+      env: STACK_YAML="$TRAVIS_BUILD_DIR/stack-8.4.4.yaml"
+    - ghc: 8.4.3
+      env: STACK_YAML="$TRAVIS_BUILD_DIR/stack.yaml"
 
 install:
   - |
@@ -43,7 +44,7 @@ install:
       ghc --version
       cabal --version
       cabal new-update
-	   cabal new-build --enable-tests --enable-benchmarks	
+      cabal new-build --enable-tests --enable-benchmarks
     else
       # install stack
       curl -sSL https://get.haskellstack.org/ | sh
@@ -56,8 +57,8 @@ install:
 script:
   - |
     if [ -z "$STACK_YAML" ]; then
-		cabal new-test --enable-tests
-		cabal new-sdist
+      cabal new-test --enable-tests
+      cabal new-sdist
     else
       stack test --system-ghc
     fi
