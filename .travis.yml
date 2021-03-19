@@ -20,10 +20,10 @@ matrix:
     #   cabal: 3.2
     # - ghc: 8.6.5
     #   cabal: 2.4
-    # - ghc: 8.0.2
-    #   cabal: 2.0
-    # - ghc: 7.10.3
-    #   cabal: 2.0
+    - ghc: 8.0.2
+      cabal: 2.4
+    - ghc: 7.10.3
+      cabal: 2.4
 
     # Stack
     # Stack version in .yaml-file
