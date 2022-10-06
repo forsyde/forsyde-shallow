@@ -383,7 +383,7 @@ stencilV :: Int               -- ^ stencil size @= n@
          -> Vector a          -- ^ /length/ = @la@ 
          -> Vector (Vector a) -- ^ /length/ = @la - n + 1@ 
 stencilV n v = mapV (takeV n) $ dropFromEnd n $ tailsV v
-  where dropFromEnd n = takeV (lengthV v - n + 1)
+  where dropFromEnd m = takeV (lengthV v - m + 1)
 
 -----------------------------------------------------------------------------
 -- PERMUTATORS

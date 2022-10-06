@@ -363,37 +363,37 @@ matchDF :: (Num a, Eq b) =>
            [[FiringToken b]] -> Signal b -> a
 matchDF rs xs       =  matchDF' 0 rs xs
   where matchDF' _ []     _    =  -1
-        matchDF' n (r:rs) xs   =  if prefixDF r xs then
+        matchDF' n (r':rs') xs'   =  if prefixDF r' xs' then
                                     n
                                   else
-                                    matchDF' (n+1) rs xs
+                                    matchDF' (n+1) rs' xs'
 
 match2DF :: (Num a, Eq b, Eq c) => 
             [([FiringToken b], [FiringToken c])]
          -> Signal b -> Signal c -> a
 match2DF rs xs ys       =  match2DF' 0 rs xs ys
   where match2DF' _ [] _ _     =  -1
-        match2DF' n ((rx, ry):rs) xs ys
-          =  if prefixDF rx xs &&
-                prefixDF ry ys 
+        match2DF' n ((rx', ry'):rs') xs' ys'
+          =  if prefixDF rx' xs' &&
+                prefixDF ry' ys' 
              then
                n
              else
-               match2DF' (n+1) rs xs ys
+               match2DF' (n+1) rs' xs' ys'
 
 match3DF :: (Num a, Eq b, Eq c, Eq d) => 
             [([FiringToken b], [FiringToken d], [FiringToken c])]
          -> Signal b -> Signal d -> Signal c -> a
 match3DF rs xs ys zs    = match3DF' 0 rs xs ys zs
   where match3DF' _ [] _ _ _   = -1 
-        match3DF' n ((rx, ry, rz):rs) xs ys zs 
-          =  if prefixDF rx xs &&
-                prefixDF ry ys &&
-                prefixDF rz zs 
+        match3DF' n ((rx', ry', rz'):rs') xs' ys' zs' 
+          =  if prefixDF rx' xs' &&
+                prefixDF ry' ys' &&
+                prefixDF rz' zs' 
              then
                n
              else
-               match3DF' (n+1) rs xs ys zs  
+               match3DF' (n+1) rs' xs' ys' zs'  
 
 -- The function 'matchStDF' works in the same way as 'matchDF', but it
 -- looks on patterns that include the state.
@@ -402,13 +402,13 @@ matchStDF :: (Num a, Eq b, Eq c) =>
           -> c -> Signal b -> a
 matchStDF rs state xs       = matchStDF' 0 rs state xs
   where matchStDF' _ [] _ _     =  -1
-        matchStDF' n (r:rs) state xs    
-          =  if prefixDF (snd r) xs && 
-                matchState (fst r) state
+        matchStDF' n (r':rs') state' xs'    
+          =  if prefixDF (snd r') xs' && 
+                matchState (fst r') state'
              then
                n
              else
-               matchStDF' (n+1) rs state xs  
+               matchStDF' (n+1) rs' state' xs'  
         
 matchState :: Eq a => FiringToken a -> a -> Bool
 matchState Wild      _ = True
@@ -445,16 +445,16 @@ s3 = signal [True, True, False, False, True, True]
 rs :: (Eq c, Num c) => Signal c -> Signal c
 rs xs           = mealyDF firingRule nextState output initState xs
    where firingRule     = [(Wild, [Wild])]
-     nextState state xs     = [(state + headS xs)]
-     output state _         = [[state]]
-     initState      = 0
+         nextState state xs     = [(state + headS xs)]
+         output state _         = [[state]]
+         initState      = 0
 
 rs2 :: Signal Integer -> Signal Integer
 rs2        = mealyDF fs ns o init
    where init      = [0,0,0,0,0]
-     fs        = [(Wild, ([Wild, Wild]))]
-     ns state xs   = [drop 2 state ++ fromSignal (takeS 2 xs)]
-     o state _     = [[(sum state)]]
+         fs        = [(Wild, ([Wild, Wild]))]
+         ns state xs   = [drop 2 state ++ fromSignal (takeS 2 xs)]
+         o state _     = [[(sum state)]]
 -}
 
 
