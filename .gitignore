@@ -26,3 +26,8 @@ add-source-timestamps
 /Gemfile.lock
 _site
 dist-newstyle
+#*
+*.old
+\\#*
+*.log
+*.lock
