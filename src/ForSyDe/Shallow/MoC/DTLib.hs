@@ -17,7 +17,7 @@ module ForSyDe.Shallow.MoC.DTLib (
   -- * Combinational Process Constructors
   -- | Combinational process constructors are used for processes that
   --   do not have a state.
-  mapDT, zipWithDT, 
+  mapDT, 
   -- * Sequential Process Constructors
   -- | Sequential process constructors are used for processes that
   --   have a state. One of the input parameters is the initial state.
@@ -33,36 +33,44 @@ import ForSyDe.Shallow.MoC.Synchronous( mapSY, zipSY)
 type DiscreteTime = Integer
 type DTSignal a = Signal (DiscreteTime, AbstExt a)
 
-
 -------------------------------------
---             --
+--                                 --
 -- SEQUENTIAL PROCESS CONSTRUCTORS --
---             --
+--                                 --
 -------------------------------------
 
--- | The process constructor 'delayDT' takes delays the signal  event
---   cycle by introducing a set of initial values at the beginning of
---   the output signal.  Note, that this implies that there is a
---   prefix at the output signal (the first n events) that has no
---   corresponding event at the input signal. This is necessary to
---   initialize feedback loops.
+-- | The process constructor 'mapDT' takes a function and a discrete time signal
+--   as arguments, a discrete time delay, an initial value as arguments,
+--   and returns the delayed discrete time signal.
+--   The resulting signal will have the intial value for the given
+--   delay time.
 --
--- >>> delaySDF [0,0,0] $ signal [1,2,3,4]
--- {0,0,0,1,2,3,4}
-
+-- λ> delayDT 4 Abst $ signal [(2, Prst 1), (5, Prst 7)]
+-- {(0,_),(6,1),(9,7)}
 delayDT :: DiscreteTime -> AbstExt a -> DTSignal a -> DTSignal a
 delayDT delay value xs = (0, value) :- zipSY newTags newValues
   where newTags = mapSY ((+ delay) . fst) xs
         newValues = mapSY snd xs
 
+----------------------------------------
+--                                    --
+-- COMBINATIONAL PROCESS CONSTRUCTORS --
+--                                    --
+----------------------------------------
+
+-- | The process constructor 'mapDT' takes a function and a discrete time signal
+--   as arguments. It returns a  discrete time signal, where the function has been
+--   applied to all input values. The output signal has the same time tags as the
+--   input signal.
+--
+-- λ> mapDT (liftDT (+1)) $ signal [(2, Prst 1), (5, Prst 7)]
+-- {(0,_),(2,2),(5,8)}
 mapDT :: (AbstExt a -> AbstExt b) -> DTSignal a -> DTSignal b
 mapDT f xs = zipSY timeTags newValues 
    where newValues = mapSY f xValues
          xValues   = getValues timeTags xs
          timeTags  = getTimeTags xs
          
-zipWithDT = undefined
-
 -- Support functions, which are not exported by the module
 
 getTag :: (DiscreteTime, a) -> DiscreteTime
@@ -77,7 +85,6 @@ getTimeTags (x:-xs) = if fst x /= 0 then
                         0 :- fst x :- mapSY fst xs
                       else
                         0 :- mapSY fst xs
-
 
 getValues :: Signal DiscreteTime -> Signal (DiscreteTime, AbstExt a) -> Signal (AbstExt a)
 getValues = getValues' Abst
