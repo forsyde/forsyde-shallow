@@ -17,14 +17,14 @@ module ForSyDe.Shallow.MoC.DTLib (
   -- * Combinational Process Constructors
   -- | Combinational process constructors are used for processes that
   --   do not have a state.
-  mapDT, zipWithDT, scanldDT,
+  mapDT, zipWithDT, zipWith3DT,
   -- * Sequential Process Constructors
   -- | Sequential process constructors are used for processes that
   --   have a state. One of the input parameters is the initial state.
-  delayDT
+  delayDT, scanldDT, mooreDT, mealyDT,
   -- * Processes
   -- | Processes to unzip a signal of tuples into a tuple of signals
-  --unzipDT, unzip3DT, unzip4DT,
+  zipDT, zip3DT, unzipDT, unzip3DT
   ) where  
 
 import ForSyDe.Shallow.Core
@@ -68,6 +68,10 @@ zipWithDT f xs ys = out
          yValues = getValues timeTags ys
          timeTags = getTimeTags2 xs ys
 
+zipWith3DT :: (AbstExt a -> AbstExt b -> AbstExt c -> AbstExt d)
+           -> DTSignal a -> DTSignal b -> DTSignal c -> DTSignal d
+zipWith3DT = undefined
+
 ------------------------------------------------------------------------
 --                                 
 -- SEQUENTIAL PROCESS CONSTRUCTORS 
@@ -92,9 +96,60 @@ scanldDT :: DiscreteTime
          -> AbstExt b
          -> DTSignal a
          -> DTSignal b
-scanldDT delay f init input = output
-  where output = delayDT delay init internal
-        internal = zipWithDT f input output
+scanldDT delay f init input = state
+  where state = delayDT delay init nextstate
+        nextstate = zipWithDT f input state
+
+mooreDT :: DiscreteTime
+        -> (AbstExt a -> AbstExt b -> AbstExt b)
+        -> (AbstExt b -> AbstExt c)
+        -> AbstExt b
+        -> DTSignal a
+        -> DTSignal c
+mooreDT delay f g init input = output
+  where state = delayDT delay init nextstate
+        nextstate = zipWithDT f input state
+        output = mapDT g state
+
+moore2DT :: DiscreteTime
+         -> (AbstExt a -> AbstExt b -> AbstExt c -> AbstExt c)
+         -> (AbstExt c -> AbstExt d)
+         -> AbstExt c
+         -> DTSignal a
+         -> DTSignal b
+         -> DTSignal c
+         -> DTSignal d
+moore2DT = undefined
+        
+mealyDT :: DiscreteTime
+        -> (AbstExt a -> AbstExt b -> AbstExt b)
+        -> (AbstExt a -> AbstExt b -> AbstExt c)
+        -> AbstExt b
+        -> DTSignal a
+        -> DTSignal c
+mealyDT delay f g init input = output
+  where state = delayDT delay init nextstate
+        nextstate = zipWithDT f input state
+        output = zipWithDT g input state
+
+------------------------------------------------------------------------
+--
+-- ZIP, UNZIP PROCESSES
+--
+------------------------------------------------------------------------
+
+zipDT :: DTSignal a -> DTSignal b -> DTSignal (a, b)
+zipDT = undefined
+
+zip3DT :: DTSignal a -> DTSignal b -> DTSignal c
+       -> DTSignal (a, b, c)
+zip3DT = undefined
+
+unzipDT :: DTSignal (a, b) -> (DTSignal a, DTSignal b)
+unzipDT = undefined
+
+unzip3DT :: DTSignal (a, b, c) -> (DTSignal a, DTSignal b, DTSignal c)
+unzip3DT = undefined
 
 ------------------------------------------------------------------------
 --
@@ -128,7 +183,6 @@ getValues' init (t:-ts) NullS
 getValues' init NullS   NullS 
                    = NullS
 
-
 getTimeTags2 :: DTSignal a -> DTSignal b -> Signal DiscreteTime
 getTimeTags2 NullS   NullS   = NullS
 getTimeTags2 NullS   ys      = getTimeTags2' NullS ys
@@ -150,10 +204,18 @@ liftDT :: (t -> a) -> AbstExt t -> AbstExt a
 liftDT f Abst    = Abst
 liftDT f (Prst x) = Prst (f x)
 
-lift2DT :: (a -> b -> c) -> AbstExt a -> AbstExt b -> AbstExt c
+lift2DT :: (a -> b -> c)
+        -> AbstExt a -> AbstExt b -> AbstExt c
 lift2DT f Abst     _        = Abst
 lift2DT f _        Abst     = Abst
 lift2DT f (Prst x) (Prst y) = Prst (f x y)
+
+lift3DT :: (a -> b -> c -> d)
+        -> AbstExt a -> AbstExt b -> AbstExt c -> AbstExt d
+lift3DT f Abst     _        _        = Abst
+lift3DT f _        Abst     _        = Abst
+lift3DT f _        _        Abst     = Abst
+lift3DT f (Prst x) (Prst y) (Prst z) = Prst (f x y z)
 
 ------------------------------------------------------------------------
 --
