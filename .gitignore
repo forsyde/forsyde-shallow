@@ -31,3 +31,4 @@ dist-newstyle
 \\#*
 *.log
 *.lock
+/#github-actions-demo.yml#

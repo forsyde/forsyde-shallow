@@ -1,6 +1,9 @@
-name: GitHub Actions Test Suite for ForSyDe-Shallow
-run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
-on: [push]
+name: GitHub Actions Test Suite for ForSyDe-Shallow (only push to master)
+run-name: ${{ github.actor }} is testing ForSyDe-Shallow on GitHub Actions 🚀
+on:
+  push:
+    branches:
+      - master
 jobs:
   Ubuntu-22-04-GHC-9-2-7:
     runs-on: ubuntu-22.04
@@ -35,7 +38,7 @@ jobs:
       - run: echo "🍏 This job's status is ${{ job.status }}."
       - name: Run Testsuite with stack for ghc 8.10.7 on Ubuntu 22.04
         run: |
-          stack test --stack-yaml test
+          stack test --stack-yaml stack-8.10.7.yaml test
   Windows-2022-GHC-9-2-7:
     runs-on: windows-2022
     steps:
