@@ -77,6 +77,64 @@ test_toyCSDF = s3
         v2 = actor11CSDF [(1, 0, \_ -> []), (1, 2, \[a] -> [a, 2*a])]
         v3 = actor11CSDF [(1, 3, \[a] -> [a, 2*a, 3*a])]
 
+test_toy1SADF :: Num a => Signal a
+test_toy1SADF = s_out where
+  s_out   = k_2 c2 s_1
+  s_1     = k_1 c1 s_in
+  (c1,c2) = d s_in
+  s_in = takeS 10 $ infiniteS (+1) 0
+  k_1 = kernel11SADF
+  k_2 = kernel11SADF
+  d = detector12SADF consume_rate next_state select_scenario initial_state
+    where
+      consume_rate = 1
+      -- Next State Function 'next_state' ignores input value
+      next_state 0 _ = 1
+      next_state 1 _ = 0
+      -- Definition of scenarios  
+      k_1_scenario_0 = (1,2, \[x] -> [x, x])   -- k1-Scenario 0: output two input tokens
+      k_2_scenario_0 = (1,1, \[x] -> [x])      -- k2-Scenario 0: id-function
+      k_1_scenario_1 = (1,1, \[x] -> [100*x])  -- k1-Scenario 1: multiply by 100
+      k_2_scenario_1 = (2,1, \[x,y] -> [x+y])  -- k2-Scenario 1: add numbers
+
+      -- Function for Selection of scenarios
+      --    select_scenario 0 = ((1,1), ([k_1_scenario_0],[k_2_scenario_0]))
+      --    select_scenario 1 = ((1,1), ([k_1_scenario_1],[k_2_scenario_1]))
+      select_scenario 0 = ((1,1), ([k_1_scenario_0],[k_2_scenario_0]))
+      select_scenario 1 = ((1,1), ([k_1_scenario_1],[k_2_scenario_1]))
+
+      -- Initial State
+      initial_state = 0
+
+test_toy2SADF :: Num a => Signal a
+test_toy2SADF = s_out where
+  s_out      = k_2 c_2 s_1 s_2
+  (s_1, s_2) = k_1 c_1 s_in
+  (c_1, c_2) = d s_in
+  s_in = takeS 10 $ infiniteS (+1) 0
+  k_1 = kernel12SADF
+  k_2 = kernel21SADF
+  d = detector12SADF consume_rate next_state select_scenario initial_state
+    where
+      consume_rate = 1
+      -- Next State Function 'next_state' ignores input value
+      next_state 0 _ = 1
+      next_state 1 _ = 0
+      -- Definition of scenarios  
+      k_1_scenario_0 = (1,(2,0), \[x]    -> ([x,x],[])) -- k1-Scenario 0: output two input tokens
+      k_2_scenario_0 = ((1,0),1, \[x] [] -> [x])        -- k2-Scenario 0: id-function
+      k_1_scenario_1 = (1,(0,1), \[x] -> ([], [100*x])) -- k1-Scenario 1: multiply by 100
+      k_2_scenario_1 = ((0,2),1, \[] [x,y] -> [x+y])    -- k2-Scenario 1: add numbers
+
+      -- Function for Selection of scenarios
+      --    select_scenario 0 = ((1,1), ([k_1_scenario_0],[k_2_scenario_0]))
+      --    select_scenario 1 = ((1,1), ([k_1_scenario_1],[k_2_scenario_1]))
+      select_scenario 0 = ((1,1), ([k_1_scenario_0],[k_2_scenario_0]))
+      select_scenario 1 = ((1,1), ([k_1_scenario_1],[k_2_scenario_1]))
+
+      -- Initial State
+      initial_state = 0
+      
 test_antiWindUpSADF :: (Num a, Ord a) => Signal a -> Signal a
 test_antiWindUpSADF input = output
   where
@@ -126,6 +184,10 @@ main = hspec $ do describe "ForSyDe.Shallow : " $ lab2tests
         `shouldBe`(read "{1.3333333333333333,10.333333333333334}" :: Signal Double)
       it "CSDF Feedback Loop" $ takeS 10 test_toyCSDF
         `shouldBe`(read "{1,1,1,2,2,4,4,8,8,16}" :: Signal Integer)
+      it "SADF Toy System" $  takeS 10 test_toy1SADF
+        `shouldBe`(read "{1,1,203,3,405,5,607,7,809,9}" :: Signal Integer)
+      it "SADF Toy System" $  takeS 10 test_toy2SADF
+        `shouldBe`(read "{200,1,1000,1}" :: Signal Integer)
       it "SADF Anti Wind-up System" $ takeS 10 (test_antiWindUpSADF s2_test)
         `shouldBe`(read "{10,21,33,46,60,75,91,108,108,108}" :: Signal Integer)
       it "SY FIR Filter" $ test_firSY
