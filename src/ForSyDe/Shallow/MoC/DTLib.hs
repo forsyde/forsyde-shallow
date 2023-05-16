@@ -29,7 +29,7 @@ module ForSyDe.Shallow.MoC.DTLib (
 
 import ForSyDe.Shallow.Core
 import ForSyDe.Shallow.MoC.Synchronous( mapSY, zipWithSY, zipWith3SY, zipSY)
-import Data.List (sort, nub)
+
 
 ------------------------------------------------------------------------
 --
