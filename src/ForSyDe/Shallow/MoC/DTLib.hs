@@ -102,11 +102,11 @@ delayDT delay value xs = (0, value) :- zipSY newTags newValues
   where newTags = mapSY ((+ delay) . fst) xs
         newValues = mapSY snd xs
 
-scanldDT :: DiscreteTime
-         -> (AbstExt a -> AbstExt b -> AbstExt b)
-         -> AbstExt b
-         -> DTSignal a
-         -> DTSignal b
+scanldDT :: DiscreteTime -- * Delay in time units
+         -> (AbstExt a -> AbstExt b -> AbstExt b) -- * Function on input and next state
+         -> AbstExt b -- * Initial State
+         -> DTSignal a -- * Input Signal
+         -> DTSignal b -- * Output Signal
 scanldDT delay f init input = state
   where state = delayDT delay init nextstate
         nextstate = zipWithDT f input state
@@ -319,6 +319,10 @@ lift3DT f (Prst x) (Prst y) (Prst z) = Prst (f x y z)
 s1 :: DTSignal Integer
 s1 = signal [(2, Prst 1), (4, Prst 3)]
 
+s2 = signal [(1, Prst 1)]
+
+zipWithDT :: DTSignal Int -> DTSignal Int -> DTSignal Int
+
 s2 :: DTSignal Integer
 s2 = mapDT (liftDT (+1)) s1
 
@@ -329,7 +333,7 @@ s4 :: DTSignal Integer
 s4 = signal [(0, Prst 1)]
 
 s5 :: DTSignal Integer
-s5 = scanldDT 1 (lift2DT (+)) (Prst 0) s4
+s5 = takeS 10 $ scanldDT 1 (lift2DT (+)) (Prst 0) s4
 
 s6 :: DTSignal Integer
 s6 = mapDT (liftDT (+1)) s1
