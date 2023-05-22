@@ -319,10 +319,6 @@ lift3DT f (Prst x) (Prst y) (Prst z) = Prst (f x y z)
 s1 :: DTSignal Integer
 s1 = signal [(2, Prst 1), (4, Prst 3)]
 
-s2 = signal [(1, Prst 1)]
-
-zipWithDT :: DTSignal Int -> DTSignal Int -> DTSignal Int
-
 s2 :: DTSignal Integer
 s2 = mapDT (liftDT (+1)) s1
 

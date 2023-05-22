@@ -40,7 +40,7 @@ module ForSyDe.Shallow.MoC (
   -- | The library for the Scenario Aware Dataflow MoC
   module ForSyDe.Shallow.MoC.SADF,
 
-  -- | The library for the Scenario Aware Dataflow MoC
+  -- | The library for the Discrete Time MoC
   module ForSyDe.Shallow.MoC.DTLib
   ) where
 
@@ -54,3 +54,4 @@ import ForSyDe.Shallow.MoC.Untimed
 import ForSyDe.Shallow.MoC.CSDF
 import ForSyDe.Shallow.MoC.SADF
 import ForSyDe.Shallow.MoC.DTLib
+
