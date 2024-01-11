@@ -11,7 +11,7 @@ ForSyDe-Shallow is the first and most long-lived incarnation of the ForSyDe mode
 
 ## Crash Course in ForSyDe Modeling
 
-* A ForSyDe system is modeled as *hierarchical network* of concurrent processes. 
+* A ForSyDe system is modeled as a *hierarchical network* of concurrent processes. 
 * Each *process* operates with the semantics dictated by a chosen MoC (e.g. Synchronous, Synchronous Dataflow, Scenario Aware Dataflow, Continuous Time, etc.) 
 * Processes can only communicate with other processes through *signals*. 
 * Processes of different MoCs communicate via *domain interfaces*.
