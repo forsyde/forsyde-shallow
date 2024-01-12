@@ -14,7 +14,7 @@ The tutorial focuses mainly on the modeling concepts of ForSyDe. We will explain
 
 ### Installing ForSyDe-Shallow
 
-To install the ForSyDe-Shallow library, we assume that you have installed ForSyDe-Shallow according to the Quick Start Instructions on the [ForSyDe-Shallow overview page](../index).
+To install the ForSyDe-Shallow library, we assume that you have installed ForSyDe-Shallow according to the Quick Start Instructions on the [ForSyDe-Shallow overview page]({{ parent-url }}/index#quick-start).
 
 ## System Modeling in ForSyDe
 In contrast to other approaches based on functional languages, ForSyDe has been designed to be able to specify systems at a high level of abstraction. However, we start with simple examples of the hardware world in order to introduce the main ForSyDe concepts.
