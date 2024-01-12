@@ -20,7 +20,7 @@ ForSyDe-Shallow is the first and most long-lived incarnation of the ForSyDe mode
 	<img src="{{ site.url }}/assets/images/forsyde-system-model.svg">
 </p>
 
-#### Process
+### Process
 
 A process takes /m/ input signals as argument and produces /n/ output signals. ForSyDe processes are deterministic.
 
@@ -31,7 +31,7 @@ A process takes /m/ input signals as argument and produces /n/ output signals. F
 <p align="center"><img src="{{ site.url }}/assets/images/forsyde-process-constructor.svg"></p>
 <p align="center"><small>The process constructor <it>mooreSY</it> constructs a Moore FSM process belonging to the synchronous MoC.</small></p>
 
-#### Process Constructor
+### Process Constructor
 
 There are three main categories of process constructors, which exist in all models of computation:
 
@@ -47,23 +47,25 @@ This concept also forces the designer to develop a structured formal model that 
 
 # Quick Start
 
-There are [several ways](setup) to acquire the [ForSyDe-Shallow]({{ site.github.baseurl }}) libraries, however the easiest one is to use a Haskell package manager to grab directly from [HackageDB](https://hackage.haskell.org/). Make sure you have the [Haskell Platform](https://www.haskell.org/platform/) installed on your machine type in the command
+There are [several ways](setup) to acquire and use the [ForSyDe-Shallow]({{ site.github.baseurl }}) libraries, however we recommend the following procedure.
 
-	cabal update
-    cabal v2-install forsyde-shallow --lib
+1. Follow these instructions to [setup Haskell and get started with it](https://www.haskell.org/get-started/).
+2. Use the command 
+```
+stack ghci --package forsyde-shallow
+```	
+to start a Haskell session with the interpreter `ghci` in a terminal, where you with the flag `--package forsyde-shallow` instruct the Haskell package manager `stack` to download the ForSyDe-Shallow library from the Haskell package repository [HackageDB](https://hackage.haskell.org/). The first time you execute this command will take some time, since both the Haskell compiler and the ForSyDe-Shallow library need to be installed.
 
-After the installation succeeds, you can test the libraries by starting an interpreter session with 
+3. You can now within the interpreter session of `ghci` load the ForSyDe-Shallow libraries and use the provided functions and constructors to test their behavior, for example: 
+```
+> :m +ForSyDe.Shallow
+> let s = signal [1..4] :: Signal Int
+> mooreSY (+) (*2) 0 s
+{0,2,6,12,20}
+```
+The example above implements a Moore finite state machine that calculates the running sum and multiplies the output with 2.
 
-    ghci
-	
-Inside an interpreter session you can load the ForSyDe-Shallow libraries and use the provided functions and constructors to test their behavior, for example: 
-
-    > :m +ForSyDe.Shallow
-	> let s = signal [1..4] :: Signal Int
-	> mooreSY (+) (*2) 0 s
-	{0,2,6,12,20}
-
-The example above implements a Moore finite state machine that calculates the running sum and multiplies the output with 2. For a more detailed step-by-step tutorial, please follow the [getting started example](getting_started).
+For a more detailed step-by-step tutorial on ForSyDe-Shallow, please follow the [getting started example](getting_started).
 
 # Documentation and resources
 
