@@ -71,9 +71,11 @@ For a more detailed step-by-step tutorial on ForSyDe-Shallow, please follow the 
 
 Here you can find links to further documentation resources:
 
- * [**The setup page**](setup) contains detailed instructions on how to install and use the libraries.
- 
  * [**A getting started tutorial**](getting_started) covers a step-by-step example to getting used to the modeling framework.
+ 
+* [**A tutorial how to setup a new `ForSyDe-Shallow` project**](new_forsyde_shallow_project).  
+
+* [**The setup page**](setup) contains detailed instructions on how to install and use the libraries.
 
  * [**The API documentation**](http://hackage.haskell.org/package/forsyde-shallow) generated with Haddock and hosted on [HackageDB](https://hackage.haskell.org/).
 
