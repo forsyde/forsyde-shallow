@@ -14,7 +14,7 @@ Setup the Haskell environment as outlined on the [Get started tutorial](https://
 
 ## Create a new ForSyDe project with Stack
 
-**NOTE:** The following steps will result in a ForSyDe project structure. If used with an editor that supports the  [language server protocol](https://microsoft.github.io/language-server-protocol/), a lot of useful information will be received from the editor during development time. The final outcome  of the following steps will result in a project structure similar to [this one]({{ parent-url }}/assets/forsyde-project.zip), where the copyright and license information has been removed. For a new project, please follow the steps below and do not just copy the zip-file. This ensures that you also have the correct copyright and license information.
+**NOTE:** The following steps will result in a ForSyDe project structure. If used with an editor that supports the  [language server protocol](https://microsoft.github.io/language-server-protocol/), a lot of useful information will be received from the editor during development time. The final outcome  of the following steps will result in a project structure similar to [this one]({{ parent-url }}/assets/forsyde-project.zip), where the copyright and license information has been removed. For a new project, please follow the steps below and do not just copy the zip-file. This ensures that you also have the correct copyright and license information. For this tutorial, we have used the `ghc`-version 9.4.8 (LTS 21.25).
 
 1. Create a new Haskell-project with the Haskell build tool [Stack](https://docs.haskellstack.org). You can choose any name, here `forsyde-project` is chosen as project name.
 ```
