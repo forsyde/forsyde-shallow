@@ -8,15 +8,15 @@ permalink: getting_started.html
 
 ## Introduction
 
-ForSyDe (Formal System Design) has been developed as system design methodology for heterogeneous embedded systems. The initial idea of ForSyDe has been to start with an abstract and formal specification model, that is then refined using well-defined design transformations into a low-level implementation model, and finally mapped into an implementation in hardware or software [[Sander and Jantsch, 2004]]({{ site.parent-url }}/publications.html#2004). Initially ForSyDe only used the synchronous model of computation (MoC), but has later been extended to cover additional models of computation, which can be integrated into one executable heterogeneous model of computation. For the synchronous model of computation there exists a synthesis back-end, which translates an executable synchronous ForSyDe model into the corresponding VHDL-code that can then further be synthesized using a commercial logic synthesis tool.
+ForSyDe (Formal System Design) has been developed as system design methodology for heterogeneous embedded systems. The initial idea of ForSyDe has been to start with an abstract and formal specification model, that is then refined using well-defined design transformations into a low-level implementation model, and finally mapped into an implementation in hardware or software [[Sander and Jantsch, 2004]]({{ site.parent-url }}/publications.html#2004). Initially ForSyDe only used the synchronous model of computation (MoC), but has later been extended to cover additional models of computation, which can be integrated into one executable heterogeneous model of computation. For the synchronous model of computation there exists a synthesis back-end, which translates an executable synchronous ForSyDe model into the corresponding VHDL-code that can then further be synthesised using a commercial logic synthesis tool.
 
-The tutorial focuses mainly on the modeling concepts of ForSyDe. We will explain the concepts using the synchronous model of computation, but the main concepts apply to all other supported ForSyDe models of computation as well. The tutorial has been written in such a way that knowledge of the functional programming language Haskell should not be required. However, in order to design systems in ForSyDe good knowledge of the main Haskell concepts is needed. For more information on Haskell consult the ​[Haskell web page](https://www.haskell.org/), where you find a lot of information and links to books and tutorials. For more information on ForSyDe consult the ForSyDe page.
+The tutorial focuses mainly on the modelling concepts of ForSyDe. We will explain the concepts using the synchronous model of computation, but the main concepts apply to all other supported ForSyDe models of computation as well. The tutorial has been written in such a way that knowledge of the functional programming language Haskell should not be required. However, in order to design systems in ForSyDe good knowledge of the main Haskell concepts is needed. For more information on Haskell consult the ​[Haskell web page](https://www.haskell.org/), where you find a lot of information and links to books and tutorials. For more information on ForSyDe consult the ForSyDe page.
 
 ### Installing ForSyDe-Shallow
 
 To install the ForSyDe-Shallow library, we assume that you have installed ForSyDe-Shallow according to the Quick Start Instructions on the [ForSyDe-Shallow overview page]({{ parent-url }}/index#quick-start).
 
-## System Modeling in ForSyDe
+## System Modelling in ForSyDe
 In contrast to other approaches based on functional languages, ForSyDe has been designed to be able to specify systems at a high level of abstraction. However, we start with simple examples of the hardware world in order to introduce the main ForSyDe concepts.
 
 If you have installed ForSyDe, start the GHC interpreter `ghci` and add the module `ForSyDe.Shallow`:
@@ -35,7 +35,7 @@ ghci>  :m +ForSyDe.Shallow
 ```
 ### Signals
 
-Systems are modeled in ForSyDe by concurrent processes that interact via signals. Signals are similar to lists and can be created using the function signal that converts a list to a signal.
+Systems are modelled in ForSyDe by concurrent processes that interact via signals. Signals are similar to lists and can be created using the function signal that converts a list to a signal.
 ```
 ghci> s1 = signal [1,2,3]
 ghci> s2 = signal [2,3,4]
@@ -49,7 +49,7 @@ ghci> s2
 ```
 ### Combinational Processes
 
-Processes are functions that take input signals and produce output signals. An adder can be modeled as a process in ForSyDe using the following code.
+Processes are functions that take input signals and produce output signals. An adder can be modelled as a process in ForSyDe using the following code.
 ```
 ghci> adder in1 in2 = zipWithSY (+) in1 in2
 ```
@@ -79,7 +79,7 @@ ghci> and2 s3 s4
 ```	
 As you may have observed, the process `adder` operates on signals of numerical data types, while the process `and2` operates on signals of Boolean. This could give the impression that Haskell has a weak or dynamic type system. However, this is not true. Haskell has a static and strong type system, which infers the type of the functions. We can ask for the type of a function using the `:t` command in `ghci`.
 ```
-hci> :t adder
+ghci> :t adder
 adder :: Num c => Signal c -> Signal c -> Signal c
 ghci> :t and2
 and2 :: Signal Bool -> Signal Bool -> Signal Bool
@@ -121,7 +121,7 @@ zipWithSY  :: (a -> b -> c) -> Signal a -> Signal b -> Signal c
 zipWith3SY :: (a -> b -> c -> d) -> Signal a -> Signal b -> Signal c -> Signal d
 zipWith4SY :: (a -> b -> c -> d -> e) -> Signal a -> Signal b -> Signal c -> Signal d -> Signal e
 ```
-ForSyDe-Shallow also defines _aliases_ for the combinational process constructores `mapSY` (`combSY`), `zipWithSY` (`comb2SY`), `zipWith3SY` (`comb3SY`), and `zipWith4SY` (`comb4SY`), which might be more intuitive for industrial users. Thus, an adder with three input signals could also be defined in the following way.
+ForSyDe-Shallow also defines _aliases_ for the combinational process constructors `mapSY` (`combSY`), `zipWithSY` (`comb2SY`), `zipWith3SY` (`comb3SY`), and `zipWith4SY` (`comb4SY`), which might be more intuitive for industrial users. Thus, an adder with three input signals could also be defined in the following way.
 ```
 ghci> adder'' = comb2SY (+)
 ghci> adder'' s1 s2
@@ -145,7 +145,7 @@ s2 = signal [2,3,4]
 
 You can now load the file into ghci using the command `:l`.
 ```
-hci> :l GettingStarted.hs 
+ghci> :l GettingStarted.hs 
 [1 of 1] Compiling GettingStarted   ( GettingStarted.hs, interpreted )
 Ok, one module loaded.
 ```
@@ -186,7 +186,7 @@ count 0     DOWN = 4
 count state DOWN = state - 1
 {% endhighlight %}
 
-Direction is an enumerated data type with the values `UP` and `DOWN`. The process counter is modeled with the process constructor `scanldSY`. It takes a function count and an initial state value `0` as arguments. The function `count` uses pattern matching. The first row of `count` reads as follows. If the direction has the value `HOLD`, the state will not change. The second row matches, if the state is `4` and the direction is `UP`. In this case the next state will be `0`. The third row matches all other patterns for state, if the direction is `UP`. In this case, the state is incremented by one. The fourth and fifth row give the corresponding functionality for the direction `DOWN`.
+Direction is an enumerated data type with the values `UP` and `DOWN`. The process counter is modelled with the process constructor `scanldSY`. It takes a function count and an initial state value `0` as arguments. The function `count` uses pattern matching. The first row of `count` reads as follows. If the direction has the value `HOLD`, the state will not change. The second row matches, if the state is `4` and the direction is `UP`. In this case the next state will be `0`. The third row matches all other patterns for state, if the direction is `UP`. In this case, the state is incremented by one. The fourth and fifth row give the corresponding functionality for the direction `DOWN`.
 ```
 ghci> counter (signal [UP,UP,UP,HOLD,UP,UP,DOWN,DOWN])
 {0,1,2,3,3,4,0,4,3}
@@ -209,7 +209,7 @@ mealy2SY :: (a -> b -> c -> a) -> (a -> b -> c -> d) -> a -> Signal b -> Signal 
 
 In the following we model a binary counter as a Mealy FSM and use it to connect several binary counters to an *n*-bit-counter that counts in both directions from 0 to 2<sup>n</sup>.
 
-The binary counter is modeled using the process constructor `mealySY`, a function for the next state decoder `binCount`, another function for the output decoder `carry`, and an initial state value `0`. The last row in the `carry` function uses `_`, which expresses a don't-care pattern.
+The binary counter is modelled using the process constructor `mealySY`, a function for the next state decoder `binCount`, another function for the output decoder `carry`, and an initial state value `0`. The last row in the `carry` function uses `_`, which expresses a don't-care pattern.
 
 {% highlight haskell %}
 binCounter = mealySY binCount carry 0
@@ -225,7 +225,7 @@ carry 0 DOWN = DOWN
 carry _ _    = HOLD
 {% endhighlight %}
 
-There are many ways to create a process network of several processes. The most general is to construct a process network as a net-list, where the net-list is specified as a set of equations using a `where`-clause. So a three-bit counter can be modeled as follows, where `s1` and `s2` are internal signals.
+There are many ways to create a process network of several processes. The most general is to construct a process network as a net-list, where the net-list is specified as a set of equations using a `where`-clause. So a three-bit counter can be modelled as follows, where `s1` and `s2` are internal signals.
 
 {% highlight haskell %}
 counter3Bit dir = out
