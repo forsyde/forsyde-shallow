@@ -34,7 +34,7 @@ dependencies:
 - base >= 4.7 && < 5
 - forsyde-shallow >= 3.5.0.0
 ```
-4. Open the file `stack.yaml` in your editor. Remove the bracket `#` before `extra-deps:`, remove `[]` and add 
+4. Open the file `stack.yaml` in your editor. Uncomment the first `extra-deps:` entry and add 
 a line `- forsyde-shallow-3.5.0.0` under `extra-deps:`
 ```
 extra-deps: 
@@ -52,7 +52,7 @@ emacs src/ForSyDeModel.hs
 
    adder = zipWithSY (+)
    ``` 
-7. Assuming you use an editor that uses the language server protocol (LSP). If the module `ForSyDe.Shallow` is not found, check that your global configuration uses the same [stackage release version](https://www.stackage.org/#about). Open the global stack project file (**NOTE**: Here we give the location for Linux, however, for other operating systems the location might differ, check on the [Stack YAML configuration page](https://docs.haskellstack.org/en/stable/yaml_configuration/), where the global configuration file is stored)
+7. Assuming you use an editor that uses the language server protocol (LSP). If the module `ForSyDe.Shallow` is not found, check that your global configuration uses the same [stackage release version](https://www.stackage.org/#about). Open the global stack project file (**NOTE**: Here we give the location for Linux, however, for other operating systems the location might differ, check on the [Stack YAML configuration page](https://docs.haskellstack.org/en/stable/yaml_configuration/), where the global configuration file is stored. For Windows, to find the global stack project file you need to find the location of the Stack root using `stack path` in PowerShell. There you can find the `stack.yaml` file.)
 ```
 prompt> less ~/.stack/global-project/stack.yaml
 ...
