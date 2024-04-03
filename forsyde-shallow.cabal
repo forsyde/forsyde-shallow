@@ -57,6 +57,7 @@ Library
                  , ForSyDe.Shallow.MoC.SDF
                  , ForSyDe.Shallow.MoC.CSDF
                  , ForSyDe.Shallow.MoC.SADF
+                 , ForSyDe.Shallow.MoC.DE
                  , ForSyDe.Shallow.MoC.DomainInterface
                  , ForSyDe.Shallow.MoC.MoCInterface
                  , ForSyDe.Shallow.Utility
