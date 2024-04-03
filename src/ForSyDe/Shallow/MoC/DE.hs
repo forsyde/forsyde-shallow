@@ -16,6 +16,7 @@
 -- (1) Event: Implement an instance of read
 -- (2) Event: Should Eq and Ord be defined for an event?
 --            (==) can have two meanings, if Eq and Ord are defined.
+-- (3) zipWithDE: non-exhaustive pattern matching rules
 
 module ForSyDe.Shallow.MoC.DE (
   -- * Data Types
