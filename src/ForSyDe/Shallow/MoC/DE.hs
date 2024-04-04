@@ -25,13 +25,18 @@ module ForSyDe.Shallow.MoC.DE (
   -- | Combinational process constructors are used for processes that
   --   do not have a state.
   mapDE, zipWithDE,
+  -- ** Sequential process constructors
+  -- | Sequential process constructors are used for processes that
+  --   have a state. One of the input parameters is the initial state.
+  delayDE, scanlDE, scanldDE, 
   -- * Support Functions
   mapTag, mapValue, getTags, getValues, showUntil, showInterval,
-  -- * Test Signals
-  s_1, s_2, s_3, s_inf
+  -- * Test Signals and Processes
+  s_1, s_2, s_3, s_inf, fsm
   ) where
 
 import ForSyDe.Shallow.Core
+    ( fromSignal, infiniteS, signal, Signal(..) )
 
 ------------------------------------------------------------------------
 --
@@ -49,14 +54,19 @@ instance (Show t, Show v) => Show (Event t v) where
 showEvent :: (Show t, Show v) => Event t v -> String -> String
 showEvent (E t v) = (++) (show v ++ "@" ++ show t)
 
--- Combinational process constructors
+------------------------------------------------------------------------
+--
+-- COMBINATIONAL PROCESS CONSTRUCTORS
+--
+-------------------------------------------------------------------------- 
 
 -- | The process constructor 'mapDE' takes a combinational function f as
 -- argument and returns a process with one input signal and one output
 -- signal. The function f is applied on all values of the input signal.
 --
 -- >>> mapDE (+1) $ signal [E 0 0, E 1 1, E 2 2]
--- {1@0,2@1,3@2}
+-- {10@0,12@2,12@10}
+
 mapDE :: (Eq t, Num t) => (a -> b) -> Signal (Event t a) -> Signal (Event t b)
 mapDE _ NullS = NullS
 mapDE f (E t v :- es) 
@@ -88,6 +98,66 @@ zipWithDE' f olda oldb (E ta va :- as) (E tb vb :- bs)
    | ta == tb = E ta (f va vb) :- zipWithDE' f va vb as bs
    | ta > tb  = E tb (f olda vb) :- zipWithDE' f olda vb (E ta va :- as) bs 
 
+------------------------------------------------------------------------
+--
+-- SEQUENTIAL PROCESS CONSTRUCTORS
+--
+-------------------------------------------------------------------------- 
+
+-- | The process constructor 'delayDE' delays the input signal a time t
+-- and introduces an initial value v0 at time 0 in the
+-- output signal.  Note, that this implies that there is one event
+-- (the first) at the output signal that has no corresponding event at
+-- the input signal. This is
+-- necessary to initialize feed-back loops.
+--
+-- >>> delayDE 2 10 $ signal [E 0 0, E 2 2]
+-- {10@0,0@2,2@4}
+
+delayDE :: (Num t) => t -> v -> Signal (Event t v) -> Signal (Event t v)
+delayDE t v0 es = E 0 v0 :- mapTag (+t) es
+
+-- | The process constructor 'scanlDE' is used to construct a finite
+-- state machine process without output decoder.  It takes a delay t
+-- an initial value v0, and a function f for the next state decoder.
+-- The process 
+-- constructor behaves similar to the Haskell prelude function
+-- 'scanl' and has the value of the new state as its output value as
+-- illustrated by the following example.
+--
+-- >>> takeS 3 $ scanlDE (+) 2 0 (signal  [E 0 1, E 2 2])
+-- {1@0,3@2,5@4}
+--
+-- This is in contrast to the function 'scanldDE', which has its
+-- current state as its output value.
+
+scanlDE :: (Num t, Ord t) => (a -> b -> a)     -- ^Combinational function for next state
+                             -- decoder
+       -> t                  -- ^delay
+       -> a                  -- ^Initial state
+       -> Signal (Event t b) -- ^Input signal 
+       -> Signal (Event t a) -- ^Output signal
+scanlDE f t v0 xs = s'
+  where s' = zipWithDE f (delayDE t v0 s') xs 
+
+-- | The process constructor 'scanldDE' is used to construct a finite
+-- state machine process without output decoder. It takes a delay t
+-- an initial value v0, and a function f for the next state decoder.
+-- In contrast to the process constructor 'scanlDE' here
+-- the output value is the current state and not the one of the next
+-- state.
+--
+-- >>> takeS 3 $ scanldDE (+) 2 0 (signal  [E 0 1, E 2 2])
+-- scanldSY (+) 0 (signal [1,2,3,4])
+scanldDE :: (Num t, Ord t) => (a -> b -> a)     -- ^Combinational function for next state
+                             -- decoder
+       -> t                  -- ^delay
+       -> a                  -- ^Initial state
+       -> Signal (Event t b) -- ^Input signal 
+       -> Signal (Event t a) -- ^Output signal
+scanldDE f t v0 xs = s'
+  where s' = delayDE t v0 $ zipWithDE f s' xs
+  
 -- Support functions
 
 -- Functions on events
@@ -136,6 +206,8 @@ showInterval tmin tmax (E t v :- es)
    | t >= tmin && t <= tmax = E t v :- showInterval tmin tmax es
    | otherwise              = NullS 
 
+-- Tests
+
 -- Test Signals
 s_1 :: Signal (Event Int Int)
 s_1 = signal [E 0 1, E 1 2]
@@ -149,3 +221,9 @@ s_3 = signal [E 0 0]
 s_inf :: Signal (Event Int Int)
 s_inf = infiniteS incTag (E 0 0) where
   incTag (E t v) = E (t+1) v
+
+-- Test Circuits
+fsm :: Signal (Event Int Int) -> Signal (Event Int Int)
+fsm s_in = s_out
+   where s_out = delayDE 2 0 s_1
+         s_1   = zipWithDE (+) s_in s_out
