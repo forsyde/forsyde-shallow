@@ -28,7 +28,7 @@ module ForSyDe.Shallow.MoC.DE (
   -- ** Sequential process constructors
   -- | Sequential process constructors are used for processes that
   --   have a state. One of the input parameters is the initial state.
-  delayDE, scanlDE, scanldDE, 
+  delayDE, scanlDE, scanldDE, mooreDE, mealyDE,
   -- * Support Functions
   mapTag, mapValue, getTags, getValues, showUntil, showInterval,
   -- * Test Signals and Processes
@@ -36,7 +36,7 @@ module ForSyDe.Shallow.MoC.DE (
   ) where
 
 import ForSyDe.Shallow.Core
-    ( fromSignal, infiniteS, signal, Signal(..) )
+    ( fromSignal, infiniteS, signal, Signal(..), takeS )
 
 ------------------------------------------------------------------------
 --
@@ -118,8 +118,8 @@ delayDE :: (Num t) => t -> v -> Signal (Event t v) -> Signal (Event t v)
 delayDE t v0 es = E 0 v0 :- mapTag (+t) es
 
 -- | The process constructor 'scanlDE' is used to construct a finite
--- state machine process without output decoder.  It takes a delay t
--- an initial value v0, and a function f for the next state decoder.
+-- state machine process without output decoder.  It takes  function f for
+-- the next state decoder, a delay t, and an initial value v0.
 -- The process 
 -- constructor behaves similar to the Haskell prelude function
 -- 'scanl' and has the value of the new state as its output value as
@@ -133,7 +133,7 @@ delayDE t v0 es = E 0 v0 :- mapTag (+t) es
 
 scanlDE :: (Num t, Ord t) => (a -> b -> a)     -- ^Combinational function for next state
                              -- decoder
-       -> t                  -- ^delay
+       -> t                  -- ^Delay
        -> a                  -- ^Initial state
        -> Signal (Event t b) -- ^Input signal 
        -> Signal (Event t a) -- ^Output signal
@@ -141,23 +141,74 @@ scanlDE f t v0 xs = s'
   where s' = zipWithDE f (delayDE t v0 s') xs 
 
 -- | The process constructor 'scanldDE' is used to construct a finite
--- state machine process without output decoder. It takes a delay t
--- an initial value v0, and a function f for the next state decoder.
+-- state machine process without output decoder. It takes  function f for
+-- the next state decoder, a delay t, and an initial value v0.
 -- In contrast to the process constructor 'scanlDE' here
 -- the output value is the current state and not the one of the next
 -- state.
 --
 -- >>> takeS 3 $ scanldDE (+) 2 0 (signal  [E 0 1, E 2 2])
--- scanldSY (+) 0 (signal [1,2,3,4])
+-- {0@0,1@2,3@4}
 scanldDE :: (Num t, Ord t) => (a -> b -> a)     -- ^Combinational function for next state
                              -- decoder
-       -> t                  -- ^delay
+       -> t                  -- ^Delay
        -> a                  -- ^Initial state
        -> Signal (Event t b) -- ^Input signal 
        -> Signal (Event t a) -- ^Output signal
 scanldDE f t v0 xs = s'
   where s' = delayDE t v0 $ zipWithDE f s' xs
-  
+
+-- | The process constructor 'mooreDE' is used to model state machines
+-- of \"Moore\" type, where the output only depends on the current
+-- state. The process constructor is based on the process constructor
+-- 'scanldDE', since it is natural for state machines in hardware,
+-- that the output operates on the current state and not on the next
+-- state. The process constructors takes a function to calculate the
+-- next state, another function to calculate the output, a delay t
+-- and a value v0 for the initial state.
+--
+-- In contrast, the output of a process created by the process constructor 'mealyDE'
+-- depends not only on the state, but also on the input values.
+--
+-- >>> takeS 3 $ mooreDE (+) (*2) 2 0 $ signal  [E 0 1, E 2 2]
+-- {0@0,2@2,6@4}
+mooreDE ::  (Num t, Ord t) => (a -> b -> a) -- ^Combinational function for next state
+                         -- decoder
+        -> (a -> c)      -- ^Combinational function for output decoder
+        -> t             -- ^Delay
+        -> a             -- ^Initial state
+        -> Signal (Event t b)      -- ^Input signal
+        -> Signal (Event t c)      -- ^Output signal
+mooreDE nextState output t v0 
+    = mapDE output . scanldDE nextState t v0
+
+-- | The process constructor 'melayDE' is used to model state machines
+-- of \"Mealy\" type, where the output only depends on the current
+-- state and the input values. The process constructor is based on the
+-- process constructor 'scanldDE', since it is natural for state
+-- machines in hardware, that the output operates on the current state
+-- and not on the next state.  The process constructors takes a function to calculate the
+-- next state, another function to calculate the output, a delay t
+-- and a value v0 for the initial state.
+--
+-- In contrast, the output of a process created by the process
+-- constructor 'mooreDE' depends only on the state, but not on the
+-- input values.
+--
+-- >>> takeS 3 $ mealyDE (+) (+) 2 0 $ signal [E 0 1, E 2 2]
+-- {1@0,3@2,5@4}
+mealyDE :: (Num t, Ord t) => (a -> b -> a) -- ^Combinational function for next state
+                         -- decoder
+        -> (a -> b-> c)      -- ^Combinational function for output decoder
+        -> t             -- ^Delay
+        -> a             -- ^Initial state
+        -> Signal (Event t b)      -- ^Input signal
+        -> Signal (Event t c)      -- ^Output signal
+mealyDE nextState output t v0 sig
+  = zipWithDE output state sig where
+    state = scanldDE nextState t v0 sig
+
+
 -- Support functions
 
 -- Functions on events
