@@ -18,6 +18,7 @@
 --            (==) can have two meanings, if Eq and Ord are defined.
 -- (3) zipWithDE: should Float and Real be avoided for tags, since they
 --                do not always correctly implement the order relation?
+
 module ForSyDe.Shallow.MoC.DE (
   -- * Data Types
   Event (E), tag, value,
@@ -37,6 +38,7 @@ module ForSyDe.Shallow.MoC.DE (
 
 import ForSyDe.Shallow.Core
     ( fromSignal, infiniteS, signal, Signal(..), takeS )
+import GHC.RTS.Flags (MiscFlags(installSignalHandlers))
 
 ------------------------------------------------------------------------
 --
@@ -54,10 +56,11 @@ instance (Show t, Show v) => Show (Event t v) where
 showEvent :: (Show t, Show v) => Event t v -> String -> String
 showEvent (E t v) = (++) (show v ++ "@" ++ show t)
 
+-- | The function 'tag' returns an the tag of an event
 tag :: Event t v -> t
 tag (E t _) = t
 
-
+-- | The function 'value' returns the value of an event
 value :: Event t v -> v
 value (E _ v) = v
 
@@ -144,8 +147,6 @@ delayDE :: (Num t)
         -> Signal (Event t v) -- ^Input signal
         -> Signal (Event t v) -- ^Output signal 
 delayDE t v0 es = E 0 v0 :- mapTag (+t) es
-
-
   
 -- | The process constructor 'scanlDE' is used to construct a finite
 -- state machine process without output decoder.  It takes a propagation
@@ -156,8 +157,6 @@ delayDE t v0 es = E 0 v0 :- mapTag (+t) es
 --
 -- This is in contrast to the function 'scanldDE', which has its
 -- {1@0,3@2,5@4}
-
-
 
 scanlDE :: (Num t, Ord t)
         => t                  -- ^Propagation delay
