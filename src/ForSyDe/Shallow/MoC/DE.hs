@@ -16,11 +16,11 @@
 -- (1) Event: Implement an instance of read
 -- (2) Event: Should Eq and Ord be defined for an event?
 --            (==) can have two meanings, if Eq and Ord are defined.
--- (3) zipWithDE: non-exhaustive pattern matching rules
-
+-- (3) zipWithDE: should Float and Real be avoided for tags, since they
+--                do not always correctly implement the order relation?
 module ForSyDe.Shallow.MoC.DE (
   -- * Data Types
-  Event (E),
+  Event (E), tag, value,
   -- * Combinational Process Constructors
   -- | Combinational process constructors are used for processes that
   --   do not have a state.
@@ -54,6 +54,13 @@ instance (Show t, Show v) => Show (Event t v) where
 showEvent :: (Show t, Show v) => Event t v -> String -> String
 showEvent (E t v) = (++) (show v ++ "@" ++ show t)
 
+tag :: Event t v -> t
+tag (E t _) = t
+
+
+value :: Event t v -> v
+value (E _ v) = v
+
 ------------------------------------------------------------------------
 --
 -- COMBINATIONAL PROCESS CONSTRUCTORS
@@ -78,7 +85,7 @@ mapDE f (E t v :- es)
 -- signal. The function f is applied pairwise on all values of the two input signals.
 --
 -- >>> zipWithDE (+) (signal [E 0 0, E 2 2]) (signal [E 0 10, E 10 10])
--- {1@0,2@1,3@2}
+-- {10@0,12@2,12@10}
 zipWithDE :: (Ord t, Num t) =>
              (a -> b -> c)
              -> Signal (Event t a)
@@ -88,7 +95,7 @@ zipWithDE _ NullS _      = NullS
 zipWithDE _ (_:-_) NullS = NullS
 zipWithDE f (E ta va :- as) (E tb vb :- bs)
    | ta == 0 && tb == 0 = E 0 (f va vb) :- zipWithDE' f va vb as bs
-   | otherwise          = error "mapDT: Signals need to start at time 0" 
+   | otherwise          = error "zipWithDE: Signals need to start at time 0" 
 
 zipWithDE' :: (Ord t, Num t) => (a -> b -> c) -> a -> b -> Signal (Event t a) -> Signal (Event t b) -> Signal (Event t c)
 zipWithDE' _ _ _ NullS NullS = NullS
@@ -97,9 +104,23 @@ zipWithDE' f _ oldb (E ta va :- as) NullS
 zipWithDE' f olda _ NullS (E tb vb :- bs) 
    = E tb (f olda vb) :- zipWithDE' f olda vb NullS bs   
 zipWithDE' f olda oldb (E ta va :- as) (E tb vb :- bs)
-   | ta < tb  = E ta (f va oldb) :- zipWithDE' f va oldb as (E tb vb :- bs)
-   | ta == tb = E ta (f va vb) :- zipWithDE' f va vb as bs
-   | ta > tb  = E tb (f olda vb) :- zipWithDE' f olda vb (E ta va :- as) bs 
+   | ta < tb   = E ta (f va oldb) :- zipWithDE' f va oldb as (E tb vb :- bs)
+   | ta == tb  = E ta (f va vb) :- zipWithDE' f va vb as bs
+   | otherwise = E tb (f olda vb) :- zipWithDE' f olda vb (E ta va :- as) bs
+
+-- | The process constructor 'zipWith3DE' takes a combinational function f as
+-- argument and returns a process with three input signals and one output
+-- signal. The function f is applied to all current values of the input signals.
+--
+-- >>> zipWith3DE (+) (signal [E 0 0, E 2 2]) (signal [E 0 10, E 10 10]) (signal [E 0 10, E 7 100])
+-- {1@0,2@1,3@2}
+zipWith3DE :: (Ord t, Num t) =>
+             (a -> b -> c -> d)
+             -> Signal (Event t a)
+             -> Signal (Event t b)
+             -> Signal (Event t c)
+             -> Signal (Event t d)
+zipWith3DE = undefined
 
 ------------------------------------------------------------------------
 --
@@ -124,6 +145,8 @@ delayDE :: (Num t)
         -> Signal (Event t v) -- ^Output signal 
 delayDE t v0 es = E 0 v0 :- mapTag (+t) es
 
+
+  
 -- | The process constructor 'scanlDE' is used to construct a finite
 -- state machine process without output decoder.  It takes a propagation
 -- delay t, a function f for the next state, and an initial value v0.
@@ -131,10 +154,11 @@ delayDE t v0 es = E 0 v0 :- mapTag (+t) es
 -- 'scanl' and has the value of the new state as its output value as
 -- illustrated by the following example.
 --
--- >>> takeS 3 $ scanlDE 2 (+) 0 (signal  [E 0 1, E 2 2])
--- {1@0,3@2,5@4}
 -- This is in contrast to the function 'scanldDE', which has its
--- current state as its output value.
+-- {1@0,3@2,5@4}
+
+
+
 scanlDE :: (Num t, Ord t)
         => t                  -- ^Propagation delay
         -> (a -> b -> a)      -- ^Function for next state
